@@ -2479,7 +2479,7 @@ class Component extends DCLogic {
       labelCell('Quantity', qobj ? 'min. order ' + qobj.moq.toLocaleString() + ' pcs' : null),
       ctrlWrap(h('select', { value: qtyChosen ? s.qty : '', onChange: e => { if (e.target.value === '') return; this.setState({ qty: Number(e.target.value), qtyChosen: true }); }, style: Object.assign({}, selStyle, qtyPh && !qtyChosen ? { color: FAINT } : null) },
         (qtyPh ? [h('option', { key: '__ph', value: '' }, '-- Please select --')] : []).concat(
-          qopts.map(qn => { const uq = this.pkQuote(qn), per = uq && uq.ok ? uq.unit : null; return h('option', { key: qn, value: qn }, qn.toLocaleString() + ' pcs' + (bestSeller.indexOf(qn) >= 0 ? ' — Best Seller' : '') + (qtyChosen && per != null ? ' — ' + this.currency() + ' ' + (per * this.fx()).toFixed(3) + '/pc' : '')); })))));
+          qopts.map(qn => h('option', { key: qn, value: qn }, qn.toLocaleString() + ' pcs' + (bestSeller.indexOf(qn) >= 0 ? ' — Best Seller' : '')))))));
     // image picker: a selectable grid of option thumbnails (e.g. Round Corner Position)
     const imgPicker = (def, options, sel, base) => {
       const label = (ov.label && ov.label[def.key]) || def.label;
