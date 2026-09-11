@@ -45,6 +45,33 @@ const LAMS = [['Gloss Lamination (Both)',0],['Matte Lamination (Both)',6],['Glos
 const SPOTUV = [['No Required',0],['Silkscreen Spot UV (Front)',45],['Silkscreen Spot UV (Both)',78]];
 const QTYS = [100,300,500,1000,2000,3000,5000];
 
+// Per-product configurator corrections layered over the crawled engine, keyed by the
+// engine product name. Built product-by-product from a live Excard comparison so the
+// Printoka configurator matches the source order form exactly. DISPLAY-ONLY — pricing
+// still uses the engine's own option values, so nothing here can change a price.
+//   hide:      field keys Excard does not show (removed from the configurator)
+//   label:     { fieldKey: 'display label' }         — rename a question
+//   optLabel:  { fieldKey: { engineValue: 'shown label' } } — rename option text (value kept)
+//   placeholder: [fieldKeys] that start unselected showing "-- Please select --"
+//   remark:    { fieldKey: 'helper text under the field' }
+const CFG_OVERRIDES = {
+  'Business Card': {
+    // Excard's Business Card has none of these: foil-colour dropdown or stamping/emboss areas
+    hide: ['hot_stamping_colour', 'hot_stamping_w', 'hot_stamping_h', 'embossing_w', 'embossing_h'],
+    label: { lamination: 'Paper Lamination' },
+    optLabel: {
+      category: { 'Standard': 'Standard Card', 'Custom Die Cut': 'Custom Die-Cut' },
+      paper: { 'Gloss Art Card 250gsm': 'Gloss Art Card 250gsm (2 side coated)', 'Gloss Art Card 310gsm': 'Gloss Art Card 310gsm (2 side coated)', 'Gloss Art Card 360gsm': 'Gloss Art Card 360gsm (2 side coated)', 'Synthetic Paper 180micron': 'Synthetic Paper 180micron (0.18mm)' },
+      lamination: { 'Gloss Water Based Varnish (Both)': 'Gloss Water Based Varnish (Both) (Free)' },
+      package: { 'Normal': 'Normal (1 Design)', '2in1': '2 In 1 (2 Designs)', '3in1': '3 In 1 (3 Designs)', '4in1': '4 In 1 (4 Designs)', '5in1': '5 In 1 (5 Designs)', '6in1': '6 In 1 (6 Designs)', '7in1': '7 In 1 (7 Designs)', '8in1': '8 In 1 (8 Designs)', '9in1': '9 In 1 (9 Designs)', '10in1': '10 In 1 (10 Designs)' },
+      round_corner: { 'No': 'No Round Corner', 'Required': 'Required Round Corner' },
+      holepunching: { '3mm': 'Hole Punching - Diameter 3mm', '5mm': 'Hole Punching - Diameter 5mm' },
+    },
+    placeholder: ['size', 'paper', 'lamination'],
+    remark: { silkscreen_spot_uv: 'Available with Matte Lamination (Both Sides) only. Gloss Art Card 250gsm & 310gsm only. Qty: 300, 500, 1,000 – 10,000.' },
+  },
+};
+
 const CATS = [
   ['Cards',8,'card'],['Books & Stationery',19,'book'],['Stickers & Labels',7,'sticker'],
   ['Large Format',13,'banner'],['Packaging & Boxes',18,'box'],['Calendars & Diary',5,'cal'],
@@ -195,11 +222,20 @@ class Component extends DCLogic {
       return true;
     });
   }
+  // per-product configurator override (display-only corrections vs the live source form)
+  cfgOv() { const p = this.pkProduct(); return (p && CFG_OVERRIDES[p.name]) || {}; }
+  pkHidden(key) { const ov = this.cfgOv(); return !!(ov.hide && ov.hide.indexOf(key) >= 0); }
+  // are all "please select" fields chosen yet? (gates the live price, like the source form)
+  pkReady() { const ov = this.cfgOv(); const ph = ov.placeholder || []; const sc = this.state.cfg || {}; return ph.every(k => sc[k] != null && sc[k] !== ''); }
   // visible option fields for the current product, each with its resolved (conditionally-valid) options
   pkFields() {
     const E = this.pkEngine(), prod = this.pkProduct(); if (!E || !prod) return [];
-    const cfg = this.pkV();
-    return (prod.fields || []).filter(f => f.key && this.pkShown(f, cfg)).map(f => {
+    // display cfg: like pkV but with UNSELECTED "please select" fields stripped, so fields
+    // that depend on them (e.g. Paper Lamination depends on Paper) stay hidden until chosen.
+    const cfg = Object.assign({}, this.pkV());
+    const ov = this.cfgOv(), ph = ov.placeholder || [], sc = this.state.cfg || {};
+    ph.forEach(k => { if (sc[k] == null || sc[k] === '') delete cfg[k]; });
+    return (prod.fields || []).filter(f => f.key && !this.pkHidden(f.key) && this.pkShown(f, cfg)).map(f => {
       let options = [];
       try { options = E.localOptions(prod, f.key, cfg) || []; } catch (e) { options = f.options || []; }
       return { def: f, options };
@@ -269,6 +305,7 @@ class Component extends DCLogic {
   }
   saveCart(cart) { try { localStorage.setItem('pk_cart', JSON.stringify(cart || [])); } catch (e) {} }
   addToCart() {
+    if (!this.pkReady()) { if (typeof window !== 'undefined') window.scrollTo(0, 0); return this.go('product'); }
     const prod = this.pkProduct(), q = this.pkQuote(); if (!prod || !q || !q.ok) return;
     const cfg = this.pkV();
     const spec = (prod.fields || []).filter(f => f.key && cfg[f.key] && !f.neutral && !/^(category)$/.test(f.key)).slice(0, 5).map(f => cfg[f.key]).join(' · ');
@@ -2382,6 +2419,7 @@ class Component extends DCLogic {
     const s = this.state, p = this.price();
     const prod = this.pkProduct(), cfg = this.pkV(), fields = this.pkFields(), q = this.pkQuote();
     const quoteOnly = q && q.quoteOnly;
+    const ready = this.pkReady();
     const NAME = prod ? this.catName(prod.id) : 'Business Card';
     const selStyle = { font: '400 14px Montserrat,sans-serif', color: INK, padding: '10px 12px', border: '1px solid ' + HAIR, borderRadius: 8, background: '#fff', width: '100%', appearance: 'auto' };
     // each option is a full-width ROW: label (left) + native <select> (right), divided by a
@@ -2391,12 +2429,22 @@ class Component extends DCLogic {
       h('div', { style: { fontSize: 13.5, fontWeight: 600 } }, label),
       note ? h('div', { style: { fontSize: 11, color: FAINT, marginTop: 3, lineHeight: 1.5 } }, note) : null);
     const ctrlWrap = ch => h('div', { style: { maxWidth: 420 } }, ch);
+    const ov = this.cfgOv();
     const optSelect = (def, options, sel) => {
+      const label = (ov.label && ov.label[def.key]) || def.label;
+      const remark = (ov.remark && ov.remark[def.key]) || null;
       const note = def.neutral ? 'price-neutral' : (def.note || null);
+      const optLabel = (ov.optLabel && ov.optLabel[def.key]) || {};
+      const isPh = !!(ov.placeholder && ov.placeholder.indexOf(def.key) >= 0);
+      // placeholder fields start unselected ("-- Please select --") and only reflect an explicit choice
+      const chosen = isPh ? (this.state.cfg[def.key] != null ? this.state.cfg[def.key] : '') : (sel != null ? sel : (options[0] || ''));
+      const optNodes = options.map(v => { const val = Array.isArray(v) ? v[0] : v; return h('option', { key: val, value: val }, optLabel[val] || val); });
       return h('div', { key: def.key, style: rowStyle },
-        labelCell(def.label, note),
-        ctrlWrap(h('select', { value: sel != null ? sel : (options[0] || ''), onChange: e => { const val = e.target.value; this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) })); }, style: selStyle },
-          options.map(v => { const val = Array.isArray(v) ? v[0] : v; return h('option', { key: val, value: val }, val); }))));
+        labelCell(label, note),
+        ctrlWrap(h('div', { style: { display: 'flex', flexDirection: 'column', gap: 5 } },
+          h('select', { value: chosen, onChange: e => { const val = e.target.value; this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) })); }, style: Object.assign({}, selStyle, isPh && chosen === '' ? { color: FAINT } : null) },
+            (isPh ? [h('option', { key: '__ph', value: '' }, '-- Please select --')] : []).concat(optNodes)),
+          remark ? h('div', { style: { fontSize: 11.5, color: FAINT, lineHeight: 1.5 } }, remark) : null)));
     };
     // quantity, straight from the engine's per-product model (moq / options)
     const qobj = this.pkQtyObj();
@@ -2468,17 +2516,22 @@ class Component extends DCLogic {
             h('div', { key: 'b', style: { display: 'flex', alignItems: 'baseline', gap: 8, margin: '8px 0 4px' } },
               quoteOnly
                 ? h('span', { style: { fontSize: 24, fontWeight: 600, letterSpacing: '-.02em', color: TEAL } }, 'Price on request')
-                : h('span', { style: { fontSize: 34, fontWeight: 600, letterSpacing: '-.03em', color: TEAL } }, this.money(p.net)),
-              !quoteOnly && h('span', { style: { fontSize: 12.5, color: FAINT, whiteSpace: 'nowrap' } }, 'incl. ' + this.taxLabel())),
-            h('div', { key: 'c', style: { fontSize: 12.5, color: MUT, marginBottom: 14 } }, quoteOnly ? 'This product is quoted on request.' : (this.currency() + ' ' + (p.unit * this.fx()).toFixed(3) + ' per piece · ' + this.state.qty.toLocaleString() + ' pcs')),
-            !quoteOnly && h('div', { key: 'd', style: { display: 'flex', flexDirection: 'column', gap: 7, fontSize: 12.5, borderTop: '1px solid ' + LINE, paddingTop: 12 } },
+                : (ready
+                    ? h('span', { style: { fontSize: 34, fontWeight: 600, letterSpacing: '-.03em', color: TEAL } }, this.money(p.net))
+                    : h('span', { style: { fontSize: 20, fontWeight: 600, letterSpacing: '-.01em', color: MUT } }, 'Select your options')),
+              !quoteOnly && ready && h('span', { style: { fontSize: 12.5, color: FAINT, whiteSpace: 'nowrap' } }, 'incl. ' + this.taxLabel())),
+            h('div', { key: 'c', style: { fontSize: 12.5, color: MUT, marginBottom: 14 } }, quoteOnly ? 'This product is quoted on request.' : (ready ? (this.currency() + ' ' + (p.unit * this.fx()).toFixed(3) + ' per piece · ' + this.state.qty.toLocaleString() + ' pcs') : 'Choose the required options above to see your live price.')),
+            !quoteOnly && ready && h('div', { key: 'd', style: { display: 'flex', flexDirection: 'column', gap: 7, fontSize: 12.5, borderTop: '1px solid ' + LINE, paddingTop: 12 } },
               [['Subtotal', this.money(p.gross)], [this.tier() + ' member −' + this.tierPct() + '%', '−' + this.money(p.disc), TEAL], ['Est. weight (physics-based)', ((q && q.ok ? q.weight : this.state.qty * 0.31 / 1000)).toFixed(2) + ' kg'], ['Est. shipping (Selangor)', this.money(12)], ['Delivery window', '3–4 working days']]
                 .map((r, i) => h('div', { key: i, style: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, lineHeight: 1.5, color: r[2] || MUT } }, h('span', { style: { flex: '1 1 auto', minWidth: 0 } }, r[0]), h('span', { style: { flex: 'none', fontWeight: 500, whiteSpace: 'nowrap', color: r[2] || INK } }, r[1])))),
             (q && q.ok && q.note) && h('div', { key: 'note', style: { fontSize: 11.5, color: FAINT, marginTop: 10, lineHeight: 1.55 } }, q.note),
             h('div', { key: 'e', style: { display: 'flex', flexDirection: 'column', gap: 9, marginTop: 16 } },
-              this.btn(quoteOnly ? 'Request a quote' : 'Add to cart', 'amber', quoteOnly ? 'contact' : 'addcart', { justifyContent: 'center' }),
-              this.btn('Buy now', 'teal', quoteOnly ? 'contact' : 'addcart', { justifyContent: 'center' }),
-              this.btn('Download quotation (PDF)', 'ghost', 'product', { justifyContent: 'center' })),
+              (quoteOnly || ready)
+                ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 9 } },
+                    this.btn(quoteOnly ? 'Request a quote' : 'Add to cart', 'amber', quoteOnly ? 'contact' : 'addcart', { justifyContent: 'center' }),
+                    this.btn('Buy now', 'teal', quoteOnly ? 'contact' : 'addcart', { justifyContent: 'center' }),
+                    this.btn('Download quotation (PDF)', 'ghost', 'product', { justifyContent: 'center' }))
+                : h('span', { style: { textAlign: 'center', background: '#f1f3f5', color: MUT, fontWeight: 600, fontSize: 13.5, padding: '12px', borderRadius: 8 } }, 'Select your options to continue')),
             h('div', { key: 'f', style: { fontSize: 11.5, color: FAINT, marginTop: 12, lineHeight: 1.6 } }, 'One price, shown once: the configurator, the quotation PDF, checkout and the invoice all read the same impression-run engine.'),
           ]),
           this.card([
