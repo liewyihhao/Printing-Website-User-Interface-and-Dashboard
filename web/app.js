@@ -102,8 +102,37 @@ const CFG_OVERRIDES = {
     optGate: {
       silkscreen_spot_uv: (cfg, qty) => cfg.lamination === 'Matte Lamination (Both)' && ['Gloss Art Card 250gsm', 'Gloss Art Card 310gsm'].indexOf(cfg.paper) >= 0 && (qty || 0) >= 300,
     },
-    remark: { silkscreen_spot_uv: 'Available with Matte Lamination (Both Sides) only. Gloss Art Card 250gsm & 310gsm only. Qty: 300, 500, 1,000 – 10,000.' },
+    remark: {
+      silkscreen_spot_uv: 'Available with Matte Lamination (Both Sides) only. Gloss Art Card 250gsm & 310gsm only. Qty: 300, 500, 1,000 – 10,000.',
+      quantity: 'For Silkscreen Spot UV: available qty 300, 500, 1,000 – 10,000 only.',
+      package: 'This is an easy-order function for you to order multiple business card sets which are the same spec. (same size, paper, quantity and spot UV finishing for all) but contain different designs.',
+      hot_stamping: '6 colours: Gold, Silver, Green, Blue, Black & Red. Options with Back side require Gloss Art Card.',
+      holepunching: '1 hole at fixed position on the shorter side.',
+      embossing: 'Embossing adds 1 production day. Not compatible with Silkscreen Spot UV.',
+      round_corner: 'This is the actual round corner position (Front), for either portrait or landscape. No rotation required.',
+    },
     processDays: 1, // Excard base process day for a plain Business Card (finishing may extend it)
+  },
+  // Flyer / Brochure (Litho Offset Loose Sheet) — Excard "lo-loose-sheet".
+  // Base pricing verified: A4 / Gloss Art Paper 128gsm / 4C Both / 1,000 = RM168.55 (=Excard cash).
+  'Flyer (= Loose Sheet Litho)': {
+    label: { colour: 'Print Colour', package: 'Package', hole_punch_position: 'Hole Punching Side' },
+    hide: ['hs_size', 'hs_colour'], // Excard's flyer hot stamping is a plain select (no size/foil sub-fields)
+    placeholder: ['size', 'paper', 'colour', 'quantity'],
+    optLabel: {
+      size: { 'A1 (594mm x 840mm)': 'A1 (594mm × 840mm)', 'A2 (420mm x 594mm)': 'A2 (420mm × 594mm)', 'A3 (297mm x 420mm)': 'A3 (297mm × 420mm)', 'A4 (210mm x 297mm)': 'A4 (210mm × 297mm)', 'A5 (148mm x 210mm)': 'A5 (148mm × 210mm)', 'A6 (148mm x 105mm)': 'A6 (105mm × 148mm)', '3xA4 (297mm x 630mm)': '3 × A4 (297mm × 630mm)', '4xA4 (297mm x 840mm)': '4 × A4 (297mm × 840mm)', '4xA5 (210mm x 594mm)': '4 × A5 (210mm × 594mm)', 'Other (Custom Size)': 'Custom Size' },
+      package: { 'Normal': 'Normal', '2in1': '2 in 1', '3in1': '3 in 1', '4in1': '4 in 1', '5in1': '5 in 1', '6in1': '6 in 1', '7in1': '7 in 1', '8in1': '8 in 1', '9in1': '9 in 1', '10in1': '10 in 1' },
+      hot_stamping: { 'Not Required': 'Not Required', '1C (Front)': '1C (Front)', '1C (Back)': '1C (Back)', '2C (Front)': '2C (Front)', '2C (Back)': '2C (Back)' },
+    },
+    remark: {
+      colour: '1C only for Simili 80gsm / 100gsm. 3 × A4, 4 × A4 and 4 × A5 are 2-sides printing only.',
+      hot_stamping: '1 side only (Front OR Back). Max 2 colours.',
+      hole_punching: '1 hole at centre of selected edge. Size: H 70–420mm × W 40–800mm. Not available for A1 / 4 × A4, and not with Folding / Creasing / Perforation.',
+      perforation: '1–6 lines, minimum 45mm gap. A3 perforation is landscape only. A6 available in Standard spec only. Not with Folding / Creasing / Hole Punching.',
+      fold: 'Open Size — Height 90–420mm, Width 120–630mm. After fold, width ≥ 25mm.',
+      creasing: 'Min 4mm gap between 2 creasing lines. Available area: H 148–325mm × W 210–695mm.',
+      envelope: 'Envelope quantity follows order quantity.',
+    },
   },
 };
 
@@ -2542,11 +2571,14 @@ class Component extends DCLogic {
     const qtyPh = !!(ov.placeholder && ov.placeholder.indexOf('quantity') >= 0);
     const qtyChosen = !qtyPh || this.state.qtyChosen;
     const bestSeller = ov.bestSellerQty || [];
+    const qtyRemark = ov.remark && ov.remark.quantity;
     const qtyField = h('div', { key: 'qty', style: rowStyle },
       labelCell('Quantity', qobj ? 'min. order ' + qobj.moq.toLocaleString() + ' pcs' : null),
-      ctrlWrap(h('select', { value: qtyChosen ? s.qty : '', onChange: e => { if (e.target.value === '') return; this.setState({ qty: Number(e.target.value), qtyChosen: true }); }, style: Object.assign({}, selStyle, qtyPh && !qtyChosen ? { color: FAINT } : null) },
-        (qtyPh ? [h('option', { key: '__ph', value: '' }, '-- Please select --')] : []).concat(
-          qopts.map(qn => h('option', { key: qn, value: qn }, qn.toLocaleString() + ' pcs' + (bestSeller.indexOf(qn) >= 0 ? ' — Best Seller' : '')))))));
+      ctrlWrap(h('div', { style: { display: 'flex', flexDirection: 'column', gap: 5 } },
+        h('select', { value: qtyChosen ? s.qty : '', onChange: e => { if (e.target.value === '') return; this.setState({ qty: Number(e.target.value), qtyChosen: true }); }, style: Object.assign({}, selStyle, qtyPh && !qtyChosen ? { color: FAINT } : null) },
+          (qtyPh ? [h('option', { key: '__ph', value: '' }, '-- Please select --')] : []).concat(
+            qopts.map(qn => h('option', { key: qn, value: qn }, qn.toLocaleString() + ' pcs' + (bestSeller.indexOf(qn) >= 0 ? ' — Best Seller' : ''))))),
+        qtyRemark ? h('div', { style: { fontSize: 11.5, color: FAINT, lineHeight: 1.5 } }, qtyRemark) : null)));
     // image picker: a selectable grid of option thumbnails (e.g. Round Corner Position)
     const imgPicker = (def, options, sel, base) => {
       const label = (ov.label && ov.label[def.key]) || def.label;
