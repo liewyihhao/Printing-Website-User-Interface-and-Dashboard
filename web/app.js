@@ -66,6 +66,11 @@ const CFG_OVERRIDES = {
     },
     // fields rendered as an image picker (base path; image = base + optionValue + '.jpg')
     optImages: { round_corner_position: 'assets/options/businesscard-roundcorner/' },
+    // custom-size inputs shown only when Size = "Other (Custom Size)" (Excard ranges)
+    addFields: [
+      { key: 'custom_h', label: 'Custom Size — Height (mm)', type: 'number', min: 40, max: 54, section: 'General', neutral: true, placeholder: 'e.g. 50', showWhen: { field: 'size', value: 'Other (Custom Size)' } },
+      { key: 'custom_w', label: 'Custom Size — Width (mm)', type: 'number', min: 40, max: 89, section: 'General', neutral: true, placeholder: 'e.g. 85', note: 'Width must be greater than Height', showWhen: { field: 'size', value: 'Other (Custom Size)' } },
+    ],
     optLabel: {
       category: { 'Standard': 'Standard Card', 'Custom Die Cut': 'Custom Die-Cut' },
       paper: { 'Gloss Art Card 250gsm': 'Gloss Art Card 250gsm (2 side coated)', 'Gloss Art Card 310gsm': 'Gloss Art Card 310gsm (2 side coated)', 'Gloss Art Card 360gsm': 'Gloss Art Card 360gsm (2 side coated)', 'Synthetic Paper 180micron': 'Synthetic Paper 180micron (0.18mm)' },
@@ -261,13 +266,24 @@ class Component extends DCLogic {
     const ov = this.cfgOv(), ph = ov.placeholder || [], sc = this.state.cfg || {};
     ph.forEach(k => { if (sc[k] == null || sc[k] === '') delete cfg[k]; });
     const gates = ov.optGate || {};
-    return (prod.fields || []).filter(f => f.key && !this.pkHidden(f.key) && this.pkShown(f, cfg)).map(f => {
+    const list = (prod.fields || []).filter(f => f.key && !this.pkHidden(f.key) && this.pkShown(f, cfg)).map(f => {
       let options = [];
       try { options = E.localOptions(prod, f.key, cfg) || []; } catch (e) { options = f.options || []; }
       // conditional validity: when a field's gate fails, offer only its first (safe) option
       if (gates[f.key] && options.length) { try { if (!gates[f.key](cfg, this.state.qty)) options = [options[0]]; } catch (e) {} }
       return { def: f, options };
     });
+    // synthetic override fields (e.g. custom-size Height/Width shown when Size = "Other"),
+    // inserted right after the engine field they depend on.
+    (ov.addFields || []).forEach(af => {
+      if (af.showWhen && !this.pkShown(af, cfg)) return;
+      const node = { def: af, options: (af.options || null) };
+      const depKey = af.showWhen && af.showWhen.field;
+      let at = depKey ? list.findIndex(x => x.def.key === depKey) : -1;
+      if (at >= 0) { let j = at + 1; while (j < list.length && list[j].def.__added) j++; list.splice(j, 0, Object.assign(node, { def: Object.assign({ __added: true }, af) })); }
+      else list.push(Object.assign(node, { def: Object.assign({ __added: true }, af) }));
+    });
+    return list;
   }
   // option-value map the engine expects. Fields can be listed out of dependency order
   // (e.g. booklet 'ordertype' depends on 'orientation'+'size'), so resolve defaults with a
