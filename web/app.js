@@ -76,6 +76,11 @@ const CFG_OVERRIDES = {
     },
     placeholder: ['size', 'paper', 'lamination', 'quantity'],
     bestSellerQty: [300, 500, 1000],
+    // Silkscreen Spot UV is only offered with Matte Lamination (Both) on Gloss Art Card
+    // 250/310gsm at qty >= 300 (Excard rule); otherwise only "No Required".
+    optGate: {
+      silkscreen_spot_uv: (cfg, qty) => cfg.lamination === 'Matte Lamination (Both)' && ['Gloss Art Card 250gsm', 'Gloss Art Card 310gsm'].indexOf(cfg.paper) >= 0 && (qty || 0) >= 300,
+    },
     remark: { silkscreen_spot_uv: 'Available with Matte Lamination (Both Sides) only. Gloss Art Card 250gsm & 310gsm only. Qty: 300, 500, 1,000 – 10,000.' },
     processDays: 1, // Excard base process day for a plain Business Card (finishing may extend it)
   },
@@ -255,9 +260,12 @@ class Component extends DCLogic {
     const cfg = Object.assign({}, this.pkV());
     const ov = this.cfgOv(), ph = ov.placeholder || [], sc = this.state.cfg || {};
     ph.forEach(k => { if (sc[k] == null || sc[k] === '') delete cfg[k]; });
+    const gates = ov.optGate || {};
     return (prod.fields || []).filter(f => f.key && !this.pkHidden(f.key) && this.pkShown(f, cfg)).map(f => {
       let options = [];
       try { options = E.localOptions(prod, f.key, cfg) || []; } catch (e) { options = f.options || []; }
+      // conditional validity: when a field's gate fails, offer only its first (safe) option
+      if (gates[f.key] && options.length) { try { if (!gates[f.key](cfg, this.state.qty)) options = [options[0]]; } catch (e) {} }
       return { def: f, options };
     });
   }
@@ -278,6 +286,13 @@ class Component extends DCLogic {
         if (cfg[f.key] == null || opts.indexOf(cfg[f.key]) < 0) { cfg[f.key] = opts[0]; changed = true; }
       }
       if (!changed) break;
+    }
+    // enforce per-product conditional validity the crawl didn't bake into localOptions
+    // (e.g. Business Card Silkscreen Spot UV only with Matte lamination + certain papers/qty):
+    // when a field's gate fails, reset it to its first (safe) option.
+    const ov = this.cfgOv();
+    if (ov.optGate) for (const k in ov.optGate) {
+      try { if (!ov.optGate[k](cfg, this.state.qty)) { const o = E.localOptions(prod, k, cfg) || []; if (o.length) cfg[k] = o[0]; } } catch (e) {}
     }
     return cfg;
   }
