@@ -45,6 +45,18 @@ const LAMS = [['Gloss Lamination (Both)',0],['Matte Lamination (Both)',6],['Glos
 const SPOTUV = [['No Required',0],['Silkscreen Spot UV (Front)',45],['Silkscreen Spot UV (Both)',78]];
 const QTYS = [100,300,500,1000,2000,3000,5000];
 
+// Business Card Silkscreen Spot UV cash deltas by qty (captured live from Excard's price
+// API: [qty, +Front, +Both]). The crawl priced silkscreen as neutral; these restore it.
+const BC_SILK_BP = [[300, 7.35, 14.70], [500, 9.45, 18.90], [1000, 4.60, 19.65], [2000, 12.70, 42.75], [3000, 18.50, 64.70], [5000, 32.35, 108.55], [10000, 60.05, 212.55]];
+function bcSilkDelta(silk, qty) {
+  if (!silk || silk === 'No Required') return 0;
+  const col = silk === 'Silkscreen Spot UV (Both)' ? 2 : 1, bp = BC_SILK_BP;
+  if (qty <= bp[0][0]) return bp[0][col];
+  if (qty >= bp[bp.length - 1][0]) return bp[bp.length - 1][col];
+  for (let i = 0; i < bp.length - 1; i++) { if (qty >= bp[i][0] && qty <= bp[i + 1][0]) { const q1 = bp[i][0], q2 = bp[i + 1][0], d1 = bp[i][col], d2 = bp[i + 1][col]; return Math.round((d1 + (d2 - d1) * (qty - q1) / (q2 - q1)) * 100) / 100; } }
+  return 0;
+}
+
 // Per-product configurator corrections layered over the crawled engine, keyed by the
 // engine product name. Built product-by-product from a live Excard comparison so the
 // Printoka configurator matches the source order form exactly. DISPLAY-ONLY — pricing
@@ -68,6 +80,8 @@ const CFG_OVERRIDES = {
     optImages: { round_corner_position: 'assets/options/businesscard-roundcorner/' },
     // custom size prices exactly as the standard 54x89 card (dimension-independent, verified on Excard)
     priceSub: { size: { 'Other (Custom Size)': '54mm x 89mm' } },
+    // Silkscreen Spot UV cash delta the crawl missed (verified live against Excard's price API)
+    priceAddon: { silkscreen_spot_uv: (cfg, qty) => bcSilkDelta(cfg.silkscreen_spot_uv, qty) },
     // custom-size inputs shown only when Size = "Other (Custom Size)" (Excard ranges)
     addFields: [
       { key: 'custom_h', label: 'Custom Size — Height (mm)', type: 'number', min: 40, max: 54, section: 'General', neutral: true, placeholder: 'e.g. 50', showWhen: { field: 'size', value: 'Other (Custom Size)' } },
