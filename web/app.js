@@ -66,6 +66,8 @@ const CFG_OVERRIDES = {
     },
     // fields rendered as an image picker (base path; image = base + optionValue + '.jpg')
     optImages: { round_corner_position: 'assets/options/businesscard-roundcorner/' },
+    // custom size prices exactly as the standard 54x89 card (dimension-independent, verified on Excard)
+    priceSub: { size: { 'Other (Custom Size)': '54mm x 89mm' } },
     // custom-size inputs shown only when Size = "Other (Custom Size)" (Excard ranges)
     addFields: [
       { key: 'custom_h', label: 'Custom Size — Height (mm)', type: 'number', min: 40, max: 54, section: 'General', neutral: true, placeholder: 'e.g. 50', showWhen: { field: 'size', value: 'Other (Custom Size)' } },
@@ -315,11 +317,21 @@ class Component extends DCLogic {
   pkQuote(qtyOverride) {
     const E = this.pkEngine(), prod = this.pkProduct(); if (!E || !prod) return null;
     const qty = qtyOverride || this.state.qty || 1;
+    const ov = this.cfgOv();
     try {
-      const r = E.localQuote(prod, this.pkV(), qty);
-      // use the engine's Printoka membership tier prices directly (Standard = printoka_cash)
-      const gross = r.printoka_cash;
-      const net = (r.tiers && r.tiers[this.tier()] != null) ? r.tiers[this.tier()] : gross;
+      const cfg = this.pkV();
+      // priceSub: substitute values for the engine call only (e.g. Business Card custom size
+      // "Other (Custom Size)" is priced exactly as the standard 54x89 card — verified on Excard).
+      let V = cfg;
+      if (ov.priceSub) { V = Object.assign({}, cfg); for (const k in ov.priceSub) { const m = ov.priceSub[k]; if (m[V[k]] != null) V[k] = m[V[k]]; } }
+      const r = E.localQuote(prod, V, qty);
+      // priceAddon: cash deltas the crawl's addonDeltas missed, verified against Excard cash
+      // (e.g. Silkscreen Spot UV). Each returns a RM delta for the given cfg + qty.
+      let addon = 0;
+      if (ov.priceAddon) for (const k in ov.priceAddon) { try { const d = ov.priceAddon[k](cfg, qty); if (d) addon += d; } catch (e) {} }
+      const gross = Math.round((r.printoka_cash + addon) * 100) / 100;
+      const pct = this.tierPct() / 100;
+      const net = Math.round(gross * (1 - pct) * 100) / 100;
       const disc = Math.round((gross - net) * 100) / 100;
       return { ok: true, gross, disc, net, unit: net / qty,
         weight: r.weight_kg, note: r.note, method: r.method, finishing: r.finishing_cost };
