@@ -319,6 +319,16 @@ class Component extends DCLogic {
       }
       if (!changed) break;
     }
+    // hidden fields must price as "not applied": set them to a none-like option so the engine's
+    // axis lookup is correct (e.g. Lamination = "Not Required" for a paper that has no lamination,
+    // instead of a blank that hits the wrong price curve).
+    const NONE_RE = /^(not required|none|no required|no|not applicable|no hot stamping|no hole punching|no round corner|no fold(ing)?)$/i;
+    for (const f of fields) {
+      if (this.pkShown(f, cfg)) continue;
+      let opts = []; try { opts = E.localOptions(prod, f.key, cfg) || f.options || []; } catch (e) { opts = f.options || []; }
+      const none = opts.find(o => NONE_RE.test(String(Array.isArray(o) ? o[0] : o)));
+      if (none != null) cfg[f.key] = Array.isArray(none) ? none[0] : none;
+    }
     // enforce per-product conditional validity the crawl didn't bake into localOptions
     // (e.g. Business Card Silkscreen Spot UV only with Matte lamination + certain papers/qty):
     // when a field's gate fails, reset it to its first (safe) option.
