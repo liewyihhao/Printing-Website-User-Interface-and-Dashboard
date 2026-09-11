@@ -2410,12 +2410,23 @@ class Component extends DCLogic {
             h('div', { style: { display: 'flex', flexDirection: 'column' } },
               fields.map(({ def, options }) => {
                 if (options && options.length) return optSelect(def, options, cfg[def.key]);
-                const note = def.neutral ? 'price-neutral' : (def.note || null);
+                // value input (e.g. custom size, hot-stamp / emboss area) — labelled input with
+                // a helper hint showing the allowed range, matching the original order form.
+                const isNum = def.type === 'number';
+                const unit = /\(mm\)/i.test(def.label || '') ? ' mm' : '';
+                const hints = [];
+                if (def.min != null && def.max != null) hints.push('Between ' + def.min + unit + ' and ' + def.max + unit);
+                else if (def.min != null) hints.push('Minimum ' + def.min + unit);
+                else if (def.max != null) hints.push('Maximum ' + def.max + unit);
+                if (def.note) hints.push(def.note);
                 return h('div', { key: def.key, style: rowStyle },
-                  labelCell(def.label, note),
-                  ctrlWrap(h('input', { type: 'text', value: cfg[def.key] || '', placeholder: def.label,
-                    onChange: e => { const val = e.target.value; this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) })); },
-                    style: Object.assign({}, selStyle, { font: '400 14px Montserrat,sans-serif' }) })));
+                  labelCell(def.label, def.neutral ? 'price-neutral' : null),
+                  ctrlWrap(h('div', { style: { display: 'flex', flexDirection: 'column', gap: 5 } },
+                    h('input', { type: isNum ? 'number' : 'text', min: def.min != null ? def.min : undefined, max: def.max != null ? def.max : undefined,
+                      value: cfg[def.key] || '', placeholder: def.placeholder || ('Enter ' + def.label.toLowerCase()),
+                      onChange: e => { const val = e.target.value; this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) })); },
+                      style: Object.assign({}, selStyle, { font: '400 14px Montserrat,sans-serif' }) }),
+                    hints.length ? h('div', { style: { fontSize: 11.5, color: FAINT, lineHeight: 1.5 } }, hints.join(' · ')) : null)));
               }).concat([qtyField])))),
         h('div', { style: { position: 'sticky', top: 122, display: 'flex', flexDirection: 'column', gap: 14 } },
           this.card([
