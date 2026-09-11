@@ -167,6 +167,15 @@ class Component extends DCLogic {
     const id = this.state.prodId != null ? this.state.prodId : 1;
     return E.DATA.products.find(p => p.id === id) || E.DATA.products[0];
   }
+  // resolve an engine product id from a name (exact, then loose match); null if unknown
+  pkIdByName(name) {
+    const list = this.pkProducts(); if (!list.length || !name) return null;
+    let p = list.find(x => x.name === name);
+    if (!p) { const n = name.toLowerCase(); p = list.find(x => x.name.toLowerCase() === n) || list.find(x => x.name.toLowerCase().indexOf(n) === 0) || list.find(x => x.name.toLowerCase().indexOf(n) !== -1); }
+    return p ? p.id : null;
+  }
+  // a 'go' verb that opens a product by name, falling back to the catalogue if not priced
+  goByName(name) { const id = this.pkIdByName(name); return id != null ? 'open:' + id : 'category'; }
   // per-product quantity model straight from the pricing engine (moq / options / chips)
   pkQtyObj(id) {
     const E = this.pkEngine(); if (!E) return null;
@@ -1563,11 +1572,12 @@ class Component extends DCLogic {
 
       this.sec('Popular right now', 'Best-selling products', 'Ranked by trailing order volume — exact, market-matched pricing on every one.',
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(190px,1fr))', gap: 14 } },
-          BEST.map((p, i) => h('div', { key: i, 'data-go': 'product', style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', background: '#fff', display: 'flex', flexDirection: 'column' } },
+          BEST.map((p, i) => { const bid = this.pkIdByName(p[0]); const label = bid != null ? this.catName(bid) : p[0];
+            return h('div', { key: i, 'data-go': bid != null ? 'open:' + bid : 'category', style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', background: '#fff', display: 'flex', flexDirection: 'column', cursor: 'pointer' } },
             this.art(p[0]),
             h('div', { style: { padding: '11px 13px', display: 'flex', flexDirection: 'column', gap: 5 } },
-              h('span', { style: { fontSize: 13.5, fontWeight: 500 } }, p[0]),
-              h('span', { style: { fontSize: 12.5, color: TEAL, fontWeight: 600 } }, p[2]))))), { alt: true }),
+              h('span', { style: { fontSize: 13.5, fontWeight: 500 } }, label),
+              h('span', { style: { fontSize: 12.5, color: TEAL, fontWeight: 600 } }, p[2]))); })), { alt: true }),
 
       this.sec('Membership', 'The ladder that rewards repeat business', 'Five tiers on trailing-12-month spend, evaluated continuously. Discounts stack with vouchers and referral credit up to an admin-set cap.',
         h('div', null,
@@ -1653,7 +1663,7 @@ class Component extends DCLogic {
             h('span', { key: i, style: { display: 'flex', alignItems: 'center', gap: 7, border: '1px solid ' + HAIR, borderRadius: 2, padding: '8px 13px', fontSize: 13, color: MUT } }, f,
               h('img', { src: window.__asset('assets/icons/dropdown.svg'), alt: '', style: { height: 6, width: 'auto', display: 'block', opacity: .55 } })))),
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 18 } },
-          RESULTS.map((r, i) => h('div', { key: i, 'data-go': 'product', style: { border: '1px solid ' + HAIR, background: '#fff', padding: 18, cursor: 'pointer' } },
+          RESULTS.map((r, i) => h('div', { key: i, 'data-go': this.goByName(r[0]), style: { border: '1px solid ' + HAIR, background: '#fff', padding: 18, cursor: 'pointer' } },
             h('img', { src: window.__asset('assets/products/' + r[3]), alt: '', loading: 'lazy', style: { width: '100%', aspectRatio: '4 / 3', objectFit: 'contain', display: 'block' } }),
             h('div', { style: { fontSize: 15, fontWeight: 500, margin: '12px 0 3px' } }, r[0]),
             h('div', { style: { fontSize: 12.5, color: FAINT, marginBottom: 6 } }, r[1]),
