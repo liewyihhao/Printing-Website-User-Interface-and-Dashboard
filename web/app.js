@@ -56,9 +56,14 @@ const QTYS = [100,300,500,1000,2000,3000,5000];
 //   remark:    { fieldKey: 'helper text under the field' }
 const CFG_OVERRIDES = {
   'Business Card': {
-    // Excard's Business Card has none of these: foil-colour dropdown or stamping/emboss areas
-    hide: ['hot_stamping_colour', 'hot_stamping_w', 'hot_stamping_h', 'embossing_w', 'embossing_h'],
-    label: { lamination: 'Paper Lamination' },
+    // Excard's Business Card has no area inputs; the foil colour is a 6-colour picker (kept)
+    hide: ['hot_stamping_w', 'hot_stamping_h', 'embossing_w', 'embossing_h'],
+    label: { lamination: 'Paper Lamination', hot_stamping_colour: 'Hot Stamping — Foil Colour' },
+    // hot stamping is price-neutral online (block quoted separately) — safe to match Excard's list exactly
+    optionsOverride: {
+      hot_stamping: ['No Hot Stamping', '1C (Front)', '1C (Back)', '1C (Front) + 1C (Back)', '1C (Front) + 2C (Back)', '2C (Front)', '2C (Back)', '2C (Front) + 1C (Back)', '2C (Front) + 2C (Back)'],
+      hot_stamping_colour: ['Gold', 'Silver', 'Green', 'Blue', 'Black', 'Red'],
+    },
     optLabel: {
       category: { 'Standard': 'Standard Card', 'Custom Die Cut': 'Custom Die-Cut' },
       paper: { 'Gloss Art Card 250gsm': 'Gloss Art Card 250gsm (2 side coated)', 'Gloss Art Card 310gsm': 'Gloss Art Card 310gsm (2 side coated)', 'Gloss Art Card 360gsm': 'Gloss Art Card 360gsm (2 side coated)', 'Synthetic Paper 180micron': 'Synthetic Paper 180micron (0.18mm)' },
@@ -2449,9 +2454,11 @@ class Component extends DCLogic {
       const note = def.neutral ? 'price-neutral' : (def.note || null);
       const optLabel = (ov.optLabel && ov.optLabel[def.key]) || {};
       const isPh = !!(ov.placeholder && ov.placeholder.indexOf(def.key) >= 0);
+      // a full option-list override (used only for price-NEUTRAL fields, so the engine value is irrelevant)
+      const dispOptions = (ov.optionsOverride && ov.optionsOverride[def.key]) || options;
       // placeholder fields start unselected ("-- Please select --") and only reflect an explicit choice
-      const chosen = isPh ? (this.state.cfg[def.key] != null ? this.state.cfg[def.key] : '') : (sel != null ? sel : (options[0] || ''));
-      const optNodes = options.map(v => { const val = Array.isArray(v) ? v[0] : v; return h('option', { key: val, value: val }, optLabel[val] || val); });
+      const chosen = isPh ? (this.state.cfg[def.key] != null ? this.state.cfg[def.key] : '') : (sel != null ? sel : (dispOptions[0] || ''));
+      const optNodes = dispOptions.map(v => { const val = Array.isArray(v) ? v[0] : v; return h('option', { key: val, value: val }, optLabel[val] || val); });
       return h('div', { key: def.key, style: rowStyle },
         labelCell(label, note),
         ctrlWrap(h('div', { style: { display: 'flex', flexDirection: 'column', gap: 5 } },
