@@ -67,8 +67,10 @@ const CFG_OVERRIDES = {
       round_corner: { 'No': 'No Round Corner', 'Required': 'Required Round Corner' },
       holepunching: { '3mm': 'Hole Punching - Diameter 3mm', '5mm': 'Hole Punching - Diameter 5mm' },
     },
-    placeholder: ['size', 'paper', 'lamination'],
+    placeholder: ['size', 'paper', 'lamination', 'quantity'],
+    bestSellerQty: [300, 500, 1000],
     remark: { silkscreen_spot_uv: 'Available with Matte Lamination (Both Sides) only. Gloss Art Card 250gsm & 310gsm only. Qty: 300, 500, 1,000 – 10,000.' },
+    processDays: 1, // Excard base process day for a plain Business Card (finishing may extend it)
   },
 };
 
@@ -133,8 +135,8 @@ class Component extends DCLogic {
     if (v === '_closeDialog') return this.setState({ dialog: null });
     if (v.indexOf('dialog:') === 0) return this.setState({ dialog: v.slice(7) });
     // Real pricing engine: product switch + per-field config change (values may contain ':')
-    if (v.indexOf('prod:') === 0) return this.setState({ prodId: Number(v.slice(5)), cfg: {}, qty: 1000 });
-    if (v.indexOf('open:') === 0) { if (typeof window !== 'undefined') window.scrollTo(0, 0); return this.setState({ prodId: Number(v.slice(5)), cfg: {}, qty: 1000, route: 'product', megaOpen: false }); }
+    if (v.indexOf('prod:') === 0) return this.setState({ prodId: Number(v.slice(5)), cfg: {}, qty: 1000, qtyChosen: false });
+    if (v.indexOf('open:') === 0) { if (typeof window !== 'undefined') window.scrollTo(0, 0); return this.setState({ prodId: Number(v.slice(5)), cfg: {}, qty: 1000, qtyChosen: false, route: 'product', megaOpen: false }); }
     if (v.indexOf('catopen:') === 0) { if (typeof window !== 'undefined') window.scrollTo(0, 0); return this.setState({ catFilter: v.slice(8), route: 'category', megaOpen: false }); }
     if (v.indexOf('blog:') === 0) return this.blogOpen(v.slice(5));
     if (v === 'addraddsave') return this.addressAdd();
@@ -226,7 +228,18 @@ class Component extends DCLogic {
   cfgOv() { const p = this.pkProduct(); return (p && CFG_OVERRIDES[p.name]) || {}; }
   pkHidden(key) { const ov = this.cfgOv(); return !!(ov.hide && ov.hide.indexOf(key) >= 0); }
   // are all "please select" fields chosen yet? (gates the live price, like the source form)
-  pkReady() { const ov = this.cfgOv(); const ph = ov.placeholder || []; const sc = this.state.cfg || {}; return ph.every(k => sc[k] != null && sc[k] !== ''); }
+  pkReady() { const ov = this.cfgOv(); const ph = ov.placeholder || []; const sc = this.state.cfg || {}; return ph.every(k => k === 'quantity' ? !!this.state.qtyChosen : (sc[k] != null && sc[k] !== '')); }
+  // physics-based shipment weight (kg) from size × paper gsm × qty × a packaging factor —
+  // the engine's per-unit weight is unreliable for sheet goods (a 50g/card fallback), and
+  // this matches Excard's stated weight (± their own 10% tolerance). Falls back to the engine.
+  pkWeight(qtyOverride) {
+    const cfg = this.pkV(), qty = qtyOverride || this.state.qty || 1;
+    const sm = String(cfg.size || '').match(/(\d+(?:\.\d+)?)\s*mm\s*[x×]\s*(\d+(?:\.\d+)?)\s*mm/i);
+    const gm = String(cfg.paper || cfg.material || '').match(/(\d{2,4})\s*(?:gsm|micron)/i);
+    if (sm && gm) { const w = +sm[1], h = +sm[2], g = +gm[1]; if (w && h && g) return w * h / 1e6 * g / 1000 * qty * 1.35; }
+    const q = this.pkQuote(qtyOverride);
+    return (q && q.ok && q.weight != null) ? q.weight : null;
+  }
   // visible option fields for the current product, each with its resolved (conditionally-valid) options
   pkFields() {
     const E = this.pkEngine(), prod = this.pkProduct(); if (!E || !prod) return [];
@@ -2450,10 +2463,14 @@ class Component extends DCLogic {
     const qobj = this.pkQtyObj();
     let qopts = (qobj && qobj.options && qobj.options.length) ? qobj.options.slice() : QTYS.slice();
     if (qopts.indexOf(s.qty) < 0) qopts = [s.qty].concat(qopts).sort((a, b) => a - b);
+    const qtyPh = !!(ov.placeholder && ov.placeholder.indexOf('quantity') >= 0);
+    const qtyChosen = !qtyPh || this.state.qtyChosen;
+    const bestSeller = ov.bestSellerQty || [];
     const qtyField = h('div', { key: 'qty', style: rowStyle },
       labelCell('Quantity', qobj ? 'min. order ' + qobj.moq.toLocaleString() + ' pcs' : null),
-      ctrlWrap(h('select', { value: s.qty, onChange: e => this.setField('qty', e.target.value), style: selStyle },
-        qopts.map(qn => { const uq = this.pkQuote(qn), per = uq && uq.ok ? uq.unit : null; return h('option', { key: qn, value: qn }, qn.toLocaleString() + ' pcs' + (per != null ? ' — ' + this.currency() + ' ' + (per * this.fx()).toFixed(3) + '/pc' : '')); }))));
+      ctrlWrap(h('select', { value: qtyChosen ? s.qty : '', onChange: e => { if (e.target.value === '') return; this.setState({ qty: Number(e.target.value), qtyChosen: true }); }, style: Object.assign({}, selStyle, qtyPh && !qtyChosen ? { color: FAINT } : null) },
+        (qtyPh ? [h('option', { key: '__ph', value: '' }, '-- Please select --')] : []).concat(
+          qopts.map(qn => { const uq = this.pkQuote(qn), per = uq && uq.ok ? uq.unit : null; return h('option', { key: qn, value: qn }, qn.toLocaleString() + ' pcs' + (bestSeller.indexOf(qn) >= 0 ? ' — Best Seller' : '') + (qtyChosen && per != null ? ' — ' + this.currency() + ' ' + (per * this.fx()).toFixed(3) + '/pc' : '')); })))));
     // render one field (dropdown, or value input with range hint)
     const renderField = ({ def, options }) => {
       if (options && options.length) return optSelect(def, options, cfg[def.key]);
@@ -2522,7 +2539,7 @@ class Component extends DCLogic {
               !quoteOnly && ready && h('span', { style: { fontSize: 12.5, color: FAINT, whiteSpace: 'nowrap' } }, 'incl. ' + this.taxLabel())),
             h('div', { key: 'c', style: { fontSize: 12.5, color: MUT, marginBottom: 14 } }, quoteOnly ? 'This product is quoted on request.' : (ready ? (this.currency() + ' ' + (p.unit * this.fx()).toFixed(3) + ' per piece · ' + this.state.qty.toLocaleString() + ' pcs') : 'Choose the required options above to see your live price.')),
             !quoteOnly && ready && h('div', { key: 'd', style: { display: 'flex', flexDirection: 'column', gap: 7, fontSize: 12.5, borderTop: '1px solid ' + LINE, paddingTop: 12 } },
-              [['Subtotal', this.money(p.gross)], [this.tier() + ' member −' + this.tierPct() + '%', '−' + this.money(p.disc), TEAL], ['Est. weight (physics-based)', ((q && q.ok ? q.weight : this.state.qty * 0.31 / 1000)).toFixed(2) + ' kg'], ['Est. shipping (Selangor)', this.money(12)], ['Delivery window', '3–4 working days']]
+              [['Subtotal', this.money(p.gross)], [this.tier() + ' member −' + this.tierPct() + '%', '−' + this.money(p.disc), TEAL], ['Est. weight', ((this.pkWeight() != null ? this.pkWeight() : this.state.qty * 0.0012)).toFixed(2) + ' kg'], ['Est. shipping (Selangor)', this.money(12)], ['Delivery window', ((ov.processDays != null ? ov.processDays + (ov.processDays === 1 ? ' working day' : ' working days') : '3–4 working days'))]]
                 .map((r, i) => h('div', { key: i, style: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, lineHeight: 1.5, color: r[2] || MUT } }, h('span', { style: { flex: '1 1 auto', minWidth: 0 } }, r[0]), h('span', { style: { flex: 'none', fontWeight: 500, whiteSpace: 'nowrap', color: r[2] || INK } }, r[1])))),
             (q && q.ok && q.note) && h('div', { key: 'note', style: { fontSize: 11.5, color: FAINT, marginTop: 10, lineHeight: 1.55 } }, q.note),
             h('div', { key: 'e', style: { display: 'flex', flexDirection: 'column', gap: 9, marginTop: 16 } },
