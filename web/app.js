@@ -189,7 +189,9 @@ class Component extends DCLogic {
     return clauses.every(c => {
       const cur = cfg[c.field];
       if (c.values) return c.values.indexOf(cur) !== -1;
+      if (c.notValues) return c.notValues.indexOf(cur) === -1;
       if (c.value != null) return cur === c.value;
+      if (c.notValue != null) return cur !== c.notValue;
       return true;
     });
   }
