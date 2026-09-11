@@ -64,6 +64,8 @@ const CFG_OVERRIDES = {
       hot_stamping: ['No Hot Stamping', '1C (Front)', '1C (Back)', '1C (Front) + 1C (Back)', '1C (Front) + 2C (Back)', '2C (Front)', '2C (Back)', '2C (Front) + 1C (Back)', '2C (Front) + 2C (Back)'],
       hot_stamping_colour: ['Gold', 'Silver', 'Green', 'Blue', 'Black', 'Red'],
     },
+    // fields rendered as an image picker (base path; image = base + optionValue + '.jpg')
+    optImages: { round_corner_position: 'assets/options/businesscard-roundcorner/' },
     optLabel: {
       category: { 'Standard': 'Standard Card', 'Custom Die Cut': 'Custom Die-Cut' },
       paper: { 'Gloss Art Card 250gsm': 'Gloss Art Card 250gsm (2 side coated)', 'Gloss Art Card 310gsm': 'Gloss Art Card 310gsm (2 side coated)', 'Gloss Art Card 360gsm': 'Gloss Art Card 360gsm (2 side coated)', 'Synthetic Paper 180micron': 'Synthetic Paper 180micron (0.18mm)' },
@@ -2451,7 +2453,7 @@ class Component extends DCLogic {
     const optSelect = (def, options, sel) => {
       const label = (ov.label && ov.label[def.key]) || def.label;
       const remark = (ov.remark && ov.remark[def.key]) || null;
-      const note = def.neutral ? 'price-neutral' : (def.note || null);
+      const note = def.neutral ? null : (def.note || null);
       const optLabel = (ov.optLabel && ov.optLabel[def.key]) || {};
       const isPh = !!(ov.placeholder && ov.placeholder.indexOf(def.key) >= 0);
       // a full option-list override (used only for price-NEUTRAL fields, so the engine value is irrelevant)
@@ -2478,8 +2480,23 @@ class Component extends DCLogic {
       ctrlWrap(h('select', { value: qtyChosen ? s.qty : '', onChange: e => { if (e.target.value === '') return; this.setState({ qty: Number(e.target.value), qtyChosen: true }); }, style: Object.assign({}, selStyle, qtyPh && !qtyChosen ? { color: FAINT } : null) },
         (qtyPh ? [h('option', { key: '__ph', value: '' }, '-- Please select --')] : []).concat(
           qopts.map(qn => { const uq = this.pkQuote(qn), per = uq && uq.ok ? uq.unit : null; return h('option', { key: qn, value: qn }, qn.toLocaleString() + ' pcs' + (bestSeller.indexOf(qn) >= 0 ? ' — Best Seller' : '') + (qtyChosen && per != null ? ' — ' + this.currency() + ' ' + (per * this.fx()).toFixed(3) + '/pc' : '')); })))));
-    // render one field (dropdown, or value input with range hint)
+    // image picker: a selectable grid of option thumbnails (e.g. Round Corner Position)
+    const imgPicker = (def, options, sel, base) => {
+      const label = (ov.label && ov.label[def.key]) || def.label;
+      const optLabel = (ov.optLabel && ov.optLabel[def.key]) || {};
+      return h('div', { key: def.key, style: { padding: '15px 0', borderTop: '1px solid ' + LINE } },
+        h('div', { style: { fontSize: 13.5, fontWeight: 600, marginBottom: 10 } }, label),
+        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(92px,1fr))', gap: 10 } },
+          options.map(v => { const val = Array.isArray(v) ? v[0] : v; const on = sel === val;
+            return h('div', { key: val, onClick: () => this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) })),
+              style: { border: '2px solid ' + (on ? TEAL : HAIR), borderRadius: 8, overflow: 'hidden', cursor: 'pointer', background: '#fff' } },
+              h('img', { src: window.__asset(base + val + '.jpg'), alt: val, loading: 'lazy', style: { width: '100%', display: 'block', aspectRatio: '1 / 1', objectFit: 'contain', background: '#fff' } }),
+              h('div', { style: { textAlign: 'center', fontSize: 11, color: on ? TEAL : MUT, fontWeight: on ? 600 : 400, padding: '3px 0', borderTop: '1px solid ' + LINE } }, optLabel[val] || val)); })));
+    };
+    // render one field (image picker, dropdown, or value input with range hint)
     const renderField = ({ def, options }) => {
+      const imgBase = ov.optImages && ov.optImages[def.key];
+      if (imgBase && options && options.length) return imgPicker(def, options, cfg[def.key], imgBase);
       if (options && options.length) return optSelect(def, options, cfg[def.key]);
       const isNum = def.type === 'number';
       const unit = /\(mm\)/i.test(def.label || '') ? ' mm' : '';
@@ -2489,7 +2506,7 @@ class Component extends DCLogic {
       else if (def.max != null) hints.push('Maximum ' + def.max + unit);
       if (def.note) hints.push(def.note);
       return h('div', { key: def.key, style: rowStyle },
-        labelCell(def.label, def.neutral ? 'price-neutral' : null),
+        labelCell(def.label, null),
         ctrlWrap(h('div', { style: { display: 'flex', flexDirection: 'column', gap: 5 } },
           h('input', { type: isNum ? 'number' : 'text', min: def.min != null ? def.min : undefined, max: def.max != null ? def.max : undefined,
             value: cfg[def.key] || '', placeholder: def.placeholder || ('Enter ' + def.label.toLowerCase()),
@@ -2548,7 +2565,6 @@ class Component extends DCLogic {
             !quoteOnly && ready && h('div', { key: 'd', style: { display: 'flex', flexDirection: 'column', gap: 7, fontSize: 12.5, borderTop: '1px solid ' + LINE, paddingTop: 12 } },
               [['Subtotal', this.money(p.gross)], [this.tier() + ' member −' + this.tierPct() + '%', '−' + this.money(p.disc), TEAL], ['Est. weight', ((this.pkWeight() != null ? this.pkWeight() : this.state.qty * 0.0012)).toFixed(2) + ' kg'], ['Est. shipping (Selangor)', this.money(12)], ['Delivery window', ((ov.processDays != null ? ov.processDays + (ov.processDays === 1 ? ' working day' : ' working days') : '3–4 working days'))]]
                 .map((r, i) => h('div', { key: i, style: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, lineHeight: 1.5, color: r[2] || MUT } }, h('span', { style: { flex: '1 1 auto', minWidth: 0 } }, r[0]), h('span', { style: { flex: 'none', fontWeight: 500, whiteSpace: 'nowrap', color: r[2] || INK } }, r[1])))),
-            (q && q.ok && q.note) && h('div', { key: 'note', style: { fontSize: 11.5, color: FAINT, marginTop: 10, lineHeight: 1.55 } }, q.note),
             h('div', { key: 'e', style: { display: 'flex', flexDirection: 'column', gap: 9, marginTop: 16 } },
               (quoteOnly || ready)
                 ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 9 } },
@@ -2556,7 +2572,6 @@ class Component extends DCLogic {
                     this.btn('Buy now', 'teal', quoteOnly ? 'contact' : 'addcart', { justifyContent: 'center' }),
                     this.btn('Download quotation (PDF)', 'ghost', 'product', { justifyContent: 'center' }))
                 : h('span', { style: { textAlign: 'center', background: '#f1f3f5', color: MUT, fontWeight: 600, fontSize: 13.5, padding: '12px', borderRadius: 8 } }, 'Select your options to continue')),
-            h('div', { key: 'f', style: { fontSize: 11.5, color: FAINT, marginTop: 12, lineHeight: 1.6 } }, 'One price, shown once: the configurator, the quotation PDF, checkout and the invoice all read the same impression-run engine.'),
           ]),
           this.card([
             h('div', { key: 'a', style: { fontSize: 12.5, fontWeight: 600, marginBottom: 8 } }, 'Artwork & bleed'),
