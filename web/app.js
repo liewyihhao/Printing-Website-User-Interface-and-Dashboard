@@ -2406,6 +2406,48 @@ class Component extends DCLogic {
       labelCell('Quantity', qobj ? 'min. order ' + qobj.moq.toLocaleString() + ' pcs' : null),
       ctrlWrap(h('select', { value: s.qty, onChange: e => this.setField('qty', e.target.value), style: selStyle },
         qopts.map(qn => { const uq = this.pkQuote(qn), per = uq && uq.ok ? uq.unit : null; return h('option', { key: qn, value: qn }, qn.toLocaleString() + ' pcs' + (per != null ? ' — ' + this.currency() + ' ' + (per * this.fx()).toFixed(3) + '/pc' : '')); }))));
+    // render one field (dropdown, or value input with range hint)
+    const renderField = ({ def, options }) => {
+      if (options && options.length) return optSelect(def, options, cfg[def.key]);
+      const isNum = def.type === 'number';
+      const unit = /\(mm\)/i.test(def.label || '') ? ' mm' : '';
+      const hints = [];
+      if (def.min != null && def.max != null) hints.push('Between ' + def.min + unit + ' and ' + def.max + unit);
+      else if (def.min != null) hints.push('Minimum ' + def.min + unit);
+      else if (def.max != null) hints.push('Maximum ' + def.max + unit);
+      if (def.note) hints.push(def.note);
+      return h('div', { key: def.key, style: rowStyle },
+        labelCell(def.label, def.neutral ? 'price-neutral' : null),
+        ctrlWrap(h('div', { style: { display: 'flex', flexDirection: 'column', gap: 5 } },
+          h('input', { type: isNum ? 'number' : 'text', min: def.min != null ? def.min : undefined, max: def.max != null ? def.max : undefined,
+            value: cfg[def.key] || '', placeholder: def.placeholder || ('Enter ' + def.label.toLowerCase()),
+            onChange: e => { const val = e.target.value; this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) })); },
+            style: Object.assign({}, selStyle, { font: '400 14px Montserrat,sans-serif' }) }),
+          hints.length ? h('div', { style: { fontSize: 11.5, color: FAINT, lineHeight: 1.5 } }, hints.join(' · ')) : null)));
+    };
+    // group fields by the engine's section order (General / Optional Finishing / …),
+    // exactly as the source order form categorises them; quantity sits in its section
+    // (before Package, matching the original).
+    const secOrder = (prod && prod.sectionOrder && prod.sectionOrder.length) ? prod.sectionOrder.slice() : ['General'];
+    const qtySec = (prod && prod.quantitySection) || 'General';
+    if (secOrder.indexOf(qtySec) < 0) secOrder.push(qtySec);
+    const usedKeys = {};
+    const groups = secOrder.map(sec => {
+      const secFields = fields.filter(f => (f.def.section || 'General') === sec);
+      secFields.forEach(f => { usedKeys[f.def.key] = 1; });
+      let nodes;
+      if (sec === qtySec) {
+        const pkgIdx = secFields.findIndex(f => /^package$/i.test(f.def.key));
+        nodes = []; secFields.forEach((f, i) => { if (i === pkgIdx) nodes.push(qtyField); nodes.push(renderField(f)); });
+        if (pkgIdx < 0) nodes.push(qtyField);
+      } else nodes = secFields.map(renderField);
+      return { sec, nodes };
+    });
+    const orphans = fields.filter(f => !usedKeys[f.def.key]);
+    if (orphans.length) groups[0].nodes = groups[0].nodes.concat(orphans.map(renderField));
+    const sectionHeader = (sec) => h('div', { key: 'h_' + sec, style: { display: 'flex', alignItems: 'center', gap: 9, margin: '18px 0 2px' } },
+      h('span', { style: { width: 4, height: 15, background: TEAL, borderRadius: 2, flex: 'none' } }),
+      h('span', { style: { fontSize: 12, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', color: INK } }, sec));
     return h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px 0' } },
       h('div', { style: { fontSize: 12.5, color: FAINT, marginBottom: 14 } },
         h('span', { 'data-go': 'home', style: { color: TEAL } }, 'Home'), ' › ', h('span', { 'data-go': prod ? ('catopen:' + this.catCategoryOf(prod.id)) : 'category', style: { color: TEAL } }, prod ? this.catCategoryLabel(this.catCategoryOf(prod.id)) : 'Products'), ' › ', NAME),
@@ -2417,29 +2459,9 @@ class Component extends DCLogic {
               h('h1', { style: { margin: '0 0 10px', fontSize: 30, fontWeight: 600, letterSpacing: '-.02em' } }, NAME),
               h('p', { style: { margin: '0 0 12px', fontSize: 14, color: MUT, lineHeight: 1.7 } }, (prod && prod.note) ? prod.note : 'Configure your job and get an instant, market-matched price — no waiting for a quote.'),
               h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, this.chip('Exact market price', 'ok'), this.chip('Ready in 3 working days', 'teal')))),
-          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, border: '1px solid ' + HAIR, borderRadius: 14, padding: 20 } },
-            h('div', { style: { fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: TEAL } }, 'Configure your order'),
-            h('div', { style: { display: 'flex', flexDirection: 'column' } },
-              fields.map(({ def, options }) => {
-                if (options && options.length) return optSelect(def, options, cfg[def.key]);
-                // value input (e.g. custom size, hot-stamp / emboss area) — labelled input with
-                // a helper hint showing the allowed range, matching the original order form.
-                const isNum = def.type === 'number';
-                const unit = /\(mm\)/i.test(def.label || '') ? ' mm' : '';
-                const hints = [];
-                if (def.min != null && def.max != null) hints.push('Between ' + def.min + unit + ' and ' + def.max + unit);
-                else if (def.min != null) hints.push('Minimum ' + def.min + unit);
-                else if (def.max != null) hints.push('Maximum ' + def.max + unit);
-                if (def.note) hints.push(def.note);
-                return h('div', { key: def.key, style: rowStyle },
-                  labelCell(def.label, def.neutral ? 'price-neutral' : null),
-                  ctrlWrap(h('div', { style: { display: 'flex', flexDirection: 'column', gap: 5 } },
-                    h('input', { type: isNum ? 'number' : 'text', min: def.min != null ? def.min : undefined, max: def.max != null ? def.max : undefined,
-                      value: cfg[def.key] || '', placeholder: def.placeholder || ('Enter ' + def.label.toLowerCase()),
-                      onChange: e => { const val = e.target.value; this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) })); },
-                      style: Object.assign({}, selStyle, { font: '400 14px Montserrat,sans-serif' }) }),
-                    hints.length ? h('div', { style: { fontSize: 11.5, color: FAINT, lineHeight: 1.5 } }, hints.join(' · ')) : null)));
-              }).concat([qtyField])))),
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4, border: '1px solid ' + HAIR, borderRadius: 14, padding: 20 } },
+            h('div', { style: { fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: TEAL, marginBottom: 4 } }, 'Configure your order'),
+            groups.map(g => h('div', { key: g.sec, style: { display: 'flex', flexDirection: 'column' } }, sectionHeader(g.sec), g.nodes)))),
         h('div', { style: { position: 'sticky', top: 122, display: 'flex', flexDirection: 'column', gap: 14 } },
           this.card([
             h('div', { key: 'a', style: { fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: FAINT } }, 'Live price'),
