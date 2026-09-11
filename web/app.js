@@ -2372,26 +2372,28 @@ class Component extends DCLogic {
     const quoteOnly = q && q.quoteOnly;
     const NAME = prod ? this.catName(prod.id) : 'Business Card';
     const selStyle = { font: '400 14px Montserrat,sans-serif', color: INK, padding: '10px 12px', border: '1px solid ' + HAIR, borderRadius: 8, background: '#fff', width: '100%', appearance: 'auto' };
-    // one option = a neat label + native <select> (word-only, like the original order form)
+    // each option is a full-width ROW: label (left) + native <select> (right), divided by a
+    // hairline — the aesthetic of the original order form's "Craft your specification".
+    const rowStyle = { display: 'grid', gridTemplateColumns: 'minmax(150px,240px) minmax(0,1fr)', gap: 24, alignItems: 'center', padding: '15px 0', borderTop: '1px solid ' + LINE };
+    const labelCell = (label, note) => h('div', null,
+      h('div', { style: { fontSize: 13.5, fontWeight: 600 } }, label),
+      note ? h('div', { style: { fontSize: 11, color: FAINT, marginTop: 3, lineHeight: 1.5 } }, note) : null);
+    const ctrlWrap = ch => h('div', { style: { maxWidth: 420 } }, ch);
     const optSelect = (def, options, sel) => {
       const note = def.neutral ? 'price-neutral' : (def.note || null);
-      return h('label', { key: def.key, style: { display: 'flex', flexDirection: 'column', gap: 6 } },
-        h('span', { style: { display: 'flex', alignItems: 'baseline', gap: 8 } },
-          h('span', { style: { fontSize: 12.5, fontWeight: 600 } }, def.label),
-          note && h('span', { style: { fontSize: 11, color: FAINT } }, note)),
-        h('select', { value: sel != null ? sel : (options[0] || ''), onChange: e => { const val = e.target.value; this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) })); }, style: selStyle },
-          options.map(v => { const val = Array.isArray(v) ? v[0] : v; return h('option', { key: val, value: val }, val); })));
+      return h('div', { key: def.key, style: rowStyle },
+        labelCell(def.label, note),
+        ctrlWrap(h('select', { value: sel != null ? sel : (options[0] || ''), onChange: e => { const val = e.target.value; this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) })); }, style: selStyle },
+          options.map(v => { const val = Array.isArray(v) ? v[0] : v; return h('option', { key: val, value: val }, val); }))));
     };
     // quantity, straight from the engine's per-product model (moq / options)
     const qobj = this.pkQtyObj();
     let qopts = (qobj && qobj.options && qobj.options.length) ? qobj.options.slice() : QTYS.slice();
     if (qopts.indexOf(s.qty) < 0) qopts = [s.qty].concat(qopts).sort((a, b) => a - b);
-    const qtyField = h('label', { key: 'qty', style: { display: 'flex', flexDirection: 'column', gap: 6 } },
-      h('span', { style: { display: 'flex', alignItems: 'baseline', gap: 8 } },
-        h('span', { style: { fontSize: 12.5, fontWeight: 600 } }, 'Quantity'),
-        qobj ? h('span', { style: { fontSize: 11, color: FAINT } }, 'min. order ' + qobj.moq.toLocaleString() + ' pcs') : null),
-      h('select', { value: s.qty, onChange: e => this.setField('qty', e.target.value), style: selStyle },
-        qopts.map(qn => { const uq = this.pkQuote(qn), per = uq && uq.ok ? uq.unit : null; return h('option', { key: qn, value: qn }, qn.toLocaleString() + ' pcs' + (per != null ? ' — ' + this.currency() + ' ' + (per * this.fx()).toFixed(3) + '/pc' : '')); })));
+    const qtyField = h('div', { key: 'qty', style: rowStyle },
+      labelCell('Quantity', qobj ? 'min. order ' + qobj.moq.toLocaleString() + ' pcs' : null),
+      ctrlWrap(h('select', { value: s.qty, onChange: e => this.setField('qty', e.target.value), style: selStyle },
+        qopts.map(qn => { const uq = this.pkQuote(qn), per = uq && uq.ok ? uq.unit : null; return h('option', { key: qn, value: qn }, qn.toLocaleString() + ' pcs' + (per != null ? ' — ' + this.currency() + ' ' + (per * this.fx()).toFixed(3) + '/pc' : '')); }))));
     return h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px 0' } },
       h('div', { style: { fontSize: 12.5, color: FAINT, marginBottom: 14 } },
         h('span', { 'data-go': 'home', style: { color: TEAL } }, 'Home'), ' › ', h('span', { 'data-go': prod ? ('catopen:' + this.catCategoryOf(prod.id)) : 'category', style: { color: TEAL } }, prod ? this.catCategoryLabel(this.catCategoryOf(prod.id)) : 'Products'), ' › ', NAME),
@@ -2405,17 +2407,15 @@ class Component extends DCLogic {
               h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, this.chip('Exact market price', 'ok'), this.chip('Ready in 3 working days', 'teal')))),
           h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, border: '1px solid ' + HAIR, borderRadius: 14, padding: 20 } },
             h('div', { style: { fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: TEAL } }, 'Configure your order'),
-            h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(210px,1fr))', gap: 14 } },
+            h('div', { style: { display: 'flex', flexDirection: 'column' } },
               fields.map(({ def, options }) => {
                 if (options && options.length) return optSelect(def, options, cfg[def.key]);
                 const note = def.neutral ? 'price-neutral' : (def.note || null);
-                return h('label', { key: def.key, style: { display: 'flex', flexDirection: 'column', gap: 6 } },
-                  h('span', { style: { display: 'flex', alignItems: 'baseline', gap: 8 } },
-                    h('span', { style: { fontSize: 12.5, fontWeight: 600 } }, def.label),
-                    note && h('span', { style: { fontSize: 11, color: FAINT } }, note)),
-                  h('input', { type: 'text', value: cfg[def.key] || '', placeholder: def.label,
+                return h('div', { key: def.key, style: rowStyle },
+                  labelCell(def.label, note),
+                  ctrlWrap(h('input', { type: 'text', value: cfg[def.key] || '', placeholder: def.label,
                     onChange: e => { const val = e.target.value; this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) })); },
-                    style: Object.assign({}, selStyle, { font: '400 14px Montserrat,sans-serif' }) }));
+                    style: Object.assign({}, selStyle, { font: '400 14px Montserrat,sans-serif' }) })));
               }).concat([qtyField])))),
         h('div', { style: { position: 'sticky', top: 122, display: 'flex', flexDirection: 'column', gap: 14 } },
           this.card([
