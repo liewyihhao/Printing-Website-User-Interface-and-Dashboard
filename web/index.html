@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- resolve relative assets (scripts, icons) from root on nested content URLs (/blog/…, /…-printing-city/) -->
+<base href="/">
+<link rel="sitemap" type="application/xml" href="/sitemap.xml">
+<title>Printoka · Admin backoffice</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#fff;color:#212121;font-family:Montserrat,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  *{box-sizing:border-box}
+  a{color:#14568a;text-decoration:none}
+  a:hover{color:#0e3f66}
+  ::selection{background:#E5222026}
+  [data-go]{cursor:pointer}
+  button:focus-visible,[data-go]:focus-visible{outline:2px solid #E52220;outline-offset:2px}
+  @keyframes pkFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+  @keyframes pkShine{0%{transform:translateX(0) skewX(-18deg)}60%,100%{transform:translateX(240px) skewX(-18deg)}}
+  .pkfloat{animation:pkFloat 4.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+  .pkshine{animation:pkShine 5s ease-in-out infinite}
+  @media(prefers-reduced-motion:reduce){.pkfloat,.pkshine{animation:none!important}}
+  .pk-mobilebar{display:none}
+  @media(max-width:760px){
+    [data-shell]{grid-template-columns:1fr!important}
+    [data-shell]>aside{position:static!important;display:flex;flex-wrap:wrap;gap:4px}
+    [data-shell]>aside>div{flex:0 0 auto}
+    .pk-mobilebar{display:flex}
+    body{padding-bottom:64px}
+  }
+</style>
+<script>
+  // Asset resolver — falls back to the literal path, which is served from /assets.
+  window.__asset = function (p) { return p; };
+</script>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js" crossorigin></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+<!-- Real pricing engine (93 products) — generated from the calculator repo via pricing/build.sh -->
+<script src="pricing/engine.js"></script>
+<!-- Storefront catalogue: display-name overrides + categories (display-only, over the engine) -->
+<script src="catalogue.js"></script>
+<script src="runtime.js"></script>
+<script src="app.js"></script>
+<script>
+  ReactDOM.createRoot(document.getElementById('root'))
+    .render(React.createElement(window.PKComponent, window.PKProps));
+</script>
+</body>
+</html>

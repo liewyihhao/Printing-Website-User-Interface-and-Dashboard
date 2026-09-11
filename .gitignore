@@ -1,0 +1,16 @@
+# Node
+node_modules/
+npm-debug.log*
+*.log
+
+# Runtime data (created on first boot from the seed; contains password hashes + session tokens)
+web/server/data.json
+
+# Next.js / build leftovers (not part of this stack)
+.next/
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# OS / editor
+.DS_Store
+Thumbs.db

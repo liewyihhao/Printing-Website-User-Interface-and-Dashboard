@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "printoka-web",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["web/server/server.js"],
+      "port": 4611
+    }
+  ]
+}

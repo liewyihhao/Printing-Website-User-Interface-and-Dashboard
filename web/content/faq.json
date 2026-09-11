@@ -1,0 +1,250 @@
+[
+  {
+    "id": "shipping-and-delivery",
+    "title": "Payment and Uploading",
+    "questions": [
+      {
+        "q": "Can I track my order's delivery status?",
+        "a": "Yes, you can. There will be a shipping confirmation email that our system sends out to you, when your goods are shipped. It contains your shipper's name, and tracking code. As prints may be super bulky and heavy sometimes, we have certain options to let you schedule your delivery. We have options like courier service, sea freight, trucking service according to your location. Each options have a different time required to complete your delivery, as well as the costs of shipping."
+      },
+      {
+        "q": "What are the different available options to speed up my production time?",
+        "a": "Based on your needs, Printoka.com offers a standard production package, and also a Urgent production package for you to choose from. As the product type differs, the production time will also differ accordingly. We are to not guarantee on the production time as it is also depending on your artwork submission time. However, standard courier shipping time shall take up to 3-5 working days according to your location. To make shipping faster and more efficient, we are looking to setting up more and more logistic networks in Malaysia, Brunei, and Singapore. Stay tuned for updates."
+      },
+      {
+        "q": "What are the difference between Sea freight and Air Courier?",
+        "a": "Depending on your urgency, we provide an option for customers to select a lower cost shipping option for huge and bulk orders. You may save a few thousands Ringgits in shipping fee alone if you are ordering in bulk. However, it is not advisable that you choose Sea freight for small orders as it might take longer time to get your prints to your doorstep compared to Air Courier."
+      },
+      {
+        "q": "Where can i find the production and delivery costs associated with my order?",
+        "a": "Printoka.com offers standard production and delivery at a opened price. All the costs of each delivery options are shown in the checkout page for you to choose from."
+      },
+      {
+        "q": "Does Printoka.com delivers to whole Malaysia, Brunei, and Singapore?",
+        "a": "Yes, we make delivery through our logistic partners via courier service, sea freight, or trucking service. Our network covers whole Malaysia, Brunei, and Singapore."
+      },
+      {
+        "q": "Can i change the production and delivery options once the order has been placed?",
+        "a": "Once you have submitted your order, you are no longer allowed to change it. Before checking out, please double check on all the options that you have selected to avoid any errors. Shall there be any further questions or discussions required, talk to us at +60 16-983 0799 or email us at print@printoka.com"
+      },
+      {
+        "q": "I would not be at the address that i have submitted during the order. What should i do?",
+        "a": "Its easy. Talk to us. Our customer service team is always there to assist you. Just make sure you have your order number with you."
+      },
+      {
+        "q": "Can I submit for multiple delivery address in a single order?",
+        "a": "One order can only be associated with one delivery address. So if you are looking to get your items delivered to different places, you are required to submit and pay for multiple orders (keep the Billing Address same, and add different Delivery Address)."
+      }
+    ]
+  },
+  {
+    "id": "payment-and-uploading",
+    "title": "My Orders",
+    "questions": [
+      {
+        "q": "Which payment methods does Printoka.com accepts?",
+        "a": "Currently, Printoka.com accepts two payment methods. \r\n\r\nFirst, you may pay using Bank Transfer (Pre-payment). Your order is not completed until your payment is made. Upon confirmation with your payment, you are required to email a copy of the transfer slip to print@printoka.com. \r\n\r\nSecondly, you may choose to use Credit Card: Your order will be complete instantly."
+      },
+      {
+        "q": "Does Printoka.com issues tax invoices?",
+        "a": "Yes, we do. All our orders are made accompanied with a Printoka.com tax invoice."
+      },
+      {
+        "q": "There seems to be some issue for me to submit my artwork. What can i do?",
+        "a": "If you have encountered issues in submitting artwork, please call us at +60 16-983 0799, or email us your artwork together with your order number at print@printoka.com"
+      },
+      {
+        "q": "Are there any special requirements or recommendations for the artwork? What are the file types that i can upload?",
+        "a": "It is highly advised to send us your file in PDF format. We do accept zip, rar, jpg, ai, psd, tiff, and png. But for the best outcome, we strongly suggest that we should stick to PDF file format."
+      },
+      {
+        "q": "Will the Orientation of my artwork have an impact on the price?",
+        "a": "On certain products, yes it will. All prices shown in the configuration section of your print are the price that we will charge. There is no further additional charges if your artwork fits to your configured print options."
+      },
+      {
+        "q": "I found mistakes on my uploaded artwork. How can i upload a new file?",
+        "a": "To make sure there is still time to change your artwork, please give us a call at +60 16-983 0799 to check on the status of your order. Shall it be not ready for production, you may still change it. Take note: Please make sure your artwork is correct, and check everything carefully before submission."
+      }
+    ]
+  },
+  {
+    "id": "my-orders",
+    "title": "Product Configuration",
+    "questions": [
+      {
+        "q": "What should I do after making payment as per the instruction?",
+        "a": "Shall your payment is made using Credit Card, you are just required to make sure your artwork is uploaded, as we will receive your payment immediately. \r\n\r\nShall you choose Bank Transfer for your order, your order is not completed until you submitted your bank in slip to print@printoka.com. You may then submit your artwork once this is done."
+      },
+      {
+        "q": "How can I make sure that Printoka.com receives my order that I have just made?",
+        "a": "Once you have successfully completed your order, our system will automatically send out a confirmation email, with all your order details inside. Please verify your Spam folder if you did not receive the email. \r\n\r\nIf you did not receive it in either your email Inbox or Spam folder, please make sure your registered email address is correctly key in. Shall you find it wrong, you may change it in your Dashboard."
+      },
+      {
+        "q": "I have just placed an order online. How and when should I submit my artwork?",
+        "a": "Do take note on the date and time mentioned in the checkout page, after you have made your payment successfully. The date provided is very important as it may affect the production time, and delivery scheduled time for your order. \r\n\r\nTo upload your artwork, please click on the Upload Artwork on the checkout success page, or you may do so on the My Orders section in your Dashboard."
+      },
+      {
+        "q": "I found mistakes on my uploaded artwork. How can i upload a new file?",
+        "a": "To make sure there is still time to change your artwork, please give us a call at +60 16-983 0799 to check on the status of your order. Shall it be not ready for production, you may still change it. \r\n\r\nTake note: Please make sure your artwork is correct, and check everything carefully before submission."
+      },
+      {
+        "q": "Can I track my order's delivery status?",
+        "a": "Yes, you can. There will be a shipping confirmation email that our system sends out to you, when your goods are shipped. It contains your shipper's name, and tracking code. \r\n\r\nAs prints may be super bulky and heavy sometimes, we have certain options to let you schedule your delivery. We have options like courier service, sea freight, trucking service according to your location. Each options have a different time required to complete your delivery, as well as the costs of shipping."
+      },
+      {
+        "q": "Can I track the overall status of my order?",
+        "a": "Yes, you can. Our system will keep you updated to the progress of your order, by sending you emails automatically when we receive your order, ships your order. We will do our best to keep you updated."
+      },
+      {
+        "q": "I have changed my mind on my order. Can i cancel the order?",
+        "a": "For order cancellation, you are required to contact +60 16-983 0799 to check if your order has been sent for production or not. Shall it be in production stage, your order cancellation request are not to be accepted as the cost has already been incurred."
+      },
+      {
+        "q": "There is a problem with my order. Who should i contact, and how?",
+        "a": "Our passionate customer service team is always there to hear your feedbacks. Feel free to call us at +60 16-983 0799. Your feedbacks are important for our improvement."
+      },
+      {
+        "q": "I am not satisfied with the print quality. Can i request for reprint or refund?",
+        "a": "Please let us know on your order details. and the reasons of not satisfied with the print's quality. Call us at +60 16-983 0799, or email us at print@printoka.com on the matter. Printoka.com is highly committed to our Client Satisfaction objectives, or a Free Reprint policy, so that we can ensure the highest level of Client Satisfaction."
+      }
+    ]
+  },
+  {
+    "id": "product-configuration",
+    "title": "General Information",
+    "questions": [
+      {
+        "q": "How should i choose and configure the product that i want?",
+        "a": "Ordering from Printoka.com is as easy as just a few clicks. First, you can access all the products that are available on our homepage. You can swipe left or right to find what you want. Click Configure Now and it will lead you to the configuration section. You will be asked how should you want your job printed, step by step."
+      },
+      {
+        "q": "How do i know whether which finishing option is best for my print job?",
+        "a": "Explanations and guides are provided when necessary. Shall you requires further inquiry, feel free to drop us a call or send us an email. Would be glad to assist you."
+      },
+      {
+        "q": "Am i able to share the minimum order quantity to different artworks?",
+        "a": "No. The minimum quantity set are for one artwork format only. For example, 100 pieces of Same Format Business Card."
+      },
+      {
+        "q": "Is there a way that i can save my configuration and download a quotation?",
+        "a": "Yes. When you have done configuring your print job, you will be lead to the shopping cart page. Before checking out, you will find one button to DOWNLOAD QUOTATION. \r\n\r\nTo make sure you wont loss your configured product, clicking ADD TO CART will save your configuration in cart."
+      }
+    ]
+  },
+  {
+    "id": "general-information",
+    "title": "Login and Profile",
+    "questions": [
+      {
+        "q": "Are there any recommendations or guidelines on how should i prepare my artworks?",
+        "a": "Yes, there are. You may find detailed explanations in the webpage \"Guides in Closing Artwork\". Please visit the page, because its important that you should take note on them to bring out the best quality for your products."
+      },
+      {
+        "q": "How should i upload my artworks?",
+        "a": "Click Upload Artwork button after you have successfully check out. Other than that, you can also do that under My Order in the Dashboard."
+      },
+      {
+        "q": "What type papers does Printoka.com offers?",
+        "a": "We offer a huge variety of papers for all the products that we have. However, only a handful of selection will be offered per product based on the usage durability, and market standard. \r\n\r\nThat doesn't mean we cannot fulfill your requests! Speak to us for custom orders or quotations. There are many more we can do for you."
+      },
+      {
+        "q": "What finishing options does Printoka.com offers?",
+        "a": "We have Matte Lamination, Gloss Lamination, Spot UV with Matte Lamination, and more to come!"
+      },
+      {
+        "q": "Which products are available at Printoka.com?",
+        "a": "We offer a huge mixture of printed products. Please visit the homepage for all the available products. There will be more to come!"
+      },
+      {
+        "q": "What is a custom order?",
+        "a": "Custom orders are orders that you could not configure through our website. They usually involve a higher degree of customization, and non-standard materials or finishing,"
+      },
+      {
+        "q": "How can i get a custom quotation?",
+        "a": "Send us an email, or speak to us through phone call. We will quote accordingly to your request."
+      },
+      {
+        "q": "Can i get a quotation without an account?",
+        "a": "Yes, you can. Except for custom orders, you are able to download a quotation from our website's shopping cart page. Just click onto the \"Download Quotation\" button."
+      }
+    ]
+  },
+  {
+    "id": "login-profile",
+    "title": "Printoka Memberships",
+    "questions": [
+      {
+        "q": "Do i need an Account? How should i create one?",
+        "a": "Yes, you do. An account for you shall make everything easier for you. You can review order details, artworks submitted or stored, having exclusive prices just for you, and many more upgrades coming soon! \r\n\r\nTo create an account, you just need to sign up and register all your details by clicking Sign up. After that, you will be directed to your Dashboard, where you manage everything in just clicking around."
+      },
+      {
+        "q": "I have configured my products without an account. Will i lose it?",
+        "a": "Worry not! Just proceed step by step to check out. You will be required to register or login with an account to confirm with an order. You will be asked on Billing and Shipping address right there."
+      },
+      {
+        "q": "What information should i provide to create an Account? Is it the same for Individual Account and Business Account?",
+        "a": "Its easy, just sign up using your email address, making sure its valid, and then you will need to create your own password to keep your account secure. Make sure no one else knows your password, because there might be some special deals and price rates exclusively for you! Other than that, you will be able to track your orders, confirm payments and artworks, through your email. \r\n\r\nIf you want to create a Corporate Account, lets Talk! Call us immediately at +60 16-983 0799"
+      },
+      {
+        "q": "Is my account successfully created?",
+        "a": "You will receive a confirmation email once confirmed."
+      },
+      {
+        "q": "How to login to My Dashboard?",
+        "a": "Once you get your account set up, you can login to Printoka.com by clicking onto the Log In Button on the top right of the website. Complete logging in by filling in your email, and password."
+      },
+      {
+        "q": "I have created an account, but i did not receive any email. What should i do?",
+        "a": "You are required to verify whether did you provide a valid email address or not. Make sure your spelling is correct. Or, you may check in your mailbox's spam folder. If you still have any problem here, please speak to us. We will solve it for you."
+      },
+      {
+        "q": "I have forgotten my password. What should i do?",
+        "a": "If you forget your password, just click onto the link \"Forgot Your Password\" on the login page. Submit your email address, and follow the steps. We will guide you one by one to your setting up a new password."
+      }
+    ]
+  },
+  {
+    "id": "printoka-memberships",
+    "title": "Requesting for Quotations",
+    "questions": [
+      {
+        "q": "What is Printoka Membership? Do i need to register?",
+        "a": "Printoka Membership is a package that ranks your membership according to the purchases you have made at Printoka.com. There are five membership tiers, which is Standard (which you will automatically have at the time you signed up an account with us), Bronze, Silver, Gold, and Platinum.\r\n\r\nEach membership plans have different discount rates. For example, a Bronze member gives you 5% product discount, and a Platinum member gives you 15% product discount. \r\n\r\nAll membership packages does not require registration, except for Corporate Membership."
+      },
+      {
+        "q": "How does Printoka Membership works?",
+        "a": "The membership packages will work by tracking all your purchases made in our website. For example, a spending of RM 1,000 in total will give you an upgrade to Bronze member. \r\n\r\nIt does not need you to make a one off purchase worth RM 1000 to bring you an upgrade. For instance, you may separate your orders of RM 1,000 worth in a month, and you will still be a Bronze Member!"
+      },
+      {
+        "q": "Will there be a downgrade? When will my Membership being downgraded?",
+        "a": "Unfortunately, yes. There will be a downgrade of One Tier for accounts being left without purchases for three months."
+      },
+      {
+        "q": "After being downgraded, how can i upgrade my membership tier again?",
+        "a": "Its easy. There will be a sum of that purchases that you need to order in order to reach the next ranking, being displayed on the Dashboard after logging in."
+      },
+      {
+        "q": "Can I still use Coupons together with my Membership Discounts?",
+        "a": "Yes, you can! Printoka.com is marketplace where we always try to be as competitive as possible. We will issue coupons seasonally, and there might be some occasion that you are awarded with non-expiring coupons, and you can use them together with your member discounts!\r\n\r\nFor example, a Platinum member (15% membership discount) uses a 15% discount coupon, you will get a discount as much as 30% in total!"
+      }
+    ]
+  },
+  {
+    "id": "requesting-for-quotations",
+    "title": "requesting for quotations",
+    "questions": [
+      {
+        "q": "I could not find what i need. What can i do?",
+        "a": "There will be some scenarios which you may not find your printing configuration as it may require different sizes, materials, finishing, or etc in our website. \r\n\r\nFirst, you may file a Request for Quotation by clicking into Customized Printing Solutions. You may then choose from the available products that you wish to get a quote for. \r\n\r\nIf the above methods still could not get you to what you need, feel free to drop us an email at print@printoka.com or send us a text in Whatsapp via +6 016 983 0799."
+      },
+      {
+        "q": "I have received a quotation from Printoka.com. And i wish to proceed with the quotation, and place an order for it. How can that be done?",
+        "a": "First of all, we are glad to know that we are able to help you out with your printing needs. Accepting a quote can be proceeded by first, clicking into My Dashboard, then click into My Quotations. You may then check for the status of the quote, accept it, and pay for it, and checkout. After that, all you need is to wait for your goods to arrive at your desired destination."
+      },
+      {
+        "q": "Can i get a copy of the Quotation submitted by Printoka.com? I might need it for Procurement work filing, or approval by management. How can i get it?",
+        "a": "You may get a quotation in PDF format in two scenarios, as below. \r\n\r\nScenario 1, when you find our product available by configuration, you can just add everything you need into your shopping cart, key in your postcode, and click Download Quotation. By doing this, you may get a finalized amount in total, with all membership discounts, shipping fees, or coupons applied displayed in the Quotation. \r\n\r\nScenario 2, when you could not find your product available by configuration, you are required to file a Request for Quotation by clicking into Customized Printing Solutions. Then choose among the products that you wish to get a quote for, key in all the details required, and a quote will be submitted to your Dashboard. At your Dashboard, you may check the status of the Quote, and click Manage, and you may then download a PDF copy of your Quotation. \r\n\r\nIf the above methods still could not get you to what you need, feel free to drop us an email at print@printoka.com or send us a text in Whatsapp via +6 016 983 0799."
+      }
+    ]
+  }
+]
