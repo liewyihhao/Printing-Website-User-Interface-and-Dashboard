@@ -179,6 +179,8 @@ class Component extends DCLogic {
   go = (id) => { if (!this.canAccess(id)) id = this.homeFor(); this.setState({ route: id, megaOpen: false }); if (typeof window !== 'undefined') window.scrollTo(0, 0); const r = this.opsRoleFor(id); if (r) this.opsLoad(this.opsActingRole()); if (id === 'learn') this.blogLoad(); if (id === 'support') this.loadFaq(); if (id === 'downloads') this.loadDownloads(); if (id === 'track' && this.state.order && !this.state.trackOrder) this.trackLookup(this.state.order.id); if (id === 'dash' && this.state.user) { this.loadUserOrders(); this.loadAccount(); this.loadQuotes(); this.loadCustomInvoices(); } if (id === 'invoices' && this.state.user) { this.loadUserOrders(); this.loadCustomInvoices(); } if (id === 'checkout' && this.state.user) this.loadAccount(); if (id === 'production') this.loadVendors(); if (id === 'vendor') this.loadVendorRequests(); if (id === 'admin') this.loadAdmin(); if (['outlet', 'prepress', 'production', 'logistics'].indexOf(id) >= 0) { this.loadNotifications(); this.loadQuotes(); } if (id === 'outlet') this.loadStaffOrders(); };
 
   onNav = (e) => {
+    // any click that bubbles here (custom-dropdown clicks stopPropagation) closes an open dropdown
+    if (this.state.ddOpen != null) this.setState({ ddOpen: null });
     const el = e.target.closest && e.target.closest('[data-go]');
     if (!el) return;
     const v = el.getAttribute('data-go');
@@ -2546,23 +2548,35 @@ class Component extends DCLogic {
       note ? h('div', { style: { fontSize: 11, color: FAINT, marginTop: 3, lineHeight: 1.5 } }, note) : null);
     const ctrlWrap = ch => h('div', { style: { maxWidth: 420 } }, ch);
     const ov = this.cfgOv();
+    const ddOpen = this.state.ddOpen;
+    // Printoka-styled custom dropdown: closed shows the value / "Please Select"; opening reveals a
+    // panel with the helper note above the options — both visible only when clicked.
+    const pkDropdown = (key, curText, isPlaceholder, remark, items) => {
+      const open = ddOpen === key;
+      return h('div', { style: { position: 'relative' } },
+        h('div', { onClick: e => { e.stopPropagation(); this.setState(st => ({ ddOpen: st.ddOpen === key ? null : key })); },
+          style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, font: '400 14px Montserrat,sans-serif', color: isPlaceholder ? FAINT : INK, padding: '10px 13px', border: '1px solid ' + (open ? TEAL : HAIR), borderRadius: 8, background: '#fff', cursor: 'pointer', boxShadow: open ? '0 0 0 3px rgba(229,34,32,.10)' : 'none' } },
+          h('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, curText),
+          h('span', { style: { flex: 'none', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .12s', color: FAINT, fontSize: 10 } }, '▼')),
+        open ? h('div', { onClick: e => e.stopPropagation(), style: { position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 50, background: '#fff', border: '1px solid ' + HAIR, borderRadius: 8, boxShadow: '0 12px 30px rgba(33,33,33,.18)', overflow: 'hidden' } },
+          remark ? h('div', { style: { padding: '10px 13px', fontSize: 11.5, color: MUT, lineHeight: 1.55, background: ALT, borderBottom: '1px solid ' + LINE } }, remark) : null,
+          h('div', { style: { maxHeight: 300, overflowY: 'auto' } },
+            items.map((it, i) => h('div', { key: i, onClick: e => { e.stopPropagation(); it.onPick(); this.setState({ ddOpen: null }); },
+              style: { padding: '10px 13px', fontSize: 13.5, cursor: 'pointer', color: it.on ? TEAL : INK, fontWeight: it.on ? 600 : 400, background: it.on ? '#fdf2f2' : '#fff', borderTop: i ? '1px solid ' + LINE : 'none' } }, it.label)))) : null);
+    };
     const optSelect = (def, options, sel) => {
       const label = (ov.label && ov.label[def.key]) || def.label;
       const remark = (ov.remark && ov.remark[def.key]) || null;
-      const note = def.neutral ? null : (def.note || null);
       const optLabel = (ov.optLabel && ov.optLabel[def.key]) || {};
       const isPh = !!(ov.placeholder && ov.placeholder.indexOf(def.key) >= 0);
-      // a full option-list override (used only for price-NEUTRAL fields, so the engine value is irrelevant)
       const dispOptions = (ov.optionsOverride && ov.optionsOverride[def.key]) || options;
-      // placeholder fields start unselected ("-- Please select --") and only reflect an explicit choice
       const chosen = isPh ? (this.state.cfg[def.key] != null ? this.state.cfg[def.key] : '') : (sel != null ? sel : (dispOptions[0] || ''));
-      const optNodes = dispOptions.map(v => { const val = Array.isArray(v) ? v[0] : v; return h('option', { key: val, value: val }, optLabel[val] || val); });
+      const isPh0 = isPh && (chosen === '' || chosen == null);
+      const curText = isPh0 ? 'Please Select' : (optLabel[chosen] || chosen);
+      const items = dispOptions.map(v => { const val = Array.isArray(v) ? v[0] : v; return { label: optLabel[val] || val, on: chosen === val, onPick: () => this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) })) }; });
       return h('div', { key: def.key, style: rowStyle },
-        labelCell(label, note),
-        ctrlWrap(h('div', { style: { display: 'flex', flexDirection: 'column', gap: 5 } },
-          h('select', { value: chosen, onChange: e => { const val = e.target.value; this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) })); }, style: Object.assign({}, selStyle, isPh && chosen === '' ? { color: FAINT } : null) },
-            (isPh ? [h('option', { key: '__ph', value: '' }, '-- Please select --')] : []).concat(optNodes)),
-          remark ? h('div', { style: { fontSize: 11.5, color: FAINT, lineHeight: 1.5 } }, remark) : null)));
+        labelCell(label, def.neutral ? null : (def.note || null)),
+        ctrlWrap(pkDropdown(def.key, curText, isPh0, remark, items)));
     };
     // quantity, straight from the engine's per-product model (moq / options)
     const qobj = this.pkQtyObj();
@@ -2572,13 +2586,12 @@ class Component extends DCLogic {
     const qtyChosen = !qtyPh || this.state.qtyChosen;
     const bestSeller = ov.bestSellerQty || [];
     const qtyRemark = ov.remark && ov.remark.quantity;
+    const qtyPh0 = qtyPh && !qtyChosen;
+    const qtyCur = qtyPh0 ? 'Please Select' : (s.qty.toLocaleString() + ' pcs' + (bestSeller.indexOf(s.qty) >= 0 ? ' — Best Seller' : ''));
+    const qtyItems = qopts.map(qn => ({ label: qn.toLocaleString() + ' pcs' + (bestSeller.indexOf(qn) >= 0 ? ' — Best Seller' : ''), on: qtyChosen && s.qty === qn, onPick: () => this.setState({ qty: qn, qtyChosen: true }) }));
     const qtyField = h('div', { key: 'qty', style: rowStyle },
       labelCell('Quantity', qobj ? 'min. order ' + qobj.moq.toLocaleString() + ' pcs' : null),
-      ctrlWrap(h('div', { style: { display: 'flex', flexDirection: 'column', gap: 5 } },
-        h('select', { value: qtyChosen ? s.qty : '', onChange: e => { if (e.target.value === '') return; this.setState({ qty: Number(e.target.value), qtyChosen: true }); }, style: Object.assign({}, selStyle, qtyPh && !qtyChosen ? { color: FAINT } : null) },
-          (qtyPh ? [h('option', { key: '__ph', value: '' }, '-- Please select --')] : []).concat(
-            qopts.map(qn => h('option', { key: qn, value: qn }, qn.toLocaleString() + ' pcs' + (bestSeller.indexOf(qn) >= 0 ? ' — Best Seller' : ''))))),
-        qtyRemark ? h('div', { style: { fontSize: 11.5, color: FAINT, lineHeight: 1.5 } }, qtyRemark) : null)));
+      ctrlWrap(pkDropdown('quantity', qtyCur, qtyPh0, qtyRemark, qtyItems)));
     // image picker: a selectable grid of option thumbnails (e.g. Round Corner Position)
     const imgPicker = (def, options, sel, base) => {
       const label = (ov.label && ov.label[def.key]) || def.label;
