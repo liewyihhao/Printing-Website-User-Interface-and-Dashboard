@@ -293,6 +293,40 @@ class Component extends DCLogic {
   pkHidden(key) { const ov = this.cfgOv(); return !!(ov.hide && ov.hide.indexOf(key) >= 0); }
   // are all "please select" fields chosen yet? (gates the live price, like the source form)
   pkReady() { const ov = this.cfgOv(); const ph = ov.placeholder || []; const sc = this.state.cfg || {}; return ph.every(k => k === 'quantity' ? !!this.state.qtyChosen : (sc[k] != null && sc[k] !== '')); }
+  // live size simulator: a proportional diagram of the selected size (standard or custom),
+  // with Width/Height dimension lines — so the customer can see exactly what they picked.
+  sizeSim() {
+    const cfg = this.pkV(), scfg = this.state.cfg || {};
+    const sv = String(cfg.size || '');
+    let a = null, b = null, custom = false;
+    if (/other|custom/i.test(sv)) {
+      const ch = parseFloat(scfg.custom_h), cw = parseFloat(scfg.custom_w);
+      if (!(ch > 0 && cw > 0)) return { pending: true }; // ask for input
+      b = ch; a = cw; custom = true; // width, height
+    } else {
+      const m = sv.match(/(\d+(?:\.\d+)?)\s*mm\s*[x×]\s*(\d+(?:\.\d+)?)\s*mm/i);
+      if (!m) return null;
+      a = Math.max(+m[1], +m[2]); b = Math.min(+m[1], +m[2]);
+    }
+    const portrait = /portrait/i.test(String(cfg.orientation || ''));
+    let W = custom ? a : a, H = custom ? b : b;
+    if (portrait) { const t = W; W = H; H = t; }
+    if (!(W > 0 && H > 0)) return null;
+    const maxW = 210, maxH = 120, ar = W / H;
+    let dw = maxW, dh = maxW / ar; if (dh > maxH) { dh = maxH; dw = maxH * ar; }
+    const pad = 34, VW = dw + pad * 2, VH = dh + pad * 2, x0 = pad, y0 = pad;
+    const dim = (x1, y1, x2, y2) => h('line', { x1, y1, x2, y2, stroke: MUT, strokeWidth: 1, markerStart: 'url(#pkArrow)', markerEnd: 'url(#pkArrow)' });
+    return {
+      svg: h('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: { width: '100%', maxWidth: 300, height: 'auto', display: 'block', margin: '0 auto' } },
+        h('defs', null, h('marker', { id: 'pkArrow', markerWidth: 8, markerHeight: 8, refX: 4, refY: 4, orient: 'auto' }, h('path', { d: 'M1 4 L7 1 L7 7 Z', fill: MUT }))),
+        h('rect', { x: x0, y: y0, width: dw, height: dh, fill: '#fdf2f2', stroke: TEAL, strokeWidth: 1.5, rx: 3 }),
+        dim(x0, y0 + dh + 16, x0 + dw, y0 + dh + 16),
+        h('text', { x: x0 + dw / 2, y: y0 + dh + 30, textAnchor: 'middle', fontSize: 12, fontWeight: 600, fill: INK }, 'Width ' + Math.round(W) + ' mm'),
+        dim(x0 - 16, y0, x0 - 16, y0 + dh),
+        h('text', { x: x0 - 22, y: y0 + dh / 2, textAnchor: 'middle', fontSize: 12, fontWeight: 600, fill: INK, transform: 'rotate(-90 ' + (x0 - 22) + ' ' + (y0 + dh / 2) + ')' }, 'Height ' + Math.round(H) + ' mm')),
+      label: (custom ? 'Custom size · ' : '') + Math.round(W) + ' × ' + Math.round(H) + ' mm',
+    };
+  }
   // physics-based shipment weight (kg) from size × paper gsm × qty × a packaging factor —
   // the engine's per-unit weight is unreliable for sheet goods (a 50g/card fallback), and
   // this matches Excard's stated weight (± their own 10% tolerance). Falls back to the engine.
@@ -2754,11 +2788,14 @@ class Component extends DCLogic {
                     this.btn('Download quotation (PDF)', 'ghost', 'product', { justifyContent: 'center' }))
                 : h('span', { style: { textAlign: 'center', background: '#f1f3f5', color: MUT, fontWeight: 600, fontSize: 13.5, padding: '12px', borderRadius: 8 } }, 'Select your options to continue')),
           ]),
-          this.card([
-            h('div', { key: 'a', style: { fontSize: 12.5, fontWeight: 600, marginBottom: 8 } }, 'Artwork & bleed'),
-            h('div', { key: 'b', style: { border: '1px dashed #eaeaea', borderRadius: 8, padding: 14, background: '#fdf2f2', fontSize: 12, color: MUT, lineHeight: 1.6 } }, (cfg.size && !/other|custom/i.test(cfg.size) ? cfg.size + ' · ' : '') + 'Bleed 3 mm all round · keep text 3–5 mm inside the trim'),
+          (() => { const sim = this.sizeSim(); return this.card([
+            h('div', { key: 'a', style: { fontSize: 12.5, fontWeight: 600, marginBottom: 10 } }, 'Size preview & bleed'),
+            sim && sim.svg ? h('div', { key: 's', style: { marginBottom: 10 } }, sim.svg,
+              h('div', { style: { textAlign: 'center', fontSize: 12, fontWeight: 600, color: TEAL, marginTop: 4 } }, sim.label)) : null,
+            sim && sim.pending ? h('div', { key: 'p', style: { fontSize: 12, color: FAINT, textAlign: 'center', padding: '14px 0' } }, 'Enter a custom height and width to preview the size.') : null,
+            h('div', { key: 'b', style: { border: '1px dashed #eaeaea', borderRadius: 8, padding: 12, background: '#fdf2f2', fontSize: 12, color: MUT, lineHeight: 1.6 } }, 'Bleed 3 mm all round · keep text 3–5 mm inside the trim'),
             h('div', { key: 'c', style: { marginTop: 10 } }, this.btn('Upload & check artwork', 'ghost', 'artwork', { justifyContent: 'center', width: '100%' })),
-          ]),
+          ]); })(),
           this.card([
             h('div', { key: 'a', style: { fontSize: 12.5, fontWeight: 600, marginBottom: 6 } }, 'Need something off-catalogue?'),
             h('div', { key: 'b', style: { fontSize: 12, color: MUT, lineHeight: 1.6, marginBottom: 10 } }, 'Custom sizes, special finishes or large volumes we don’t price online are quoted on request.'),
