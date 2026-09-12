@@ -415,6 +415,75 @@ class Component extends DCLogic {
     this.loadCart();
     this.loadSettings();
     this.authLoad();
+    this.applySEO();
+  }
+  componentDidUpdate(prevProps, prevState) {
+    const s = this.state;
+    if (!prevState || prevState.route !== s.route || prevState.prodId !== s.prodId || prevState.catFilter !== s.catFilter) this.applySEO();
+  }
+  // ---------- SEO: dynamic <title>, meta description, robots + JSON-LD per route ----------
+  applySEO() {
+    if (typeof document === 'undefined') return;
+    let d; try { d = this.seoData(); } catch (e) { return; }
+    if (!d) return;
+    document.title = d.title;
+    const setMeta = (name, content) => { let m = document.head.querySelector('meta[name="' + name + '"]'); if (!m) { m = document.createElement('meta'); m.setAttribute('name', name); document.head.appendChild(m); } m.setAttribute('content', content || ''); };
+    setMeta('description', d.description || '');
+    setMeta('robots', d.robots || 'index,follow');
+    let sc = document.getElementById('pk-jsonld'); if (!sc) { sc = document.createElement('script'); sc.id = 'pk-jsonld'; sc.type = 'application/ld+json'; document.head.appendChild(sc); }
+    sc.textContent = d.jsonld ? JSON.stringify(d.jsonld) : '';
+  }
+  productFaqs(prod, name) {
+    const sizeF = this.pkFields().find(f => /size/i.test(f.def.key) && f.options && f.options.length);
+    const sizes = sizeF ? sizeF.options.filter(o => !/other|custom/i.test(String(o))).slice(0, 6).join(', ') : '';
+    return [
+      ['What size options are available for ' + name + '?', sizes ? ('Available sizes include ' + sizes + '. You can also enter a custom size where supported.') : ('Multiple sizes are available — choose from the size options in the configurator.')],
+      ['How long does ' + name + ' printing take?', 'Standard turnaround is 3 working days after your artwork is approved by prepress.'],
+      ['Can I get ' + name + ' delivered, or pick it up?', 'Both — nationwide courier delivery, or free self-pickup at a Klang Valley outlet.'],
+    ];
+  }
+  seoData() {
+    const route = this.state.route, C = 'Malaysia, Singapore & Brunei';
+    const ctx = 'https://schema.org', origin = (typeof location !== 'undefined' ? location.origin : 'https://printoka.com');
+    const org = { '@context': ctx, '@type': 'Organization', name: 'Printoka', url: origin, logo: origin + '/assets/icons/logomark.svg' };
+    const IDX = 'index,follow', NOIDX = 'noindex,follow', money0 = n => this.money(n);
+    if (route === 'product') {
+      const prod = this.pkProduct(), name = prod ? this.catName(prod.id) : 'Business Card';
+      const from = prod ? this.catFromPrice(prod.id) : null, cat = prod ? this.catCategoryLabel(this.catCategoryOf(prod.id)) : 'Products';
+      const seo = this.productSeo(prod, name), faqs = this.productFaqs(prod, name);
+      const jsonld = { '@context': ctx, '@graph': [
+        Object.assign({ '@type': 'Product', name: name + ' Printing', category: cat, description: seo.paras[0].slice(0, 320), brand: { '@type': 'Brand', name: 'Printoka' } },
+          from != null ? { offers: { '@type': 'Offer', priceCurrency: this.currency(), price: (from * this.fx()).toFixed(2), availability: 'https://schema.org/InStock', url: origin } } : {}),
+        { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Home', item: origin + '/' }, { '@type': 'ListItem', position: 2, name: cat }, { '@type': 'ListItem', position: 3, name: name }] },
+        { '@type': 'FAQPage', mainEntity: faqs.map(f => ({ '@type': 'Question', name: f[0], acceptedAnswer: { '@type': 'Answer', text: f[1] } })) },
+      ] };
+      return { title: name + ' Printing | ' + (from != null && from >= 0.01 ? 'From ' + money0(from) + ' | ' : '') + 'Printoka', description: 'Order ' + name + ' printing online in ' + C + ' — configure your options, get an instant price, and print with a free artwork check. Member discounts up to 15%.', robots: IDX, jsonld };
+    }
+    if (route === 'category') {
+      const active = this.state.catFilter || 'all', label = active === 'all' ? 'Online Printing' : this.catCategoryLabel(active);
+      const items = this.catProducts(active), froms = items.map(p => this.catFromPrice(p.id)).filter(x => x != null), minFrom = froms.length ? Math.min.apply(null, froms) : null;
+      const jsonld = { '@context': ctx, '@graph': [
+        { '@type': 'CollectionPage', name: label + ' Printing' },
+        { '@type': 'ItemList', itemListElement: items.slice(0, 20).map((p, i) => ({ '@type': 'ListItem', position: i + 1, name: p.name })) },
+        { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Home', item: origin + '/' }, { '@type': 'ListItem', position: 2, name: label }] },
+      ] };
+      const showFrom = minFrom != null && minFrom >= 0.01;
+      return { title: label + ' Printing Online | ' + (showFrom ? 'From ' + money0(minFrom) + ' | ' : '') + 'Printoka', description: 'Custom ' + label.toLowerCase() + ' printing in ' + C + '. Configure size, material and finish, see the price instantly, and order online' + (showFrom ? ' — from ' + money0(minFrom) + '.' : '.'), robots: IDX, jsonld };
+    }
+    if (route === 'home') return { title: 'Printoka — Online Printing in Malaysia, Singapore & Brunei | 100+ Products, Instant Pricing', description: 'Order business cards, flyers, stickers, packaging and more online. Instant pricing, member discounts up to 15%, and nationwide delivery across Malaysia, Singapore and Brunei.', robots: IDX, jsonld: { '@context': ctx, '@graph': [org, { '@type': 'WebSite', name: 'Printoka', url: origin, potentialAction: { '@type': 'SearchAction', target: origin + '/search?q={search_term_string}', 'query-input': 'required name=search_term_string' } }] } };
+    if (route === 'packaging') return { title: 'Custom Packaging Boxes Printing | Design Your Own | Printoka', description: 'Design custom packaging boxes, sleeves and mailers online in ' + C + '. Choose your size, material and finishing, with a free die-line to design on.', robots: IDX, jsonld: org };
+    if (route === 'membership') return { title: 'Printoka Membership — Save Up to 15% on Every Order', description: 'Earn Bronze, Silver, Gold or Platinum status as you print with Printoka. Automatic tier discounts, priority queue placement, and a dedicated account manager at Platinum.', robots: IDX, jsonld: { '@context': ctx, '@type': 'FAQPage', mainEntity: [{ '@type': 'Question', name: 'How do Printoka membership tiers work?', acceptedAnswer: { '@type': 'Answer', text: 'Your tier is set by trailing-12-month spend and applies automatically at checkout: Bronze 5%, Silver 8%, Gold 10% and Platinum 15%.' } }] } };
+    if (route === 'about' || route === 'corporate') return { title: 'About Printoka | Malaysia’s Trusted Printing Marketplace', description: 'Printoka connects partner printers across ' + C + ' with instant online pricing for 100+ products.', robots: IDX, jsonld: org };
+    if (route === 'support') return { title: 'Support & FAQ | Printoka', description: 'Artwork prep tips, FAQs and support for every Printoka product — free to read before you upload.', robots: IDX, jsonld: org };
+    if (route === 'learn') return { title: 'Printing Guides & Artwork Tips | Printoka Learning Hub', description: 'Bleed and margin guides, paper stock explainers, and artwork prep tips for every Printoka product — free to read before you upload.', robots: IDX, jsonld: org };
+    if (route === 'article') return { title: (this.state.article && this.state.article.title ? this.state.article.title : 'Article') + ' | Printoka Learning Hub', description: (this.state.article && this.state.article.excerpt) || 'A printing guide from the Printoka Learning Hub.', robots: IDX, jsonld: org };
+    if (route === 'downloads') return { title: 'Free Print Templates & Downloads | Printoka', description: 'Download print-ready templates, die-lines and artwork guides for Printoka products.', robots: IDX, jsonld: org };
+    if (route === 'contact') return { title: 'Contact Printoka | WhatsApp, Email & Support', description: 'Get in touch with Printoka support via WhatsApp, live chat or the contact form. We reply within 1 business day.', robots: IDX, jsonld: org };
+    if (route === 'partners') return { title: 'Partner With Printoka | Become a Printer', description: 'Join Printoka’s partner printer network and receive jobs from customers across ' + C + '.', robots: IDX, jsonld: org };
+    if (route === 'terms') return { title: 'Terms, Privacy & Policies | Printoka', description: 'Printoka terms of service, privacy and PDPA policy, and disclosures.', robots: IDX, jsonld: org };
+    const T = { cart: 'Your Cart', checkout: 'Checkout', confirm: 'Order Confirmed', auth: 'Log In / Sign Up', dash: 'My Account', invoices: 'Invoices', track: 'Track Order', artwork: 'Upload & Check Artwork', search: 'Search Results' };
+    if (T[route]) return { title: T[route] + ' | Printoka', description: '', robots: NOIDX, jsonld: null };
+    return { title: 'Printoka — Online Printing', description: 'Order printing online across ' + C + '.', robots: IDX, jsonld: org };
   }
 
   // ---------- cart + checkout + orders (storefront commerce loop) ----------
@@ -2481,7 +2550,7 @@ class Component extends DCLogic {
     return h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px 0' } },
       h('div', { style: { fontSize: 12.5, color: FAINT, marginBottom: 12 } },
         h('span', { 'data-go': 'home', style: { color: TEAL } }, 'Home'), ' › Products', active !== 'all' ? ' › ' + this.catCategoryLabel(active) : ''),
-      this.head(active === 'all' ? 'All products' : this.catCategoryLabel(active),
+      this.head(active === 'all' ? 'Online Printing' : this.catCategoryLabel(active) + ' Printing',
         active === 'all'
           ? 'Browse every product Printoka prints — ' + this.pkProducts().length + ' products across ' + this.catCategories().length + ' categories, each priced instantly from the live engine.'
           : seo.lead),
@@ -2657,7 +2726,7 @@ class Component extends DCLogic {
           h('div', { style: { display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 26 } },
             h('div', { style: { flex: '0 0 300px', maxWidth: 340, filter: 'drop-shadow(0 12px 24px rgba(33,33,33,.12))' } }, this.art(prod ? prod.name : 'card')),
             h('div', { style: { flex: '1 1 300px', minWidth: 0 } },
-              h('h1', { style: { margin: '0 0 10px', fontSize: 30, fontWeight: 600, letterSpacing: '-.02em' } }, NAME),
+              h('h1', { style: { margin: '0 0 10px', fontSize: 30, fontWeight: 600, letterSpacing: '-.02em' } }, NAME + ' Printing'),
               h('p', { style: { margin: '0 0 12px', fontSize: 14, color: MUT, lineHeight: 1.7 } }, (prod && prod.note) ? prod.note : 'Configure your job and get an instant, market-matched price — no waiting for a quote.'),
               h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, this.chip('Exact market price', 'ok'), this.chip('Ready in 3 working days', 'teal')))),
           h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4, border: '1px solid ' + HAIR, borderRadius: 14, padding: 20 } },
