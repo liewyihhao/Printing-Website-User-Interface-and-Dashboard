@@ -296,8 +296,12 @@ class Component extends DCLogic {
   // live size simulator: a proportional diagram of the selected size (standard or custom),
   // with Width/Height dimension lines — so the customer can see exactly what they picked.
   sizeSim() {
-    const cfg = this.pkV(), scfg = this.state.cfg || {};
-    const sv = String(cfg.size || '');
+    const cfg = this.pkV(), scfg = this.state.cfg || {}, ov = this.cfgOv();
+    // read the user's ACTUAL choice for a "please select" size (not the engine's auto-filled
+    // default), so the preview stays empty until a size is picked and then clearly reacts.
+    const sizePh = !!(ov.placeholder && ov.placeholder.indexOf('size') >= 0);
+    const sv = String((sizePh ? scfg.size : cfg.size) || '');
+    if (!sv) return { pendingSize: true };
     let a = null, b = null, custom = false;
     if (/other|custom/i.test(sv)) {
       const ch = parseFloat(scfg.custom_h), cw = parseFloat(scfg.custom_w);
@@ -2792,6 +2796,7 @@ class Component extends DCLogic {
             h('div', { key: 'a', style: { fontSize: 12.5, fontWeight: 600, marginBottom: 10 } }, 'Size preview & bleed'),
             sim && sim.svg ? h('div', { key: 's', style: { marginBottom: 10 } }, sim.svg,
               h('div', { style: { textAlign: 'center', fontSize: 12, fontWeight: 600, color: TEAL, marginTop: 4 } }, sim.label)) : null,
+            sim && sim.pendingSize ? h('div', { key: 'ps', style: { fontSize: 12, color: FAINT, textAlign: 'center', padding: '18px 0' } }, 'Choose a size above to preview it here.') : null,
             sim && sim.pending ? h('div', { key: 'p', style: { fontSize: 12, color: FAINT, textAlign: 'center', padding: '14px 0' } }, 'Enter a custom height and width to preview the size.') : null,
             h('div', { key: 'b', style: { border: '1px dashed #eaeaea', borderRadius: 8, padding: 12, background: '#fdf2f2', fontSize: 12, color: MUT, lineHeight: 1.6 } }, 'Bleed 3 mm all round · keep text 3–5 mm inside the trim'),
             h('div', { key: 'c', style: { marginTop: 10 } }, this.btn('Upload & check artwork', 'ghost', 'artwork', { justifyContent: 'center', width: '100%' })),
