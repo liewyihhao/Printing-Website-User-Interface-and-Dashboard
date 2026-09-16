@@ -68,9 +68,9 @@ function bcSilkDelta(silk, qty) {
 //   remark:    { fieldKey: 'helper text under the field' }
 const CFG_OVERRIDES = {
   'Business Card': {
-    // Excard's Business Card has no area inputs; the foil colour is a 6-colour picker (kept)
-    hide: ['hot_stamping_w', 'hot_stamping_h', 'embossing_w', 'embossing_h'],
-    label: { lamination: 'Paper Lamination', hot_stamping_colour: 'Hot Stamping — Foil Colour' },
+    // Excard's Business Card has no area inputs; the foil colour is a swatch picker (hs_colours widget)
+    hide: ['hot_stamping_w', 'hot_stamping_h', 'embossing_w', 'embossing_h', 'hot_stamping_colour'],
+    label: { lamination: 'Paper Lamination' },
     // hot stamping is price-neutral online (block quoted separately) — safe to match Excard's list exactly
     optionsOverride: {
       hot_stamping: ['No Hot Stamping', '1C (Front)', '1C (Back)', '1C (Front) + 1C (Back)', '1C (Front) + 2C (Back)', '2C (Front)', '2C (Back)', '2C (Front) + 1C (Back)', '2C (Front) + 2C (Back)'],
@@ -102,6 +102,8 @@ const CFG_OVERRIDES = {
       { key: 'creasing', label: 'Creasing', options: ['Standard Creasing', 'Customised Creasing'], section: 'General', neutral: true, after: 'size', showWhen: { field: 'category', values: ['Thin Fold', 'Fat Fold'] } },
       // Customised Creasing: distance of the crease from the left edge (min 10 mm)
       { key: 'crease_add', label: 'Crease position — Add (mm)', type: 'number', min: 10, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 78', note: 'Distance of the crease from the left edge (minimum 10 mm).', showWhen: { field: 'creasing', value: 'Customised Creasing' } },
+      // Hot Stamping foil colours: one 6-colour swatch picker per colour in the option + block
+      { key: 'hs_colours', widget: 'foilColours', section: 'Optional Finishing', neutral: true, after: 'hot_stamping', showWhen: { field: 'hot_stamping', notValues: ['No Hot Stamping'] } },
     ],
     optLabel: {
       category: { 'Standard': 'Standard Card', 'Custom Die Cut': 'Custom Die-Cut' },
@@ -405,6 +407,22 @@ class Component extends DCLogic {
         h('text', { x: x0 - 24, y: midy, textAnchor: 'middle', fontSize: 12, fontWeight: 600, fill: INK, transform: 'rotate(-90 ' + (x0 - 24) + ' ' + midy + ')' }, 'Height ' + Math.round(H) + ' mm')),
       label: 'Open ' + Math.round(W) + ' × ' + Math.round(H) + ' mm · crease at ' + Math.round(creaseAt) + ' mm (' + Math.round(leftW) + ' + ' + Math.round(rightW) + ')',
     };
+  }
+  // hot-stamping foil picker: one 6-colour swatch row per colour in the chosen option
+  // (Front/Back × Colour 1/2), plus a Hot Stamping Block choice — matching Excard.
+  foilColourPicker(def, cfg) {
+    const COLOURS = [['Gold', '#E6C200'], ['Silver', '#C4C4C4'], ['Green', '#2E7D32'], ['Blue', '#1E88E5'], ['Black', '#1A1A1A'], ['Red', '#C62828']];
+    const hs = String(cfg.hot_stamping || ''), pickers = [];
+    hs.split('+').forEach(part => { const m = part.match(/(\d)\s*C\s*\((Front|Back)\)/i); if (m) { const n = +m[1], side = /front/i.test(m[2]) ? 'Front' : 'Back'; for (let i = 1; i <= n; i++) pickers.push({ key: 'hs_' + side.toLowerCase() + '_' + i, label: side + ' — Colour ' + i }); } });
+    if (!pickers.length) return null;
+    const pick = (k, v) => this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [k]: v }) }));
+    const swatch = (key, c) => { const on = cfg[key] === c[0]; return h('span', { key: c[0], onClick: e => { e.stopPropagation(); pick(key, c[0]); }, style: { display: 'inline-flex', alignItems: 'center', gap: 7, border: '1px solid ' + (on ? TEAL : HAIR), borderRadius: 999, padding: '5px 13px 5px 6px', cursor: 'pointer', background: on ? '#fdf2f2' : '#fff', fontSize: 12.5, fontWeight: on ? 600 : 500, color: on ? TEAL : INK } }, h('span', { style: { width: 15, height: 15, borderRadius: '50%', background: c[1], border: '1px solid rgba(0,0,0,.2)', flex: 'none' } }), c[0]); };
+    const row = (label, children) => h('div', { key: label, style: { border: '1px solid ' + HAIR, borderRadius: 10, padding: 14, background: '#fff', display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' } }, h('div', { style: { fontSize: 13, fontWeight: 600, minWidth: 110 } }, label), h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, children));
+    const blockVal = cfg.hs_block || 'None';
+    return h('div', { key: def.key, style: { padding: '6px 0 15px', borderTop: '1px solid ' + LINE } },
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+        pickers.map(p => row(p.label, COLOURS.map(c => swatch(p.key, c)))),
+        row('Hot Stamping Block', ['None', 'Same Block'].map(b => { const on = blockVal === b; return h('span', { key: b, onClick: e => { e.stopPropagation(); pick('hs_block', b); }, style: { display: 'inline-flex', alignItems: 'center', gap: 7, border: '1px solid ' + (on ? TEAL : HAIR), borderRadius: 999, padding: '6px 14px', cursor: 'pointer', background: on ? '#fdf2f2' : '#fff', fontSize: 12.5, fontWeight: on ? 600 : 500, color: on ? TEAL : INK } }, h('span', { style: { width: 13, height: 13, borderRadius: '50%', border: '2px solid ' + (on ? TEAL : '#bbb'), background: on ? TEAL : '#fff', boxShadow: on ? 'inset 0 0 0 2px #fff' : 'none', flex: 'none' } }), b); }))));
   }
   // physics-based shipment weight (kg) from size × paper gsm × qty × a packaging factor —
   // the engine's per-unit weight is unreliable for sheet goods (a 50g/card fallback), and
@@ -2795,6 +2813,7 @@ class Component extends DCLogic {
     };
     // render one field (image picker, dropdown, or value input with range hint)
     const renderField = ({ def, options }) => {
+      if (def.widget === 'foilColours') return this.foilColourPicker(def, cfg);
       const imgBase = ov.optImages && ov.optImages[def.key];
       if (imgBase && options && options.length) return imgPicker(def, options, cfg[def.key], imgBase);
       if (options && options.length) return optSelect(def, options, cfg[def.key]);
