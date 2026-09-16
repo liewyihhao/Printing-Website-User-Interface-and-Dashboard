@@ -75,6 +75,12 @@ const CFG_OVERRIDES = {
     optionsOverride: {
       hot_stamping: ['No Hot Stamping', '1C (Front)', '1C (Back)', '1C (Front) + 1C (Back)', '1C (Front) + 2C (Back)', '2C (Front)', '2C (Back)', '2C (Front) + 1C (Back)', '2C (Front) + 2C (Back)'],
       hot_stamping_colour: ['Gold', 'Silver', 'Green', 'Blue', 'Black', 'Red'],
+      // fold cards have their own preset open sizes (Excard); Standard keeps the engine's sizes.
+      size: (cfg, options) => {
+        if (cfg.category === 'Thin Fold') return ['54mm × 178mm (Open Size)', '52mm × 172mm (Open Size)', '50mm × 172mm (Open Size)', '52mm × 156mm (Open Size)', 'Other (Custom Size)'];
+        if (cfg.category === 'Fat Fold') return ['89mm × 108mm (Open Size)', '86mm × 104mm (Open Size)', '86mm × 100mm (Open Size)', '86mm × 88mm (Open Size)', 'Other (Custom Size)'];
+        return options;
+      },
     },
     // fields rendered as an image picker (base path; image = base + optionValue + '.jpg')
     optImages: { round_corner_position: 'assets/options/businesscard-roundcorner/' },
@@ -82,22 +88,20 @@ const CFG_OVERRIDES = {
     priceSub: { size: { 'Other (Custom Size)': '54mm x 89mm' } },
     // Silkscreen Spot UV cash delta the crawl missed (verified live against Excard's price API)
     priceAddon: { silkscreen_spot_uv: (cfg, qty) => bcSilkDelta(cfg.silkscreen_spot_uv, qty) },
-    // Thin/Fat Fold are folded cards: the standard Size dropdown is replaced by fold custom
-    // size inputs (Excard ranges) + a Creasing field, and the preview shows the fold line.
-    hideWhen: { size: cfg => /Fold$/.test(String(cfg.category || '')) },
-    // custom-size inputs shown only when Size = "Other (Custom Size)" (Excard ranges)
+    // Custom Size inputs appear only when Size = "Other (Custom Size)"; the ranges depend on the
+    // card category (Standard / Thin Fold / Fat Fold). Creasing shows for fold cards.
     addFields: [
-      { key: 'custom_h', label: 'Custom Size — Height (mm)', type: 'number', min: 40, max: 54, section: 'General', neutral: true, placeholder: 'e.g. 50', showWhen: { field: 'size', value: 'Other (Custom Size)' } },
-      { key: 'custom_w', label: 'Custom Size — Width (mm)', type: 'number', min: 40, max: 89, section: 'General', neutral: true, placeholder: 'e.g. 85', note: 'Width must be greater than Height', showWhen: { field: 'size', value: 'Other (Custom Size)' } },
-      // Thin Fold — open card 110–178 mm wide, folds down the middle (H 52–54 mm)
-      { key: 'fold_h_thin', label: 'Open Height (mm)', type: 'number', min: 52, max: 54, section: 'General', neutral: true, after: 'category', placeholder: 'e.g. 54', showWhen: { field: 'category', value: 'Thin Fold' } },
-      { key: 'fold_w_thin', label: 'Open Width (mm)', type: 'number', min: 110, max: 178, section: 'General', neutral: true, after: 'category', placeholder: 'e.g. 178', note: 'folds to half width', showWhen: { field: 'category', value: 'Thin Fold' } },
-      // Fat Fold — open card 60–108 mm wide (H 70–89 mm)
-      { key: 'fold_h_fat', label: 'Open Height (mm)', type: 'number', min: 70, max: 89, section: 'General', neutral: true, after: 'category', placeholder: 'e.g. 89', showWhen: { field: 'category', value: 'Fat Fold' } },
-      { key: 'fold_w_fat', label: 'Open Width (mm)', type: 'number', min: 60, max: 108, section: 'General', neutral: true, after: 'category', placeholder: 'e.g. 108', note: 'folds to half width', showWhen: { field: 'category', value: 'Fat Fold' } },
-      { key: 'creasing', label: 'Creasing', options: ['Standard Creasing', 'Customised Creasing'], section: 'General', neutral: true, after: 'category', showWhen: { field: 'category', values: ['Thin Fold', 'Fat Fold'] } },
+      { key: 'custom_h', label: 'Custom Size — Height (mm)', type: 'number', min: 40, max: 54, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 50', showWhen: { all: [{ field: 'category', value: 'Standard' }, { field: 'size', value: 'Other (Custom Size)' }] } },
+      { key: 'custom_w', label: 'Custom Size — Width (mm)', type: 'number', min: 40, max: 89, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 85', note: 'Width must be greater than Height', showWhen: { all: [{ field: 'category', value: 'Standard' }, { field: 'size', value: 'Other (Custom Size)' }] } },
+      // Thin Fold custom — open card 110–178 mm wide, folds down the middle (H 52–54 mm)
+      { key: 'fold_h_thin', label: 'Open Height (mm)', type: 'number', min: 52, max: 54, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 54', showWhen: { all: [{ field: 'category', value: 'Thin Fold' }, { field: 'size', value: 'Other (Custom Size)' }] } },
+      { key: 'fold_w_thin', label: 'Open Width (mm)', type: 'number', min: 110, max: 178, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 178', note: 'folds to half width', showWhen: { all: [{ field: 'category', value: 'Thin Fold' }, { field: 'size', value: 'Other (Custom Size)' }] } },
+      // Fat Fold custom — open card 60–108 mm wide (H 70–89 mm)
+      { key: 'fold_h_fat', label: 'Open Height (mm)', type: 'number', min: 70, max: 89, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 89', showWhen: { all: [{ field: 'category', value: 'Fat Fold' }, { field: 'size', value: 'Other (Custom Size)' }] } },
+      { key: 'fold_w_fat', label: 'Open Width (mm)', type: 'number', min: 60, max: 108, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 108', note: 'folds to half width', showWhen: { all: [{ field: 'category', value: 'Fat Fold' }, { field: 'size', value: 'Other (Custom Size)' }] } },
+      { key: 'creasing', label: 'Creasing', options: ['Standard Creasing', 'Customised Creasing'], section: 'General', neutral: true, after: 'size', showWhen: { field: 'category', values: ['Thin Fold', 'Fat Fold'] } },
       // Customised Creasing: distance of the crease from the left edge (min 10 mm)
-      { key: 'crease_add', label: 'Crease position — Add (mm)', type: 'number', min: 10, section: 'General', neutral: true, after: 'category', placeholder: 'e.g. 78', note: 'Distance of the crease from the left edge (minimum 10 mm).', showWhen: { field: 'creasing', value: 'Customised Creasing' } },
+      { key: 'crease_add', label: 'Crease position — Add (mm)', type: 'number', min: 10, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 78', note: 'Distance of the crease from the left edge (minimum 10 mm).', showWhen: { field: 'creasing', value: 'Customised Creasing' } },
     ],
     optLabel: {
       category: { 'Standard': 'Standard Card', 'Custom Die Cut': 'Custom Die-Cut' },
@@ -312,12 +316,23 @@ class Component extends DCLogic {
     // folded cards (Thin/Fat Fold) draw the open card + a crease/fold line, like Excard.
     const cat = String(cfg.category || '');
     const fold = /^Thin Fold$/.test(cat) ? 'thin' : /^Fat Fold$/.test(cat) ? 'fat' : null;
+    const sizePhTop = !!(ov.placeholder && ov.placeholder.indexOf('size') >= 0);
     if (fold) {
-      const rng = fold === 'thin' ? { h: [52, 54], w: [110, 178] } : { h: [70, 89], w: [60, 108] };
-      const H = parseFloat(fold === 'thin' ? scfg.fold_h_thin : scfg.fold_h_fat);
-      const W = parseFloat(fold === 'thin' ? scfg.fold_w_thin : scfg.fold_w_fat);
-      // only preview a size that is complete AND within range (no out-of-range flashes while typing)
-      if (!(H >= rng.h[0] && H <= rng.h[1] && W >= rng.w[0] && W <= rng.w[1])) return { pendingSize: true, msg: 'Enter an open size within range — Height ' + rng.h[0] + '–' + rng.h[1] + ' mm, Width ' + rng.w[0] + '–' + rng.w[1] + ' mm.' };
+      const sizeSel = String((sizePhTop ? scfg.size : cfg.size) || '');
+      if (!sizeSel) return { pendingSize: true };
+      let W, H;
+      if (/other|custom/i.test(sizeSel)) {
+        const rng = fold === 'thin' ? { h: [52, 54], w: [110, 178] } : { h: [70, 89], w: [60, 108] };
+        H = parseFloat(fold === 'thin' ? scfg.fold_h_thin : scfg.fold_h_fat);
+        W = parseFloat(fold === 'thin' ? scfg.fold_w_thin : scfg.fold_w_fat);
+        // only preview a size that is complete AND within range (no out-of-range flashes while typing)
+        if (!(H >= rng.h[0] && H <= rng.h[1] && W >= rng.w[0] && W <= rng.w[1])) return { pendingSize: true, msg: 'Enter an open size within range — Height ' + rng.h[0] + '–' + rng.h[1] + ' mm, Width ' + rng.w[0] + '–' + rng.w[1] + ' mm.' };
+      } else {
+        // preset e.g. "54mm × 178mm (Open Size)" → height × open width
+        const m = sizeSel.match(/(\d+(?:\.\d+)?)\s*mm\s*[x×]\s*(\d+(?:\.\d+)?)\s*mm/i);
+        if (!m) return { pendingSize: true };
+        H = +m[1]; W = +m[2];
+      }
       // crease position: middle for Standard, user-chosen (Add mm from left, min 10) for Customised
       let creaseAt = W / 2;
       if (/Customised/i.test(String(cfg.creasing || ''))) {
@@ -424,7 +439,7 @@ class Component extends DCLogic {
     (ov.addFields || []).forEach(af => {
       if (af.showWhen && !this.pkShown(af, cfg)) return;
       const node = { def: af, options: (af.options || null) };
-      const depKey = af.showWhen && (af.showWhen.field || (af.showWhen.all && af.showWhen.all[0] && af.showWhen.all[0].field)) || af.after;
+      const depKey = af.after || (af.showWhen && (af.showWhen.field || (af.showWhen.all && af.showWhen.all[0] && af.showWhen.all[0].field)));
       let at = depKey ? list.findIndex(x => x.def.key === depKey) : -1;
       if (at >= 0) { let j = at + 1; while (j < list.length && list[j].def.__added) j++; list.splice(j, 0, Object.assign(node, { def: Object.assign({ __added: true }, af) })); }
       else list.push(Object.assign(node, { def: Object.assign({ __added: true }, af) }));
@@ -439,11 +454,15 @@ class Component extends DCLogic {
     const cfg = Object.assign({}, this.state.cfg || {});
     if (!E || !prod) return cfg;
     const fields = (prod.fields || []).filter(f => f.key);
+    const ovOpts = this.cfgOv().optionsOverride || {};
     for (let pass = 0; pass <= fields.length + 1; pass++) {
       let changed = false;
       for (const f of fields) {
         if (!this.pkShown(f, cfg)) continue;
         let opts = []; try { opts = E.localOptions(prod, f.key, cfg) || []; } catch (e) { opts = f.options || []; }
+        // validate against the display option-override list where one exists, so an overridden
+        // value (e.g. a fold-card preset size not in the engine's list) isn't reset.
+        if (ovOpts[f.key]) { try { const a = typeof ovOpts[f.key] === 'function' ? ovOpts[f.key](cfg, opts) : ovOpts[f.key]; if (a && a.length) opts = a; } catch (e) {} }
         if (!opts.length) continue;
         if (cfg[f.key] == null || opts.indexOf(cfg[f.key]) < 0) { cfg[f.key] = opts[0]; changed = true; }
       }
@@ -2737,7 +2756,8 @@ class Component extends DCLogic {
       const remark = (ov.remark && ov.remark[def.key]) || null;
       const optLabel = (ov.optLabel && ov.optLabel[def.key]) || {};
       const isPh = !!(ov.placeholder && ov.placeholder.indexOf(def.key) >= 0);
-      const dispOptions = (ov.optionsOverride && ov.optionsOverride[def.key]) || options;
+      let dispOptions = ov.optionsOverride && ov.optionsOverride[def.key];
+      dispOptions = (typeof dispOptions === 'function' ? (dispOptions(this.pkV(), options) || options) : (dispOptions || options));
       const chosen = isPh ? (this.state.cfg[def.key] != null ? this.state.cfg[def.key] : '') : (sel != null ? sel : (dispOptions[0] || ''));
       const isPh0 = isPh && (chosen === '' || chosen == null);
       const curText = isPh0 ? 'Please Select' : (optLabel[chosen] || chosen);
