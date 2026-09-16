@@ -96,6 +96,8 @@ const CFG_OVERRIDES = {
       { key: 'fold_h_fat', label: 'Open Height (mm)', type: 'number', min: 70, max: 89, section: 'General', neutral: true, after: 'category', placeholder: 'e.g. 89', showWhen: { field: 'category', value: 'Fat Fold' } },
       { key: 'fold_w_fat', label: 'Open Width (mm)', type: 'number', min: 60, max: 108, section: 'General', neutral: true, after: 'category', placeholder: 'e.g. 108', note: 'folds to half width', showWhen: { field: 'category', value: 'Fat Fold' } },
       { key: 'creasing', label: 'Creasing', options: ['Standard Creasing', 'Customised Creasing'], section: 'General', neutral: true, after: 'category', showWhen: { field: 'category', values: ['Thin Fold', 'Fat Fold'] } },
+      // Customised Creasing: distance of the crease from the left edge (min 10 mm)
+      { key: 'crease_add', label: 'Crease position — Add (mm)', type: 'number', min: 10, section: 'General', neutral: true, after: 'category', placeholder: 'e.g. 78', note: 'Distance of the crease from the left edge (minimum 10 mm).', showWhen: { field: 'creasing', value: 'Customised Creasing' } },
     ],
     optLabel: {
       category: { 'Standard': 'Standard Card', 'Custom Die Cut': 'Custom Die-Cut' },
@@ -316,7 +318,14 @@ class Component extends DCLogic {
       const W = parseFloat(fold === 'thin' ? scfg.fold_w_thin : scfg.fold_w_fat);
       // only preview a size that is complete AND within range (no out-of-range flashes while typing)
       if (!(H >= rng.h[0] && H <= rng.h[1] && W >= rng.w[0] && W <= rng.w[1])) return { pendingSize: true, msg: 'Enter an open size within range — Height ' + rng.h[0] + '–' + rng.h[1] + ' mm, Width ' + rng.w[0] + '–' + rng.w[1] + ' mm.' };
-      return this.foldDiagram(W, H, cfg.creasing);
+      // crease position: middle for Standard, user-chosen (Add mm from left, min 10) for Customised
+      let creaseAt = W / 2;
+      if (/Customised/i.test(String(cfg.creasing || ''))) {
+        const ca = parseFloat(scfg.crease_add);
+        if (!(ca >= 10 && ca <= W - 10)) return { pendingSize: true, msg: 'Enter the crease position (Add) between 10 and ' + Math.round(W - 10) + ' mm.' };
+        creaseAt = ca;
+      }
+      return this.foldDiagram(W, H, cfg.creasing, creaseAt);
     }
     // read the user's ACTUAL choice for a "please select" size (not the engine's auto-filled
     // default), so the preview stays empty until a size is picked and then clearly reacts.
@@ -353,28 +362,33 @@ class Component extends DCLogic {
       label: (custom ? 'Custom size · ' : '') + Math.round(W) + ' × ' + Math.round(H) + ' mm',
     };
   }
-  // fold-card diagram: open card with a dashed centre crease line + panel arrows, matching Excard.
-  foldDiagram(W, H, creasing) {
+  // fold-card diagram: open card with a dashed crease line at the given position (default centre),
+  // panel arrows and left/right panel-width labels, matching Excard.
+  foldDiagram(W, H, creasing, creaseAt) {
+    if (!(creaseAt > 0 && creaseAt < W)) creaseAt = W / 2;
+    const leftW = creaseAt, rightW = W - creaseAt;
     const maxW = 224, maxH = 108, ar = W / H;
     let dw = maxW, dh = maxW / ar; if (dh > maxH) { dh = maxH; dw = maxH * ar; }
-    const pad = 42, VW = dw + pad * 2, VH = dh + pad * 2, x0 = pad, y0 = pad, midx = x0 + dw / 2, midy = y0 + dh / 2;
+    const pad = 42, VW = dw + pad * 2, VH = dh + pad * 2, x0 = pad, y0 = pad, midy = y0 + dh / 2;
+    const cx = x0 + (creaseAt / W) * dw; // crease x-position, proportional
     const arrow = (x1, y1, x2, y2) => h('line', { x1, y1, x2, y2, stroke: MUT, strokeWidth: 1, markerStart: 'url(#pkA2)', markerEnd: 'url(#pkA2)' });
+    const seg = (x1, x2, val) => [arrow(x1 + 5, midy, x2 - 5, midy), h('text', { x: (x1 + x2) / 2, y: midy - 5, textAnchor: 'middle', fontSize: 11, fontWeight: 600, fill: INK }, Math.round(val))];
     return {
       svg: h('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: { width: '100%', maxWidth: 300, height: 'auto', display: 'block', margin: '0 auto' } },
         h('defs', null, h('marker', { id: 'pkA2', markerWidth: 8, markerHeight: 8, refX: 4, refY: 4, orient: 'auto' }, h('path', { d: 'M1 4 L7 1 L7 7 Z', fill: MUT }))),
         h('rect', { x: x0, y: y0, width: dw, height: dh, fill: '#fff', stroke: INK, strokeWidth: 1.5 }),
-        // centre crease (fold) line
-        h('line', { x1: midx, y1: y0 - 8, x2: midx, y2: y0 + dh + 8, stroke: TEAL, strokeWidth: 1.5, strokeDasharray: '5 4' }),
-        h('text', { x: midx, y: y0 - 12, textAnchor: 'middle', fontSize: 10, fontWeight: 600, fill: TEAL }, 'Fold'),
-        // panel arrows (left half / right half)
-        arrow(x0 + 8, midy, midx - 8, midy), arrow(midx + 8, midy, x0 + dw - 8, midy),
-        // width dimension
+        // crease (fold) line at position
+        h('line', { x1: cx, y1: y0 - 8, x2: cx, y2: y0 + dh + 8, stroke: TEAL, strokeWidth: 1.5, strokeDasharray: '5 4' }),
+        h('text', { x: cx, y: y0 - 12, textAnchor: 'middle', fontSize: 10, fontWeight: 600, fill: TEAL }, 'Fold'),
+        // left + right panel widths
+        seg(x0, cx, leftW), seg(cx, x0 + dw, rightW),
+        // total width dimension
         arrow(x0, y0 + dh + 18, x0 + dw, y0 + dh + 18),
-        h('text', { x: midx, y: y0 + dh + 32, textAnchor: 'middle', fontSize: 12, fontWeight: 600, fill: INK }, 'Width ' + Math.round(W) + ' mm'),
+        h('text', { x: x0 + dw / 2, y: y0 + dh + 32, textAnchor: 'middle', fontSize: 12, fontWeight: 600, fill: INK }, 'Width ' + Math.round(W) + ' mm'),
         // height dimension
         arrow(x0 - 18, y0, x0 - 18, y0 + dh),
         h('text', { x: x0 - 24, y: midy, textAnchor: 'middle', fontSize: 12, fontWeight: 600, fill: INK, transform: 'rotate(-90 ' + (x0 - 24) + ' ' + midy + ')' }, 'Height ' + Math.round(H) + ' mm')),
-      label: 'Open ' + Math.round(W) + ' × ' + Math.round(H) + ' mm → folds to ' + Math.round(W / 2) + ' × ' + Math.round(H) + ' mm' + (creasing ? ' · ' + creasing : ''),
+      label: 'Open ' + Math.round(W) + ' × ' + Math.round(H) + ' mm · crease at ' + Math.round(creaseAt) + ' mm (' + Math.round(leftW) + ' + ' + Math.round(rightW) + ')',
     };
   }
   // physics-based shipment weight (kg) from size × paper gsm × qty × a packaging factor —
