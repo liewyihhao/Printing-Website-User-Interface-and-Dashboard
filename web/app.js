@@ -82,10 +82,20 @@ const CFG_OVERRIDES = {
     priceSub: { size: { 'Other (Custom Size)': '54mm x 89mm' } },
     // Silkscreen Spot UV cash delta the crawl missed (verified live against Excard's price API)
     priceAddon: { silkscreen_spot_uv: (cfg, qty) => bcSilkDelta(cfg.silkscreen_spot_uv, qty) },
+    // Thin/Fat Fold are folded cards: the standard Size dropdown is replaced by fold custom
+    // size inputs (Excard ranges) + a Creasing field, and the preview shows the fold line.
+    hideWhen: { size: cfg => /Fold$/.test(String(cfg.category || '')) },
     // custom-size inputs shown only when Size = "Other (Custom Size)" (Excard ranges)
     addFields: [
       { key: 'custom_h', label: 'Custom Size — Height (mm)', type: 'number', min: 40, max: 54, section: 'General', neutral: true, placeholder: 'e.g. 50', showWhen: { field: 'size', value: 'Other (Custom Size)' } },
       { key: 'custom_w', label: 'Custom Size — Width (mm)', type: 'number', min: 40, max: 89, section: 'General', neutral: true, placeholder: 'e.g. 85', note: 'Width must be greater than Height', showWhen: { field: 'size', value: 'Other (Custom Size)' } },
+      // Thin Fold — open card 110–178 mm wide, folds down the middle (H 52–54 mm)
+      { key: 'fold_h_thin', label: 'Open Height (mm)', type: 'number', min: 52, max: 54, section: 'General', neutral: true, after: 'category', placeholder: 'e.g. 54', showWhen: { field: 'category', value: 'Thin Fold' } },
+      { key: 'fold_w_thin', label: 'Open Width (mm)', type: 'number', min: 110, max: 178, section: 'General', neutral: true, after: 'category', placeholder: 'e.g. 178', note: 'folds to half width', showWhen: { field: 'category', value: 'Thin Fold' } },
+      // Fat Fold — open card 60–108 mm wide (H 70–89 mm)
+      { key: 'fold_h_fat', label: 'Open Height (mm)', type: 'number', min: 70, max: 89, section: 'General', neutral: true, after: 'category', placeholder: 'e.g. 89', showWhen: { field: 'category', value: 'Fat Fold' } },
+      { key: 'fold_w_fat', label: 'Open Width (mm)', type: 'number', min: 60, max: 108, section: 'General', neutral: true, after: 'category', placeholder: 'e.g. 108', note: 'folds to half width', showWhen: { field: 'category', value: 'Fat Fold' } },
+      { key: 'creasing', label: 'Creasing', options: ['Standard Creasing', 'Customised Creasing'], section: 'General', neutral: true, after: 'category', showWhen: { field: 'category', values: ['Thin Fold', 'Fat Fold'] } },
     ],
     optLabel: {
       category: { 'Standard': 'Standard Card', 'Custom Die Cut': 'Custom Die-Cut' },
@@ -297,6 +307,15 @@ class Component extends DCLogic {
   // with Width/Height dimension lines — so the customer can see exactly what they picked.
   sizeSim() {
     const cfg = this.pkV(), scfg = this.state.cfg || {}, ov = this.cfgOv();
+    // folded cards (Thin/Fat Fold) draw the open card + a crease/fold line, like Excard.
+    const cat = String(cfg.category || '');
+    const fold = /^Thin Fold$/.test(cat) ? 'thin' : /^Fat Fold$/.test(cat) ? 'fat' : null;
+    if (fold) {
+      const H = parseFloat(fold === 'thin' ? scfg.fold_h_thin : scfg.fold_h_fat);
+      const W = parseFloat(fold === 'thin' ? scfg.fold_w_thin : scfg.fold_w_fat);
+      if (!(H > 0 && W > 0)) return { pendingSize: true };
+      return this.foldDiagram(W, H, cfg.creasing);
+    }
     // read the user's ACTUAL choice for a "please select" size (not the engine's auto-filled
     // default), so the preview stays empty until a size is picked and then clearly reacts.
     const sizePh = !!(ov.placeholder && ov.placeholder.indexOf('size') >= 0);
@@ -331,6 +350,30 @@ class Component extends DCLogic {
       label: (custom ? 'Custom size · ' : '') + Math.round(W) + ' × ' + Math.round(H) + ' mm',
     };
   }
+  // fold-card diagram: open card with a dashed centre crease line + panel arrows, matching Excard.
+  foldDiagram(W, H, creasing) {
+    const maxW = 224, maxH = 108, ar = W / H;
+    let dw = maxW, dh = maxW / ar; if (dh > maxH) { dh = maxH; dw = maxH * ar; }
+    const pad = 42, VW = dw + pad * 2, VH = dh + pad * 2, x0 = pad, y0 = pad, midx = x0 + dw / 2, midy = y0 + dh / 2;
+    const arrow = (x1, y1, x2, y2) => h('line', { x1, y1, x2, y2, stroke: MUT, strokeWidth: 1, markerStart: 'url(#pkA2)', markerEnd: 'url(#pkA2)' });
+    return {
+      svg: h('svg', { viewBox: '0 0 ' + VW + ' ' + VH, style: { width: '100%', maxWidth: 300, height: 'auto', display: 'block', margin: '0 auto' } },
+        h('defs', null, h('marker', { id: 'pkA2', markerWidth: 8, markerHeight: 8, refX: 4, refY: 4, orient: 'auto' }, h('path', { d: 'M1 4 L7 1 L7 7 Z', fill: MUT }))),
+        h('rect', { x: x0, y: y0, width: dw, height: dh, fill: '#fff', stroke: INK, strokeWidth: 1.5 }),
+        // centre crease (fold) line
+        h('line', { x1: midx, y1: y0 - 8, x2: midx, y2: y0 + dh + 8, stroke: TEAL, strokeWidth: 1.5, strokeDasharray: '5 4' }),
+        h('text', { x: midx, y: y0 - 12, textAnchor: 'middle', fontSize: 10, fontWeight: 600, fill: TEAL }, 'Fold'),
+        // panel arrows (left half / right half)
+        arrow(x0 + 8, midy, midx - 8, midy), arrow(midx + 8, midy, x0 + dw - 8, midy),
+        // width dimension
+        arrow(x0, y0 + dh + 18, x0 + dw, y0 + dh + 18),
+        h('text', { x: midx, y: y0 + dh + 32, textAnchor: 'middle', fontSize: 12, fontWeight: 600, fill: INK }, 'Width ' + Math.round(W) + ' mm'),
+        // height dimension
+        arrow(x0 - 18, y0, x0 - 18, y0 + dh),
+        h('text', { x: x0 - 24, y: midy, textAnchor: 'middle', fontSize: 12, fontWeight: 600, fill: INK, transform: 'rotate(-90 ' + (x0 - 24) + ' ' + midy + ')' }, 'Height ' + Math.round(H) + ' mm')),
+      label: 'Open ' + Math.round(W) + ' × ' + Math.round(H) + ' mm → folds to ' + Math.round(W / 2) + ' × ' + Math.round(H) + ' mm' + (creasing ? ' · ' + creasing : ''),
+    };
+  }
   // physics-based shipment weight (kg) from size × paper gsm × qty × a packaging factor —
   // the engine's per-unit weight is unreliable for sheet goods (a 50g/card fallback), and
   // this matches Excard's stated weight (± their own 10% tolerance). Falls back to the engine.
@@ -350,8 +393,9 @@ class Component extends DCLogic {
     const cfg = Object.assign({}, this.pkV());
     const ov = this.cfgOv(), ph = ov.placeholder || [], sc = this.state.cfg || {};
     ph.forEach(k => { if (sc[k] == null || sc[k] === '') delete cfg[k]; });
-    const gates = ov.optGate || {};
-    const list = (prod.fields || []).filter(f => f.key && !this.pkHidden(f.key) && this.pkShown(f, cfg)).map(f => {
+    const gates = ov.optGate || {}, hideWhen = ov.hideWhen || {};
+    const hidden = f => { if (this.pkHidden(f.key)) return true; if (hideWhen[f.key]) { try { return !!hideWhen[f.key](cfg); } catch (e) {} } return false; };
+    const list = (prod.fields || []).filter(f => f.key && !hidden(f) && this.pkShown(f, cfg)).map(f => {
       let options = [];
       try { options = E.localOptions(prod, f.key, cfg) || []; } catch (e) { options = f.options || []; }
       // conditional validity: when a field's gate fails, offer only its first (safe) option
@@ -363,7 +407,7 @@ class Component extends DCLogic {
     (ov.addFields || []).forEach(af => {
       if (af.showWhen && !this.pkShown(af, cfg)) return;
       const node = { def: af, options: (af.options || null) };
-      const depKey = af.showWhen && af.showWhen.field;
+      const depKey = af.showWhen && (af.showWhen.field || (af.showWhen.all && af.showWhen.all[0] && af.showWhen.all[0].field)) || af.after;
       let at = depKey ? list.findIndex(x => x.def.key === depKey) : -1;
       if (at >= 0) { let j = at + 1; while (j < list.length && list[j].def.__added) j++; list.splice(j, 0, Object.assign(node, { def: Object.assign({ __added: true }, af) })); }
       else list.push(Object.assign(node, { def: Object.assign({ __added: true }, af) }));
