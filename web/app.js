@@ -45,18 +45,6 @@ const LAMS = [['Gloss Lamination (Both)',0],['Matte Lamination (Both)',6],['Glos
 const SPOTUV = [['No Required',0],['Silkscreen Spot UV (Front)',45],['Silkscreen Spot UV (Both)',78]];
 const QTYS = [100,300,500,1000,2000,3000,5000];
 
-// Business Card Silkscreen Spot UV cash deltas by qty (captured live from Excard's price
-// API: [qty, +Front, +Both]). The crawl priced silkscreen as neutral; these restore it.
-const BC_SILK_BP = [[300, 7.35, 14.70], [500, 9.45, 18.90], [1000, 4.60, 19.65], [2000, 12.70, 42.75], [3000, 18.50, 64.70], [5000, 32.35, 108.55], [10000, 60.05, 212.55]];
-function bcSilkDelta(silk, qty) {
-  if (!silk || silk === 'No Required') return 0;
-  const col = silk === 'Silkscreen Spot UV (Both)' ? 2 : 1, bp = BC_SILK_BP;
-  if (qty <= bp[0][0]) return bp[0][col];
-  if (qty >= bp[bp.length - 1][0]) return bp[bp.length - 1][col];
-  for (let i = 0; i < bp.length - 1; i++) { if (qty >= bp[i][0] && qty <= bp[i + 1][0]) { const q1 = bp[i][0], q2 = bp[i + 1][0], d1 = bp[i][col], d2 = bp[i + 1][col]; return Math.round((d1 + (d2 - d1) * (qty - q1) / (q2 - q1)) * 100) / 100; } }
-  return 0;
-}
-
 // Per-product configurator corrections layered over the crawled engine, keyed by the
 // engine product name. Built product-by-product from a live Excard comparison so the
 // Printoka configurator matches the source order form exactly. DISPLAY-ONLY — pricing
@@ -66,8 +54,33 @@ function bcSilkDelta(silk, qty) {
 //   optLabel:  { fieldKey: { engineValue: 'shown label' } } — rename option text (value kept)
 //   placeholder: [fieldKeys] that start unselected showing "-- Please select --"
 //   remark:    { fieldKey: 'helper text under the field' }
+// Captured Excard live CASH price tables, loaded at runtime from /pricing/*.json (see
+// loadExcardPrices in componentDidMount). Keyed by engine product name → { qtys, standard,
+// fold, addons }. priceBase reads these so the configurator quotes Excard's live price to
+// the cent (pricing policy: follow Excard, not the frozen crawl engine).
+let EXCARD_PRICES = {};
+// package (N-in-1) design multipliers for Business Card
+const BC_PKG_N = { 'Normal': 1, '2in1': 2, '3in1': 3, '4in1': 4, '5in1': 5, '6in1': 6, '7in1': 7, '8in1': 8, '9in1': 9, '10in1': 10 };
+// Business Card price from the captured Excard table: standard cards (any size incl. custom —
+// price is size-independent) across paper × print colour × qty, × package designs, + hole-punch
+// delta. Returns null for configs the table doesn't cover (folds / plastic / die-cut → engine).
+function bcPriceBase(cfg, qty) {
+  const T = EXCARD_PRICES['Business Card']; if (!T) return null;
+  if (cfg.category !== 'Standard') return null;            // folds/plastic/die-cut not captured yet
+  const branch = T.standard && T.standard[cfg.paper]; if (!branch) return null;
+  const arr = branch[cfg.printcolour]; if (!arr) return null;
+  const qi = T.qtys.indexOf(qty); if (qi < 0) return null;
+  let base = arr[qi]; if (base == null) return null;
+  const A = T.addons || {};
+  let hp = 0;
+  if (cfg.holepunching && !/^no/i.test(cfg.holepunching) && Array.isArray(A.holepunch) && A.holepunch[qi] != null) hp = A.holepunch[qi];
+  const N = BC_PKG_N[cfg.package] || 1;                    // N designs, same spec → ×N
+  return Math.round((base + hp) * N * 100) / 100;
+}
+
 const CFG_OVERRIDES = {
   'Business Card': {
+    priceBase: bcPriceBase,
     // Excard's Business Card has no area inputs; the foil colour is a swatch picker (hs_colours widget)
     hide: ['hot_stamping_w', 'hot_stamping_h', 'embossing_w', 'embossing_h', 'hot_stamping_colour'],
     label: { lamination: 'Paper Lamination' },
@@ -86,8 +99,9 @@ const CFG_OVERRIDES = {
     optImages: { round_corner_position: 'assets/options/businesscard-roundcorner/' },
     // custom size prices exactly as the standard 54x89 card (dimension-independent, verified on Excard)
     priceSub: { size: { 'Other (Custom Size)': '54mm x 89mm' } },
-    // Silkscreen Spot UV cash delta the crawl missed (verified live against Excard's price API)
-    priceAddon: { silkscreen_spot_uv: (cfg, qty) => bcSilkDelta(cfg.silkscreen_spot_uv, qty) },
+    // NOTE: Silkscreen Spot UV, embossing, round corner & hot stamping are all price-neutral
+    // on Excard now (captured 2026-09-21) — no priceAddon. Hole punching is priced inside
+    // bcPriceBase. Base pricing comes entirely from the captured Excard table via priceBase.
     // Custom Size inputs appear only when Size = "Other (Custom Size)"; the ranges depend on the
     // card category (Standard / Thin Fold / Fat Fold). Creasing shows for fold cards.
     addFields: [
@@ -516,11 +530,17 @@ class Component extends DCLogic {
       let V = cfg;
       if (ov.priceSub) { V = Object.assign({}, cfg); for (const k in ov.priceSub) { const m = ov.priceSub[k]; if (m[V[k]] != null) V[k] = m[V[k]]; } }
       const r = E.localQuote(prod, V, qty);
-      // priceAddon: cash deltas the crawl's addonDeltas missed, verified against Excard cash
-      // (e.g. Silkscreen Spot UV). Each returns a RM delta for the given cfg + qty.
+      // priceBase: when a product's pricing is driven directly from captured Excard CASH
+      // (the engine's own curve is stale / structurally different), priceBase(cfg,qty)
+      // returns the Excard cash for the current config in RM and REPLACES the engine base.
+      // Return null to fall back to the engine for a config the table doesn't cover.
+      let base = r.printoka_cash;
+      if (ov.priceBase) { try { const b = ov.priceBase(cfg, qty); if (b != null && isFinite(b)) base = b; } catch (e) {} }
+      // priceAddon: cash deltas added on top of the base (engine or priceBase), verified
+      // against Excard cash (e.g. Silkscreen Spot UV). Each returns a RM delta for cfg+qty.
       let addon = 0;
       if (ov.priceAddon) for (const k in ov.priceAddon) { try { const d = ov.priceAddon[k](cfg, qty); if (d) addon += d; } catch (e) {} }
-      const gross = Math.round((r.printoka_cash + addon) * 100) / 100;
+      const gross = Math.round((base + addon) * 100) / 100;
       const pct = this.tierPct() / 100;
       const net = Math.round(gross * (1 - pct) * 100) / 100;
       const disc = Math.round((gross - net) * 100) / 100;
@@ -542,6 +562,10 @@ class Component extends DCLogic {
   componentDidMount() {
     if (typeof fetch === 'function')
       fetch('/api/catalogue').then(r => r.json()).then(d => { if (d && d.overrides) this.setState({ catOverrides: d.overrides }); }).catch(() => {});
+    // captured Excard live price tables → EXCARD_PRICES (drives priceBase). forceUpdate so any
+    // already-rendered configurator re-prices once the table lands.
+    if (typeof fetch === 'function')
+      fetch('/pricing/excard_bc.json').then(r => r.json()).then(d => { if (d) { EXCARD_PRICES['Business Card'] = d; if (this.state.route === 'product') this.forceUpdate(); } }).catch(() => {});
     const r = this.opsRoleFor(this.state.route); if (r) this.opsLoad(this.opsActingRole());
     if (this.state.route === 'learn') this.blogLoad();
     if (this.state.route === 'production') this.loadVendors();
@@ -627,14 +651,54 @@ class Component extends DCLogic {
     try { const c = JSON.parse(localStorage.getItem('pk_cart') || '[]'); if (Array.isArray(c) && c.length) this.setState({ cart: c }); } catch (e) {}
   }
   saveCart(cart) { try { localStorage.setItem('pk_cart', JSON.stringify(cart || [])); } catch (e) {} }
+  // Full human-readable spec for the current configuration. Walks the *rendered* fields
+  // (pkFields → includes the synthetic override fields: custom size, fold sizes, creasing)
+  // and appends the Hot Stamping foil colours, so a placed order carries every choice —
+  // not only the priced axes. Returns { short, lines:[[label,value],…] }.
+  pkOrderSpec() {
+    const ov = this.cfgOv(), cfg = this.pkV();
+    let fields = []; try { fields = this.pkFields(); } catch (e) { fields = []; }
+    const NONE_RE = /^(no|not required|no required|none|not applicable|no hot stamping|no hole punching|no round corner|no fold(ing)?)$/i;
+    const dispLabel = def => (ov.label && ov.label[def.key]) || def.label || def.key;
+    const dispVal = (def, val) => { const m = (ov.optLabel && ov.optLabel[def.key]) || {}; return m[val] || val; };
+    // combine the custom H/W input pairs into one dimension line instead of two rows
+    const PAIRS = { custom_w: ['custom_h', 'Custom Size'], fold_w_thin: ['fold_h_thin', 'Open Size'], fold_w_fat: ['fold_h_fat', 'Open Size'] };
+    const SKIP_H = { custom_h: 1, fold_h_thin: 1, fold_h_fat: 1 };
+    const lines = [], seen = {};
+    for (const f of fields) {
+      const def = f.def, k = def && def.key; if (!k || seen[k]) continue; seen[k] = 1;
+      if (def.widget === 'foilColours') continue;      // colours handled below
+      if (SKIP_H[k]) continue;                          // folded into its width partner
+      if (PAIRS[k]) { const [hk, tag] = PAIRS[k]; if (cfg[hk] && cfg[k]) lines.push([tag, cfg[hk] + 'mm × ' + cfg[k] + 'mm']); continue; }
+      let val = cfg[k]; if (val == null || val === '') continue;
+      if (NONE_RE.test(String(val))) continue;   // drop "No/Not Required" selections (geometry fields are never none-like)
+      if (/^\d+(\.\d+)?$/.test(String(val)) && /\(mm\)/i.test(def.label || '')) val = val + 'mm';
+      lines.push([dispLabel(def), String(dispVal(def, val))]);
+    }
+    // Hot Stamping foil colours (same picker logic as foilColourPicker) + block
+    const hs = String(cfg.hot_stamping || '');
+    if (hs && !/^no /i.test(hs)) {
+      hs.split('+').forEach(part => { const m = part.match(/(\d)\s*C\s*\((Front|Back)\)/i); if (m) { const n = +m[1], side = /front/i.test(m[2]) ? 'Front' : 'Back'; for (let i = 1; i <= n; i++) { const v = cfg['hs_' + side.toLowerCase() + '_' + i]; if (v) lines.push(['Foil — ' + side + ' Colour ' + i, v]); } } });
+      if (cfg.hs_block && cfg.hs_block !== 'None') lines.push(['Hot Stamping Block', cfg.hs_block]);
+    }
+    // short line for the cart row: the meaningful choices, geometry/colour detail trimmed
+    const short = lines.filter(l => !/^(creasing|crease|foil |hot stamping block|custom size|open size)/i.test(l[0])).slice(0, 5).map(l => l[1]).join(' · ');
+    return { short: short || lines.slice(0, 5).map(l => l[1]).join(' · '), lines };
+  }
   addToCart() {
     if (!this.pkReady()) { if (typeof window !== 'undefined') window.scrollTo(0, 0); return this.go('product'); }
     const prod = this.pkProduct(), q = this.pkQuote(); if (!prod || !q || !q.ok) return;
-    const cfg = this.pkV();
-    const spec = (prod.fields || []).filter(f => f.key && cfg[f.key] && !f.neutral && !/^(category)$/.test(f.key)).slice(0, 5).map(f => cfg[f.key]).join(' · ');
-    const item = { productId: prod.id, name: this.catName(prod.id), spec, qty: this.state.qty || 1, unitPrice: q.gross / (this.state.qty || 1), lineTotal: q.gross };
+    const { short, lines } = this.pkOrderSpec();
+    const item = { productId: prod.id, name: this.catName(prod.id), spec: short, specLines: lines, qty: this.state.qty || 1, unitPrice: q.gross / (this.state.qty || 1), lineTotal: q.gross };
     const cart = (this.state.cart || []).concat([item]);
     this.setState({ cart }); this.saveCart(cart); this.go('cart');
+  }
+  // render a cart/order item's spec: labelled lines when specLines is present (new fields
+  // — fold sizes, creasing, custom size, foil colours — included), else the legacy string.
+  specView(it) {
+    if (it && it.specLines && it.specLines.length)
+      return it.specLines.map((l, k) => h('div', { key: k }, h('span', { style: { color: FAINT } }, l[0] + ': '), l[1]));
+    return ((it && it.spec) || '—').split(' · ').map((s, k) => h('div', { key: k }, s));
   }
   removeFromCart(i) { const cart = (this.state.cart || []).filter((_, idx) => idx !== i); this.setState({ cart }); this.saveCart(cart); }
   rmCart(i) { return this.removeFromCart(i); }
@@ -672,7 +736,7 @@ class Component extends DCLogic {
       customer: { name: this.state.coName || u.name || 'Guest customer', email: this.state.coEmail || u.email || '', phone: this.state.coPhone || u.phone || '', company: this.state.coCompany || u.company || '' },
       fulfillment: { method: this.state.coFulfil || 'delivery', address: addrText, addressId: this.state.coAddrId || null, outlet: this.state.coOutlet || '' },
       payment: { method: this.state.coPay || 'card_test' },
-      items: cart.map(it => ({ productId: it.productId, product: it.name, spec: it.spec, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal })),
+      items: cart.map(it => ({ productId: it.productId, product: it.name, spec: it.spec, specLines: it.specLines || null, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal })),
       subtotal: t.subtotal, memberDiscount: t.memberDiscount, tax: t.tax, shipping: t.shipping, total: t.total, creditApplied, tier: this.tier(),
     };
     this.setState({ placing: true });
@@ -1004,7 +1068,7 @@ class Component extends DCLogic {
             h('tbody', null, (o.items || []).map((it, i) => h('tr', { key: i, style: { borderBottom: '1px solid ' + LINE, verticalAlign: 'top' } },
               h('td', { style: { padding: '9px 4px', color: MUT } }, it.lineNo || i + 1),
               h('td', { style: { padding: '9px 4px' } }, h('div', { style: { fontWeight: 600 } }, it.product),
-                isSlip ? h('div', { style: { color: MUT, fontSize: 11.5, lineHeight: 1.6, marginTop: 3 } }, (it.spec || '').split(' · ').map((s, k) => h('div', { key: k }, s))) : null,
+                isSlip ? h('div', { style: { color: MUT, fontSize: 11.5, lineHeight: 1.6, marginTop: 3 } }, this.specView(it)) : null,
                 isSlip && (it.artworks || []).length ? h('div', { style: { color: TEAL, fontSize: 11.5, marginTop: 4 } }, (it.artworks || []).map((a, k) => h('div', { key: k }, 'Artwork: ' + a))) : null),
               h('td', { style: { padding: '9px 4px', textAlign: 'right', color: MUT } }, (it.qty || 0).toLocaleString()),
               h('td', { style: { padding: '9px 4px', textAlign: 'right', color: MUT } }, this.rm(it.unitPrice)),
@@ -1090,7 +1154,7 @@ class Component extends DCLogic {
                 h('div', { style: { display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' } },
                   h('span', { style: { fontSize: 13.5, fontWeight: 600 } }, it.product),
                   h('span', { style: { fontSize: 13, fontWeight: 600 } }, this.rm(it.lineTotal))),
-                h('div', { style: { fontSize: 12, color: MUT, lineHeight: 1.6, marginTop: 4 } }, (it.spec || '—').split(' · ').map((s, k) => h('div', { key: k }, s))),
+                h('div', { style: { fontSize: 12, color: MUT, lineHeight: 1.6, marginTop: 4 } }, this.specView(it)),
                 h('div', { style: { fontSize: 12, color: FAINT, marginTop: 4 } }, 'Qty ' + (it.qty || 0).toLocaleString() + ' · unit ' + this.rm(it.unitPrice)),
                 (it.artworks || []).length ? h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 } }, (it.artworks || []).map((a, k) =>
                   h('span', { key: k, style: { display: 'inline-flex', alignItems: 'center', gap: 5, background: CHIP, color: TEAL, fontSize: 11.5, fontWeight: 600, borderRadius: 6, padding: '4px 8px' } }, '📎 ' + a))) : h('div', { style: { fontSize: 11.5, color: FAINT, marginTop: 6 } }, 'No artwork uploaded yet')))))),
@@ -3114,9 +3178,9 @@ class Component extends DCLogic {
                   h('span', { 'data-go': 'open:' + it.productId, style: { fontSize: 12.5, color: TEAL, fontWeight: 600, cursor: 'pointer' } }, 'Edit'),
                   h('span', { onClick: () => this.rmCart(i), style: { marginLeft: 'auto', fontSize: 18, color: FAINT, cursor: 'pointer' } }, '🗑')),
                 [['Quantity (pcs)', it.qty.toLocaleString()], ['Price per piece', this.currency() + ' ' + (it.unitPrice * this.fx()).toFixed(3)], ['Subtotal', this.money(it.lineTotal)], ['Urgency', it.urgency || 'Standard'], ['Total', this.money(it.lineTotal), true]].map(r => kvRow(r[0], r[1], r[2])))),
-            it.spec ? h('div', { key: 'spec', style: { marginTop: 12 } },
+            (it.spec || (it.specLines && it.specLines.length)) ? h('div', { key: 'spec', style: { marginTop: 12 } },
               h('div', { style: { fontSize: 12.5, fontWeight: 600, marginBottom: 4 } }, 'Specification'),
-              h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.7 } }, it.spec)) : null,
+              h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.7 } }, this.specView(it))) : null,
             h('div', { key: 'act', style: { display: 'flex', gap: 18, marginTop: 12 } },
               h('span', { 'data-go': 'open:' + it.productId, style: { fontSize: 12.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'Edit'),
               h('span', { onClick: () => this.dupCart(i), style: { fontSize: 12.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'Duplicate')),
