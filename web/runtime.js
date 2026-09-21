@@ -29,7 +29,7 @@
         h('span', { style: { fontSize: 12, color: MUT, borderLeft: '1px solid ' + HAIR, paddingLeft: 12 } }, 'Staff console')));
     return h('div', { style: { position: 'sticky', top: 0, zIndex: 60, display: 'flex', flexDirection: 'column' } },
       h('header', { style: { background: 'rgba(255,255,255,.96)', backdropFilter: 'blur(8px)', borderBottom: '1px solid ' + HAIR } },
-        h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px', minHeight: 64, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px 18px' } },
+        h('div', { role: 'navigation', 'aria-label': 'Primary', style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px', minHeight: 64, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px 18px' } },
           // logo
           h('a', { 'data-go': 'home', href: '#', onClick: function (e) { e.preventDefault(); }, style: { display: 'flex', alignItems: 'center', gap: 9, fontWeight: 500, fontSize: 18, letterSpacing: '.16em', color: '#231f20', whiteSpace: 'nowrap', textDecoration: 'none' } },
             img('assets/icons/logomark.svg', { height: 26, width: 'auto', display: 'block', flex: 'none' }), 'printoka'),
@@ -171,8 +171,9 @@
     render() {
       var v = this.renderVals();
       return h('div', { onClick: v.onNav, style: { minHeight: '100vh', background: '#fff' } },
+        h('a', { href: '#pk-main', className: 'pk-skip' }, 'Skip to content'),
         header(v),
-        h('main', null, v.screen),
+        h('main', { id: 'pk-main', tabIndex: -1, style: { outline: 'none' } }, v.screen),
         v.staff ? null : footer(v),
         v.staff ? null : chat());
     }

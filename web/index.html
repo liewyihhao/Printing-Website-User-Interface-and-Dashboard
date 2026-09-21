@@ -29,7 +29,10 @@
   a:hover{color:#0e3f66}
   ::selection{background:#E5222026}
   [data-go]{cursor:pointer}
-  button:focus-visible,[data-go]:focus-visible{outline:2px solid #E52220;outline-offset:2px}
+  button:focus-visible,[data-go]:focus-visible,[role=button]:focus-visible,[role=option]:focus-visible,[role=combobox]:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #E52220;outline-offset:2px}
+  /* skip-to-content link: off-screen until keyboard-focused */
+  .pk-skip{position:absolute;left:-9999px;top:8px;z-index:200;background:#E52220;color:#fff;padding:9px 15px;border-radius:6px;font-weight:600;text-decoration:none}
+  .pk-skip:focus{left:8px}
   @keyframes pkFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
   @keyframes pkShine{0%{transform:translateX(0) skewX(-18deg)}60%,100%{transform:translateX(240px) skewX(-18deg)}}
   .pkfloat{animation:pkFloat 4.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}

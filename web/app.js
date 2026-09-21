@@ -637,10 +637,51 @@ class Component extends DCLogic {
     this.loadSettings();
     this.authLoad();
     this.applySEO();
+    // a11y: keyboard-activate data-go elements (Enter/Space), since they are not native buttons
+    if (typeof document !== 'undefined') document.addEventListener('keydown', this.onNavKey);
+    this.a11yEnhance();
   }
   componentDidUpdate(prevProps, prevState) {
     const s = this.state;
     if (!prevState || prevState.route !== s.route || prevState.prodId !== s.prodId || prevState.catFilter !== s.catFilter) this.applySEO();
+    this.a11yEnhance();
+  }
+  componentWillUnmount() { if (typeof document !== 'undefined') document.removeEventListener('keydown', this.onNavKey); }
+  // Enter / Space on a focused [data-go] element behaves like a click (native controls keep their own behaviour)
+  onNavKey = (e) => {
+    // Escape closes any open overlay (dropdown, mega menu, dialog, announcement)
+    if (e.key === 'Escape') {
+      const st = this.state;
+      if (st.ddOpen != null || st.megaOpen || st.dialog != null || st.nu_open || st.annClosed !== (st.settings && st.settings.announcement && st.settings.announcement.text)) {
+        const patch = {};
+        if (st.ddOpen != null) patch.ddOpen = null;
+        if (st.megaOpen) patch.megaOpen = false;
+        if (st.dialog != null) patch.dialog = null;
+        if (st.nu_open) patch.nu_open = false;
+        const annTxt = st.settings && st.settings.announcement && st.settings.announcement.text;
+        if (annTxt && st.annClosed !== annTxt) patch.annClosed = annTxt;
+        if (Object.keys(patch).length) { this.setState(patch); }
+      }
+      return;
+    }
+    if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+    const t = e.target; if (!t || !t.tagName) return;
+    if (/^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(t.tagName)) return;
+    const el = t.closest && t.closest('[data-go]'); if (!el) return;
+    e.preventDefault();
+    this.onNav(e);
+  };
+  // a11y: give every non-native [data-go] a button role + tab stop so it is reachable and
+  // announced. React replaces nodes on re-render, so this re-runs after each update.
+  a11yEnhance() {
+    if (typeof document === 'undefined') return;
+    const root = document.getElementById('root'); if (!root) return;
+    root.querySelectorAll('[data-go]').forEach(el => {
+      const tag = el.tagName;
+      if (tag === 'A' || tag === 'BUTTON' || tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+      if (el.getAttribute('tabindex') == null) el.setAttribute('tabindex', '0');
+      if (el.getAttribute('role') == null) el.setAttribute('role', 'button');
+    });
   }
   // ---------- SEO: dynamic <title>, meta description, robots + JSON-LD per route ----------
   applySEO() {
@@ -949,8 +990,8 @@ class Component extends DCLogic {
     const close = () => { try { localStorage.setItem('pk_ann', a.text); } catch (e) {} this.setState({ annClosed: a.text }); };
     const goCta = () => { close(); this.go(a.link || 'membership'); };
     return h('div', { key: 'annpop', onClick: close, style: { position: 'fixed', inset: 0, zIndex: 97, background: 'rgba(20,20,25,.4)', display: 'grid', placeItems: 'center', padding: 20 } },
-      h('div', { onClick: e => e.stopPropagation(), style: { position: 'relative', maxWidth: 460, width: '100%', borderRadius: 16, overflow: 'hidden', boxShadow: '0 24px 60px rgba(33,33,33,.35)', background: 'linear-gradient(135deg,#FF9A2E,#F02B29)', color: '#fff' } },
-        h('span', { onClick: close, style: { position: 'absolute', top: 12, right: 14, fontSize: 22, lineHeight: 1, cursor: 'pointer', color: 'rgba(255,255,255,.9)' } }, '×'),
+      h('div', { onClick: e => e.stopPropagation(), role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Announcement', style: { position: 'relative', maxWidth: 460, width: '100%', borderRadius: 16, overflow: 'hidden', boxShadow: '0 24px 60px rgba(33,33,33,.35)', background: 'linear-gradient(135deg,#FF9A2E,#F02B29)', color: '#fff' } },
+        h('span', { onClick: close, role: 'button', tabIndex: 0, 'aria-label': 'Close announcement', onKeyDown: e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); close(); } }, style: { position: 'absolute', top: 12, right: 14, fontSize: 22, lineHeight: 1, cursor: 'pointer', color: 'rgba(255,255,255,.9)' } }, '×'),
         h('div', { style: { padding: '30px 28px 26px', textAlign: 'center' } },
           h('img', { src: window.__asset('assets/icons/logomark.svg'), alt: '', style: { height: 40, width: 'auto', filter: 'brightness(0) invert(1)', marginBottom: 14 } }),
           h('div', { style: { fontSize: 12, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', opacity: .85, marginBottom: 10 } }, 'Announcement'),
@@ -2047,7 +2088,7 @@ class Component extends DCLogic {
       h('section', { style: { background: 'linear-gradient(180deg,#fdf2f2,#fff)', padding: '46px 0 40px' } },
         h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '0 20px', display: 'flex', gap: 40, alignItems: 'center', flexWrap: 'wrap' } },
           h('div', { style: { flex: '1 1 420px', minWidth: 0 } },
-            h('div', { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: '.09em', textTransform: 'uppercase', color: TEAL, marginBottom: 10 } }, 'Custom printing · Malaysia · Singapore · Brunei'),
+            h('div', { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: '.09em', textTransform: 'uppercase', color: TEALD, marginBottom: 10 } }, 'Custom printing · Malaysia · Singapore · Brunei'),
             h('h1', { style: { margin: '0 0 14px', fontSize: 'clamp(32px,4.4vw,50px)', lineHeight: 1.06, letterSpacing: '-.03em', fontWeight: 600 } }, 'Your exact print price, ', h('span', { style: { color: TEAL } }, 'in seconds.')),
             h('p', { style: { margin: '0 0 22px', fontSize: 16.5, color: MUT, maxWidth: '48ch', lineHeight: 1.65 } }, 'Configure your job and see the price to the cent. Order online when it looks right.'),
             h('div', { style: { display: 'flex', gap: 11, flexWrap: 'wrap' } }, this.btn('Get your price →', 'teal', 'product'), this.btn('Browse products', 'ghost', 'category')),
@@ -2433,7 +2474,7 @@ class Component extends DCLogic {
       h('section', { style: { background: 'linear-gradient(180deg,#fdf2f2,#fff)', borderRadius: 16, padding: '40px 34px', marginBottom: 26 } },
         h('div', { style: { display: 'flex', gap: 36, alignItems: 'center', flexWrap: 'wrap' } },
           h('div', { style: { flex: '1 1 360px', minWidth: 0 } },
-            h('div', { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: '.09em', textTransform: 'uppercase', color: TEAL, marginBottom: 10 } }, 'Custom packaging boxes'),
+            h('div', { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: '.09em', textTransform: 'uppercase', color: TEALD, marginBottom: 10 } }, 'Custom packaging boxes'),
             h('h1', { style: { margin: '0 0 12px', fontSize: 'clamp(30px,4vw,46px)', lineHeight: 1.05, letterSpacing: '-.03em', fontWeight: 600 } }, 'Create your own ', h('span', { style: { color: TEAL } }, 'packaging.')),
             h('p', { style: { margin: '0 0 18px', fontSize: 16, color: MUT, maxWidth: '50ch', lineHeight: 1.65 } }, 'Design a box, sleeve or mailer to your exact size. Pick your material and finishing and see the price instantly. Every order comes with a free die-line to design on.'),
             h('div', { style: { display: 'flex', gap: 10, alignItems: 'center', marginBottom: 20, flexWrap: 'wrap' } },
@@ -2913,18 +2954,34 @@ class Component extends DCLogic {
     const ddOpen = this.state.ddOpen;
     // Printoka-styled custom dropdown: closed shows the value / "Please Select"; opening reveals a
     // panel with the helper note above the options — both visible only when clicked.
-    const pkDropdown = (key, curText, isPlaceholder, remark, items) => {
+    const pkDropdown = (key, curText, isPlaceholder, remark, items, fieldLabel) => {
       const open = ddOpen === key;
+      const toggle = () => this.setState(st => ({ ddOpen: st.ddOpen === key ? null : key }));
+      const close = () => this.setState({ ddOpen: null });
+      const label = (fieldLabel || 'Option') + (isPlaceholder ? ' (not selected)' : ': ' + (typeof curText === 'string' ? curText : ''));
       return h('div', { style: { position: 'relative' } },
-        h('div', { onClick: e => { e.stopPropagation(); this.setState(st => ({ ddOpen: st.ddOpen === key ? null : key })); },
+        h('div', { onClick: e => { e.stopPropagation(); toggle(); },
+          tabIndex: 0, role: 'combobox', 'aria-haspopup': 'listbox', 'aria-expanded': open ? 'true' : 'false', 'aria-label': label,
+          onKeyDown: e => {
+            if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); e.stopPropagation(); toggle(); }
+            else if (e.key === 'ArrowDown' && !open) { e.preventDefault(); e.stopPropagation(); this.setState({ ddOpen: key }); }
+            else if (e.key === 'Escape' && open) { e.preventDefault(); e.stopPropagation(); close(); }
+          },
           style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, font: '400 14px Montserrat,sans-serif', color: isPlaceholder ? FAINT : INK, padding: '10px 13px', border: '1px solid ' + (open ? TEAL : HAIR), borderRadius: 8, background: '#fff', cursor: 'pointer', boxShadow: open ? '0 0 0 3px rgba(229,34,32,.10)' : 'none' } },
           h('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, curText),
-          h('span', { style: { flex: 'none', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .12s', color: FAINT, fontSize: 10 } }, '▼')),
-        open ? h('div', { onClick: e => e.stopPropagation(), style: { position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 50, background: '#fff', border: '1px solid ' + HAIR, borderRadius: 8, boxShadow: '0 12px 30px rgba(33,33,33,.18)', overflow: 'hidden' } },
+          h('span', { 'aria-hidden': 'true', style: { flex: 'none', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .12s', color: FAINT, fontSize: 10 } }, '▼')),
+        open ? h('div', { onClick: e => e.stopPropagation(), role: 'listbox', 'aria-label': label, style: { position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 50, background: '#fff', border: '1px solid ' + HAIR, borderRadius: 8, boxShadow: '0 12px 30px rgba(33,33,33,.18)', overflow: 'hidden' } },
           remark ? h('div', { style: { padding: '10px 13px', fontSize: 11.5, color: MUT, lineHeight: 1.55, background: ALT, borderBottom: '1px solid ' + LINE } }, remark) : null,
           h('div', { style: { maxHeight: 300, overflowY: 'auto' } },
-            items.map((it, i) => h('div', { key: i, onClick: e => { e.stopPropagation(); it.onPick(); this.setState({ ddOpen: null }); },
-              style: { padding: '10px 13px', fontSize: 13.5, cursor: 'pointer', color: it.on ? TEAL : INK, fontWeight: it.on ? 600 : 400, background: it.on ? '#fdf2f2' : '#fff', borderTop: i ? '1px solid ' + LINE : 'none' } }, it.label)))) : null);
+            items.map((it, i) => h('div', { key: i, role: 'option', 'aria-selected': it.on ? 'true' : 'false', tabIndex: 0,
+              onClick: e => { e.stopPropagation(); it.onPick(); close(); },
+              onKeyDown: e => {
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); e.stopPropagation(); it.onPick(); close(); }
+                else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); const n = e.currentTarget.nextElementSibling; if (n && n.focus) n.focus(); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); const p = e.currentTarget.previousElementSibling; if (p && p.focus) p.focus(); }
+              },
+              style: { padding: '10px 13px', fontSize: 13.5, cursor: 'pointer', color: it.on ? TEAL : INK, fontWeight: it.on ? 600 : 400, background: it.on ? '#fdf2f2' : '#fff', borderTop: i ? '1px solid ' + LINE : 'none', outlineOffset: '-2px' } }, it.label)))) : null);
     };
     const optSelect = (def, options, sel) => {
       const label = (ov.label && ov.label[def.key]) || def.label;
@@ -2940,7 +2997,7 @@ class Component extends DCLogic {
       const note = (ov.noteOverride && Object.prototype.hasOwnProperty.call(ov.noteOverride, def.key)) ? ov.noteOverride[def.key] : (def.neutral ? null : (def.note || null));
       return h('div', { key: def.key, style: rowStyle },
         labelCell(label, note),
-        ctrlWrap(pkDropdown(def.key, curText, isPh0, remark, items)));
+        ctrlWrap(pkDropdown(def.key, curText, isPh0, remark, items, label)));
     };
     // quantity, straight from the engine's per-product model (moq / options)
     const qobj = this.pkQtyObj();
@@ -2955,7 +3012,7 @@ class Component extends DCLogic {
     const qtyItems = qopts.map(qn => ({ label: qn.toLocaleString() + ' pcs' + (bestSeller.indexOf(qn) >= 0 ? ' — Best Seller' : ''), on: qtyChosen && s.qty === qn, onPick: () => this.setState({ qty: qn, qtyChosen: true }) }));
     const qtyField = h('div', { key: 'qty', style: rowStyle },
       labelCell('Quantity', qobj ? 'min. order ' + qobj.moq.toLocaleString() + ' pcs' : null),
-      ctrlWrap(pkDropdown('quantity', qtyCur, qtyPh0, qtyRemark, qtyItems)));
+      ctrlWrap(pkDropdown('quantity', qtyCur, qtyPh0, qtyRemark, qtyItems, 'Quantity')));
     // image picker: a selectable grid of option thumbnails (e.g. Round Corner Position)
     const imgPicker = (def, options, sel, base) => {
       const label = (ov.label && ov.label[def.key]) || def.label;
@@ -2964,7 +3021,9 @@ class Component extends DCLogic {
         h('div', { style: { fontSize: 13.5, fontWeight: 600, marginBottom: 10 } }, label),
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(92px,1fr))', gap: 10 } },
           options.map(v => { const val = Array.isArray(v) ? v[0] : v; const on = sel === val;
-            return h('div', { key: val, onClick: () => this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) })),
+            const pick = () => this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) }));
+            return h('div', { key: val, onClick: pick, tabIndex: 0, role: 'button', 'aria-pressed': on ? 'true' : 'false', 'aria-label': label + ': ' + (optLabel[val] || val),
+              onKeyDown: e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); pick(); } },
               style: { border: '2px solid ' + (on ? TEAL : HAIR), borderRadius: 8, overflow: 'hidden', cursor: 'pointer', background: '#fff' } },
               h('img', { src: window.__asset(base + val + '.jpg'), alt: val, loading: 'lazy', style: { width: '100%', display: 'block', aspectRatio: '1 / 1', objectFit: 'contain', background: '#fff' } }),
               h('div', { style: { textAlign: 'center', fontSize: 11, color: on ? TEAL : MUT, fontWeight: on ? 600 : 400, padding: '3px 0', borderTop: '1px solid ' + LINE } }, optLabel[val] || val)); })));
@@ -2986,7 +3045,7 @@ class Component extends DCLogic {
         labelCell(def.label, null),
         ctrlWrap(h('div', { style: { display: 'flex', flexDirection: 'column', gap: 5 } },
           h('input', { type: isNum ? 'number' : 'text', min: def.min != null ? def.min : undefined, max: def.max != null ? def.max : undefined,
-            value: cfg[def.key] || '', placeholder: def.placeholder || ('Enter ' + def.label.toLowerCase()),
+            value: cfg[def.key] || '', placeholder: def.placeholder || ('Enter ' + def.label.toLowerCase()), 'aria-label': def.label,
             onChange: e => { const val = e.target.value; this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) })); },
             style: Object.assign({}, selStyle, { font: '400 14px Montserrat,sans-serif' }) }),
           hints.length ? h('div', { style: { fontSize: 11.5, color: FAINT, lineHeight: 1.5 } }, hints.join(' · ')) : null)));
