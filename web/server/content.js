@@ -76,7 +76,10 @@ function sitemapXml(origin) {
   ['/', '/blog/', '/about-us/', '/products'].forEach(u => urls.push(u));
   productUrls().forEach(u => urls.push(u));
   blog().forEach(p => urls.push(p.url));
-  seo().forEach(p => urls.push(p.path));
+  // only the major "keeper" city landing pages are indexable (the long-tail are noindexed to
+  // avoid doorway-page duplication), so the sitemap lists only those (content-strategy §4).
+  const KEEP = { 'kuala-lumpur': 1, 'petaling-jaya': 1, 'shah-alam': 1, 'klang': 1, 'klang-valley': 1, 'penang': 1, 'pulau-pinang': 1, 'georgetown': 1, 'george-town': 1, 'johor-bahru': 1, 'iskandar-puteri': 1, 'ipoh': 1, 'kuching': 1, 'miri': 1, 'kota-kinabalu': 1, 'seremban': 1, 'melaka': 1, 'malaysia': 1, 'singapore': 1, 'brunei': 1, 'bandar-seri-begawan': 1, 'australia': 1, 'new-zealand': 1, 'nz': 1, 'solutions': 1 };
+  seo().forEach(p => { const city = String(p.slug || '').replace(/^.*?-printing-/, '').replace(/^in-/, ''); if (KEEP[city]) urls.push(p.path); });
   const seenU = {};
   const body = urls.filter(u => (u && !seenU[u] && (seenU[u] = 1))).map(u => `  <url><loc>${base}${u}</loc></url>`).join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`;

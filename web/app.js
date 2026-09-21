@@ -643,7 +643,7 @@ class Component extends DCLogic {
   }
   componentDidUpdate(prevProps, prevState) {
     const s = this.state;
-    if (!prevState || prevState.route !== s.route || prevState.prodId !== s.prodId || prevState.catFilter !== s.catFilter) this.applySEO();
+    if (!prevState || prevState.route !== s.route || prevState.prodId !== s.prodId || prevState.catFilter !== s.catFilter || prevState.seoPage !== s.seoPage || prevState.article !== s.article) this.applySEO();
     this.a11yEnhance();
   }
   componentWillUnmount() { if (typeof document !== 'undefined') document.removeEventListener('keydown', this.onNavKey); }
@@ -714,13 +714,22 @@ class Component extends DCLogic {
     sc.textContent = d.jsonld ? JSON.stringify(d.jsonld) : '';
   }
   productFaqs(prod, name) {
-    const sizeF = this.pkFields().find(f => /size/i.test(f.def.key) && f.options && f.options.length);
+    const fields = this.pkFields();
+    const sizeF = fields.find(f => /size/i.test(f.def.key) && f.options && f.options.length);
     const sizes = sizeF ? sizeF.options.filter(o => !/other|custom/i.test(String(o))).slice(0, 6).join(', ') : '';
-    return [
-      ['What size options are available for ' + name + '?', sizes ? ('Available sizes include ' + sizes + '. You can also enter a custom size where supported.') : ('Multiple sizes are available — choose from the size options in the configurator.')],
-      ['How long does ' + name + ' printing take?', 'Standard turnaround is 3 working days after your artwork is approved by prepress.'],
-      ['Can I get ' + name + ' delivered, or pick it up?', 'Both — nationwide courier delivery, or free self-pickup at a Klang Valley outlet.'],
-    ];
+    // real material/finish options for THIS product, so the FAQ differs per product
+    const matF = fields.find(f => /paper|material|stock/i.test(f.def.key) && f.options && f.options.length);
+    const mats = matF ? matF.options.filter(o => !/other|custom|not required|^no/i.test(String(o))).slice(0, 5).join(', ') : '';
+    const finF = fields.filter(f => /laminat|spot|stamp|emboss|foil|corner|coat|varnish/i.test(f.def.key) && f.options && f.options.length);
+    const fins = finF.length ? finF.map(f => f.def.label.toLowerCase()).slice(0, 4).join(', ') : '';
+    const qobj = prod ? this.pkQtyObj(prod.id) : null;
+    const faqs = [];
+    faqs.push(['What size options are available for ' + name + '?', sizes ? ('Available sizes include ' + sizes + '. You can also enter a custom size where supported.') : 'Choose from the size options in the configurator, or enter a custom size where supported.']);
+    if (mats || fins) faqs.push(['What materials and finishes can I choose for ' + name + '?', (mats ? ('Materials include ' + mats + '. ') : '') + (fins ? ('Finishes include ' + fins + '.') : '')]);
+    if (qobj) faqs.push(['What is the minimum order for ' + name + '?', 'The minimum order is ' + qobj.moq.toLocaleString() + ' pcs. Larger runs lower the price per piece.']);
+    faqs.push(['How long does ' + name + ' printing take?', 'Standard turnaround is 3 working days after your artwork is approved by prepress.']);
+    faqs.push(['Can I get ' + name + ' delivered or pick it up?', 'Both. Choose nationwide courier delivery, or free self-pickup at a Klang Valley outlet.']);
+    return faqs.slice(0, 5);
   }
   seoData() {
     const route = this.state.route, C = 'Malaysia, Singapore & Brunei';
@@ -761,6 +770,19 @@ class Component extends DCLogic {
     if (route === 'contact') return { title: 'Contact Printoka | WhatsApp, Email & Support', description: 'Get in touch with Printoka support via WhatsApp, live chat or the contact form. We reply within 1 business day.', robots: IDX, jsonld: org };
     if (route === 'partners') return { title: 'Partner With Printoka | Become a Printer', description: 'Join Printoka’s partner printer network and receive jobs from customers across ' + C + '.', robots: IDX, jsonld: org };
     if (route === 'terms') return { title: 'Terms, Privacy & Policies | Printoka', description: 'Printoka terms of service, privacy and PDPA policy, and disclosures.', robots: IDX, jsonld: org };
+    // programmatic city landing pages: index only major cities; noindex the long-tail so the
+    // near-duplicate small-town variants are not treated as doorway pages (content-strategy §4).
+    if (route === 'seo') {
+      const p = this.state.seoPage;
+      if (!p || typeof p !== 'object') return { title: 'Online Printing | Printoka', description: 'Order printing online across ' + C + '.', robots: NOIDX, jsonld: org };
+      const slug = p.slug || '';
+      const city = slug.replace(/^.*?-printing-/, '').replace(/^in-/, '');
+      const KEEP = { 'kuala-lumpur': 1, 'petaling-jaya': 1, 'shah-alam': 1, 'klang': 1, 'klang-valley': 1, 'penang': 1, 'pulau-pinang': 1, 'georgetown': 1, 'george-town': 1, 'johor-bahru': 1, 'iskandar-puteri': 1, 'ipoh': 1, 'kuching': 1, 'miri': 1, 'kota-kinabalu': 1, 'seremban': 1, 'melaka': 1, 'malaysia': 1, 'singapore': 1, 'brunei': 1, 'bandar-seri-begawan': 1, 'australia': 1, 'new-zealand': 1, 'nz': 1, 'solutions': 1 };
+      const keep = !!KEEP[city];
+      const place = city.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      const desc = (p.title || 'Printing') + ' online with instant pricing and delivery to ' + place + '. Configure your job, see the exact price, and order from Printoka.';
+      return { title: (p.title || 'Online Printing') + ' | Printoka', description: desc.slice(0, 300), robots: keep ? IDX : NOIDX, jsonld: org };
+    }
     const T = { cart: 'Your Cart', checkout: 'Checkout', confirm: 'Order Confirmed', auth: 'Log In / Sign Up', dash: 'My Account', invoices: 'Invoices', track: 'Track Order', artwork: 'Upload & Check Artwork', search: 'Search Results' };
     if (T[route]) return { title: T[route] + ' | Printoka', description: '', robots: NOIDX, jsonld: null };
     return { title: 'Printoka — Online Printing', description: 'Order printing online across ' + C + '.', robots: IDX, jsonld: org };
@@ -3146,15 +3168,27 @@ class Component extends DCLogic {
   // SEO copy generator — real, product-specific sentences built from the live catalogue
   // (name, category, option axes) rather than generic keyword filler.
   productSeo(prod, NAME) {
-    const cat = prod ? this.catCategoryLabel(this.catCategoryOf(prod.id)) : 'Print';
+    const catId = prod ? this.catCategoryOf(prod.id) : null;
     const qobj = prod ? this.pkQtyObj(prod.id) : null;
     const fields = this.pkFields();
     const axes = fields.filter(f => f.options && f.options.length && !/category/i.test(f.def.key)).map(f => f.def.label.toLowerCase());
     const axisPhrase = axes.length ? axes.slice(0, 4).join(', ') + (axes.length > 4 ? ' and more' : '') : 'a range of specifications';
     const from = prod ? this.catFromPrice(prod.id) : null;
+    // per-category use case so each product's opening is unique, not a name-swap template
+    const USE = {
+      'business-essentials': 'a sharp first impression at meetings, networking and your storefront',
+      'flyers-leaflets': 'promotions, menus and launches you put straight into people’s hands',
+      'labels-stickers': 'product labels, packaging seals and branding that stays put',
+      'books-stationery': 'notebooks, booklets and stationery that keep your brand in daily use',
+      'cards-invitations': 'weddings, celebrations and greetings that people keep',
+      'large-format': 'events, storefronts and roadshows where you need to be seen from a distance',
+      'packaging-boxes': 'retail shelves and unboxing that protect your product and sell it',
+      'apparel-gifts': 'uniforms, events and corporate gifts that put your brand on people',
+    };
+    const useCase = USE[catId] || 'your business, event or brand';
     const paras = [];
-    paras.push('Order ' + NAME + ' online across Malaysia, Singapore and Brunei. Configure ' + axisPhrase + ' and see the exact price on screen. The configurator price is your final price at checkout and on your invoice.');
-    if (qobj) paras.push('Minimum order is ' + qobj.moq.toLocaleString() + ' pcs' + (from != null ? ', from ' + this.money(from) + ' per piece' : '') + '. Members save 5% to 15% automatically at checkout.');
+    paras.push(NAME + ' is made for ' + useCase + '. Configure ' + axisPhrase + ' and see the exact price on screen, then order online across Malaysia, Singapore and Brunei. You pay exactly what the configurator shows, at checkout and on your invoice.');
+    if (qobj) paras.push('Minimum order is ' + qobj.moq.toLocaleString() + ' pcs' + (from != null ? ', from ' + this.money(from) + ' per piece' : '') + '. Larger runs bring the price per piece down, and members save 5% to 15% automatically at checkout.');
     paras.push('Upload your artwork and our prepress team checks trim, bleed, resolution and colour before printing. Turnaround is 3 working days after approval, with nationwide delivery or free pickup in the Klang Valley.');
     return { heading: NAME + ' printing: specs, artwork and pricing', paras };
   }
