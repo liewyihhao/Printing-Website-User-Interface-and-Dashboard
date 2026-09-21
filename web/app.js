@@ -599,8 +599,26 @@ class Component extends DCLogic {
     if (!d) return;
     document.title = d.title;
     const setMeta = (name, content) => { let m = document.head.querySelector('meta[name="' + name + '"]'); if (!m) { m = document.createElement('meta'); m.setAttribute('name', name); document.head.appendChild(m); } m.setAttribute('content', content || ''); };
+    // og:/article: meta use the property attribute, not name
+    const setProp = (prop, content) => { let m = document.head.querySelector('meta[property="' + prop + '"]'); if (!m) { m = document.createElement('meta'); m.setAttribute('property', prop); document.head.appendChild(m); } m.setAttribute('content', content || ''); };
     setMeta('description', d.description || '');
     setMeta('robots', d.robots || 'index,follow');
+    // canonical URL — strip query/hash so each route has one canonical address
+    const origin = (typeof location !== 'undefined' ? location.origin : 'https://printoka.com');
+    const canonical = origin + (typeof location !== 'undefined' ? location.pathname : '/');
+    let can = document.head.querySelector('link[rel="canonical"]'); if (!can) { can = document.createElement('link'); can.setAttribute('rel', 'canonical'); document.head.appendChild(can); } can.setAttribute('href', canonical);
+    // Open Graph + Twitter Card — social share previews
+    const ogImg = d.image ? (/^https?:/.test(d.image) ? d.image : origin + d.image) : (origin + '/assets/products/business-card.jpg');
+    setProp('og:type', d.ogType || 'website');
+    setProp('og:site_name', 'Printoka');
+    setProp('og:title', d.title || 'Printoka');
+    setProp('og:description', d.description || '');
+    setProp('og:url', canonical);
+    setProp('og:image', ogImg);
+    setMeta('twitter:card', 'summary_large_image');
+    setMeta('twitter:title', d.title || 'Printoka');
+    setMeta('twitter:description', d.description || '');
+    setMeta('twitter:image', ogImg);
     let sc = document.getElementById('pk-jsonld'); if (!sc) { sc = document.createElement('script'); sc.id = 'pk-jsonld'; sc.type = 'application/ld+json'; document.head.appendChild(sc); }
     sc.textContent = d.jsonld ? JSON.stringify(d.jsonld) : '';
   }
@@ -1565,8 +1583,9 @@ class Component extends DCLogic {
       book: 'booklet.jpg', banner: 'hanging-banners.jpg', box: 'gift-boxes.jpg',
       cal: 'table-calendar.jpg', mug: 'tote-bags.jpg' };
     const file = BY_NAME[kind] || BY_KIND[kind] || 'cards.jpg';
+    const alt = (typeof kind === 'string' && BY_NAME[kind]) ? (kind + ' printing') : 'Printoka custom printing product';
     return React.createElement('img', {
-      src: window.__asset('assets/products/' + file), alt: '', loading: 'lazy',
+      src: window.__asset('assets/products/' + file), alt: alt, loading: 'lazy',
       style: { width: w || '100%', aspectRatio: '4 / 3', objectFit: 'contain', display: 'block', background: '#fff' },
     });
   }

@@ -298,9 +298,23 @@ function serveStatic(res, pathname) {
 
 http.createServer(async (req, res) => {
   const parsed = url.parse(req.url, true);
+  // real public origin (honour a reverse proxy's forwarded host/proto in production)
+  const proto = (req.headers['x-forwarded-proto'] || 'http').split(',')[0].trim();
+  const host = (req.headers['x-forwarded-host'] || req.headers.host || ('localhost:' + PORT)).split(',')[0].trim();
+  const origin = proto + '://' + host;
   try {
     if (parsed.pathname.indexOf('/api/') === 0) return await api(req, res, parsed.pathname, parsed.query);
-    if (parsed.pathname === '/sitemap.xml') return send(res, 200, content.sitemapXml('http://localhost:' + PORT), 'application/xml; charset=utf-8');
+    if (parsed.pathname === '/sitemap.xml') return send(res, 200, content.sitemapXml(origin), 'application/xml; charset=utf-8');
+    // robots.txt — allow crawling, point at the sitemap, keep app/ops routes out of the index
+    if (parsed.pathname === '/robots.txt') return send(res, 200, [
+      'User-agent: *',
+      'Allow: /',
+      'Disallow: /api/',
+      'Disallow: /cart', 'Disallow: /checkout', 'Disallow: /dash', 'Disallow: /admin',
+      'Disallow: /production', 'Disallow: /vendor', 'Disallow: /invoices',
+      'Host: ' + host,
+      'Sitemap: ' + origin + '/sitemap.xml', '',
+    ].join('\n'), 'text/plain; charset=utf-8');
     return serveStatic(res, parsed.pathname);
   } catch (e) { send(res, 500, { error: String(e && e.message || e) }); }
 }).listen(PORT, () => console.log('Printoka dev server on http://localhost:' + PORT + ' (static + /api)'));
