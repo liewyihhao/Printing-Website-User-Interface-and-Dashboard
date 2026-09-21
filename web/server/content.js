@@ -37,15 +37,48 @@ function seoPage(slug, locale) {
   return seo().find(p => p.slug === slug && (!locale || p.locale === locale)) || seo().find(p => p.slug === slug) || null;
 }
 
-// Full XML sitemap — blog + SEO landing pages + the core storefront routes.
+// Crawlable product + category URLs — built from the same product list + display-name
+// overrides the client uses, so each /<name>-printing path matches what the app resolves.
+// The 20MB engine is required once and cached (dev/prototype server).
+let _prodUrls = null;
+function slugify(s) { return String(s || '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); }
+function productUrls() {
+  if (_prodUrls) return _prodUrls;
+  const urls = [];
+  try {
+    const cat = (function () { try { const vm = require('vm'); const code = fs.readFileSync(path.join(__dirname, '..', 'catalogue.js'), 'utf8'); const sandbox = { window: {} }; vm.runInNewContext(code, sandbox); return sandbox.window.PrintokaCatalogueDefaults || {}; } catch (e) { return {}; } })();
+    const overrides = (cat && cat.overrides) || {};
+    (cat.categories || []).forEach(c => { if (c && c.id) urls.push('/products/' + c.id); });
+    // load the pricing engine into a private global to read the product list
+    const engPath = path.join(__dirname, '..', 'pricing', 'engine.js');
+    global.window = global.window || {};
+    require(engPath);
+    const E = global.window.PricingEngine;
+    const prods = (E && E.DATA && E.DATA.products) || [];
+    const seen = {};
+    prods.forEach(p => {
+      const ov = overrides[p.id] || overrides[String(p.id)];
+      if (ov && ov.hidden) return;
+      const name = (ov && ov.displayName) || p.name;
+      const slug = slugify(name) + '-printing';
+      if (!seen[slug]) { seen[slug] = 1; urls.push('/' + slug); }
+    });
+  } catch (e) { /* engine not loadable → product URLs omitted, core sitemap still served */ }
+  _prodUrls = urls;
+  return urls;
+}
+
+// Full XML sitemap — blog + SEO landing pages + product/category + core storefront routes.
 // Preserves the live URL structure for SEO continuity (audit §9).
 function sitemapXml(origin) {
   const base = (origin || 'https://printoka.com').replace(/\/$/, '');
   const urls = [];
-  ['/', '/blog/', '/about-us/', '/products/'].forEach(u => urls.push(u));
+  ['/', '/blog/', '/about-us/', '/products'].forEach(u => urls.push(u));
+  productUrls().forEach(u => urls.push(u));
   blog().forEach(p => urls.push(p.url));
   seo().forEach(p => urls.push(p.path));
-  const body = urls.map(u => `  <url><loc>${base}${u}</loc></url>`).join('\n');
+  const seenU = {};
+  const body = urls.filter(u => (u && !seenU[u] && (seenU[u] = 1))).map(u => `  <url><loc>${base}${u}</loc></url>`).join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`;
 }
 

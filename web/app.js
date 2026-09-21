@@ -238,8 +238,8 @@ class Component extends DCLogic {
     if (v.indexOf('dialog:') === 0) return this.setState({ dialog: v.slice(7) });
     // Real pricing engine: product switch + per-field config change (values may contain ':')
     if (v.indexOf('prod:') === 0) return this.setState({ prodId: Number(v.slice(5)), cfg: {}, qty: 1000, qtyChosen: false });
-    if (v.indexOf('open:') === 0) { if (typeof window !== 'undefined') window.scrollTo(0, 0); return this.setState({ prodId: Number(v.slice(5)), cfg: {}, qty: 1000, qtyChosen: false, route: 'product', megaOpen: false }); }
-    if (v.indexOf('catopen:') === 0) { if (typeof window !== 'undefined') window.scrollTo(0, 0); return this.setState({ catFilter: v.slice(8), route: 'category', megaOpen: false }); }
+    if (v.indexOf('open:') === 0) { const pid = Number(v.slice(5)); if (typeof window !== 'undefined') window.scrollTo(0, 0); this.pushUrl(this.productPath(pid) || '/'); return this.setState({ prodId: pid, cfg: {}, qty: 1000, qtyChosen: false, route: 'product', megaOpen: false }); }
+    if (v.indexOf('catopen:') === 0) { const cf = v.slice(8); if (typeof window !== 'undefined') window.scrollTo(0, 0); this.pushUrl(cf === 'all' ? '/products' : '/products/' + cf); return this.setState({ catFilter: cf, route: 'category', megaOpen: false }); }
     if (v.indexOf('blog:') === 0) return this.blogOpen(v.slice(5));
     if (v === 'addraddsave') return this.addressAdd();
     if (v.indexOf('addrdel:') === 0) return this.addressDelete(v.slice(8));
@@ -307,6 +307,20 @@ class Component extends DCLogic {
   }
   // a 'go' verb that opens a product by name, falling back to the catalogue if not priced
   goByName(name) { const id = this.pkIdByName(name); return id != null ? 'open:' + id : 'category'; }
+  // ---------- crawlable product URLs: /<name>-printing ----------
+  // Each product gets a real, shareable, indexable path derived from its display name, so
+  // product pages have distinct URLs (canonical + sitemap) instead of living only in state.
+  slugify(s) { return String(s || '').toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); }
+  pkSlug(id) { const n = this.catName(id); return n ? this.slugify(n) + '-printing' : null; }
+  pkIdBySlug(slug) {
+    const s = String(slug || '').toLowerCase().replace(/\/+$/, '');
+    const prods = this.pkProducts();
+    for (const p of prods) if (this.pkSlug(p.id) === s) return p.id;
+    return null;
+  }
+  productPath(id) { const sl = this.pkSlug(id); return sl ? '/' + sl : null; }
+  // push a route's URL into the address bar so it is shareable/back-navigable (SPA history)
+  pushUrl(path) { try { if (typeof history !== 'undefined' && path && location.pathname !== path) history.pushState({ pk: 1 }, '', path); } catch (e) {} }
   // per-product quantity model straight from the pricing engine (moq / options / chips)
   pkQtyObj(id) {
     const E = this.pkEngine(); if (!E) return null;
@@ -577,9 +591,12 @@ class Component extends DCLogic {
     // already-rendered configurator re-prices once the table lands.
     if (typeof fetch === 'function')
       fetch('/pricing/excard_bc.json').then(r => r.json()).then(d => { if (d) { EXCARD_PRICES['Business Card'] = d; if (this.state.route === 'product') this.forceUpdate(); } }).catch(() => {});
-    // the ~20MB pricing engine loads async (after first paint); re-render prices when it lands
+    // the ~20MB pricing engine loads async (after first paint); re-render prices when it lands,
+    // and re-resolve the URL (a product deep-link can't map its slug→id until products exist)
     if (typeof window !== 'undefined' && !window.PricingEngine)
-      window.addEventListener('pk-engine-ready', () => { try { this.forceUpdate(); this.applySEO(); } catch (e) {} }, { once: true });
+      window.addEventListener('pk-engine-ready', () => { try { if (this._urlPending) this.resolveUrl(); this.forceUpdate(); this.applySEO(); } catch (e) {} }, { once: true });
+    // browser back/forward → re-resolve the address bar to the matching in-app route
+    if (typeof window !== 'undefined') window.addEventListener('popstate', () => { try { this.resolveUrl(); } catch (e) {} });
     const r = this.opsRoleFor(this.state.route); if (r) this.opsLoad(this.opsActingRole());
     if (this.state.route === 'learn') this.blogLoad();
     if (this.state.route === 'production') this.loadVendors();
@@ -1316,8 +1333,18 @@ class Component extends DCLogic {
   resolveUrl() {
     if (typeof window === 'undefined') return;
     const segs = window.location.pathname.split('/').filter(Boolean);
-    if (!segs.length) return;
+    if (!segs.length) { if (this.state.route !== 'home') this.setState({ route: 'home' }); return; }
     if (segs[0] === 'blog' && segs[1]) return this.blogOpen(segs[1]);
+    // category listing: /products or /products/<catId>
+    if (segs[0] === 'products') return this.setState({ route: 'category', catFilter: segs[1] || 'all' });
+    // product page: /<name>-printing (matched before the SEO city landing pages, which carry an
+    // extra -<city> suffix and so won't match a bare product slug). The slug→id map needs the
+    // pricing engine; until it loads, DEFER (set a flag; componentDidMount re-runs resolveUrl on
+    // pk-engine-ready) rather than mis-routing a product slug to seoOpen.
+    if (!this.pkProducts().length) { this._urlPending = true; return; }
+    this._urlPending = false;
+    const pid = this.pkIdBySlug(segs[0]);
+    if (pid != null) { if (typeof window !== 'undefined') window.scrollTo(0, 0); return this.setState({ prodId: pid, cfg: {}, qty: 1000, qtyChosen: false, route: 'product' }); }
     const LOC = { au: 1, nz: 1, sg: 1, bn: 1 };
     let locale = 'my', rest = segs;
     if (LOC[segs[0]]) { locale = segs[0]; rest = segs.slice(1); }
