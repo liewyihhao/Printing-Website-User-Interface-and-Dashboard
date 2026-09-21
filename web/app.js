@@ -61,25 +61,30 @@ const QTYS = [100,300,500,1000,2000,3000,5000];
 let EXCARD_PRICES = {};
 // package (N-in-1) design multipliers for Business Card
 const BC_PKG_N = { 'Normal': 1, '2in1': 2, '3in1': 3, '4in1': 4, '5in1': 5, '6in1': 6, '7in1': 7, '8in1': 8, '9in1': 9, '10in1': 10 };
-// Business Card price from the captured Excard table: standard cards (any size incl. custom —
-// price is size-independent) across paper × print colour × qty, × package designs, + hole-punch
-// delta. Returns null for configs the table doesn't cover (folds / plastic / die-cut → engine).
-const BC_FOLD_CAT = { 'Thin Fold': 'thin_fold', 'Fat Fold': 'fat_fold' };
+// Business Card price from the captured Excard table, for every card category. Price is
+// size-independent (standard sizes, custom size, fold open size and die-cut size all price
+// the same within a category); folds ignore creasing type. All applicable finishing is
+// price-neutral on Excard now (lamination/embossing/round-corner/hot-stamping/silkscreen)
+// EXCEPT hole punching (standard cards only). Package (N designs) = base × N.
+function bcSegTable(T, cat) {
+  if (cat === 'Standard') return T.standard;
+  if (cat === 'Thin Fold') return T.fold && T.fold.thin_fold;
+  if (cat === 'Fat Fold') return T.fold && T.fold.fat_fold;
+  if (cat === 'Custom Die Cut') return T.die_cut;
+  if (cat === 'Plastic Card') return T.plastic;
+  return null;
+}
 function bcPriceBase(cfg, qty) {
   const T = EXCARD_PRICES['Business Card']; if (!T) return null;
-  // select the captured table by card category: standard, thin fold, or fat fold. Fold price
-  // is independent of the open size and creasing type — only fold-type/paper/print-colour/qty.
-  let table;
-  if (cfg.category === 'Standard') table = T.standard;
-  else if (BC_FOLD_CAT[cfg.category]) table = T.fold && T.fold[BC_FOLD_CAT[cfg.category]];
-  else return null;                                        // plastic / die-cut not captured yet
-  const branch = table && table[cfg.paper]; if (!branch) return null;
+  const table = bcSegTable(T, cfg.category); if (!table) return null;
+  const branch = table[cfg.paper]; if (!branch) return null;
   const arr = branch[cfg.printcolour]; if (!arr) return null;
   const qi = T.qtys.indexOf(qty); if (qi < 0) return null;
   let base = arr[qi]; if (base == null) return null;
   const A = T.addons || {};
+  // hole punching is a Standard-card-only add-on on Excard (qty curve, paper/diameter-independent)
   let hp = 0;
-  if (cfg.holepunching && !/^no/i.test(cfg.holepunching) && Array.isArray(A.holepunch) && A.holepunch[qi] != null) hp = A.holepunch[qi];
+  if (cfg.category === 'Standard' && cfg.holepunching && !/^no/i.test(cfg.holepunching) && Array.isArray(A.holepunch) && A.holepunch[qi] != null) hp = A.holepunch[qi];
   const N = BC_PKG_N[cfg.package] || 1;                    // N designs, same spec → ×N
   return Math.round((base + hp) * N * 100) / 100;
 }
@@ -94,12 +99,35 @@ const CFG_OVERRIDES = {
     optionsOverride: {
       hot_stamping: ['No Hot Stamping', '1C (Front)', '1C (Back)', '1C (Front) + 1C (Back)', '1C (Front) + 2C (Back)', '2C (Front)', '2C (Back)', '2C (Front) + 1C (Back)', '2C (Front) + 2C (Back)'],
       hot_stamping_colour: ['Gold', 'Silver', 'Green', 'Blue', 'Black', 'Red'],
-      // fold cards have their own preset open sizes (Excard); Standard keeps the engine's sizes.
+      // Paper list per Excard per card type: Custom Die-Cut drops Gloss Art Card 360gsm;
+      // Plastic Card is frosted plastic only. Other categories keep the engine's paper list.
+      paper: (cfg, options) => {
+        if (cfg.category === 'Plastic Card') return ['Frosted Plastic 0.4mm'];
+        if (cfg.category === 'Custom Die Cut') return (options || []).filter(p => p !== 'Gloss Art Card 360gsm');
+        return options;
+      },
+      // Plastic Card prints 4C or 4C + White; every other card type is 4C (Both) / 4C (Front).
+      printcolour: (cfg, options) => cfg.category === 'Plastic Card' ? ['4C', '4C & White'] : options,
+      // fold cards have their own preset open sizes; Plastic Card is a single fixed size;
+      // Standard + Custom Die-Cut keep the engine's standard size list.
       size: (cfg, options) => {
         if (cfg.category === 'Thin Fold') return ['54mm × 178mm (Open Size)', '52mm × 172mm (Open Size)', '50mm × 172mm (Open Size)', '52mm × 156mm (Open Size)', 'Other (Custom Size)'];
         if (cfg.category === 'Fat Fold') return ['89mm × 108mm (Open Size)', '86mm × 104mm (Open Size)', '86mm × 100mm (Open Size)', '86mm × 88mm (Open Size)', 'Other (Custom Size)'];
+        if (cfg.category === 'Plastic Card') return ['54mm x 89mm'];
         return options;
       },
+    },
+    // per-card-type field visibility, mirroring Excard's finishing rules exactly:
+    //   hole punch → Standard only · round corner → Standard + Plastic · hot stamp / embossing /
+    //   silkscreen → Standard + folds · lamination → coated papers only (not fine/plastic).
+    hideWhen: {
+      holepunching: cfg => cfg.category !== 'Standard',
+      round_corner: cfg => !(cfg.category === 'Standard' || cfg.category === 'Plastic Card'),
+      round_corner_position: cfg => !(cfg.category === 'Standard' || cfg.category === 'Plastic Card'),
+      hot_stamping: cfg => ['Standard', 'Thin Fold', 'Fat Fold'].indexOf(cfg.category) < 0,
+      embossing: cfg => ['Standard', 'Thin Fold', 'Fat Fold'].indexOf(cfg.category) < 0,
+      silkscreen_spot_uv: cfg => ['Standard', 'Thin Fold', 'Fat Fold'].indexOf(cfg.category) < 0,
+      lamination: cfg => ['Gloss Art Card 250gsm', 'Gloss Art Card 310gsm', 'Gloss Art Card 360gsm', 'Matte Art Card 250gsm'].indexOf(cfg.paper) < 0,
     },
     // fields rendered as an image picker (base path; image = base + optionValue + '.jpg')
     optImages: { round_corner_position: 'assets/options/businesscard-roundcorner/' },
@@ -344,7 +372,7 @@ class Component extends DCLogic {
   cfgOv() { const p = this.pkProduct(); return (p && CFG_OVERRIDES[p.name]) || {}; }
   pkHidden(key) { const ov = this.cfgOv(); return !!(ov.hide && ov.hide.indexOf(key) >= 0); }
   // are all "please select" fields chosen yet? (gates the live price, like the source form)
-  pkReady() { const ov = this.cfgOv(); const ph = ov.placeholder || []; const sc = this.state.cfg || {}; return ph.every(k => k === 'quantity' ? !!this.state.qtyChosen : (sc[k] != null && sc[k] !== '')); }
+  pkReady() { const ov = this.cfgOv(); const ph = ov.placeholder || []; const sc = this.state.cfg || {}; const hw = ov.hideWhen || {}; const hidden = k => { try { return hw[k] ? !!hw[k](sc) : false; } catch (e) { return false; } }; return ph.every(k => hidden(k) ? true : (k === 'quantity' ? !!this.state.qtyChosen : (sc[k] != null && sc[k] !== ''))); }
   // live size simulator: a proportional diagram of the selected size (standard or custom),
   // with Width/Height dimension lines — so the customer can see exactly what they picked.
   sizeSim() {
