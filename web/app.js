@@ -64,10 +64,16 @@ const BC_PKG_N = { 'Normal': 1, '2in1': 2, '3in1': 3, '4in1': 4, '5in1': 5, '6in
 // Business Card price from the captured Excard table: standard cards (any size incl. custom —
 // price is size-independent) across paper × print colour × qty, × package designs, + hole-punch
 // delta. Returns null for configs the table doesn't cover (folds / plastic / die-cut → engine).
+const BC_FOLD_CAT = { 'Thin Fold': 'thin_fold', 'Fat Fold': 'fat_fold' };
 function bcPriceBase(cfg, qty) {
   const T = EXCARD_PRICES['Business Card']; if (!T) return null;
-  if (cfg.category !== 'Standard') return null;            // folds/plastic/die-cut not captured yet
-  const branch = T.standard && T.standard[cfg.paper]; if (!branch) return null;
+  // select the captured table by card category: standard, thin fold, or fat fold. Fold price
+  // is independent of the open size and creasing type — only fold-type/paper/print-colour/qty.
+  let table;
+  if (cfg.category === 'Standard') table = T.standard;
+  else if (BC_FOLD_CAT[cfg.category]) table = T.fold && T.fold[BC_FOLD_CAT[cfg.category]];
+  else return null;                                        // plastic / die-cut not captured yet
+  const branch = table && table[cfg.paper]; if (!branch) return null;
   const arr = branch[cfg.printcolour]; if (!arr) return null;
   const qi = T.qtys.indexOf(qty); if (qi < 0) return null;
   let base = arr[qi]; if (base == null) return null;
@@ -529,13 +535,18 @@ class Component extends DCLogic {
       // "Other (Custom Size)" is priced exactly as the standard 54x89 card — verified on Excard).
       let V = cfg;
       if (ov.priceSub) { V = Object.assign({}, cfg); for (const k in ov.priceSub) { const m = ov.priceSub[k]; if (m[V[k]] != null) V[k] = m[V[k]]; } }
-      const r = E.localQuote(prod, V, qty);
       // priceBase: when a product's pricing is driven directly from captured Excard CASH
       // (the engine's own curve is stale / structurally different), priceBase(cfg,qty)
       // returns the Excard cash for the current config in RM and REPLACES the engine base.
-      // Return null to fall back to the engine for a config the table doesn't cover.
-      let base = r.printoka_cash;
-      if (ov.priceBase) { try { const b = ov.priceBase(cfg, qty); if (b != null && isFinite(b)) base = b; } catch (e) {} }
+      // Computed FIRST so it can price configs the engine refuses to quote (e.g. fold cards,
+      // which the crawl engine returns "quote on request" for). Null → fall back to the engine.
+      let baseOverride = null;
+      if (ov.priceBase) { try { const b = ov.priceBase(cfg, qty); if (b != null && isFinite(b)) baseOverride = b; } catch (e) {} }
+      // engine quote (price + weight/note). May throw for configs it won't quote — tolerate that
+      // when priceBase covers the price; only its weight/note are then missing.
+      let r = null;
+      try { r = E.localQuote(prod, V, qty); } catch (e) { if (baseOverride == null) throw e; }
+      let base = baseOverride != null ? baseOverride : r.printoka_cash;
       // priceAddon: cash deltas added on top of the base (engine or priceBase), verified
       // against Excard cash (e.g. Silkscreen Spot UV). Each returns a RM delta for cfg+qty.
       let addon = 0;
@@ -545,7 +556,7 @@ class Component extends DCLogic {
       const net = Math.round(gross * (1 - pct) * 100) / 100;
       const disc = Math.round((gross - net) * 100) / 100;
       return { ok: true, gross, disc, net, unit: net / qty,
-        weight: r.weight_kg, note: r.note, method: r.method, finishing: r.finishing_cost };
+        weight: r ? r.weight_kg : this.pkWeight(qty), note: r ? r.note : null, method: r ? r.method : 'excard', finishing: r ? r.finishing_cost : 0 };
     } catch (e) { return { ok: false, quoteOnly: true, message: e.message }; }
   }
   // legacy shim kept for any caller; routes through the real engine when present
