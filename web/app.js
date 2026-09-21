@@ -1372,12 +1372,14 @@ class Component extends DCLogic {
   // tiny, safe Markdown → React renderer (headings, lists, paragraphs, bold/italic)
   mdInline(text) {
     const parts = []; let s = String(text || ''); let key = 0;
-    const re = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g; let last = 0, m;
+    // bold / italic / code / [label](href) links
+    const re = /(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g; let last = 0, m;
     while ((m = re.exec(s))) {
       if (m.index > last) parts.push(s.slice(last, m.index));
       const t = m[0];
       if (t.startsWith('**')) parts.push(h('b', { key: key++ }, t.slice(2, -2)));
       else if (t.startsWith('`')) parts.push(h('code', { key: key++, style: { background: '#f1f3f5', padding: '1px 5px', borderRadius: 4, fontSize: '.9em' } }, t.slice(1, -1)));
+      else if (t.startsWith('[')) { const lm = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(t); if (lm) parts.push(h('a', { key: key++, href: lm[2], style: { color: TEAL, fontWeight: 500, textDecoration: 'underline' } }, lm[1])); else parts.push(t); }
       else parts.push(h('i', { key: key++ }, t.slice(1, -1)));
       last = m.index + t.length;
     }
