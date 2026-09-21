@@ -666,7 +666,7 @@ class Component extends DCLogic {
         { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Home', item: origin + '/' }, { '@type': 'ListItem', position: 2, name: cat }, { '@type': 'ListItem', position: 3, name: name }] },
         { '@type': 'FAQPage', mainEntity: faqs.map(f => ({ '@type': 'Question', name: f[0], acceptedAnswer: { '@type': 'Answer', text: f[1] } })) },
       ] };
-      return { title: name + ' Printing | ' + (from != null && from >= 0.01 ? 'From ' + money0(from) + ' | ' : '') + 'Printoka', description: 'Order ' + name + ' printing online in ' + C + ' — configure your options, get an instant price, and print with a free artwork check. Member discounts up to 15%.', robots: IDX, jsonld };
+      return { title: name + ' Printing | ' + (from != null && from >= 0.001 ? 'From ' + money0(from) + '/pc | ' : '') + 'Printoka', description: 'Order ' + name + ' printing online in ' + C + ' — configure your options, get an instant price, and print with a free artwork check. Member discounts up to 15%.', robots: IDX, jsonld };
     }
     if (route === 'category') {
       const active = this.state.catFilter || 'all', label = active === 'all' ? 'Online Printing' : this.catCategoryLabel(active);
@@ -677,7 +677,7 @@ class Component extends DCLogic {
         { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Home', item: origin + '/' }, { '@type': 'ListItem', position: 2, name: label }] },
       ] };
       const showFrom = minFrom != null && minFrom >= 0.01;
-      return { title: label + ' Printing Online | ' + (showFrom ? 'From ' + money0(minFrom) + ' | ' : '') + 'Printoka', description: 'Custom ' + label.toLowerCase() + ' printing in ' + C + '. Configure size, material and finish, see the price instantly, and order online' + (showFrom ? ' — from ' + money0(minFrom) + '.' : '.'), robots: IDX, jsonld };
+      return { title: label + ' Printing Online | ' + (showFrom ? 'From ' + money0(minFrom) + '/pc | ' : '') + 'Printoka', description: 'Custom ' + label.toLowerCase() + ' printing in ' + C + '. Configure size, material and finish, see the price instantly, and order online' + (showFrom ? ' — from ' + money0(minFrom) + ' per piece.' : '.'), robots: IDX, jsonld };
     }
     if (route === 'home') return { title: 'Printoka — Online Printing in Malaysia, Singapore & Brunei | 100+ Products, Instant Pricing', description: 'Order business cards, flyers, stickers, packaging and more online. Instant pricing, member discounts up to 15%, and nationwide delivery across Malaysia, Singapore and Brunei.', robots: IDX, jsonld: { '@context': ctx, '@graph': [org, { '@type': 'WebSite', name: 'Printoka', url: origin, potentialAction: { '@type': 'SearchAction', target: origin + '/search?q={search_term_string}', 'query-input': 'required name=search_term_string' } }] } };
     if (route === 'packaging') return { title: 'Custom Packaging Boxes Printing | Design Your Own | Printoka', description: 'Design custom packaging boxes, sleeves and mailers online in ' + C + '. Choose your size, material and finishing, with a free die-line to design on.', robots: IDX, jsonld: org };
@@ -1583,11 +1583,13 @@ class Component extends DCLogic {
     let samples = (q && q.options && q.options.length) ? q.options.slice() : [100, 500, 1000];
     // sample a spread (min, some middles, max) to find the lowest available per-piece price
     if (samples.length > 6) { const pick = [0, Math.floor(samples.length / 3), Math.floor(2 * samples.length / 3), samples.length - 1]; samples = pick.map(i => samples[i]); }
-    const save = this.state.prodId, saveCfg = this.state.cfg;
+    const save = this.state.prodId, saveCfg = this.state.cfg, saveQty = this.state.qty;
     this.state.prodId = id; this.state.cfg = {};
     let best = null;
-    try { const V = this.pkV(); for (const qn of samples) { try { const r = E.localQuote(prod, V, qn); if (r && r.printoka_cash != null && r.printoka_cash > 0 && (best == null || r.printoka_cash / qn < best)) best = r.printoka_cash / qn; } catch (e) {} } } catch (e) {}
-    this.state.prodId = save; this.state.cfg = saveCfg;
+    // price via pkQuote so the "from" price follows the same source as the configurator
+    // (captured Excard cash where a product has priceBase, e.g. Business Card), not the raw engine.
+    try { for (const qn of samples) { try { this.state.qty = qn; const r = this.pkQuote(qn); if (r && r.ok && r.gross > 0 && (best == null || r.gross / qn < best)) best = r.gross / qn; } catch (e) {} } } catch (e) {}
+    this.state.prodId = save; this.state.cfg = saveCfg; this.state.qty = saveQty;
     return best;
   }
 
