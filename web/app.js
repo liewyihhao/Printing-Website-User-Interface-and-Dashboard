@@ -577,6 +577,9 @@ class Component extends DCLogic {
     // already-rendered configurator re-prices once the table lands.
     if (typeof fetch === 'function')
       fetch('/pricing/excard_bc.json').then(r => r.json()).then(d => { if (d) { EXCARD_PRICES['Business Card'] = d; if (this.state.route === 'product') this.forceUpdate(); } }).catch(() => {});
+    // the ~20MB pricing engine loads async (after first paint); re-render prices when it lands
+    if (typeof window !== 'undefined' && !window.PricingEngine)
+      window.addEventListener('pk-engine-ready', () => { try { this.forceUpdate(); this.applySEO(); } catch (e) {} }, { once: true });
     const r = this.opsRoleFor(this.state.route); if (r) this.opsLoad(this.opsActingRole());
     if (this.state.route === 'learn') this.blogLoad();
     if (this.state.route === 'production') this.loadVendors();

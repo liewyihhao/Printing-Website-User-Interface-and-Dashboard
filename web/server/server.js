@@ -7,6 +7,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
+const zlib = require('zlib');
 const D = require('./domain');
 const store = require('./store');
 const content = require('./content');
@@ -280,7 +281,20 @@ async function api(req, res, pathname, query) {
   return send(res, 404, { error: 'unknown api route', path: pathname });
 }
 
-function serveStatic(res, pathname) {
+// text types worth gzipping (the 20MB engine.js compresses ~95%). Images are already compressed.
+const GZIP_RE = /\b(text\/|application\/(javascript|json|xml)|image\/svg)/i;
+function sendStatic(req, res, data, type) {
+  const ae = String((req.headers && req.headers['accept-encoding']) || '');
+  if (GZIP_RE.test(type || '') && /\bgzip\b/.test(ae) && data && data.length > 512) {
+    return zlib.gzip(data, (e, gz) => {
+      if (e) return send(res, 200, data, type);
+      res.writeHead(200, { 'Content-Type': type, 'Content-Encoding': 'gzip', 'Vary': 'Accept-Encoding', 'Cache-Control': 'no-cache' });
+      res.end(gz);
+    });
+  }
+  send(res, 200, data, type);
+}
+function serveStatic(req, res, pathname) {
   let rel = decodeURIComponent(pathname);
   if (rel === '/' || rel === '') rel = '/index.html';
   const filePath = path.normalize(path.join(WEB_ROOT, rel));
@@ -289,10 +303,10 @@ function serveStatic(res, pathname) {
     if (err) {
       // SPA fallback: extensionless content URLs (/blog/<slug>/, /<service>-printing-<city>/, /au/...)
       // serve the app shell; the client reads location.pathname and routes to the right page.
-      if (!path.extname(filePath)) return fs.readFile(path.join(WEB_ROOT, 'index.html'), (e, html) => e ? send(res, 404, 'Not found', 'text/plain') : send(res, 200, html, MIME['.html']));
+      if (!path.extname(filePath)) return fs.readFile(path.join(WEB_ROOT, 'index.html'), (e, html) => e ? send(res, 404, 'Not found', 'text/plain') : sendStatic(req, res, html, MIME['.html']));
       return send(res, 404, 'Not found: ' + rel, 'text/plain');
     }
-    send(res, 200, data, MIME[path.extname(filePath).toLowerCase()] || 'application/octet-stream');
+    sendStatic(req, res, data, MIME[path.extname(filePath).toLowerCase()] || 'application/octet-stream');
   });
 }
 
@@ -315,6 +329,6 @@ http.createServer(async (req, res) => {
       'Host: ' + host,
       'Sitemap: ' + origin + '/sitemap.xml', '',
     ].join('\n'), 'text/plain; charset=utf-8');
-    return serveStatic(res, parsed.pathname);
+    return serveStatic(req, res, parsed.pathname);
   } catch (e) { send(res, 500, { error: String(e && e.message || e) }); }
 }).listen(PORT, () => console.log('Printoka dev server on http://localhost:' + PORT + ' (static + /api)'));

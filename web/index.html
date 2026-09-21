@@ -53,15 +53,23 @@
 <div id="root"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js" crossorigin></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js" crossorigin></script>
-<!-- Real pricing engine (93 products) — generated from the calculator repo via pricing/build.sh -->
-<script src="pricing/engine.js"></script>
 <!-- Storefront catalogue: display-name overrides + categories (display-only, over the engine) -->
 <script src="catalogue.js"></script>
 <script src="runtime.js"></script>
 <script src="app.js"></script>
 <script>
+  // Render the app immediately (React + app.js are small), THEN load the ~20MB pricing
+  // engine in the background so it never blocks first paint / LCP. The app is null-safe
+  // without window.PricingEngine (prices fill in once it loads and fires pk-engine-ready).
   ReactDOM.createRoot(document.getElementById('root'))
     .render(React.createElement(window.PKComponent, window.PKProps));
+  (function () {
+    var s = document.createElement('script');
+    s.src = 'pricing/engine.js';
+    s.async = true;
+    s.onload = function () { try { window.dispatchEvent(new Event('pk-engine-ready')); } catch (e) {} };
+    document.body.appendChild(s);
+  })();
 </script>
 </body>
 </html>
