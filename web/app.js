@@ -139,8 +139,8 @@ const CFG_OVERRIDES = {
     // Custom Size inputs appear only when Size = "Other (Custom Size)"; the ranges depend on the
     // card category (Standard / Thin Fold / Fat Fold). Creasing shows for fold cards.
     addFields: [
-      { key: 'custom_h', label: 'Custom Size — Height (mm)', type: 'number', min: 40, max: 54, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 50', showWhen: { all: [{ field: 'category', value: 'Standard' }, { field: 'size', value: 'Other (Custom Size)' }] } },
-      { key: 'custom_w', label: 'Custom Size — Width (mm)', type: 'number', min: 40, max: 89, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 85', note: 'Width must be greater than Height', showWhen: { all: [{ field: 'category', value: 'Standard' }, { field: 'size', value: 'Other (Custom Size)' }] } },
+      { key: 'custom_h', label: 'Custom height (mm)', type: 'number', min: 40, max: 54, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 50', showWhen: { all: [{ field: 'category', value: 'Standard' }, { field: 'size', value: 'Other (Custom Size)' }] } },
+      { key: 'custom_w', label: 'Custom width (mm)', type: 'number', min: 40, max: 89, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 85', note: 'Width must be greater than height', showWhen: { all: [{ field: 'category', value: 'Standard' }, { field: 'size', value: 'Other (Custom Size)' }] } },
       // Thin Fold custom — open card 110–178 mm wide, folds down the middle (H 52–54 mm)
       { key: 'fold_h_thin', label: 'Open Height (mm)', type: 'number', min: 52, max: 54, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 54', showWhen: { all: [{ field: 'category', value: 'Thin Fold' }, { field: 'size', value: 'Other (Custom Size)' }] } },
       { key: 'fold_w_thin', label: 'Open Width (mm)', type: 'number', min: 110, max: 178, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 178', note: 'folds to half width', showWhen: { all: [{ field: 'category', value: 'Thin Fold' }, { field: 'size', value: 'Other (Custom Size)' }] } },
@@ -149,7 +149,7 @@ const CFG_OVERRIDES = {
       { key: 'fold_w_fat', label: 'Open Width (mm)', type: 'number', min: 60, max: 108, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 108', note: 'folds to half width', showWhen: { all: [{ field: 'category', value: 'Fat Fold' }, { field: 'size', value: 'Other (Custom Size)' }] } },
       { key: 'creasing', label: 'Creasing', options: ['Standard Creasing', 'Customised Creasing'], section: 'General', neutral: true, after: 'size', showWhen: { field: 'category', values: ['Thin Fold', 'Fat Fold'] } },
       // Customised Creasing: distance of the crease from the left edge (min 10 mm)
-      { key: 'crease_add', label: 'Crease position — Add (mm)', type: 'number', min: 10, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 78', note: 'Distance of the crease from the left edge (minimum 10 mm).', showWhen: { field: 'creasing', value: 'Customised Creasing' } },
+      { key: 'crease_add', label: 'Crease position (mm)', type: 'number', min: 10, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 78', note: 'Distance of the crease from the left edge (minimum 10 mm).', showWhen: { field: 'creasing', value: 'Customised Creasing' } },
       // Hot Stamping foil colours: one 6-colour swatch picker per colour in the option + block
       { key: 'hs_colours', widget: 'foilColours', section: 'Optional Finishing', neutral: true, after: 'hot_stamping', showWhen: { field: 'hot_stamping', notValues: ['No Hot Stamping'] } },
     ],
@@ -177,6 +177,8 @@ const CFG_OVERRIDES = {
       embossing: 'Embossing adds 1 production day. Not compatible with Silkscreen Spot UV.',
       round_corner: 'This is the actual round corner position (Front), for either portrait or landscape. No rotation required.',
     },
+    // suppress the engine's stale category note (every card type is now priced online)
+    noteOverride: { category: null },
     processDays: 1, // Excard base process day for a plain Business Card (finishing may extend it)
   },
   // Flyer / Brochure (Litho Offset Loose Sheet) — Excard "lo-loose-sheet".
@@ -2046,9 +2048,9 @@ class Component extends DCLogic {
         h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '0 20px', display: 'flex', gap: 40, alignItems: 'center', flexWrap: 'wrap' } },
           h('div', { style: { flex: '1 1 420px', minWidth: 0 } },
             h('div', { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: '.09em', textTransform: 'uppercase', color: TEAL, marginBottom: 10 } }, 'Custom printing · Malaysia · Singapore · Brunei'),
-            h('h1', { style: { margin: '0 0 14px', fontSize: 'clamp(32px,4.4vw,50px)', lineHeight: 1.06, letterSpacing: '-.03em', fontWeight: 600 } }, 'Custom printing, ', h('span', { style: { color: TEAL } }, 'priced instantly.')),
-            h('p', { style: { margin: '0 0 22px', fontSize: 16.5, color: MUT, maxWidth: '54ch', lineHeight: 1.65 } }, 'Configure any of 100+ products and see the exact price in seconds — with membership-tier savings, full specifications, artwork guides and print-ready templates. Order online, end to end.'),
-            h('div', { style: { display: 'flex', gap: 11, flexWrap: 'wrap' } }, this.btn('Configure & price →', 'teal', 'product'), this.btn('Browse products', 'ghost', 'category')),
+            h('h1', { style: { margin: '0 0 14px', fontSize: 'clamp(32px,4.4vw,50px)', lineHeight: 1.06, letterSpacing: '-.03em', fontWeight: 600 } }, 'Your exact print price, ', h('span', { style: { color: TEAL } }, 'in seconds.')),
+            h('p', { style: { margin: '0 0 22px', fontSize: 16.5, color: MUT, maxWidth: '48ch', lineHeight: 1.65 } }, 'Configure your job and see the price to the cent. Order online when it looks right.'),
+            h('div', { style: { display: 'flex', gap: 11, flexWrap: 'wrap' } }, this.btn('Get your price →', 'teal', 'product'), this.btn('Browse products', 'ghost', 'category')),
             h('div', { style: { marginTop: 20, display: 'flex', gap: 22, flexWrap: 'wrap', fontSize: 12.5, color: FAINT } },
               h('span', null, h('b', { style: { color: INK } }, '30+'), ' partner vendors'),
               h('span', null, h('b', { style: { color: INK } }, '100+'), ' products online'),
@@ -2062,7 +2064,7 @@ class Component extends DCLogic {
 
       this.homeSteps(),
 
-      this.sec('Instant quote', 'Price it without leaving this page', 'Pick a category and quantity for an indicative from-price, then deep-link into the full configurator.',
+      this.sec('Instant quote', 'See your price right here', 'Pick a category and quantity to get a starting price.',
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 14, alignItems: 'end', border: '1px solid ' + HAIR, borderRadius: 14, padding: 20, background: '#fff' } },
           [['Category', 'Cards'], ['Product', 'Business Card'], ['Quantity', '1,000 pcs']].map((f, i) =>
             h('label', { key: i, style: { display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, fontWeight: 600, color: MUT } }, f[0],
@@ -2072,7 +2074,7 @@ class Component extends DCLogic {
             h('span', { style: { fontSize: 27, fontWeight: 600, letterSpacing: '-.02em', color: TEAL } }, this.money(168))),
           this.btn('Open configurator →', 'amber', 'product', { justifyContent: 'center' })), { alt: true }),
 
-      this.sec('Shop by category', 'What can we print for you?', this.pkProducts().length + ' priced products across ' + this.catCategories().length + ' categories — every one with full specs, artwork guides and print-ready templates.',
+      this.sec('Shop by category', 'Find your product by category', this.pkProducts().length + ' products, every one priced online with specs and artwork guides.',
         h('div', null,
           h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(210px,1fr))', gap: 16 } },
             this.catCategories().map(c => {
@@ -2086,7 +2088,7 @@ class Component extends DCLogic {
           h('div', { style: { display: 'flex', justifyContent: 'center', marginTop: 24 } },
             this.btn('Browse all ' + this.pkProducts().length + ' products →', 'teal', 'catopen:all', { justifyContent: 'center', padding: '13px 26px' })))),
 
-      this.sec('Popular right now', 'Best-selling products', 'Ranked by trailing order volume — exact, market-matched pricing on every one.',
+      this.sec('Popular right now', 'What customers order most', 'Best sellers, priced to the cent.',
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(190px,1fr))', gap: 14 } },
           BEST.map((p, i) => { const bid = this.pkIdByName(p[0]); const label = bid != null ? this.catName(bid) : p[0];
             return h('div', { key: i, 'data-go': bid != null ? 'open:' + bid : 'category', style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', background: '#fff', display: 'flex', flexDirection: 'column', cursor: 'pointer' } },
@@ -2095,7 +2097,7 @@ class Component extends DCLogic {
               h('span', { style: { fontSize: 13.5, fontWeight: 500 } }, label),
               h('span', { style: { fontSize: 12.5, color: TEAL, fontWeight: 600 } }, p[2]))); })), { alt: true }),
 
-      this.sec('Membership', 'The ladder that rewards repeat business', 'Five tiers on trailing-12-month spend, evaluated continuously. Discounts stack with vouchers and referral credit up to an admin-set cap.',
+      this.sec('Membership', 'Save up to 15% on every order', 'Your discount grows with your yearly spend, and stacks with vouchers and referral credit.',
         h('div', null,
           h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12 } },
             TIERS.map((t, i) => h('div', { key: i, style: { border: '1px solid ' + (i === 3 ? TEAL : HAIR), borderRadius: 12, padding: 16, background: i === 3 ? '#fdf2f2' : '#fff' } },
@@ -2105,7 +2107,7 @@ class Component extends DCLogic {
               h('div', { style: { fontSize: 12, color: MUT, marginTop: 8, lineHeight: 1.55 } }, t[3])))),
           h('div', { style: { marginTop: 18, display: 'flex', gap: 11 } }, this.btn('See full comparison', 'ghost', 'membership'), this.btn('Register free', 'teal', 'dash')))),
 
-      this.sec('Learning Hub', 'Get your artwork right first time', 'Guide content is authored once with {{product_name}} placeholders and served both here and inside the configurator’s Size & Bleed tab.',
+      this.sec('Learning Hub', 'Get your artwork right first time', 'Free guides on bleed, paper and setup for every product.',
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 16 } },
           [['Artwork Guides', 'How to set up bleed, trim and safe area', '3 mm bleed on every side'],
            ['Paper & Finishes', 'Choosing between 250gsm and 360gsm art card', 'Stock weight guide'],
@@ -2123,16 +2125,16 @@ class Component extends DCLogic {
   // band (step copy preserved verbatim from the live site; brand-styled step icons).
   homeSteps() {
     const STEPS = [
-      ['sliders', 'Choose and Customize your Prints', 'Select the products you wish to print, and customize them to your desired size, materials, and quantity.'],
-      ['upload', 'Upload the print-ready files', 'Upload your “print-ready” artworks in just a few clicks.'],
-      ['credit-card', 'Check the price and pay online', 'Get an instant price check online, and add your prints to cart for checking out.'],
-      ['truck', 'We print, ship, and get everything done for you!', 'Check the shipping fee for your postcode, and your order is ready right after payment is done!'],
+      ['sliders', 'Customise your print', 'Pick your product, size, material and quantity.'],
+      ['upload', 'Upload your artwork', 'Drop in your print-ready files.'],
+      ['credit-card', 'See the price and pay', 'Get the exact price, then check out online.'],
+      ['truck', 'We print and ship', 'We produce your order and deliver to your door.'],
     ];
     return h('section', { style: { background: '#fff', padding: '48px 0' } },
       h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '0 20px' } },
         h('div', { style: { textAlign: 'center', marginBottom: 34 } },
-          h('h2', { style: { margin: '0 0 8px', fontSize: 28, fontWeight: 600, letterSpacing: '-.02em' } }, 'Fast and Easy Ways to Print Online'),
-          h('p', { style: { margin: 0, fontSize: 14.5, color: MUT } }, 'Four easy steps, just clicks of time, and your order is ready for printing!')),
+          h('h2', { style: { margin: '0 0 8px', fontSize: 28, fontWeight: 600, letterSpacing: '-.02em' } }, 'Order your print in four steps'),
+          h('p', { style: { margin: 0, fontSize: 14.5, color: MUT } }, 'Set it up online in minutes.')),
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 26 } },
           STEPS.map((st, i) => h('div', { key: i, style: { textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 } },
             h('div', { style: { position: 'relative', height: 76, width: 76, borderRadius: '50%', background: '#fdf2f2', display: 'grid', placeItems: 'center' } },
@@ -2211,8 +2213,8 @@ class Component extends DCLogic {
     return h('div', null,
       h('section', { style: { background: ALT, borderBottom: '1px solid ' + HAIR } },
         h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '54px 20px' } },
-          h('h1', { style: { margin: 0, maxWidth: '20ch', fontSize: 'clamp(26px,3.6vw,38px)', fontWeight: 600, lineHeight: 1.2, letterSpacing: '-.02em' } }, 'Print. Create. Elevate.'),
-          h('p', { style: { margin: '16px 0 0', maxWidth: '68ch', fontSize: 16, color: MUT, lineHeight: 1.8 } }, 'Printoka is a printing marketplace, not a single press. Every job is matched to the printer best suited to it — our own facility in Miri or one of thirty partner vendors — so you get factory pricing without negotiating a quote first.'))),
+          h('h1', { style: { margin: 0, maxWidth: '20ch', fontSize: 'clamp(26px,3.6vw,38px)', fontWeight: 600, lineHeight: 1.2, letterSpacing: '-.02em' } }, 'Printing matched to the right press'),
+          h('p', { style: { margin: '16px 0 0', maxWidth: '60ch', fontSize: 16, color: MUT, lineHeight: 1.8 } }, 'Printoka sends your job to the printer that suits it best, from our own facility in Miri to thirty partner vendors. You get factory pricing without chasing a quote first.'))),
       h('section', { style: { maxWidth: 1180, margin: '0 auto', padding: '36px 20px 0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 18 } },
         STATS.map((s, i) => h('div', { key: i, style: { border: '1px solid ' + HAIR, padding: '22px 24px' } },
           h('div', { style: { fontSize: 30, fontWeight: 600, color: TEAL, letterSpacing: '-.02em' } }, s[0]),
@@ -2224,7 +2226,7 @@ class Component extends DCLogic {
             h('div', null,
               h('div', { style: { fontSize: 16, fontWeight: 600, marginBottom: 5 } }, t[1]),
               h('div', { style: { fontSize: 14, color: MUT, lineHeight: 1.75 } }, t[2])))))),
-      this.sec('Key Account Management', 'A named person, not a ticket queue', 'Platinum members and approved business accounts are assigned a Key Account Manager who handles quoting, scheduling, credit terms and escalation directly.',
+      this.sec('Key Account Management', 'Your own Key Account Manager', 'Platinum members and approved business accounts get a named manager who handles quoting, scheduling, credit terms and escalation directly.',
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 18 } },
           [['Quoting and re-quoting', 'Bulk and off-catalogue jobs priced against vendor rate cards, usually same day.'],
            ['Production scheduling', 'Priority queue placement and delivery dates committed before you order.'],
@@ -2413,12 +2415,12 @@ class Component extends DCLogic {
   // leads into the die-line-first configurator below.
   packagingHero() {
     const TYPES = [
-      ['box', 'Basic Boxes', 'A clean base you can size to your exact measurements — tuck-end, auto-lock and tray styles.'],
+      ['box', 'Basic Boxes', 'A clean base you can size to your exact measurements. Tuck-end, auto-lock and tray styles.'],
       ['layers', 'Window Boxes', 'Put your product front-and-centre with a clear window patch.'],
       ['file', 'Sleeves', 'Add to the unboxing moment with a printed sleeve or belly band.'],
       ['box', 'E-Flute Mailers', 'Durable corrugated mailers and flip-lid boxes for shipping and gifting.'],
     ];
-    const STOCKS = [['Boxboard Grey Back', 'Economical, rigid — ideal for retail cartons.'], ['Gloss / Matte Art Card', '250–400 GSM coated stock for vivid print.'], ['Kraft', 'Natural brown board for an organic, eco look.'], ['E-Flute Corrugated', 'Cushioned board for mailers and shippers.']];
+    const STOCKS = [['Boxboard Grey Back', 'Economical and rigid. Ideal for retail cartons.'], ['Gloss / Matte Art Card', '250 to 400 GSM coated stock for vivid print.'], ['Kraft', 'Natural brown board for an organic, eco look.'], ['E-Flute Corrugated', 'Cushioned board for mailers and shippers.']];
     const FINISH = [['Spot UV', 'A precise gloss over matte for a tactile, premium accent.'], ['Embossing', 'Raise logos and text off the surface for a physical finish.'], ['Hot Stamping', 'Metallic gold or silver foil for a touch of luxury.'], ['Window Patching', 'A clear film window so the product shows through.']];
     const STEPS = [
       ['sliders', 'Choose your box & dimensions', 'Pick a die-cut style and key in your exact length, width and depth.'],
@@ -2433,10 +2435,10 @@ class Component extends DCLogic {
           h('div', { style: { flex: '1 1 360px', minWidth: 0 } },
             h('div', { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: '.09em', textTransform: 'uppercase', color: TEAL, marginBottom: 10 } }, 'Custom packaging boxes'),
             h('h1', { style: { margin: '0 0 12px', fontSize: 'clamp(30px,4vw,46px)', lineHeight: 1.05, letterSpacing: '-.03em', fontWeight: 600 } }, 'Create your own ', h('span', { style: { color: TEAL } }, 'packaging.')),
-            h('p', { style: { margin: '0 0 18px', fontSize: 16, color: MUT, maxWidth: '52ch', lineHeight: 1.65 } }, 'Good packaging is a good first impression. Design a custom box, sleeve or mailer to your exact size, choose your material and finishing, and price the run instantly — with a free die-line to design on.'),
+            h('p', { style: { margin: '0 0 18px', fontSize: 16, color: MUT, maxWidth: '50ch', lineHeight: 1.65 } }, 'Design a box, sleeve or mailer to your exact size. Pick your material and finishing and see the price instantly. Every order comes with a free die-line to design on.'),
             h('div', { style: { display: 'flex', gap: 10, alignItems: 'center', marginBottom: 20, flexWrap: 'wrap' } },
               h('span', { style: { color: AMBER, fontSize: 18, letterSpacing: 2 } }, '★★★★★'),
-              h('span', { style: { fontSize: 13, color: MUT } }, '5.00 / 5 · trusted by Malaysian brands')),
+              h('span', { style: { fontSize: 13, color: MUT } }, '4.8 / 5 from verified reviews')),
             h('div', { style: { display: 'flex', gap: 11, flexWrap: 'wrap' } },
               this.btn('Design your box →', 'amber', 'set:pkTab:configure', { padding: '13px 24px' }),
               this.btn('Get a custom quote', 'ghost', 'contact', { padding: '13px 24px' }))),
@@ -2520,7 +2522,7 @@ class Component extends DCLogic {
           h('div', { style: { display: 'flex', gap: 10, alignItems: 'baseline', flexWrap: 'wrap', marginBottom: 4 } },
             h('span', { style: { fontSize: 16.5, fontWeight: 600 } }, l[0]),
             h('span', { style: { fontSize: 12.5, fontWeight: 600, color: TEAL } }, l[1])),
-          h('div', { style: { fontSize: 11.5, color: FAINT, marginBottom: 10 } }, l[4] + ' · ' + l[3]),
+          h('div', { style: { fontSize: 11.5, color: FAINT, marginBottom: 10 } }, l[3]),
           h('div', { style: { display: 'flex', flexDirection: 'column', gap: 7 } },
             l[2].map((b, bi) => h('div', { key: bi, style: { display: 'flex', gap: 9, fontSize: 13, color: MUT, lineHeight: 1.55 } },
               h('img', { src: window.__asset ? window.__asset('assets/icons/check-circle.svg') : 'assets/icons/check-circle.svg', alt: '', style: { height: 14, width: 14, display: 'block', flex: 'none', marginTop: 2 } }), b)))))),
@@ -2809,7 +2811,7 @@ class Component extends DCLogic {
       this.packagingHero(),
       h('div', { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: '.09em', textTransform: 'uppercase', color: TEAL, margin: '10px 0 4px' } }, 'Start your order'),
       h('h2', { style: { margin: '0 0 6px', fontSize: 22, fontWeight: 600, letterSpacing: '-.02em' } }, 'Die-line-first box configurator'),
-      h('p', { style: { margin: '0 0 6px', fontSize: 13.5, color: MUT, maxWidth: '72ch', lineHeight: 1.7 } }, 'Pick a box style, set its dimensions, choose material and finishing, then price the run at every membership tier before submitting — artwork follows once the die-line is downloaded.'),
+      h('p', { style: { margin: '0 0 6px', fontSize: 13.5, color: MUT, maxWidth: '68ch', lineHeight: 1.7 } }, 'Pick a box style, set its size, and choose your material and finishing. See the price at every tier before you submit. Add artwork once you download the die-line.'),
       h('div', { style: { display: 'flex', gap: 22, borderBottom: '1px solid ' + HAIR, margin: '20px 0 20px', flexWrap: 'wrap' } },
         TABS.map(t => h('span', { key: t[0], 'data-go': 'set:pkTab:' + t[0], style: { padding: '0 0 12px', fontSize: 14, fontWeight: 600, color: tab === t[0] ? TEAL : MUT, borderBottom: '2px solid ' + (tab === t[0] ? TEAL : 'transparent'), marginBottom: -1, cursor: 'pointer' } }, t[1]))),
       P[tab],
@@ -2842,7 +2844,7 @@ class Component extends DCLogic {
         h('span', { 'data-go': 'home', style: { color: TEAL } }, 'Home'), ' › Products', active !== 'all' ? ' › ' + this.catCategoryLabel(active) : ''),
       this.head(active === 'all' ? 'Online Printing' : this.catCategoryLabel(active) + ' Printing',
         active === 'all'
-          ? 'Browse every product Printoka prints — ' + this.pkProducts().length + ' products across ' + this.catCategories().length + ' categories, each priced instantly from the live engine.'
+          ? 'Browse every product Printoka prints. ' + this.pkProducts().length + ' products across ' + this.catCategories().length + ' categories, each priced online in seconds.'
           : seo.lead),
       h('div', { style: { display: 'grid', gridTemplateColumns: '232px minmax(0,1fr)', gap: 26, alignItems: 'start', marginTop: 18 } },
         sidebar,
@@ -2878,14 +2880,15 @@ class Component extends DCLogic {
     const minMoq = moqs.length ? Math.min.apply(null, moqs) : null;
     const froms = items.map(p => this.catFromPrice(p.id)).filter(x => x != null);
     const minFrom = froms.length ? Math.min.apply(null, froms) : null;
+    const showFrom = minFrom != null && minFrom >= 0.01;
     const lead = all
-      ? 'Every product Printoka prints, priced instantly.'
-      : 'Order ' + label.toLowerCase() + ' online in Malaysia, Singapore and Brunei — ' + items.length + ' product' + (items.length === 1 ? '' : 's') + ', each priced instantly from our live engine.';
+      ? 'Every product Printoka prints, priced online in seconds.'
+      : 'Order ' + label.toLowerCase() + ' online across Malaysia, Singapore and Brunei. ' + items.length + ' product' + (items.length === 1 ? '' : 's') + ', each priced online in seconds.';
     const paras = [];
-    paras.push(label + ' from Printoka covers ' + items.length + ' product' + (items.length === 1 ? '' : 's') + (names.length ? ' including ' + names.slice(0, 5).join(', ') + (items.length > 5 ? ' and more' : '') : '') + '. Configure your specification, see an exact price the moment you choose it, and check out online — no waiting for a quote.');
-    if (minMoq != null || minFrom != null) paras.push('Start from ' + (minMoq != null ? 'as few as ' + minMoq.toLocaleString() + ' pcs' : 'small runs') + (minFrom != null ? ', with prices from ' + this.money(minFrom) + ' per piece' : '') + '. Printoka members save automatically at checkout — up to 15% on every order.');
-    paras.push('Upload print-ready artwork and our prepress team checks trim, bleed, resolution and colour before printing. Standard turnaround is 3 working days after approval, with nationwide courier delivery or free self-pickup at a Klang Valley outlet.');
-    return { lead, heading: all ? 'Online printing in Malaysia, Singapore & Brunei' : label + ' printing — instant online pricing', paras };
+    paras.push('Printoka prints ' + items.length + ' ' + label.toLowerCase() + ' product' + (items.length === 1 ? '' : 's') + (names.length ? ', including ' + names.slice(0, 5).join(', ') + (items.length > 5 ? ' and more' : '') : '') + '. Configure your spec, see the exact price as you choose, and order online.');
+    if (minMoq != null || showFrom) paras.push('Start from ' + (minMoq != null ? 'as few as ' + minMoq.toLocaleString() + ' pcs' : 'small runs') + (showFrom ? ', from ' + this.money(minFrom) + ' per piece' : '') + '. Members save up to 15% at checkout.');
+    paras.push('Upload your artwork and our prepress team checks trim, bleed, resolution and colour before printing. Turnaround is 3 working days after approval, with nationwide delivery or free pickup in the Klang Valley.');
+    return { lead, heading: all ? 'Online printing in Malaysia, Singapore & Brunei' : label + ' printing: instant online pricing', paras };
   }
 
   // ===== PRODUCT + CONFIGURATOR =====
@@ -2934,8 +2937,9 @@ class Component extends DCLogic {
       const isPh0 = isPh && (chosen === '' || chosen == null);
       const curText = isPh0 ? 'Please Select' : (optLabel[chosen] || chosen);
       const items = dispOptions.map(v => { const val = Array.isArray(v) ? v[0] : v; return { label: optLabel[val] || val, on: chosen === val, onPick: () => this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) })) }; });
+      const note = (ov.noteOverride && Object.prototype.hasOwnProperty.call(ov.noteOverride, def.key)) ? ov.noteOverride[def.key] : (def.neutral ? null : (def.note || null));
       return h('div', { key: def.key, style: rowStyle },
-        labelCell(label, def.neutral ? null : (def.note || null)),
+        labelCell(label, note),
         ctrlWrap(pkDropdown(def.key, curText, isPh0, remark, items)));
     };
     // quantity, straight from the engine's per-product model (moq / options)
@@ -3019,8 +3023,8 @@ class Component extends DCLogic {
             h('div', { style: { flex: '0 0 300px', maxWidth: 340, filter: 'drop-shadow(0 12px 24px rgba(33,33,33,.12))' } }, this.art(prod ? prod.name : 'card')),
             h('div', { style: { flex: '1 1 300px', minWidth: 0 } },
               h('h1', { style: { margin: '0 0 10px', fontSize: 30, fontWeight: 600, letterSpacing: '-.02em' } }, NAME + ' Printing'),
-              h('p', { style: { margin: '0 0 12px', fontSize: 14, color: MUT, lineHeight: 1.7 } }, (() => { try { const s = this.productSeo(prod, NAME); if (s && s.paras && s.paras[0]) return s.paras[0]; } catch (e) {} return 'Configure your job and get an instant, market-matched price — no waiting for a quote.'; })()),
-              h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, this.chip('Exact market price', 'ok'), this.chip('Ready in 3 working days', 'teal')))),
+              h('p', { style: { margin: '0 0 12px', fontSize: 14, color: MUT, lineHeight: 1.7 } }, (() => { try { const s = this.productSeo(prod, NAME); if (s && s.paras && s.paras[0]) return s.paras[0]; } catch (e) {} return 'Configure your job and see the exact price before you order.'; })()),
+              h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, this.chip('Price to the cent', 'ok'), this.chip('Ready in 3 working days', 'teal')))),
           h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4, border: '1px solid ' + HAIR, borderRadius: 14, padding: 20 } },
             h('div', { style: { fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: TEAL, marginBottom: 4 } }, 'Configure your order'),
             groups.map(g => h('div', { key: g.sec, style: { display: 'flex', flexDirection: 'column' } }, sectionHeader(g.sec), g.nodes)))),
@@ -3088,10 +3092,10 @@ class Component extends DCLogic {
     const axisPhrase = axes.length ? axes.slice(0, 4).join(', ') + (axes.length > 4 ? ' and more' : '') : 'a range of specifications';
     const from = prod ? this.catFromPrice(prod.id) : null;
     const paras = [];
-    paras.push('Order ' + NAME + ' printing online in Malaysia, Singapore and Brunei with Printoka. Configure ' + axisPhrase + ', see an exact price instantly, and check out in minutes — the same impression-run engine our production floor uses prices every option, so the number in the configurator is the number on your quotation, at checkout and on your invoice.');
-    if (qobj) paras.push('Minimum order is ' + qobj.moq.toLocaleString() + ' pcs' + (from != null ? ', from ' + this.money(from) + ' per piece' : '') + '. Printoka members save automatically at checkout — Bronze 5%, Silver 8%, Gold 10% and Platinum 15% — and every job is print-checked before it reaches the press.');
-    paras.push(NAME + ' sits in our ' + cat + ' range. Upload print-ready artwork, and our prepress team reviews trim, bleed, resolution and colour before printing so your order comes out exactly as designed. Standard turnaround is 3 working days after artwork approval, with nationwide courier delivery or free self-pickup at a Klang Valley outlet.');
-    return { heading: NAME + ' printing — specifications, artwork & pricing', paras };
+    paras.push('Order ' + NAME + ' online across Malaysia, Singapore and Brunei. Configure ' + axisPhrase + ' and see the exact price on screen. The configurator price is your final price at checkout and on your invoice.');
+    if (qobj) paras.push('Minimum order is ' + qobj.moq.toLocaleString() + ' pcs' + (from != null ? ', from ' + this.money(from) + ' per piece' : '') + '. Members save 5% to 15% automatically at checkout.');
+    paras.push('Upload your artwork and our prepress team checks trim, bleed, resolution and colour before printing. Turnaround is 3 working days after approval, with nationwide delivery or free pickup in the Klang Valley.');
+    return { heading: NAME + ' printing: specs, artwork and pricing', paras };
   }
 
   productPanel() {
@@ -3104,7 +3108,7 @@ class Component extends DCLogic {
     if (t === 'artwork') return h('div', null,
       h('h3', { style: { fontSize: 20, fontWeight: 600, margin: '0 0 6px' } }, 'Artwork Specification'),
       h('p', { style: { fontSize: 13.5, color: MUT, margin: '0 0 16px' } }, 'How to set up print-ready artwork for ' + NAME0 + ' so it prints exactly as you expect.'),
-      kv([['File format', 'Print-ready PDF preferred. AI, EPS, or high-resolution PNG/TIFF also accepted.'], ['Resolution', '300 dpi at 100% size. Vector art stays sharp.'], ['Colour mode', 'CMYK for accurate print colour (RGB is converted and can shift).'], ['Bleed', '3 mm on every side — extend background artwork into the bleed.'], ['Safe margin', 'Keep text and logos ≥ 3–5 mm inside the trim.'], ['Fonts', 'Outline or embed all fonts before exporting.'], ['Spot UV / foil', 'Supply a separate 100% black mask layer, named for the finishing process.']]));
+      kv([['File format', 'Print-ready PDF preferred. AI, EPS, or high-resolution PNG/TIFF also accepted.'], ['Resolution', '300 dpi at 100% size. Vector art stays sharp.'], ['Colour mode', 'CMYK for accurate print colour (RGB is converted and can shift).'], ['Bleed', '3 mm on every side. Extend your background into the bleed.'], ['Safe margin', 'Keep text and logos at least 3 to 5 mm inside the trim.'], ['Fonts', 'Outline or embed all fonts before exporting.'], ['Spot UV / foil', 'Supply a separate 100% black mask layer, named for the finishing process.']]));
     if (t === 'templates') {
       const prodT = this.pkProduct();
       const sizeField = this.pkFields().find(f => /size/i.test(f.def.key) && f.options && f.options.length);
@@ -3119,7 +3123,7 @@ class Component extends DCLogic {
           sizes.map((sz, i) => h('div', { key: i, style: { display: 'grid', gridTemplateColumns: '1fr 110px 110px 90px', gap: 8, padding: '10px 14px', borderTop: '1px solid ' + LINE, alignItems: 'center' } },
             h('span', { style: { fontSize: 13, fontWeight: 500 } }, sz, h('span', { style: { color: FAINT, fontWeight: 400 } }, ' · +3 mm bleed')),
             ['.ai', '.psd', '.pdf'].map((ext, j) => h('a', { key: j, href: 'templates/' + slug + '/' + sz.replace(/[^a-z0-9]+/gi, '-').toLowerCase() + ext, style: { textAlign: 'center', fontSize: 12, fontWeight: 600, color: TEAL, border: '1px solid ' + HAIR, borderRadius: 6, padding: '6px 0', textDecoration: 'none' } }, ['AI', 'PSD', 'PDF'][j]))))) : h('p', { style: { fontSize: 13, color: FAINT } }, 'Templates for this product are supplied on request.'),
-        h('div', { style: { fontSize: 11.5, color: FAINT, marginTop: 12, lineHeight: 1.6 } }, 'Template files map to ' + (prodT ? 'products/' + slug + '/' : 'products/') + '<size>.{ai,psd,pdf} — the size list is generated from the live catalogue; drop the source files into web/assets/templates/ to activate the links (staged migration).'));
+        h('div', { style: { fontSize: 11.5, color: FAINT, marginTop: 12, lineHeight: 1.6 } }, 'Need a size that is not listed? Ask us and we will send you the template.'));
     }
     if (t === 'about') {
       const axes0 = this.pkFields().filter(f => f.options && f.options.length && !/category/i.test(f.def.key));
@@ -3140,7 +3144,7 @@ class Component extends DCLogic {
       [def.label, (options && options.length) ? options.join(' · ') : (this.state.cfg && this.state.cfg[def.key]) || '—']);
     return h('div', null,
       h('h3', { style: { fontSize: 20, fontWeight: 600, margin: '0 0 6px' } }, 'Configurable Options'),
-      h('p', { style: { fontSize: 13.5, color: MUT, margin: '0 0 16px' } }, 'Every option you can set for ' + NAME + ' when you order — read live from the pricing engine (' + (prod ? prod.engine : '') + ').'),
+      h('p', { style: { fontSize: 13.5, color: MUT, margin: '0 0 16px' } }, 'Every option you can set for ' + NAME + ' when you order.'),
       rows.length ? kv(rows) : h('p', { style: { fontSize: 13.5, color: FAINT } }, 'This product is quoted on request.'));
   }
 
@@ -3432,7 +3436,7 @@ class Component extends DCLogic {
     const spend = (u && u.spend12mo) || 0, plat = 10000;
     const toPlat = Math.max(0, plat - spend), pct = Math.min(100, Math.round(spend / plat * 100));
     return h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px 0' } },
-      this.head('Membership & rewards', 'Five tiers on cumulative trailing-12-month spend, evaluated continuously — not per order. The more you print with Printoka, the more you save on every job.',
+      this.head('Save up to 15% on every order', 'Your tier is set by your spend over the last 12 months. Higher tiers save you more on every job.',
         [this.btn(u ? 'Go to dashboard' : 'Register free', 'amber', 'dash')]),
       h('div', { style: { marginTop: 22, border: '1px solid ' + TEAL, borderRadius: 14, padding: 20, background: '#fdf2f2' } },
         h('div', { style: { display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center' } },
@@ -3444,14 +3448,14 @@ class Component extends DCLogic {
             h('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: MUT, marginTop: 8 } },
               h('span', null, this.money(spend) + ' of ' + this.money(plat) + ' trailing spend'), h('span', null, this.tier() === 'Platinum' ? 'Top tier reached' : this.money(toPlat) + ' to Platinum'))),
           h('div', { style: { flex: '0 0 260px', display: 'flex', flexDirection: 'column', gap: 9, fontSize: 12.5 } },
-            h('div', { style: { background: '#fff5e2', color: '#a1660a', borderRadius: 8, padding: '11px 13px', lineHeight: 1.55 } }, 'Inactivity watch: 41 days without an order. At 90 days you drop one tier — re-upgrade is automatic.'),
+            h('div', { style: { background: '#fff5e2', color: '#a1660a', borderRadius: 8, padding: '11px 13px', lineHeight: 1.55 } }, 'Inactivity watch: 41 days without an order. At 90 days you drop one tier. Re-upgrade is automatic.'),
             this.btn('Refer a friend · earn ' + this.money(150), 'ghost', 'membership', { justifyContent: 'center' })))),
       h('div', { style: { marginTop: 22 } },
         this.table(['Tier', 'Trailing 12-month spend', 'Discount', 'Benefits', 'Status'],
           (function (self) { const cur = TIERS.findIndex(t => t[0] === self.tier()); return TIERS.map((t, i) => [t[0], t[1], t[2], t[3], i === cur ? self.chip('Your tier', 'ok') : (i < cur ? self.chip('Unlocked', 'neutral') : self.chip('Next', 'warn'))]); })(this),
           ['140px', '190px', '110px', null, '110px'])),
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 16, marginTop: 22 } },
-        [['Stacking', 'Membership discount, seasonal coupons and referral credit stack independently up to an admin-set cap — currently 30% per order.'],
+        [['Stacking', 'Membership discount, seasonal coupons and referral credit stack independently up to a cap, currently 30% per order.'],
          ['Credit balance, not a wallet', 'A ledger fed by refunds, goodwill adjustments and referral payouts. Every entry carries a reason code, actor and running balance.'],
          ['Downgrade & re-upgrade', 'No order for 3 consecutive months drops one tier. Crossing the threshold again re-upgrades instantly, no manual reinstatement.']]
           .map((c, i) => this.card([
@@ -3521,7 +3525,7 @@ class Component extends DCLogic {
       ['Template downloads', 'Print-ready AI, PSD & PDF templates per product size.', 'file', 'downloads'],
     ];
     return this.pageWrap([
-      this.head('Support', 'We’re here to help — pick a topic, browse the FAQ below, or reach us on WhatsApp, email or the contact form.',
+      this.head('Support', 'Pick a topic below, or reach us on WhatsApp, email or the contact form.',
         [this.btn('WhatsApp us', 'amber', 'contact'), this.btn('Contact form', 'ghost', 'contact')]),
       h('div', { key: 'g', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 16, marginTop: 22 } },
         topics.map((t, i) => h('div', { key: i, 'data-go': t[3], style: { cursor: 'pointer' } }, this.card([
