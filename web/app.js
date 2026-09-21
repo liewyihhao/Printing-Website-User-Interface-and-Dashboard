@@ -2989,7 +2989,7 @@ class Component extends DCLogic {
             h('div', { style: { flex: '0 0 300px', maxWidth: 340, filter: 'drop-shadow(0 12px 24px rgba(33,33,33,.12))' } }, this.art(prod ? prod.name : 'card')),
             h('div', { style: { flex: '1 1 300px', minWidth: 0 } },
               h('h1', { style: { margin: '0 0 10px', fontSize: 30, fontWeight: 600, letterSpacing: '-.02em' } }, NAME + ' Printing'),
-              h('p', { style: { margin: '0 0 12px', fontSize: 14, color: MUT, lineHeight: 1.7 } }, (prod && prod.note) ? prod.note : 'Configure your job and get an instant, market-matched price — no waiting for a quote.'),
+              h('p', { style: { margin: '0 0 12px', fontSize: 14, color: MUT, lineHeight: 1.7 } }, (() => { try { const s = this.productSeo(prod, NAME); if (s && s.paras && s.paras[0]) return s.paras[0]; } catch (e) {} return 'Configure your job and get an instant, market-matched price — no waiting for a quote.'; })()),
               h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, this.chip('Exact market price', 'ok'), this.chip('Ready in 3 working days', 'teal')))),
           h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4, border: '1px solid ' + HAIR, borderRadius: 14, padding: 20 } },
             h('div', { style: { fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: TEAL, marginBottom: 4 } }, 'Configure your order'),
