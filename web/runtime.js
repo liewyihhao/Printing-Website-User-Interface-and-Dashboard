@@ -67,16 +67,16 @@
             h('div', { style: { borderRight: '1px solid ' + HAIR, paddingRight: 20, display: 'flex', flexDirection: 'column', gap: 4 } },
               h('div', { style: { fontSize: 13, fontWeight: 700, color: INK, marginBottom: 6 } }, 'Printing'),
               v.megaCols.map(function (col, ci) {
-                return h('span', { key: ci, 'data-go': col.go, style: { fontSize: 13, color: MUT, padding: '5px 0', cursor: 'pointer' } }, col.title);
+                return h(col.href ? 'a' : 'span', { key: ci, href: col.href || undefined, 'data-go': col.go, style: { fontSize: 13, color: MUT, padding: '5px 0', cursor: 'pointer', textDecoration: 'none' } }, col.title);
               }),
-              h('span', { 'data-go': 'catopen:all', style: { fontSize: 13, fontWeight: 600, color: TEAL, padding: '8px 0 0', cursor: 'pointer' } }, 'View all products →')),
+              h('a', { href: '/products', 'data-go': 'catopen:all', style: { fontSize: 13, fontWeight: 600, color: TEAL, padding: '8px 0 0', cursor: 'pointer', textDecoration: 'none' } }, 'View all products →')),
             // product columns
             h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: '18px 24px' } },
               v.megaCols.map(function (col, ci) {
                 return h('div', { key: ci, style: { display: 'flex', flexDirection: 'column', gap: 8 } },
-                  h('div', { 'data-go': col.go, style: { fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: TEAL, cursor: 'pointer' } }, col.title),
+                  h(col.href ? 'a' : 'div', { href: col.href || undefined, 'data-go': col.go, style: { fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: TEAL, cursor: 'pointer', textDecoration: 'none' } }, col.title),
                   col.items.map(function (it, ii) {
-                    return h('div', { key: ii, 'data-go': it.go, style: { fontSize: 13, color: MUT, cursor: 'pointer', lineHeight: 1.35 } }, it.n);
+                    return h(it.href ? 'a' : 'div', { key: ii, href: it.href || undefined, 'data-go': it.go, style: { fontSize: 13, color: MUT, cursor: 'pointer', lineHeight: 1.35, textDecoration: 'none' } }, it.n);
                   }));
               })))) : null));
   }

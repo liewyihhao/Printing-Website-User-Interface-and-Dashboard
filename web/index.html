@@ -29,6 +29,9 @@
   a:hover{color:#0e3f66}
   ::selection{background:#E5222026}
   [data-go]{cursor:pointer}
+  /* configurator dropdown control: subtle hover so the collapsed (borderless) row still reads as clickable */
+  .pk-ddctl{transition:background .12s}
+  .pk-ddctl:hover{background:#f6f7f8}
   button:focus-visible,[data-go]:focus-visible,[role=button]:focus-visible,[role=option]:focus-visible,[role=combobox]:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #E52220;outline-offset:2px}
   /* skip-to-content link: off-screen until keyboard-focused */
   .pk-skip{position:absolute;left:-9999px;top:8px;z-index:200;background:#E52220;color:#fff;padding:9px 15px;border-radius:6px;font-weight:600;text-decoration:none}

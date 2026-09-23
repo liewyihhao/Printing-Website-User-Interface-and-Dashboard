@@ -252,6 +252,13 @@ class Component extends DCLogic {
     const el = e.target.closest && e.target.closest('[data-go]');
     if (!el) return;
     const v = el.getAttribute('data-go');
+    // Product links point to the server-rendered SEO page (/<slug>-printing). Let a plain
+    // left-click do a FULL navigation so everyone lands on that static SEO page, not the SPA
+    // configurator — the SEO page's "Check Price Now" then loads the configurator (/configure/).
+    if (el.tagName === 'A' && v && v.indexOf('open:') === 0 && el.getAttribute('href') && (e.button == null || e.button === 0) && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) return;
+    // other real <a href> cards (categories, blog): let modified/middle clicks open a new tab,
+    // but intercept a plain left-click so it routes in-app instead of a full page reload.
+    if (el.tagName === 'A' && el.getAttribute('href') && (e.button == null || e.button === 0) && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) e.preventDefault();
     if (v === '_mega') return this.setState(s => ({ megaOpen: !s.megaOpen }));
     if (v === '_dismiss') return this.setState({ banner: false });
     if (v === '_locale') { const L = ['EN', 'ZH', 'MS']; return this.setState(s => ({ locale: L[(L.indexOf(s.locale || 'EN') + 1) % 3] })); }
@@ -349,6 +356,19 @@ class Component extends DCLogic {
     return null;
   }
   productPath(id) { const sl = this.pkSlug(id); return sl ? '/' + sl : null; }
+  // crawlable href for a nav token so product/category cards can be real <a> links (internal
+  // link equity + anchor text). Returns null for tokens that are pure in-app state changes.
+  navHref(go) {
+    if (!go || typeof go !== 'string') return null;
+    if (go.indexOf('open:') === 0) return this.productPath(Number(go.slice(5)));
+    if (go.indexOf('catopen:') === 0) { const cf = go.slice(8); return cf === 'all' ? '/products' : '/products/' + cf; }
+    if (go === 'packaging') return '/products/packaging-boxes';
+    if (go.indexOf('blog:') === 0) return '/blog/' + go.slice(5) + '/';
+    return null;
+  }
+  // props for a clickable card that navigates: a real <a href> when the token maps to a URL,
+  // else the plain data-go span/div. Spread onto an h('a',…)/h('div',…) accordingly.
+  cardGo(go) { const href = this.navHref(go); return href ? { tag: 'a', props: { href, 'data-go': go } } : { tag: 'div', props: { 'data-go': go } }; }
   // push a route's URL into the address bar so it is shareable/back-navigable (SPA history)
   pushUrl(path) { try { if (typeof history !== 'undefined' && path && location.pathname !== path) history.pushState({ pk: 1 }, '', path); } catch (e) {} }
   // per-product quantity model straight from the pricing engine (moq / options / chips)
@@ -696,7 +716,7 @@ class Component extends DCLogic {
     setMeta('robots', d.robots || 'index,follow');
     // canonical URL — strip query/hash so each route has one canonical address
     const origin = (typeof location !== 'undefined' ? location.origin : 'https://printoka.com');
-    const canonical = origin + (typeof location !== 'undefined' ? location.pathname : '/');
+    const canonical = origin + (d.canonical || (typeof location !== 'undefined' ? location.pathname : '/'));
     let can = document.head.querySelector('link[rel="canonical"]'); if (!can) { can = document.createElement('link'); can.setAttribute('rel', 'canonical'); document.head.appendChild(can); } can.setAttribute('href', canonical);
     // Open Graph + Twitter Card — social share previews
     const ogImg = d.image ? (/^https?:/.test(d.image) ? d.image : origin + d.image) : (origin + '/assets/products/business-card.jpg');
@@ -746,18 +766,24 @@ class Component extends DCLogic {
         { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Home', item: origin + '/' }, { '@type': 'ListItem', position: 2, name: cat }, { '@type': 'ListItem', position: 3, name: name }] },
         { '@type': 'FAQPage', mainEntity: faqs.map(f => ({ '@type': 'Question', name: f[0], acceptedAnswer: { '@type': 'Answer', text: f[1] } })) },
       ] };
-      return { title: name + ' Printing | ' + (from != null && from >= 0.001 ? 'From ' + money0(from) + '/pc | ' : '') + 'Printoka', description: 'Order ' + name + ' printing online in ' + C + ' — configure your options, get an instant price, and print with a free artwork check. Member discounts up to 15%.', robots: IDX, jsonld };
+      // configurator canonicalises to the static SEO page so the /configure/ route never competes
+      return { title: name + ' Printing | ' + (from != null && from >= 0.001 ? 'From ' + money0(from) + '/pc | ' : '') + 'Printoka', description: 'Order ' + name + ' printing online in ' + C + ' — configure your options, get an instant price, and print with a free artwork check. Member discounts up to 15%.', robots: IDX, canonical: (prod ? this.productPath(prod.id) : null), jsonld };
     }
     if (route === 'category') {
-      const active = this.state.catFilter || 'all', label = active === 'all' ? 'Online Printing' : this.catCategoryLabel(active);
+      const active = this.state.catFilter || 'all', isAll = active === 'all';
+      const label = isAll ? 'Online Printing' : this.catCategoryLabel(active);
+      // "Online Printing" already contains "Printing", so don't append it again (avoids "… Printing Printing")
+      const collName = isAll ? 'Online Printing' : label + ' Printing';
+      const titleLead = isAll ? 'Online Printing' : label + ' Printing Online';
+      const descLead = isAll ? 'Online printing' : 'Custom ' + label.toLowerCase() + ' printing';
       const items = this.catProducts(active), froms = items.map(p => this.catFromPrice(p.id)).filter(x => x != null), minFrom = froms.length ? Math.min.apply(null, froms) : null;
       const jsonld = { '@context': ctx, '@graph': [
-        { '@type': 'CollectionPage', name: label + ' Printing' },
+        { '@type': 'CollectionPage', name: collName },
         { '@type': 'ItemList', itemListElement: items.slice(0, 20).map((p, i) => ({ '@type': 'ListItem', position: i + 1, name: p.name })) },
         { '@type': 'BreadcrumbList', itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Home', item: origin + '/' }, { '@type': 'ListItem', position: 2, name: label }] },
       ] };
       const showFrom = minFrom != null && minFrom >= 0.01;
-      return { title: label + ' Printing Online | ' + (showFrom ? 'From ' + money0(minFrom) + '/pc | ' : '') + 'Printoka', description: 'Custom ' + label.toLowerCase() + ' printing in ' + C + '. Configure size, material and finish, see the price instantly, and order online' + (showFrom ? ' — from ' + money0(minFrom) + ' per piece.' : '.'), robots: IDX, jsonld };
+      return { title: titleLead + ' | ' + (showFrom ? 'From ' + money0(minFrom) + '/pc | ' : '') + 'Printoka', description: descLead + ' in ' + C + '. Configure size, material and finish, see the price instantly, and order online' + (showFrom ? ', from ' + money0(minFrom) + ' per piece.' : '.'), robots: IDX, jsonld };
     }
     if (route === 'home') return { title: 'Printoka — Online Printing in Malaysia, Singapore & Brunei | 100+ Products, Instant Pricing', description: 'Order business cards, flyers, stickers, packaging and more online. Instant pricing, member discounts up to 15%, and nationwide delivery across Malaysia, Singapore and Brunei.', robots: IDX, jsonld: { '@context': ctx, '@graph': [org, { '@type': 'WebSite', name: 'Printoka', url: origin, potentialAction: { '@type': 'SearchAction', target: origin + '/search?q={search_term_string}', 'query-input': 'required name=search_term_string' } }] } };
     if (route === 'packaging') return { title: 'Custom Packaging Boxes Printing | Design Your Own | Printoka', description: 'Design custom packaging boxes, sleeves and mailers online in ' + C + '. Choose your size, material and finishing, with a free die-line to design on.', robots: IDX, jsonld: org };
@@ -814,6 +840,8 @@ class Component extends DCLogic {
       if (PAIRS[k]) { const [hk, tag] = PAIRS[k]; if (cfg[hk] && cfg[k]) lines.push([tag, cfg[hk] + 'mm × ' + cfg[k] + 'mm']); continue; }
       let val = cfg[k]; if (val == null || val === '') continue;
       if (NONE_RE.test(String(val))) continue;   // drop "No/Not Required" selections (geometry fields are never none-like)
+      // the size field's "Other (Custom Size)" is already covered by the combined Custom/Open Size line
+      if (k === 'size' && /other|custom/i.test(String(val)) && (cfg.custom_w || cfg.fold_w_thin || cfg.fold_w_fat)) continue;
       if (/^\d+(\.\d+)?$/.test(String(val)) && /\(mm\)/i.test(def.label || '')) val = val + 'mm';
       lines.push([dispLabel(def), String(dispVal(def, val))]);
     }
@@ -1430,6 +1458,9 @@ class Component extends DCLogic {
     const segs = window.location.pathname.split('/').filter(Boolean);
     if (!segs.length) { if (this.state.route !== 'home') this.setState({ route: 'home' }); return; }
     if (segs[0] === 'blog' && segs[1]) return this.blogOpen(segs[1]);
+    // named top-level routes (so the SSR header/footer links resolve in the SPA)
+    const NAMED = { cart: 'cart', checkout: 'checkout', auth: 'auth', search: 'search', learn: 'learn', 'learning-hub': 'learn', membership: 'membership', contact: 'contact', about: 'about', 'about-us': 'about', support: 'support', downloads: 'downloads', partners: 'partners', terms: 'terms', track: 'track', packaging: 'packaging' };
+    if (segs.length === 1 && NAMED[segs[0]]) return this.setState({ route: NAMED[segs[0]] });
     // category listing: /products or /products/<catId>
     if (segs[0] === 'products') return this.setState({ route: 'category', catFilter: segs[1] || 'all' });
     // product page: /<name>-printing (matched before the SEO city landing pages, which carry an
@@ -1439,7 +1470,7 @@ class Component extends DCLogic {
     if (!this.pkProducts().length) { this._urlPending = true; return; }
     this._urlPending = false;
     const pid = this.pkIdBySlug(segs[0]);
-    if (pid != null) { if (typeof window !== 'undefined') window.scrollTo(0, 0); return this.setState({ prodId: pid, cfg: {}, qty: 1000, qtyChosen: false, route: 'product' }); }
+    if (pid != null) { if (typeof window !== 'undefined') window.scrollTo(0, 0); return this.setState({ prodId: pid, cfg: {}, qty: 1000, qtyChosen: false, sizeConfirmed: false, route: 'product' }); }
     const LOC = { au: 1, nz: 1, sg: 1, bn: 1 };
     let locale = 'my', rest = segs;
     if (LOC[segs[0]]) { locale = segs[0]; rest = segs.slice(1); }
@@ -1481,7 +1512,7 @@ class Component extends DCLogic {
       h('h2', { style: { fontSize: 22, fontWeight: 600, margin: '0 0 16px' } }, 'Popular products' + (place ? ' in ' + place : '')),
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(210px,1fr))', gap: 16 } },
         prods.map(pr => { const from = this.catFromPrice(pr.id);
-          return h('div', { key: pr.id, 'data-go': 'open:' + pr.id, style: { border: '1px solid ' + HAIR, borderRadius: 12, background: '#fff', overflow: 'hidden', cursor: 'pointer' } },
+          return h('a', { key: pr.id, href: this.productPath(pr.id) || undefined, 'data-go': 'open:' + pr.id, style: { border: '1px solid ' + HAIR, borderRadius: 12, background: '#fff', overflow: 'hidden', cursor: 'pointer', display: 'block', color: 'inherit', textDecoration: 'none' } },
             this.art(pr.engName),
             h('div', { style: { padding: '13px 14px' } },
               h('div', { style: { fontSize: 13.5, fontWeight: 500, minHeight: 34, lineHeight: 1.3 } }, pr.name),
@@ -1792,8 +1823,8 @@ class Component extends DCLogic {
   head(title, sub, actions) {
     return h('div', { style: { display: 'flex', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' } },
       h('div', { style: { flex: '1 1 320px', minWidth: 0 } },
-        h('h1', { style: { margin: '0 0 5px', fontSize: 25, fontWeight: 600, letterSpacing: '-.02em' } }, title),
-        h('p', { style: { margin: 0, fontSize: 13.5, color: MUT, maxWidth: '76ch', lineHeight: 1.65 } }, sub)),
+        h('h1', { style: { margin: '0 0 6px', fontSize: 28, fontWeight: 600, letterSpacing: '-.02em' } }, title),
+        h('p', { style: { margin: 0, fontSize: 14, color: MUT, maxWidth: '76ch', lineHeight: 1.7 } }, sub)),
       actions && h('div', { style: { display: 'flex', gap: 9, flexWrap: 'wrap' } }, actions));
   }
 
@@ -2022,11 +2053,12 @@ class Component extends DCLogic {
       specNote: cur[3],
       screens: SCREENS.map(x => ({ id: x[0], label: x[1] })),
       payments: ['Stripe', 'iPay88', 'FPX', "Touch 'n Go", 'PayNow', 'GrabPay'],
-      megaCols: this.catCategories().map(c => ({
+      megaCols: this.catCategories().map(c => { const go = c.id === 'packaging-boxes' ? 'packaging' : 'catopen:' + c.id; return {
         title: c.label,
-        go: c.id === 'packaging-boxes' ? 'packaging' : 'catopen:' + c.id,
-        items: this.catProducts(c.id).slice(0, 7).map(pr => ({ n: pr.name, go: 'open:' + pr.id })),
-      })),
+        go,
+        href: this.navHref(go),
+        items: this.catProducts(c.id).slice(0, 7).map(pr => ({ n: pr.name, go: 'open:' + pr.id, href: this.productPath(pr.id) })),
+      }; }),
       footerCols: [
         { title: 'Products', items: [['Business cards', 'category'], ['Stickers & labels', 'category'], ['Flyers & brochures', 'category'], ['Booklets', 'category'], ['Packaging & boxes', 'packaging'], ['Apparel & gifts', 'category']] },
         { title: 'Company', items: [['About Printoka', 'about'], ['Corporate accounts', 'corporate'], ['Partners', 'partners'], ['Membership', 'membership'], ['Terms & policies', 'terms']] },
@@ -2144,7 +2176,7 @@ class Component extends DCLogic {
           h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(210px,1fr))', gap: 16 } },
             this.catCategories().map(c => {
               const list = this.catProducts(c.id), cover = list[0] ? list[0].engName : 'card';
-              return h('div', { key: c.id, 'data-go': c.id === 'packaging-boxes' ? 'packaging' : 'catopen:' + c.id, style: { border: '1px solid ' + HAIR, borderRadius: 13, overflow: 'hidden', background: '#fff', cursor: 'pointer' } },
+              return h('a', { key: c.id, href: this.navHref(c.id === 'packaging-boxes' ? 'packaging' : 'catopen:' + c.id) || undefined, 'data-go': c.id === 'packaging-boxes' ? 'packaging' : 'catopen:' + c.id, style: { border: '1px solid ' + HAIR, borderRadius: 13, overflow: 'hidden', background: '#fff', cursor: 'pointer', display: 'block', color: 'inherit', textDecoration: 'none' } },
                 this.art(cover),
                 h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '13px 15px' } },
                   h('span', { style: { fontWeight: 500, fontSize: 14 } }, c.label),
@@ -2156,7 +2188,7 @@ class Component extends DCLogic {
       this.sec('Popular right now', 'What customers order most', 'Best sellers, priced to the cent.',
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(190px,1fr))', gap: 14 } },
           BEST.map((p, i) => { const bid = this.pkIdByName(p[0]); const label = bid != null ? this.catName(bid) : p[0];
-            return h('div', { key: i, 'data-go': bid != null ? 'open:' + bid : 'category', style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', background: '#fff', display: 'flex', flexDirection: 'column', cursor: 'pointer' } },
+            return h(bid != null ? 'a' : 'div', { key: i, href: bid != null ? (this.productPath(bid) || undefined) : undefined, 'data-go': bid != null ? 'open:' + bid : 'category', style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', background: '#fff', display: 'flex', flexDirection: 'column', cursor: 'pointer', color: 'inherit', textDecoration: 'none' } },
             this.art(p[0]),
             h('div', { style: { padding: '11px 13px', display: 'flex', flexDirection: 'column', gap: 5 } },
               h('span', { style: { fontSize: 13.5, fontWeight: 500 } }, label),
@@ -2591,29 +2623,64 @@ class Component extends DCLogic {
           h('div', { style: { display: 'flex', flexDirection: 'column', gap: 7 } },
             l[2].map((b, bi) => h('div', { key: bi, style: { display: 'flex', gap: 9, fontSize: 13, color: MUT, lineHeight: 1.55 } },
               h('img', { src: window.__asset ? window.__asset('assets/icons/check-circle.svg') : 'assets/icons/check-circle.svg', alt: '', style: { height: 14, width: 14, display: 'block', flex: 'none', marginTop: 2 } }), b)))))),
-      h('div', { key: 'body', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 20, marginTop: 20, alignItems: 'start' } },
-        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, maxWidth: 260 } },
-          h('div', { style: { border: '1px solid ' + HAIR, background: '#fff' } },
-            h('div', { style: { padding: '11px 14px', borderBottom: '1px solid ' + HAIR, fontSize: 12, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: FAINT } }, 'Box family'),
-            FAMILIES.map((f, i) => h('div', { key: i, style: { display: 'flex', justifyContent: 'space-between', gap: 10, padding: '9px 14px', borderTop: i ? '1px solid ' + LINE : 'none', fontSize: 13, cursor: 'pointer', background: '#fff', borderLeft: '2px solid ' + (i === 0 ? TEAL : 'transparent'), color: i === 0 ? TEAL : f[0].indexOf('—') === 0 ? MUT : INK, fontWeight: f[0].indexOf('—') === 0 ? 400 : 600, paddingLeft: f[0].indexOf('—') === 0 ? 24 : 14 } },
-              h('span', null, f[0].replace('— ', '')), h('span', { style: { color: FAINT, fontSize: 12 } }, f[1])))),
-          h('div', { style: { background: TEAL, color: '#fff', padding: '22px 20px', textAlign: 'center' } },
-            h('div', { style: { fontSize: 14.5, fontWeight: 600, lineHeight: 1.5, marginBottom: 12 } }, 'Can’t find the style you need?'),
-            h('span', { 'data-go': 'contact', style: { display: 'inline-block', background: '#fff', color: TEAL, fontSize: 13.5, fontWeight: 600, padding: '10px 20px', borderRadius: 2, cursor: 'pointer' } }, 'Get a custom quote'),
-            h('div', { style: { fontSize: 12, marginTop: 10, opacity: .9 } }, 'For fully bespoke packaging and die-lines'))),
-        h('div', null,
-          h('div', { style: { display: 'flex', gap: 22, borderBottom: '1px solid ' + HAIR, marginBottom: 16, flexWrap: 'wrap' } },
-            ['Box model', 'Product spec', 'Artwork spec', 'Tutorial'].map((t, i) =>
-              h('span', { key: i, style: { padding: '0 0 12px', fontSize: 13.5, fontWeight: 600, color: i ? MUT : TEAL, borderBottom: '2px solid ' + (i ? 'transparent' : TEAL), marginBottom: -1, cursor: 'pointer' } }, t))),
-          h('div', { style: { display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 } },
-            h('span', { style: { fontSize: 13, color: MUT } }, 'All boxes · 54 styles'),
-            h('span', { style: { fontSize: 13, color: MUT } }, 'Sort: Most popular')),
-          h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(190px,1fr))', gap: 16 } },
-            MODELS.map((m, i) => h('div', { key: i, 'data-go': 'set:pkTab:configure', style: { border: '1px solid ' + HAIR, background: '#fff', padding: '16px 16px 18px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 } },
-              this.dieline(m[3]),
-              h('div', { style: { fontSize: 14.5, fontWeight: 600, color: TEAL, marginTop: 8 } }, m[0]),
-              h('div', { style: { fontSize: 12.5, fontWeight: 500 } }, m[1]),
-              h('div', { style: { fontSize: 12, color: MUT, lineHeight: 1.5 } }, m[2])))))),
+      (() => {
+        // fixed sidebar + flexible content (was auto-fit, which stretched the sidebar and left a
+        // big empty gap). The box family filters the grid; the inner tabs switch the sub-view.
+        const fam = st.pkFam || 'All boxes', libTab = st.pkLibTab || 'Box model';
+        const matchFam = m => { const f = fam.toLowerCase(), l = (m[1] + ' ' + m[3]).toLowerCase();
+          if (f.indexOf('basic') >= 0) return l.indexOf('basic') >= 0;
+          if (f.indexOf('window') >= 0) return l.indexOf('window') >= 0;
+          if (f.indexOf('gift') >= 0) return l.indexOf('gift') >= 0;
+          if (f.indexOf('hanging') >= 0) return l.indexOf('hanging') >= 0;
+          if (f.indexOf('tray') >= 0 || f.indexOf('telescope') >= 0) return l.indexOf('tray') >= 0;
+          if (f.indexOf('folder') >= 0 || f.indexOf('envelope') >= 0) return l.indexOf('folder') >= 0 || l.indexOf('envelope') >= 0;
+          if (f.indexOf('sleeve') >= 0) return l.indexOf('sleeve') >= 0;
+          if (f.indexOf('divider') >= 0) return l.indexOf('divider') >= 0;
+          if (f.indexOf('inner') >= 0) return l.indexOf('inner') >= 0 || l.indexOf('insert') >= 0;
+          return true; };
+        const famModels = fam === 'All boxes' ? MODELS : fam === 'Most popular' ? MODELS.slice(0, 5) : MODELS.filter(matchFam);
+        const INNER = ['Box model', 'Product spec', 'Artwork spec', 'Tutorial'];
+        const specRows = [['Materials', 'Gloss / matte art card, kraft, corrugated E-flute'], ['Weights', '250 – 400 GSM card · 3-ply E-flute'], ['Finishing', 'Lamination, spot UV, hot stamping, emboss, window patch'], ['Min order', '100 pcs short run · 1,000 pcs standard'], ['Lead time', '2 – 6 working days after die-line approval']];
+        const subViews = {
+          'Box model': h('div', null,
+            h('div', { style: { display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 14 } },
+              h('span', { style: { fontSize: 13, color: MUT } }, fam + ' · ' + famModels.length + ' style' + (famModels.length === 1 ? '' : 's')),
+              h('span', { style: { fontSize: 13, color: MUT } }, 'Sort: Most popular')),
+            famModels.length ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(190px,1fr))', gap: 16 } },
+              famModels.map((m, i) => h('div', { key: i, 'data-go': 'set:pkTab:configure', style: { border: '1px solid ' + HAIR, borderRadius: 10, background: '#fff', padding: '16px 16px 18px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 } },
+                this.dieline(m[3]),
+                h('div', { style: { fontSize: 14.5, fontWeight: 600, color: TEAL, marginTop: 8 } }, m[0]),
+                h('div', { style: { fontSize: 12.5, fontWeight: 500 } }, m[1]),
+                h('div', { style: { fontSize: 12, color: MUT, lineHeight: 1.5 } }, m[2]))))
+              : h('div', { style: { border: '1px dashed ' + HAIR, borderRadius: 10, padding: 30, textAlign: 'center', fontSize: 13, color: MUT } }, 'More ' + fam.toLowerCase() + ' styles are available on request — get a custom quote.')),
+          'Product spec': h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 10, overflow: 'hidden' } },
+            specRows.map((r, i) => h('div', { key: i, style: { display: 'grid', gridTemplateColumns: '150px 1fr', gap: 14, padding: '13px 16px', borderTop: i ? '1px solid ' + LINE : 'none' } },
+              h('span', { style: { fontSize: 13, fontWeight: 600, color: TEAL } }, r[0]), h('span', { style: { fontSize: 13, color: MUT, lineHeight: 1.6 } }, r[1])))),
+          'Artwork spec': h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 10, padding: 18, fontSize: 13.5, color: MUT, lineHeight: 1.8 } },
+            h('p', { style: { margin: '0 0 8px' } }, 'Every box comes with a free die-line — a vector file of the cut, crease and bleed lines at your exact size. Design straight on top of it.'),
+            h('ul', { style: { margin: 0, paddingLeft: 18 } }, ['3 mm bleed past every cut edge', 'CMYK, 300 dpi, fonts outlined', 'Keep text 4 mm clear of creases and cut lines'].map((x, i) => h('li', { key: i }, x)))),
+          'Tutorial': h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+            [['1', 'Pick a box style and set its exact size'], ['2', 'Choose material, finishing and quantity — see the price at each tier'], ['3', 'Download the die-line, add your artwork, and submit']].map((s, i) =>
+              h('div', { key: i, style: { display: 'flex', gap: 12, border: '1px solid ' + HAIR, borderRadius: 10, padding: '13px 15px' } },
+                h('span', { style: { flex: 'none', width: 24, height: 24, borderRadius: '50%', background: TEAL, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700 } }, s[0]),
+                h('span', { style: { fontSize: 13.5, color: INK, alignSelf: 'center' } }, s[1])))),
+        };
+        return h('div', { key: 'body', style: { display: 'grid', gridTemplateColumns: '256px minmax(0,1fr)', gap: 20, marginTop: 20, alignItems: 'start' } },
+          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+            h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 10, overflow: 'hidden', background: '#fff' } },
+              h('div', { style: { padding: '11px 14px', borderBottom: '1px solid ' + HAIR, fontSize: 12, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: FAINT } }, 'Box family'),
+              FAMILIES.map((f, i) => { const name = f[0].replace('— ', ''), isSub = f[0].indexOf('—') === 0, on = fam === name;
+                return h('div', { key: i, 'data-go': 'set:pkFam:' + name, style: { display: 'flex', justifyContent: 'space-between', gap: 10, padding: '9px 14px', borderTop: i ? '1px solid ' + LINE : 'none', fontSize: 13, cursor: 'pointer', background: on ? '#fdf2f2' : '#fff', borderLeft: '2px solid ' + (on ? TEAL : 'transparent'), color: on ? TEAL : isSub ? MUT : INK, fontWeight: on ? 600 : isSub ? 400 : 600, paddingLeft: isSub ? 24 : 14 } },
+                  h('span', null, name), h('span', { style: { color: on ? TEAL : FAINT, fontSize: 12 } }, f[1])); })),
+            h('div', { style: { background: TEAL, color: '#fff', padding: '22px 20px', borderRadius: 10, textAlign: 'center' } },
+              h('div', { style: { fontSize: 14.5, fontWeight: 600, lineHeight: 1.5, marginBottom: 12 } }, 'Can’t find the style you need?'),
+              h('span', { 'data-go': 'contact', style: { display: 'inline-block', background: '#fff', color: TEAL, fontSize: 13.5, fontWeight: 600, padding: '10px 20px', borderRadius: 8, cursor: 'pointer' } }, 'Get a custom quote'),
+              h('div', { style: { fontSize: 12, marginTop: 10, opacity: .9 } }, 'For fully bespoke packaging and die-lines'))),
+          h('div', { style: { minWidth: 0 } },
+            h('div', { style: { display: 'flex', gap: 22, borderBottom: '1px solid ' + HAIR, marginBottom: 16, flexWrap: 'wrap' } },
+              INNER.map((t, i) => h('span', { key: i, 'data-go': 'set:pkLibTab:' + t, style: { padding: '0 0 12px', fontSize: 13.5, fontWeight: 600, color: libTab === t ? TEAL : MUT, borderBottom: '2px solid ' + (libTab === t ? TEAL : 'transparent'), marginBottom: -1, cursor: 'pointer' } }, t))),
+            subViews[libTab] || subViews['Box model']));
+      })(),
     ];
 
     const step = st.pkStep === undefined ? 0 : st.pkStep;
@@ -2915,10 +2982,12 @@ class Component extends DCLogic {
         sidebar,
         h('div', null,
           h('div', { key: 'count', style: { fontSize: 13, color: MUT, marginBottom: 14 } }, items.length + ' products' + (active === 'all' ? '' : ' in ' + this.catCategoryLabel(active))),
-          h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(210px,1fr))', gap: 16 } },
-            items.map(p => {
+          (() => {
+            // more than 5 products => a horizontal carousel (scroll left/right); else a grid
+            const carousel = items.length > 5;
+            const card = p => {
               const from = this.catFromPrice(p.id), moq = this.catMoq(p.id);
-              return h('div', { key: p.id, 'data-go': 'open:' + p.id, style: { border: '1px solid ' + HAIR, borderRadius: 12, background: '#fff', overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer' } },
+              return h('a', { key: p.id, href: this.productPath(p.id) || undefined, 'data-go': 'open:' + p.id, style: Object.assign({ border: '1px solid ' + HAIR, borderRadius: 12, background: '#fff', overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer', color: 'inherit', textDecoration: 'none' }, carousel ? { display: 'inline-flex', width: '216px', verticalAlign: 'top', whiteSpace: 'normal', marginRight: '16px', scrollSnapAlign: 'start' } : {}) },
                 this.art(p.engName),
                 h('div', { style: { padding: '13px 14px', display: 'flex', flexDirection: 'column', gap: 6, flex: 1 } },
                   h('span', { style: { fontSize: 13.5, fontWeight: 500, lineHeight: 1.3, minHeight: 34 } }, p.name),
@@ -2926,16 +2995,44 @@ class Component extends DCLogic {
                   h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 'auto', paddingTop: 4 } },
                     h('span', { style: { fontSize: 14.5, fontWeight: 600, color: TEAL } }, from != null ? ('from ' + this.money(from) + '/pc') : 'Quote'),
                     this.chip(from != null ? 'Instant' : 'On request', from != null ? 'ok' : 'warn'))));
-            })))),
+            };
+            if (!carousel) return h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(210px,1fr))', gap: 16 } }, items.map(card));
+            const carBtn = { flex: 'none', alignSelf: 'center', width: 40, height: 40, borderRadius: '50%', border: '1px solid ' + HAIR, background: '#fff', color: TEAL, fontSize: 22, lineHeight: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' };
+            const scroll = (btn, dir) => { const t = dir < 0 ? btn.nextSibling : btn.previousSibling; if (t) t.scrollBy({ left: dir * Math.max(240, t.clientWidth * 0.8), behavior: 'auto' }); };
+            return h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } },
+              h('button', { type: 'button', 'aria-label': 'Scroll left', onClick: e => scroll(e.currentTarget, -1), style: carBtn }, '‹'),
+              h('div', { style: { flex: 1, minWidth: 0, overflowX: 'auto', whiteSpace: 'nowrap', scrollSnapType: 'x proximity', padding: '2px 0' } }, items.map(card)),
+              h('button', { type: 'button', 'aria-label': 'Scroll right', onClick: e => scroll(e.currentTarget, 1), style: carBtn }, '›'));
+          })())),
       // SEO content section above the footer
-      h('section', { style: { borderTop: '1px solid ' + HAIR, marginTop: 46, paddingTop: 34 } },
-        h('h2', { style: { margin: '0 0 12px', fontSize: 23, fontWeight: 600, letterSpacing: '-.02em' } }, seo.heading),
-        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '10px 40px', maxWidth: 980 } },
+      h('section', { style: { borderTop: '1px solid ' + HAIR, marginTop: 46, paddingTop: 34, maxWidth: 900 } },
+        h('h2', { style: { margin: '0 0 18px', fontSize: 20, fontWeight: 600, letterSpacing: '-.01em' } }, seo.heading),
+        seo.whyHeading ? h('h3', { style: { margin: '0 0 10px', fontSize: 16, fontWeight: 600, color: INK } }, seo.whyHeading) : null,
+        (seo.bullets && seo.bullets.length) ? h('ul', { style: { margin: '0 0 20px', padding: '0 0 0 22px' } },
+          seo.bullets.map((b, i) => h('li', { key: i, style: { fontSize: 14, color: MUT, lineHeight: 1.95 } }, b))) : null,
+        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 13 } },
           seo.paras.map((t, i) => h('p', { key: i, style: { margin: 0, fontSize: 14, color: MUT, lineHeight: 1.85 } }, t)))));
   }
 
-  // category SEO copy — real sentences derived from the live catalogue (product count,
-  // representative min-order and from-price), not keyword filler.
+  // per-category benefit bullets + an opening pitch (benefit-first, no filler). Shared by
+  // the category page and every product page in that category so the "Why print" block is
+  // consistent across the site. Falls back to platform-level benefits for 'all'/unknown.
+  catWhy(catId) {
+    const WHY = {
+      'business-essentials': { bullets: ['Make a sharp first impression at every meeting', 'Put your contact details in every prospect’s hand', 'Look established from the first hello'], pitch: 'Your business card and stationery are the first thing a client touches. Print them well and you look ready for the deal before you say a word. Choose premium stocks and finishes that feel as good as they look.' },
+      'flyers-leaflets': { bullets: ['Put your promotion straight into people’s hands', 'Drive walk-ins with an offer they can hold', 'Reach a whole neighbourhood on a small budget'], pitch: 'A flyer works because someone holds it. Hand out a launch, a menu or an offer and your message goes home with the customer. Pick your size and paper, and print as few or as many as you need.' },
+      'labels-stickers': { bullets: ['Brand every product you sell', 'Seal your packaging with your own mark', 'Turn plain boxes into shelf appeal'], pitch: 'Labels and stickers put your brand on the product itself. They are low cost, hard-wearing and they travel wherever your product goes. Choose round, rectangular, oval or a custom die-cut shape to fit your packaging exactly.' },
+      'books-stationery': { bullets: ['Keep your brand on a desk all year', 'Give clients something they use every day', 'Collect your story in one book'], pitch: 'Notebooks, booklets and company profiles carry more of your story than a single page. The right binding and paper make them feel premium and keep your brand in daily use.' },
+      'cards-invitations': { bullets: ['Set the tone for the big day', 'Give guests something worth keeping', 'Add foil and texture people want to touch'], pitch: 'A wedding invitation or greeting card gets kept, not thrown away. The right paper and finishing make the moment feel special before it begins. Add hot foil, embossing or a die-cut shape to make it yours.' },
+      'large-format': { bullets: ['Get seen from across the street', 'Own your storefront and events', 'Stand tall at every roadshow'], pitch: 'Banners, buntings and roll-ups put your message where a crowd can see it. Print on durable material that lasts the event and beyond, at the exact size you need.' },
+      'packaging-boxes': { bullets: ['Protect your product in transit', 'Turn unboxing into your best advert', 'Own the shelf with custom print'], pitch: 'Custom boxes and mailers protect your product and sell it at the same time. A branded unboxing is the advert your customer photographs and shares. Design on a free die-line built for your exact size.' },
+      'apparel-gifts': { bullets: ['Put your brand on your team', 'Turn events into walking billboards', 'Give gifts people actually use'], pitch: 'Printed shirts, totes and mugs earn daily use, which makes them some of the highest-exposure branding you can buy. Choose the print method that suits your run and your design.' },
+    };
+    return WHY[catId] || { bullets: ['Get an exact price before you order', 'Choose from 100+ products in one place', 'Print with a free artwork check'], pitch: 'Printoka is an online printing marketplace bringing 30+ vendors and our own facility into one place. Configure any product, see the exact price on screen, and order online.' };
+  }
+  // category SEO copy — a keyword heading, a "Why print X" benefit list, and descriptive
+  // paragraphs. Benefit bullets are hand-written per category; the closing paragraph is
+  // derived live from the catalogue (product count, representative names, from-price).
   categorySeo(catId) {
     const all = catId === 'all';
     const label = all ? 'Online printing' : this.catCategoryLabel(catId);
@@ -2946,14 +3043,21 @@ class Component extends DCLogic {
     const froms = items.map(p => this.catFromPrice(p.id)).filter(x => x != null);
     const minFrom = froms.length ? Math.min.apply(null, froms) : null;
     const showFrom = minFrom != null && minFrom >= 0.01;
+    const why = this.catWhy(catId);
     const lead = all
       ? 'Every product Printoka prints, priced online in seconds.'
       : 'Order ' + label.toLowerCase() + ' online across Malaysia, Singapore and Brunei. ' + items.length + ' product' + (items.length === 1 ? '' : 's') + ', each priced online in seconds.';
-    const paras = [];
-    paras.push('Printoka prints ' + items.length + ' ' + label.toLowerCase() + ' product' + (items.length === 1 ? '' : 's') + (names.length ? ', including ' + names.slice(0, 5).join(', ') + (items.length > 5 ? ' and more' : '') : '') + '. Configure your spec, see the exact price as you choose, and order online.');
-    if (minMoq != null || showFrom) paras.push('Start from ' + (minMoq != null ? 'as few as ' + minMoq.toLocaleString() + ' pcs' : 'small runs') + (showFrom ? ', from ' + this.money(minFrom) + ' per piece' : '') + '. Members save up to 15% at checkout.');
-    paras.push('Upload your artwork and our prepress team checks trim, bleed, resolution and colour before printing. Turnaround is 3 working days after approval, with nationwide delivery or free pickup in the Klang Valley.');
-    return { lead, heading: all ? 'Online printing in Malaysia, Singapore & Brunei' : label + ' printing: instant online pricing', paras };
+    // closing paragraph from live catalogue data
+    const catalogue = 'Printoka prints ' + items.length + ' ' + (all ? 'product' : label.toLowerCase() + ' product') + (items.length === 1 ? '' : 's') + (names.length ? ', including ' + names.slice(0, 5).join(', ') + (items.length > 5 ? ' and more' : '') : '') + '. Configure your spec, see the exact price as you choose'
+      + (minMoq != null ? ', from as few as ' + minMoq.toLocaleString() + ' pc' + (minMoq === 1 ? '' : 's') : '')
+      + (showFrom ? ' and ' + this.money(minFrom) + ' per piece' : '') + ', and order online. Members save up to 15% at checkout.';
+    return {
+      lead,
+      heading: all ? 'Online Printing in Malaysia, Singapore & Brunei' : 'Print ' + label + ' Online in Malaysia',
+      whyHeading: all ? 'Why Print with Printoka' : 'Why Print ' + label,
+      bullets: why.bullets,
+      paras: [why.pitch, catalogue],
+    };
   }
 
   // ===== PRODUCT + CONFIGURATOR =====
@@ -3007,8 +3111,61 @@ class Component extends DCLogic {
               },
               style: { padding: '10px 13px', fontSize: 13.5, cursor: 'pointer', color: it.on ? TEAL : INK, fontWeight: it.on ? 600 : 400, background: it.on ? '#fdf2f2' : '#fff', borderTop: i ? '1px solid ' + LINE : 'none', outlineOffset: '-2px' } }, it.label)))) : null);
     };
-    const optSelect = (def, options, sel) => {
+    // card-tile option selector (the "Craft your specification" layout): a field header row
+    // (label + current value) over a responsive grid of selectable cards. Each card shows a
+    // radio dot, the option label and a Select / Not available subtext; the chosen card is
+    // highlighted, and options that are invalid for the current spec are greyed and disabled.
+    const cardGroup = (key, fieldLabel, curText, isPh0, note, remark, items, selected) => {
+      // collapsible: the field shows only its current value until clicked; clicking reveals the
+      // option cards, and picking one collapses it again (the original site's dropdown behaviour).
+      // `selected` = the customer has actively chosen this field; when false the value reads in a
+      // lighter tone so unselected fields (placeholders and untouched defaults) stand out.
+      const open = this.state.ddOpen === key;
+      const toggle = () => this.setState(st => ({ ddOpen: st.ddOpen === key ? null : key }));
+      const close = () => this.setState({ ddOpen: null });
+      const cards = open ? items.map((it, i) => {
+        const on = it.on, avail = it.avail !== false || on;
+        return h(avail ? 'button' : 'div', {
+          key: it.val != null ? it.val : i, type: avail ? 'button' : undefined,
+          onClick: avail ? (e => { e.preventDefault(); e.stopPropagation(); it.onPick(); close(); }) : undefined,
+          role: 'radio', 'aria-checked': on ? 'true' : 'false', 'aria-disabled': avail ? undefined : 'true',
+          tabIndex: avail ? 0 : -1, 'aria-label': fieldLabel + ': ' + it.label + (avail ? '' : ' (not available)'),
+          onKeyDown: avail ? (e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); e.stopPropagation(); it.onPick(); close(); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } }) : undefined,
+          style: { display: 'flex', alignItems: 'center', gap: 11, textAlign: 'left', width: '100%', font: 'inherit',
+            border: '1px solid ' + (on ? TEAL : HAIR), borderRadius: 12, background: on ? '#fdf2f2' : (avail ? '#fff' : ALT),
+            padding: '13px 14px', cursor: avail ? 'pointer' : 'default', opacity: avail ? 1 : 0.75, outlineOffset: '2px' } },
+          h('span', { 'aria-hidden': 'true', style: { flex: 'none', width: 18, height: 18, borderRadius: '50%', border: '2px solid ' + (on ? TEAL : '#cfcfcf'), background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+            on ? h('span', { style: { width: 8, height: 8, borderRadius: '50%', background: TEAL } }) : null),
+          h('span', { style: { display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 } },
+            h('span', { style: { fontSize: 13.5, fontWeight: 500, lineHeight: 1.3, color: avail ? INK : FAINT, textDecoration: avail ? 'none' : 'line-through' } }, it.label),
+            avail ? null : h('span', { style: { fontSize: 11.5, fontWeight: 400, color: '#bdbdbd' } }, 'Not available')));
+      }) : [];
+      return h('div', { key: key, style: { padding: '16px 0', borderTop: '1px solid ' + LINE } },
+        // the collapsed control: field label (+ note) on the left, current value + chevron on the
+        // right of the SAME row; click anywhere on the row to open the option list.
+        h('div', { className: 'pk-ddctl', onClick: e => { e.stopPropagation(); toggle(); }, tabIndex: 0, role: 'combobox', 'aria-haspopup': 'listbox', 'aria-expanded': open ? 'true' : 'false', 'aria-label': fieldLabel + (isPh0 ? ' (not selected)' : ': ' + curText),
+          onKeyDown: e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); e.stopPropagation(); toggle(); } else if (e.key === 'ArrowDown' && !open) { e.preventDefault(); e.stopPropagation(); this.setState({ ddOpen: key }); } else if (e.key === 'Escape' && open) { e.preventDefault(); e.stopPropagation(); close(); } },
+          style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, cursor: 'pointer', padding: '4px 6px', margin: '0 -6px', borderRadius: 8 } },
+          h('div', { style: { flex: '1 1 auto', minWidth: 0 } },
+            h('div', { style: { fontSize: 13.5, fontWeight: 600 } }, fieldLabel),
+            note ? h('div', { style: { fontSize: 11.5, color: FAINT, lineHeight: 1.5, marginTop: 3 } }, note) : null),
+          h('div', { style: { flex: '0 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, minWidth: 0 } },
+            h('span', { style: { fontSize: 14, fontWeight: selected ? 600 : 400, color: selected ? INK : '#6f6f6f', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, curText),
+            h('span', { 'aria-hidden': 'true', style: { flex: 'none', color: MUT, fontSize: 10, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .12s' } }, '▼'))),
+        open ? h('div', { style: { marginTop: 12 } },
+          remark ? h('div', { style: { fontSize: 11.5, color: MUT, lineHeight: 1.55, background: ALT, borderRadius: 8, padding: '9px 12px', marginBottom: 12 } }, remark) : null,
+          h('div', { role: 'radiogroup', 'aria-label': fieldLabel, style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(200px,1fr))', gap: 12 } }, cards)) : null);
+    };
+    // custom-size dimension fields: the H/W pairs shown when Size = "Other (Custom Size)".
+    // After the user fills both and clicks Confirm, the Size field displays "Custom Size: HxW"
+    // and the inputs collapse (state.sizeConfirmed). Editing re-opens them (reset on size pick).
+    const DIM_PAIRS = [['custom_h', 'custom_w'], ['fold_h_thin', 'fold_w_thin'], ['fold_h_fat', 'fold_w_fat']];
+    const WIDTH_KEYS = { custom_w: 'custom_h', fold_w_thin: 'fold_h_thin', fold_w_fat: 'fold_h_fat' };
+    const DIM_KEYS = { custom_h: 1, custom_w: 1, fold_h_thin: 1, fold_w_thin: 1, fold_h_fat: 1, fold_w_fat: 1 };
+    const activeDims = () => { for (const p of DIM_PAIRS) { const hv = cfg[p[0]], wv = cfg[p[1]]; if (hv != null && hv !== '' && wv != null && wv !== '') return { hk: p[0], wk: p[1], h: hv, w: wv }; } return null; };
+    const optCards = (def, options, sel) => {
       const label = (ov.label && ov.label[def.key]) || def.label;
+      const isSizeField = def.key === 'size';
       const remark = (ov.remark && ov.remark[def.key]) || null;
       const optLabel = (ov.optLabel && ov.optLabel[def.key]) || {};
       const isPh = !!(ov.placeholder && ov.placeholder.indexOf(def.key) >= 0);
@@ -3016,12 +3173,28 @@ class Component extends DCLogic {
       dispOptions = (typeof dispOptions === 'function' ? (dispOptions(this.pkV(), options) || options) : (dispOptions || options));
       const chosen = isPh ? (this.state.cfg[def.key] != null ? this.state.cfg[def.key] : '') : (sel != null ? sel : (dispOptions[0] || ''));
       const isPh0 = isPh && (chosen === '' || chosen == null);
-      const curText = isPh0 ? 'Please Select' : (optLabel[chosen] || chosen);
-      const items = dispOptions.map(v => { const val = Array.isArray(v) ? v[0] : v; return { label: optLabel[val] || val, on: chosen === val, onPick: () => this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) })) }; });
+      let curText = isPh0 ? 'Please Select' : (optLabel[chosen] || chosen);
+      // once a custom size is confirmed, the Size field reads "Custom Size: H mm × W mm"
+      if (isSizeField && /other|custom/i.test(String(chosen)) && this.state.sizeConfirmed) { const d = activeDims(); if (d) curText = 'Custom Size: ' + d.h + 'mm × ' + d.w + 'mm'; }
       const note = (ov.noteOverride && Object.prototype.hasOwnProperty.call(ov.noteOverride, def.key)) ? ov.noteOverride[def.key] : (def.neutral ? null : (def.note || null));
-      return h('div', { key: def.key, style: rowStyle },
-        labelCell(label, note),
-        ctrlWrap(pkDropdown(def.key, curText, isPh0, remark, items, label)));
+      // which of the displayed options are valid for the current spec (the engine's live set)
+      const availSet = {}; const validVals = (options || []).map(o => Array.isArray(o) ? o[0] : o);
+      validVals.forEach(v => { availSet[v] = 1; });
+      // Only grey "Not available" when the engine's live set is a subset of the displayed menu —
+      // i.e. the override is the full menu and the engine filters it (e.g. paper vs lamination).
+      // When the displayed options are a display-only override the engine doesn't enumerate
+      // (fold "Open Size" presets, plastic-card sets), the engine set is disjoint, so trust the
+      // override and show every option as available (don't falsely grey them).
+      const dispSet = {}; dispOptions.forEach(v => { dispSet[Array.isArray(v) ? v[0] : v] = 1; });
+      const reliable = validVals.length > 0 && validVals.every(v => dispSet[v]);
+      const items = dispOptions.map(v => { const val = Array.isArray(v) ? v[0] : v;
+        return { val: val, label: optLabel[val] || val, on: chosen === val, avail: reliable ? !!availSet[val] : true,
+          onPick: () => this.setState(st => Object.assign({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) }, isSizeField ? { sizeConfirmed: false } : {})) }; });
+      // "selected" = the customer set this field explicitly (placeholder chosen, or a value in
+      // state.cfg); an untouched default is NOT selected, so it reads lighter.
+      const uv = this.state.cfg[def.key];
+      const selected = isPh ? !isPh0 : (uv != null && uv !== '');
+      return cardGroup(def.key, label, curText, isPh0, note, remark, items, selected);
     };
     // quantity, straight from the engine's per-product model (moq / options)
     const qobj = this.pkQtyObj();
@@ -3033,10 +3206,8 @@ class Component extends DCLogic {
     const qtyRemark = ov.remark && ov.remark.quantity;
     const qtyPh0 = qtyPh && !qtyChosen;
     const qtyCur = qtyPh0 ? 'Please Select' : (s.qty.toLocaleString() + ' pcs' + (bestSeller.indexOf(s.qty) >= 0 ? ' — Best Seller' : ''));
-    const qtyItems = qopts.map(qn => ({ label: qn.toLocaleString() + ' pcs' + (bestSeller.indexOf(qn) >= 0 ? ' — Best Seller' : ''), on: qtyChosen && s.qty === qn, onPick: () => this.setState({ qty: qn, qtyChosen: true }) }));
-    const qtyField = h('div', { key: 'qty', style: rowStyle },
-      labelCell('Quantity', qobj ? 'min. order ' + qobj.moq.toLocaleString() + ' pcs' : null),
-      ctrlWrap(pkDropdown('quantity', qtyCur, qtyPh0, qtyRemark, qtyItems, 'Quantity')));
+    const qtyItems = qopts.map(qn => ({ val: qn, label: qn.toLocaleString() + ' pcs' + (bestSeller.indexOf(qn) >= 0 ? ' · Best Seller' : ''), on: qtyChosen && s.qty === qn, avail: true, onPick: () => this.setState({ qty: qn, qtyChosen: true }) }));
+    const qtyField = cardGroup('quantity', 'Quantity', qtyCur, qtyPh0, qobj ? 'min. order ' + qobj.moq.toLocaleString() + ' pcs' : null, qtyRemark, qtyItems, qtyChosen);
     // image picker: a selectable grid of option thumbnails (e.g. Round Corner Position)
     const imgPicker = (def, options, sel, base) => {
       const label = (ov.label && ov.label[def.key]) || def.label;
@@ -3057,7 +3228,9 @@ class Component extends DCLogic {
       if (def.widget === 'foilColours') return this.foilColourPicker(def, cfg);
       const imgBase = ov.optImages && ov.optImages[def.key];
       if (imgBase && options && options.length) return imgPicker(def, options, cfg[def.key], imgBase);
-      if (options && options.length) return optSelect(def, options, cfg[def.key]);
+      if (options && options.length) return optCards(def, options, cfg[def.key]);
+      // custom-size dimension inputs collapse once the size is confirmed
+      if (DIM_KEYS[def.key] && this.state.sizeConfirmed) return null;
       const isNum = def.type === 'number';
       const unit = /\(mm\)/i.test(def.label || '') ? ' mm' : '';
       const hints = [];
@@ -3065,6 +3238,12 @@ class Component extends DCLogic {
       else if (def.min != null) hints.push('Minimum ' + def.min + unit);
       else if (def.max != null) hints.push('Maximum ' + def.max + unit);
       if (def.note) hints.push(def.note);
+      // Confirm button after the WIDTH input of a custom-size pair (both dimensions filled)
+      const widthHK = WIDTH_KEYS[def.key];
+      const bothFilled = widthHK && cfg[widthHK] != null && cfg[widthHK] !== '' && cfg[def.key] != null && cfg[def.key] !== '';
+      const confirmBtn = widthHK ? h('button', { type: 'button', disabled: !bothFilled,
+        onClick: e => { e.preventDefault(); e.stopPropagation(); if (bothFilled) this.setState({ sizeConfirmed: true, ddOpen: null }); },
+        style: { marginTop: 4, alignSelf: 'flex-start', background: bothFilled ? TEAL : '#e9ecef', color: bothFilled ? '#fff' : MUT, border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 13.5, fontWeight: 600, cursor: bothFilled ? 'pointer' : 'not-allowed', font: '600 13.5px Montserrat,sans-serif' } }, 'Confirm size') : null;
       return h('div', { key: def.key, style: rowStyle },
         labelCell(def.label, null),
         ctrlWrap(h('div', { style: { display: 'flex', flexDirection: 'column', gap: 5 } },
@@ -3072,7 +3251,8 @@ class Component extends DCLogic {
             value: cfg[def.key] || '', placeholder: def.placeholder || ('Enter ' + def.label.toLowerCase()), 'aria-label': def.label,
             onChange: e => { const val = e.target.value; this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) })); },
             style: Object.assign({}, selStyle, { font: '400 14px Montserrat,sans-serif' }) }),
-          hints.length ? h('div', { style: { fontSize: 11.5, color: FAINT, lineHeight: 1.5 } }, hints.join(' · ')) : null)));
+          hints.length ? h('div', { style: { fontSize: 11.5, color: FAINT, lineHeight: 1.5 } }, hints.join(' · ')) : null,
+          confirmBtn)));
     };
     // group fields by the engine's section order (General / Optional Finishing / …),
     // exactly as the source order form categorises them; quantity sits in its section
@@ -3084,19 +3264,15 @@ class Component extends DCLogic {
     const groups = secOrder.map(sec => {
       const secFields = fields.filter(f => (f.def.section || 'General') === sec);
       secFields.forEach(f => { usedKeys[f.def.key] = 1; });
-      let nodes;
-      if (sec === qtySec) {
-        const pkgIdx = secFields.findIndex(f => /^package$/i.test(f.def.key));
-        nodes = []; secFields.forEach((f, i) => { if (i === pkgIdx) nodes.push(qtyField); nodes.push(renderField(f)); });
-        if (pkgIdx < 0) nodes.push(qtyField);
-      } else nodes = secFields.map(renderField);
-      return { sec, nodes };
+      return { sec, nodes: secFields.map(renderField) };
     });
     const orphans = fields.filter(f => !usedKeys[f.def.key]);
     if (orphans.length) groups[0].nodes = groups[0].nodes.concat(orphans.map(renderField));
-    const sectionHeader = (sec) => h('div', { key: 'h_' + sec, style: { display: 'flex', alignItems: 'center', gap: 9, margin: '18px 0 2px' } },
-      h('span', { style: { width: 4, height: 15, background: TEAL, borderRadius: 2, flex: 'none' } }),
-      h('span', { style: { fontSize: 12, fontWeight: 700, letterSpacing: '.05em', textTransform: 'uppercase', color: INK } }, sec));
+    // Quantity is always the LAST configuration option, after every other field/section.
+    if (groups.length) groups[groups.length - 1].nodes = groups[groups.length - 1].nodes.concat([qtyField]);
+    const sectionHeader = (sec) => h('div', { key: 'h_' + sec, style: { display: 'flex', alignItems: 'center', gap: 10, margin: '22px 0 4px' } },
+      h('span', { style: { width: 4, height: 18, background: TEAL, borderRadius: 2, flex: 'none' } }),
+      h('span', { style: { fontSize: 15, fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: INK } }, sec));
     return h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px 0' } },
       h('div', { style: { fontSize: 12.5, color: FAINT, marginBottom: 14 } },
         h('span', { 'data-go': 'home', style: { color: TEAL } }, 'Home'), ' › ', h('span', { 'data-go': prod ? ('catopen:' + this.catCategoryOf(prod.id)) : 'category', style: { color: TEAL } }, prod ? this.catCategoryLabel(this.catCategoryOf(prod.id)) : 'Products'), ' › ', NAME),
@@ -3105,26 +3281,38 @@ class Component extends DCLogic {
           h('div', { style: { display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: 26 } },
             h('div', { style: { flex: '0 0 300px', maxWidth: 340, filter: 'drop-shadow(0 12px 24px rgba(33,33,33,.12))' } }, this.art(prod ? prod.name : 'card')),
             h('div', { style: { flex: '1 1 300px', minWidth: 0 } },
-              h('h1', { style: { margin: '0 0 10px', fontSize: 30, fontWeight: 600, letterSpacing: '-.02em' } }, NAME + ' Printing'),
+              h('h1', { style: { margin: '0 0 10px', fontSize: 28, fontWeight: 600, letterSpacing: '-.02em' } }, NAME + ' Printing'),
               h('p', { style: { margin: '0 0 12px', fontSize: 14, color: MUT, lineHeight: 1.7 } }, (() => { try { const s = this.productSeo(prod, NAME); if (s && s.paras && s.paras[0]) return s.paras[0]; } catch (e) {} return 'Configure your job and see the exact price before you order.'; })()),
               h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, this.chip('Price to the cent', 'ok'), this.chip('Ready in 3 working days', 'teal')))),
           h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4, border: '1px solid ' + HAIR, borderRadius: 14, padding: 20 } },
-            h('div', { style: { fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: TEAL, marginBottom: 4 } }, 'Configure your order'),
+            h('div', { style: { fontSize: 18, fontWeight: 600, letterSpacing: '-.01em', color: INK, borderBottom: '2px solid ' + TEAL, paddingBottom: 8, marginBottom: 4, display: 'inline-block' } }, 'Craft your specification'),
             groups.map(g => h('div', { key: g.sec, style: { display: 'flex', flexDirection: 'column' } }, sectionHeader(g.sec), g.nodes)))),
         h('div', { style: { position: 'sticky', top: 122, display: 'flex', flexDirection: 'column', gap: 14 } },
           this.card([
-            h('div', { key: 'a', style: { fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: FAINT } }, 'Live price'),
-            h('div', { key: 'b', style: { display: 'flex', alignItems: 'baseline', gap: 8, margin: '8px 0 4px' } },
-              quoteOnly
-                ? h('span', { style: { fontSize: 24, fontWeight: 600, letterSpacing: '-.02em', color: TEAL } }, 'Price on request')
-                : (ready
-                    ? h('span', { style: { fontSize: 34, fontWeight: 600, letterSpacing: '-.03em', color: TEAL } }, this.money(p.net))
-                    : h('span', { style: { fontSize: 20, fontWeight: 600, letterSpacing: '-.01em', color: MUT } }, 'Select your options')),
-              !quoteOnly && ready && h('span', { style: { fontSize: 12.5, color: FAINT, whiteSpace: 'nowrap' } }, 'incl. ' + this.taxLabel())),
-            h('div', { key: 'c', style: { fontSize: 12.5, color: MUT, marginBottom: 14 } }, quoteOnly ? 'This product is quoted on request.' : (ready ? (this.currency() + ' ' + (p.unit * this.fx()).toFixed(3) + ' per piece · ' + this.state.qty.toLocaleString() + ' pcs') : 'Choose the required options above to see your live price.')),
-            !quoteOnly && ready && h('div', { key: 'd', style: { display: 'flex', flexDirection: 'column', gap: 7, fontSize: 12.5, borderTop: '1px solid ' + LINE, paddingTop: 12 } },
-              [['Subtotal', this.money(p.gross)], [this.tier() + ' member −' + this.tierPct() + '%', '−' + this.money(p.disc), TEAL], ['Est. weight', ((this.pkWeight() != null ? this.pkWeight() : this.state.qty * 0.0012)).toFixed(2) + ' kg'], ['Est. shipping (Selangor)', this.money(12)], ['Delivery window', ((ov.processDays != null ? ov.processDays + (ov.processDays === 1 ? ' working day' : ' working days') : '3–4 working days'))]]
-                .map((r, i) => h('div', { key: i, style: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, lineHeight: 1.5, color: r[2] || MUT } }, h('span', { style: { flex: '1 1 auto', minWidth: 0 } }, r[0]), h('span', { style: { flex: 'none', fontWeight: 500, whiteSpace: 'nowrap', color: r[2] || INK } }, r[1])))),
+            h('div', { key: 'h', style: { fontSize: 18, fontWeight: 600, letterSpacing: '-.01em', color: INK, borderBottom: '2px solid ' + TEAL, paddingBottom: 8, marginBottom: 12, display: 'inline-block' } }, 'Summary'),
+            // live spec summary, straight from the current configuration
+            (() => { let lines = []; try { lines = (this.pkOrderSpec().lines || []); } catch (e) {} return lines.length
+              ? h('div', { key: 'spec', style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+                  lines.map((l, i) => h('div', { key: i, style: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 14, fontSize: 12.5, lineHeight: 1.5 } },
+                    h('span', { style: { color: FAINT, flex: '0 0 auto' } }, l[0]), h('span', { style: { color: INK, fontWeight: 500, textAlign: 'right' } }, l[1]))))
+              : null; })(),
+            // order quantity + production time
+            h('div', { key: 'qp', style: { display: 'flex', flexDirection: 'column', gap: 8, borderTop: '1px solid ' + LINE, paddingTop: 12, marginTop: 12, fontSize: 12.5 } },
+              [['Order Quantity', qtyChosen ? s.qty.toLocaleString() + ' pcs' : 'Please select'], ['Production time', ov.processDays != null ? (ov.processDays + (ov.processDays === 1 ? ' working day' : ' working days')) : '3 working days']]
+                .map((r, i) => h('div', { key: i, style: { display: 'flex', justifyContent: 'space-between', gap: 12, lineHeight: 1.5 } }, h('span', { style: { color: FAINT } }, r[0]), h('span', { style: { color: INK, fontWeight: 500 } }, r[1])))),
+            // price
+            quoteOnly
+              ? h('div', { key: 'pr', style: { borderTop: '1px solid ' + LINE, paddingTop: 14, marginTop: 12 } }, h('span', { style: { fontSize: 22, fontWeight: 600, color: TEAL } }, 'Price on request'))
+              : (ready
+                  ? h('div', { key: 'pr', style: { borderTop: '1px solid ' + LINE, paddingTop: 12, marginTop: 12, display: 'flex', flexDirection: 'column', gap: 7 } },
+                      [['Subtotal', this.money(p.gross), MUT], [this.tier() + ' member −' + this.tierPct() + '%', '−' + this.money(p.disc), TEAL], ['Est. shipping (Selangor)', this.money(12), MUT]]
+                        .map((r, i) => h('div', { key: i, style: { display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 12.5, lineHeight: 1.5, color: r[2] } }, h('span', null, r[0]), h('span', { style: { fontWeight: 500, color: r[2] === TEAL ? TEAL : INK } }, r[1]))),
+                      h('div', { style: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, borderTop: '1px solid ' + LINE, paddingTop: 11, marginTop: 4 } },
+                        h('span', { style: { fontSize: 15, fontWeight: 600 } }, 'Total'),
+                        h('span', { style: { fontSize: 30, fontWeight: 600, letterSpacing: '-.02em', color: TEAL } }, this.money(p.net))),
+                      h('div', { style: { fontSize: 11.5, color: FAINT } }, this.currency() + ' ' + (p.unit * this.fx()).toFixed(3) + ' per piece · incl. ' + this.taxLabel()))
+                  : h('div', { key: 'pr', style: { borderTop: '1px solid ' + LINE, paddingTop: 14, marginTop: 12, fontSize: 20, fontWeight: 600, color: MUT } }, 'Select your options')),
+            // actions
             h('div', { key: 'e', style: { display: 'flex', flexDirection: 'column', gap: 9, marginTop: 16 } },
               (quoteOnly || ready)
                 ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 9 } },
@@ -3152,17 +3340,22 @@ class Component extends DCLogic {
 
   // full-width product-detail / SEO section (below the configurator): intro copy for
   // search engines + the Product Spec / Artwork Spec / Templates / FAQ tabs.
+  // Below the configurator: just the product's Templates (spec / description / FAQ live on the
+  // SEO page now; artwork spec belongs with the Upload & Check Artwork flow).
   productDetails(prod, NAME) {
-    const s = this.state;
-    const tabs = [['spec', 'Product Spec'], ['artwork', 'Artwork Spec'], ['templates', 'Templates'], ['about', 'Description & FAQ']];
-    const seo = this.productSeo(prod, NAME);
+    const sizeField = this.pkFields().find(f => /size/i.test(f.def.key) && f.options && f.options.length);
+    const sizes = sizeField ? sizeField.options.filter(s => !/other|custom/i.test(s)) : [];
+    const slug = prod ? (this.catOverride(prod.id).slug || 'product') : 'product';
     return h('section', { style: { borderTop: '1px solid ' + HAIR, marginTop: 44, paddingTop: 34 } },
-      h('h2', { style: { margin: '0 0 12px', fontSize: 24, fontWeight: 600, letterSpacing: '-.02em' } }, seo.heading),
-      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '10px 40px', maxWidth: 960 } },
-        seo.paras.map((t, i) => h('p', { key: i, style: { margin: 0, fontSize: 14, color: MUT, lineHeight: 1.85 } }, t))),
-      h('div', { style: { display: 'flex', gap: 24, borderBottom: '1px solid ' + HAIR, marginTop: 30, flexWrap: 'wrap' } },
-        tabs.map(t => h('span', { key: t[0], 'data-go': 'set:tab:' + t[0], style: { padding: '13px 2px', fontSize: 14, fontWeight: 600, color: s.tab === t[0] ? TEAL : FAINT, borderBottom: '3px solid ' + (s.tab === t[0] ? AMBER : 'transparent'), marginBottom: -1, cursor: 'pointer' } }, t[1]))),
-      h('div', { style: { paddingTop: 22 } }, this.productPanel()));
+      h('h2', { style: { margin: '0 0 6px', fontSize: 20, fontWeight: 600, letterSpacing: '-.01em' } }, NAME + ' Templates'),
+      h('p', { style: { fontSize: 13.5, color: MUT, margin: '0 0 18px', maxWidth: '82ch' } }, 'Download a print-ready template for your size, design on it, and remove the guides before you submit. Every template has trim, +3 mm bleed and the safe area marked.'),
+      sizes.length ? h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', maxWidth: 620 } },
+        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 90px 90px 78px', gap: 8, padding: '10px 14px', background: ALT, fontSize: 11, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: FAINT } },
+          h('span', null, 'Size'), h('span', { style: { textAlign: 'center' } }, 'Illustrator'), h('span', { style: { textAlign: 'center' } }, 'Photoshop'), h('span', { style: { textAlign: 'center' } }, 'PDF')),
+        sizes.map((sz, i) => h('div', { key: i, style: { display: 'grid', gridTemplateColumns: '1fr 90px 90px 78px', gap: 8, padding: '10px 14px', borderTop: '1px solid ' + LINE, alignItems: 'center' } },
+          h('span', { style: { fontSize: 13, fontWeight: 500 } }, sz, h('span', { style: { color: FAINT, fontWeight: 400 } }, ' · +3 mm bleed')),
+          ['.ai', '.psd', '.pdf'].map((ext, j) => h('a', { key: j, href: 'templates/' + slug + '/' + sz.replace(/[^a-z0-9]+/gi, '-').toLowerCase() + ext, style: { textAlign: 'center', fontSize: 12, fontWeight: 600, color: TEAL, border: '1px solid ' + HAIR, borderRadius: 6, padding: '6px 0', textDecoration: 'none' } }, ['AI', 'PSD', 'PDF'][j]))))) : h('p', { style: { fontSize: 13, color: FAINT } }, 'Templates for this product are supplied on request.'),
+      h('div', { style: { fontSize: 11.5, color: FAINT, marginTop: 12, lineHeight: 1.6 } }, 'Need a size that is not listed? Ask us and we will send you the template.'));
   }
 
   // SEO copy generator — real, product-specific sentences built from the live catalogue
@@ -3174,23 +3367,23 @@ class Component extends DCLogic {
     const axes = fields.filter(f => f.options && f.options.length && !/category/i.test(f.def.key)).map(f => f.def.label.toLowerCase());
     const axisPhrase = axes.length ? axes.slice(0, 4).join(', ') + (axes.length > 4 ? ' and more' : '') : 'a range of specifications';
     const from = prod ? this.catFromPrice(prod.id) : null;
-    // per-category use case so each product's opening is unique, not a name-swap template
-    const USE = {
-      'business-essentials': 'a sharp first impression at meetings, networking and your storefront',
-      'flyers-leaflets': 'promotions, menus and launches you put straight into people’s hands',
-      'labels-stickers': 'product labels, packaging seals and branding that stays put',
-      'books-stationery': 'notebooks, booklets and stationery that keep your brand in daily use',
-      'cards-invitations': 'weddings, celebrations and greetings that people keep',
-      'large-format': 'events, storefronts and roadshows where you need to be seen from a distance',
-      'packaging-boxes': 'retail shelves and unboxing that protect your product and sell it',
-      'apparel-gifts': 'uniforms, events and corporate gifts that put your brand on people',
-    };
-    const useCase = USE[catId] || 'your business, event or brand';
+    // shared per-category benefit bullets (same "Why print" list as the category page)
+    const why = this.catWhy(catId);
+    // pull THIS product's real option values (not just field labels) so two products in the
+    // same category with the same axes still get genuinely different body copy (content-strategy §4.A.2)
+    const valsOf = re => { const f = fields.find(x => re.test(x.def.key) && x.options && x.options.length); return f ? f.options.filter(o => !/other|custom|not required|^no\b|none/i.test(String(o))) : []; };
+    const sizes = valsOf(/size/i).slice(0, 4), mats = valsOf(/paper|material|stock/i).slice(0, 3), fins = valsOf(/laminat|spot|stamp|emboss|foil|corner|coat|varnish/i).slice(0, 3);
+    const specBits = [];
+    if (sizes.length) specBits.push('sizes like ' + sizes.join(', '));
+    if (mats.length) specBits.push('materials such as ' + mats.join(', '));
+    if (fins.length) specBits.push('finishing including ' + fins.map(x => String(x).toLowerCase()).join(', '));
+    const specLine = specBits.length ? ('For your ' + NAME + ' you can choose ' + specBits.join('; ') + '. Every option is priced live as you select it.') : '';
     const paras = [];
-    paras.push(NAME + ' is made for ' + useCase + '. Configure ' + axisPhrase + ' and see the exact price on screen, then order online across Malaysia, Singapore and Brunei. You pay exactly what the configurator shows, at checkout and on your invoice.');
+    paras.push('Order ' + NAME + ' online and see the exact price as you configure it. Set ' + axisPhrase + ', then order across Malaysia, Singapore and Brunei. You pay exactly what the configurator shows, at checkout and on your invoice.');
+    if (specLine) paras.push(specLine);
     if (qobj) paras.push('Minimum order is ' + qobj.moq.toLocaleString() + ' pcs' + (from != null ? ', from ' + this.money(from) + ' per piece' : '') + '. Larger runs bring the price per piece down, and members save 5% to 15% automatically at checkout.');
     paras.push('Upload your artwork and our prepress team checks trim, bleed, resolution and colour before printing. Turnaround is 3 working days after approval, with nationwide delivery or free pickup in the Klang Valley.');
-    return { heading: NAME + ' printing: specs, artwork and pricing', paras };
+    return { heading: 'Print ' + NAME + ' Online in Malaysia', whyHeading: 'Why Print ' + NAME, bullets: why.bullets, paras };
   }
 
   productPanel() {
@@ -3244,87 +3437,150 @@ class Component extends DCLogic {
   }
 
   // ===== ARTWORK UPLOAD + BLEED CHECKER =====
+  // target print size (mm) from the current configuration, so checks are measured against
+  // the size the customer actually picked
+  artworkTarget() {
+    try {
+      const cfg = this.pkV();
+      if (cfg.custom_w && cfg.custom_h) return { w: +cfg.custom_w, h: +cfg.custom_h };
+      if (cfg.fold_w_thin && cfg.fold_h_thin) return { w: +cfg.fold_w_thin, h: +cfg.fold_h_thin };
+      if (cfg.fold_w_fat && cfg.fold_h_fat) return { w: +cfg.fold_w_fat, h: +cfg.fold_h_fat };
+      const m = String(cfg.size || '').match(/(\d+(?:\.\d+)?)\s*mm\s*[x×]\s*(\d+(?:\.\d+)?)\s*mm/i);
+      if (m) return { w: +m[1], h: +m[2] };
+    } catch (e) {}
+    return null;
+  }
+  awLoadPdfjs() {
+    if (typeof window !== 'undefined' && window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+    if (this._pdfjsP) return this._pdfjsP;
+    this._pdfjsP = new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+      s.onload = () => { try { window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; res(window.pdfjsLib); } catch (e) { rej(e); } };
+      s.onerror = () => rej(new Error('pdfjs load failed'));
+      document.head.appendChild(s);
+    });
+    return this._pdfjsP;
+  }
+  // read a JPEG's SOF marker to see if it is CMYK (4 components) vs RGB (3); null if not JPEG
+  awDetectCmyk(file) {
+    return file.arrayBuffer().then(buf => {
+      const b = new Uint8Array(buf);
+      if (!(b[0] === 0xFF && b[1] === 0xD8)) return null;
+      let i = 2;
+      while (i < b.length - 9) {
+        if (b[i] !== 0xFF) { i++; continue; }
+        const m = b[i + 1];
+        if (m >= 0xC0 && m <= 0xCF && m !== 0xC4 && m !== 0xC8 && m !== 0xCC) return b[i + 9] === 4;
+        const len = (b[i + 2] << 8) | b[i + 3]; if (len < 2) break; i += 2 + len;
+      }
+      return null;
+    }).catch(() => null);
+  }
+  awFinish(checks, preview) {
+    this.setState({ aw: Object.assign({}, this.state.aw, { status: 'done', checks: checks.slice(), preview: preview || null }) });
+  }
+  awCheckRaster(file, target, checks) {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const pw = img.naturalWidth, ph = img.naturalHeight;
+      if (target) {
+        const dpi = Math.max(Math.min(pw / (target.w / 25.4), ph / (target.h / 25.4)), Math.min(pw / (target.h / 25.4), ph / (target.w / 25.4)));
+        checks.push({ t: 'Resolution', s: dpi >= 300 ? 'pass' : dpi >= 150 ? 'warn' : 'fail', d: Math.round(dpi) + ' dpi at print size' + (dpi < 300 ? ' — 300 dpi recommended for a sharp print' : '') });
+        const arArt = Math.max(pw, ph) / Math.min(pw, ph), arTgt = Math.max(target.w, target.h) / Math.min(target.w, target.h), off = Math.abs(arArt - arTgt) / arTgt;
+        checks.push({ t: 'Proportions', s: off < 0.03 ? 'pass' : off < 0.12 ? 'warn' : 'fail', d: off < 0.03 ? 'Matches your ' + target.w + '×' + target.h + ' mm size' : 'Ratio differs from the selected size — may be cropped or stretched' });
+      } else checks.push({ t: 'Dimensions', s: 'info', d: pw + ' × ' + ph + ' px' });
+      this.awDetectCmyk(file).then(cmyk => {
+        checks.push(cmyk === true ? { t: 'Colour mode', s: 'pass', d: 'CMYK — print-ready' } : { t: 'Colour mode', s: 'warn', d: 'RGB — converted to CMYK, colour may shift slightly' });
+        this.awFinish(checks, url);
+      });
+    };
+    img.onerror = () => { checks.push({ t: 'Readable', s: 'fail', d: 'This image could not be opened' }); this.awFinish(checks, null); };
+    img.src = url;
+  }
+  awCheckPdf(file, target, checks) {
+    this.awLoadPdfjs().then(pdfjs => file.arrayBuffer().then(buf => pdfjs.getDocument({ data: buf }).promise).then(pdf => {
+      checks.push({ t: 'Pages', s: 'pass', d: pdf.numPages + ' page' + (pdf.numPages > 1 ? 's' : '') });
+      return pdf.getPage(1).then(page => {
+        const vp = page.getViewport({ scale: 1 }), wmm = vp.width / 72 * 25.4, hmm = vp.height / 72 * 25.4;
+        if (target) {
+          const big = Math.max(wmm, hmm), small = Math.min(wmm, hmm), tBig = Math.max(target.w, target.h), tSmall = Math.min(target.w, target.h);
+          const trimOff = Math.max(Math.abs(big - tBig), Math.abs(small - tSmall)), bleedOff = Math.max(Math.abs(big - (tBig + 6)), Math.abs(small - (tSmall + 6)));
+          if (bleedOff < 1.5) checks.push({ t: 'Size & bleed', s: 'pass', d: Math.round(wmm) + '×' + Math.round(hmm) + ' mm — trim + 3 mm bleed' });
+          else if (trimOff < 1) checks.push({ t: 'Size & bleed', s: 'warn', d: Math.round(wmm) + '×' + Math.round(hmm) + ' mm — no bleed; add 3 mm all round' });
+          else checks.push({ t: 'Size & bleed', s: 'fail', d: Math.round(wmm) + '×' + Math.round(hmm) + ' mm — expected about ' + (tBig + 6) + '×' + (tSmall + 6) + ' mm (trim + bleed)' });
+        } else checks.push({ t: 'Page size', s: 'info', d: Math.round(wmm) + '×' + Math.round(hmm) + ' mm' });
+        const scale = Math.min(2, 560 / vp.width), v2 = page.getViewport({ scale }), canvas = document.createElement('canvas');
+        canvas.width = v2.width; canvas.height = v2.height;
+        return page.render({ canvasContext: canvas.getContext('2d'), viewport: v2 }).promise.then(() => this.awFinish(checks, canvas.toDataURL('image/png')));
+      });
+    })).catch(() => { checks.push({ t: 'Readable', s: 'fail', d: 'This PDF could not be opened' }); this.awFinish(checks, null); });
+  }
+  analyzeArtwork(file) {
+    if (!file) return;
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    const okExt = ['pdf', 'jpg', 'jpeg', 'png', 'ai', 'eps', 'tif', 'tiff', 'zip', 'gif', 'webp'];
+    const checks = [];
+    checks.push({ t: 'File format', s: okExt.indexOf(ext) >= 0 ? 'pass' : 'fail', d: (ext ? '.' + ext : 'unknown') + (okExt.indexOf(ext) >= 0 ? ' accepted' : ' — not a supported print format') });
+    const mb = file.size / 1048576;
+    checks.push({ t: 'File size', s: mb <= 1024 ? 'pass' : 'fail', d: (mb < 10 ? mb.toFixed(1) : Math.round(mb)) + ' MB' + (mb > 1024 ? ' — over the 1 GB limit' : '') });
+    this.setState({ aw: { name: file.name, sizeMB: mb, ext, status: 'analyzing', checks: checks.slice(), preview: null } });
+    if (okExt.indexOf(ext) < 0) return this.awFinish(checks, null);
+    const target = this.artworkTarget();
+    if (ext === 'pdf') this.awCheckPdf(file, target, checks);
+    else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].indexOf(ext) >= 0) this.awCheckRaster(file, target, checks);
+    else { checks.push({ t: 'Preview', s: 'info', d: 'Vector and archive files are reviewed by our prepress team after upload' }); this.awFinish(checks, null); }
+  }
+  // Automated artwork checker — the customer uploads a file, the browser inspects it and lists
+  // the real risks/warnings, then they choose to continue or replace it. No instructions to read.
   s_artwork() {
-    const zoom = this.state.zoom || 100, page = this.state.apage || 1;
-    const CHECKS = [
-      ['C2.1', 'File format valid', 'pass', 'PDF/X-1a:2001 · 2 pages · 4.1 MB'],
-      ['C2.2', 'Page count matches job', 'pass', '2 of 2 required pages present'],
-      ['C2.3', 'Trim dimensions', 'pass', '54.0 × 89.0 mm · within 0.3 mm tolerance'],
-      ['C2.4', 'Bleed present', 'fail', 'Page 1: background stops 1.2 mm short of the bleed line on the right edge'],
-      ['C2.5', 'Safe area respected', 'warn', 'Page 2: phone number sits 1.8 mm inside the safe margin'],
-      ['C2.6', 'Resolution floor (300 dpi)', 'pass', 'Lowest placed image 412 dpi'],
-      ['C2.7', 'Colour mode', 'warn', 'Logo swatch is RGB — will be converted to CMYK, colour may shift'],
-      ['C2.8', 'Fonts embedded / outlined', 'pass', '4 fonts embedded, none subset-missing'],
-      ['C2.9', 'Overprint & transparency', 'pass', 'No live transparency on spot layers'],
-      ['C2.10', 'Special-finish layer naming', 'pass', 'No foil or spot-UV layer required for this job'],
-    ];
-    const dot = s => h('span', { style: { flex: 'none', height: 10, width: 10, borderRadius: '50%', background: s === 'pass' ? '#63AA02' : s === 'warn' ? '#E8A317' : TEAL, marginTop: 5 } });
-    const fails = CHECKS.filter(c => c[2] === 'fail').length, warns = CHECKS.filter(c => c[2] === 'warn').length;
-    const VERSIONS = [
-      ['v3', 'aiman-bizcard-v3.pdf', '12 Sep · 14:02', 'Current · 1 fail, 2 warnings'],
-      ['v2', 'aiman-bizcard-v2.pdf', '11 Sep · 17:40', 'Rejected by prepress — wrong trim size'],
-      ['v1', 'aiman-bizcard.pdf', '11 Sep · 09:15', 'Replaced by customer'],
-    ];
-    const scale = zoom / 100;
-    const sheet = h('div', { style: { display: 'grid', placeItems: 'center', background: '#f3f4f6', padding: 26, overflow: 'hidden' } },
-      h('div', { style: { position: 'relative', width: 300 * scale, height: 190 * scale, background: '#fff', boxShadow: '0 2px 14px rgba(33,33,33,.14)' } },
-        h('div', { style: { position: 'absolute', inset: 0, background: 'linear-gradient(115deg,#231f20 0 62%,#fff 62% 100%)' } }),
-        h('div', { style: { position: 'absolute', inset: 16 * scale + 'px', border: '1px dashed ' + TEAL } }),
-        h('div', { style: { position: 'absolute', inset: 30 * scale + 'px', border: '1px dashed #2fa4c5' } }),
-        h('div', { style: { position: 'absolute', top: 0, right: 0, bottom: 0, width: 14 * scale, background: 'rgba(229,34,32,.35)', borderLeft: '1px solid ' + TEAL } }),
-        h('div', { style: { position: 'absolute', right: 6 * scale, bottom: 6 * scale, fontSize: 10, fontWeight: 600, color: TEAL, background: '#fff', padding: '2px 5px' } }, 'bleed short 1.2 mm')));
+    const aw = this.state.aw;
+    const NAME = this.pkProduct() ? this.catName(this.pkProduct().id) : null;
+    const COL = { pass: '#2e9e5b', warn: '#E8A317', fail: '#E52220', info: '#9aa0a6' };
+    const dot = s => h('span', { style: { flex: 'none', height: 11, width: 11, borderRadius: '50%', background: COL[s] || COL.info, marginTop: 4 } });
+    const onFiles = fl => { if (fl && fl[0]) this.analyzeArtwork(fl[0]); };
+    if (!aw) {
+      // upload state — one line, a big dropzone, nothing to read
+      return h('div', { style: { maxWidth: 720, margin: '0 auto', padding: '10px 20px 0' } },
+        this.head('Upload artwork' + (NAME ? ' — ' + NAME : ''), 'Drop your file in and we’ll check it for you.'),
+        h('label', { htmlFor: 'aw-input',
+          onDragOver: e => { e.preventDefault(); }, onDrop: e => { e.preventDefault(); onFiles(e.dataTransfer.files); },
+          style: { display: 'block', border: '2px dashed ' + HAIR, borderRadius: 16, background: ALT, padding: '54px 24px', textAlign: 'center', cursor: 'pointer', marginTop: 18 } },
+          h('input', { id: 'aw-input', type: 'file', accept: '.pdf,.jpg,.jpeg,.png,.ai,.eps,.tif,.tiff,.zip', style: { display: 'none' }, onChange: e => onFiles(e.target.files) }),
+          h('img', { src: window.__asset('assets/icons/upload-artwork.svg'), alt: '', style: { height: 44, width: 'auto', display: 'block', margin: '0 auto 14px' } }),
+          h('div', { style: { fontSize: 16, fontWeight: 600, marginBottom: 6 } }, 'Drop your artwork here'),
+          h('div', { style: { fontSize: 13, color: MUT } }, 'or click to browse — PDF, JPG, PNG, AI, EPS')));
+    }
+    const checks = aw.checks || [], analyzing = aw.status === 'analyzing';
+    const fails = checks.filter(c => c.s === 'fail').length, warns = checks.filter(c => c.s === 'warn').length;
+    const overall = analyzing ? 'analyzing' : fails ? 'fail' : warns ? 'warn' : 'pass';
+    const banner = { analyzing: ['#eef1f4', INK, 'Checking your artwork…'], pass: ['#eafaf0', '#1c7a45', 'Looks good — ready to print'], warn: ['#fff7e9', '#8a5a00', warns + ' thing' + (warns > 1 ? 's' : '') + ' to review before you continue'], fail: ['#fdf0f0', '#b3241f', fails + ' issue' + (fails > 1 ? 's' : '') + ' found — please check'] }[overall];
     return h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px 0' } },
-      this.head('Upload & check artwork' + (this.pkProduct() ? ' — ' + this.catName(this.pkProduct().id) : ''), 'Upload your print-ready file (JPG, PNG, EPS, AI, ID, PDF or ZIP — up to 1 GB). Every upload is scanned for malware, then checked against this product’s template. Each check reports pass, warning or fail on its own — never one opaque “invalid file” message. You can also upload later and we’ll email you a link.'),
-      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 22, marginTop: 20, alignItems: 'start' } },
-        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
-          h('div', { style: { border: '1px dashed ' + HAIR, background: ALT, padding: 26, textAlign: 'center' } },
-            h('img', { src: window.__asset('assets/icons/upload-artwork.svg'), alt: '', style: { height: 38, width: 'auto', display: 'block', margin: '0 auto 12px' } }),
-            h('div', { style: { fontSize: 14.5, fontWeight: 600, marginBottom: 5 } }, 'Drag artwork here, or browse'),
-            h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.7 } }, 'PDF preferred · AI, EPS, PNG and JPG accepted for this product · multi-file upload for multi-page jobs · every file is virus-scanned before it reaches prepress')),
-          h('div', { style: { border: '1px solid ' + HAIR } },
-            h('div', { style: { padding: '13px 16px', borderBottom: '1px solid ' + HAIR, fontSize: 13.5, fontWeight: 600 } }, 'Version history'),
-            VERSIONS.map((v, i) => h('div', { key: i, style: { padding: '12px 16px', borderTop: i ? '1px solid ' + LINE : 'none', display: 'flex', gap: 12, alignItems: 'baseline' } },
-              h('span', { style: { fontSize: 12, fontWeight: 600, color: i === 0 ? TEAL : FAINT, flex: 'none' } }, v[0]),
-              h('span', { style: { flex: 1, minWidth: 0 } },
-                h('span', { style: { display: 'block', fontFamily: 'ui-monospace,Menlo,monospace', fontSize: 12, color: INK } }, v[1]),
-                h('span', { style: { display: 'block', fontSize: 12, color: MUT, marginTop: 3 } }, v[3])),
-              h('span', { style: { fontSize: 11.5, color: FAINT, flex: 'none' } }, v[2])))),
-          h('div', { style: { border: '1px solid ' + HAIR, padding: 18 } },
-            h('div', { style: { fontSize: 13.5, fontWeight: 600, marginBottom: 9 } }, 'Guides & templates for this product'),
-            [['Business card artwork guide', 'learn'], ['Download die-line — AI / PDF / PSD', 'learn'], ['Bleed and safe area explained', 'learn']].map((g, i) =>
-              h('div', { key: i, 'data-go': g[1], style: { display: 'flex', gap: 8, alignItems: 'center', padding: '7px 0', fontSize: 13, color: TEAL, fontWeight: 600, cursor: 'pointer' } }, g[0],
-                h('img', { src: window.__asset('assets/icons/arrow-right.svg'), alt: '', style: { height: 11, width: 'auto', display: 'block' } }))))),
-        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
-          h('div', { style: { border: '1px solid ' + HAIR } },
-            h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', padding: '11px 14px', borderBottom: '1px solid ' + HAIR } },
-              h('span', { style: { fontSize: 13, fontWeight: 600, marginRight: 'auto' } }, 'Overlay viewer'),
-              [['set:apage:1', 'Page 1', page === 1], ['set:apage:2', 'Page 2', page === 2]].map((p, i) =>
-                h('span', { key: i, 'data-go': p[0], style: { fontSize: 12, fontWeight: 600, padding: '5px 11px', borderRadius: 2, cursor: 'pointer', background: p[2] ? TEAL : '#fff', color: p[2] ? '#fff' : MUT, border: '1px solid ' + (p[2] ? TEAL : HAIR) } }, p[1])),
-              [['set:zoom:75', '75%', 75], ['set:zoom:100', '100%', 100], ['set:zoom:150', '150%', 150]].map((z, i) =>
-                h('span', { key: i, 'data-go': z[0], style: { fontSize: 12, fontWeight: 600, padding: '5px 10px', borderRadius: 2, cursor: 'pointer', color: zoom === z[2] ? TEAL : MUT, border: '1px solid ' + (zoom === z[2] ? TEAL : HAIR) } }, z[1]))),
-            sheet,
-            h('div', { style: { display: 'flex', gap: 18, flexWrap: 'wrap', padding: '11px 14px', borderTop: '1px solid ' + HAIR, fontSize: 12, color: MUT } },
-              [['Trim', '#231f20'], ['Bleed 3 mm', TEAL], ['Safe area', '#2fa4c5']].map((l, i) =>
-                h('span', { key: i, style: { display: 'flex', alignItems: 'center', gap: 7 } },
-                  h('span', { style: { width: 18, height: 0, borderTop: '2px dashed ' + l[1] } }), l[0])))),
-          h('div', { style: { border: '1px solid ' + HAIR } },
-            h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', padding: '13px 16px', borderBottom: '1px solid ' + HAIR } },
-              h('span', { style: { fontSize: 13.5, fontWeight: 600, marginRight: 'auto' } }, 'Automated checks'),
-              this.chip(fails + ' fail', 'bad'), this.chip(warns + ' warnings', 'warn'), this.chip((CHECKS.length - fails - warns) + ' pass', 'ok')),
-            CHECKS.map((c, i) => h('div', { key: i, style: { display: 'flex', gap: 12, padding: '12px 16px', borderTop: i ? '1px solid ' + LINE : 'none', background: c[2] === 'fail' ? '#fdf6f6' : '#fff' } },
-              dot(c[2]),
+      h('h1', { style: { margin: '2px 0 16px', fontSize: 28, fontWeight: 600, letterSpacing: '-.02em' } }, 'Artwork check' + (NAME ? ' — ' + NAME : '')),
+      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 22, alignItems: 'start' } },
+        // preview
+        h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden' } },
+          h('div', { style: { display: 'grid', placeItems: 'center', background: '#f3f4f6', minHeight: 240, padding: 20 } },
+            aw.preview ? h('img', { src: aw.preview, alt: 'Your artwork', style: { maxWidth: '100%', maxHeight: 360, boxShadow: '0 2px 14px rgba(33,33,33,.16)' } })
+              : h('div', { style: { fontSize: 13, color: FAINT, textAlign: 'center', lineHeight: 1.7 } }, analyzing ? 'Rendering preview…' : 'No preview for this file type')),
+          h('div', { style: { display: 'flex', justifyContent: 'space-between', gap: 10, padding: '11px 14px', borderTop: '1px solid ' + HAIR, fontSize: 12.5, color: MUT } },
+            h('span', { style: { fontFamily: 'ui-monospace,Menlo,monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, aw.name),
+            h('span', { style: { flex: 'none' } }, (aw.sizeMB < 10 ? aw.sizeMB.toFixed(1) : Math.round(aw.sizeMB)) + ' MB'))),
+        // report
+        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+          h('div', { style: { background: banner[0], color: banner[1], borderRadius: 10, padding: '13px 16px', fontSize: 14, fontWeight: 600 } }, banner[2]),
+          h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden' } },
+            checks.map((c, i) => h('div', { key: i, style: { display: 'flex', gap: 12, padding: '13px 16px', borderTop: i ? '1px solid ' + LINE : 'none', background: c.s === 'fail' ? '#fdf6f6' : '#fff' } },
+              dot(c.s),
               h('div', { style: { minWidth: 0, flex: 1 } },
-                h('div', { style: { display: 'flex', gap: 9, alignItems: 'baseline', flexWrap: 'wrap' } },
-                  h('span', { style: { fontSize: 13.5, fontWeight: 600 } }, c[1])),
-                h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.6, marginTop: 3 } }, c[3])),
-              c[2] !== 'pass' && h('span', { 'data-go': 'learn', style: { fontSize: 12, fontWeight: 600, color: TEAL, cursor: 'pointer', whiteSpace: 'nowrap' } }, 'How to fix')))),
-          h('div', { style: { border: '1px solid ' + HAIR, padding: 18, display: 'flex', flexDirection: 'column', gap: 12 } },
-            h('div', { style: { fontSize: 13.5, fontWeight: 600 } }, 'Your decision'),
-            h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.7 } }, 'One check failed. You can still continue — prepress will review it manually and may send it back — or fix the file now and re-upload as v4.'),
-            h('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap' } },
-              this.btn('Fix and re-upload', 'teal', 'artwork', { borderRadius: 2 }),
-              this.btn('Looks good, continue', 'ghost', 'cart', { borderRadius: 2 }),
-              this.btn('Download annotated PDF', 'ghost', 'artwork', { borderRadius: 2 }))))));
+                h('div', { style: { fontSize: 13.5, fontWeight: 600 } }, c.t),
+                h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.6, marginTop: 3 } }, c.d)))),
+            analyzing ? h('div', { style: { padding: '13px 16px', borderTop: '1px solid ' + LINE, fontSize: 12.5, color: FAINT } }, 'Running remaining checks…') : null),
+          !analyzing ? h('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap' } },
+            this.btn(fails ? 'Continue anyway →' : 'Continue to cart →', fails ? 'amber' : 'teal', 'cart', { justifyContent: 'center' }),
+            h('label', { htmlFor: 'aw-reinput', style: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, border: '1px solid ' + HAIR, borderRadius: 8, padding: '11px 20px', fontSize: 13.5, fontWeight: 600, color: INK, cursor: 'pointer' } },
+              h('input', { id: 'aw-reinput', type: 'file', accept: '.pdf,.jpg,.jpeg,.png,.ai,.eps,.tif,.tiff,.zip', style: { display: 'none' }, onChange: e => onFiles(e.target.files) }), 'Replace file')) : null)));
   }
 
   // ===== CART =====

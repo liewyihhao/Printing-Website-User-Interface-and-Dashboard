@@ -1,0 +1,10 @@
+# Dependencies / build caches
+node_modules/
+.next/
+tsconfig.tsbuildinfo
+
+# Generated pricing engine (built from ../crawler/output via pricing/build.sh — 21MB, not committed)
+pricing/engine.js
+
+# local env (never commit)
+.env.local

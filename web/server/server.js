@@ -11,6 +11,7 @@ const zlib = require('zlib');
 const D = require('./domain');
 const store = require('./store');
 const content = require('./content');
+const seoProduct = require('./seo-product');
 
 const PORT = process.env.PORT || 4611;
 const WEB_ROOT = path.join(__dirname, '..'); // web/
@@ -329,6 +330,10 @@ http.createServer(async (req, res) => {
       'Host: ' + host,
       'Sitemap: ' + origin + '/sitemap.xml', '',
     ].join('\n'), 'text/plain; charset=utf-8');
+    // Product SEO page (SSR) — full content in the initial HTML, at /<slug>-printing.
+    // The /configure/ sub-route is the interactive configurator (SPA), handled by serveStatic.
+    const pm = parsed.pathname.match(/^\/([a-z0-9-]+-printing)\/?$/);
+    if (pm) { try { const html = seoProduct.page(pm[1], origin); if (html) return sendStatic(req, res, Buffer.from(html), MIME['.html']); } catch (e) { /* fall through to SPA */ } }
     return serveStatic(req, res, parsed.pathname);
   } catch (e) { send(res, 500, { error: String(e && e.message || e) }); }
 }).listen(PORT, () => console.log('Printoka dev server on http://localhost:' + PORT + ' (static + /api)'));
