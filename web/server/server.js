@@ -16,6 +16,7 @@ const files = require('./files');
 const outlet = require('./outlet');
 const supplier = require('./supplier');
 const payables = require('./payables');
+const chat = require('./chat');
 ops.migrate();
 const content = require('./content');
 const seoProduct = require('./seo-product');
@@ -461,7 +462,14 @@ async function api(req, res, pathname, query) {
     if (body.walkin && me && me.type === 'outlet') { const r = store.createWalkinQuote(body, me); return send(res, r.error ? 400 : 200, r.error ? r : Object.assign({ ok: true }, r)); }
     // staff/outlet may prepare a manual quote (with a free-text body + direct price)
     if (body.manual && me && me.type !== 'customer' && me.type !== 'vendor') return send(res, 200, { ok: true, quote: store.createManualQuote(body, me) });
-    return send(res, 200, { ok: true, quote: store.createQuote(body, me) });
+    // the website request (user, 2026-09-28): customer details, product details, a photo / artwork, and a price expectation
+    const c = body.customer || {};
+    if (!String(body.product || '').trim()) return send(res, 400, { error: 'Please tell us what you are looking to print.' });
+    if (!String(body.priceExpectation || '').trim()) return send(res, 400, { error: 'Please tell us your price expectation for this job.' });
+    if (!me && (!String(c.name || '').trim() || !/S+@S+.S+/.test(String(c.email || '')))) return send(res, 400, { error: 'Please fill in your name and email so we can send you the quote.' });
+    const q = store.createQuote(body, me);
+    if (body.artworkData) { const aw = outlet.saveQuoteArtwork(q, { artworkData: body.artworkData, artworkFileName: body.artworkName }, me || { name: c.name || 'customer' }); if (aw && aw.error) return send(res, 400, aw); q.artworkFile = aw ? aw.file : null; store.save(); }
+    return send(res, 200, { ok: true, quote: q });
   }
   if (seg[0] === 'quotes' && seg[2] === 'remark' && req.method === 'POST') {
     const me = store.sessionCustomer(token); if (!me || me.type === 'customer' || me.type === 'vendor') return send(res, 401, { error: 'staff sign-in required' });
@@ -555,6 +563,20 @@ async function api(req, res, pathname, query) {
   // ---- outsource / vendor quotation flow ----
   // printer companies; ?job=ID → only the printers that make this product and can do its finishing (+ who is left out)
   if (seg[0] === 'vendors' && !seg[1]) { const vj = query.job && store.job(query.job); if (vj) return send(res, 200, supplier.vendorsForJob(vj)); return send(res, 200, { vendors: store.vendorAccounts().filter(v => !v.vendorId).map(v => ({ id: v.id, name: v.name, internal: !!v.internal })) }); }
+  // ---- web chat: visitors / customers chat from the website; staff answer from the Chat inbox ----
+  if (seg[0] === 'chat') {
+    const cm = store.sessionCustomer(token);
+    const outc = r => send(res, r && r.error ? 400 : 200, r);
+    if (!seg[1]) return req.method === 'POST' ? outc(chat.visitorSend(cm, await readBody(req))) : outc(chat.visitorThread(cm, query.key));
+    if (seg[1] === 'inbox') {
+      if (!cm || ['admin', 'outlet', 'production'].indexOf(cm.type) < 0) return send(res, 403, { error: 'staff only' });
+      if (!seg[2]) return outc(chat.inbox());
+      if (seg[3] === 'close' && req.method === 'POST') return outc(chat.close(seg[2]));
+      if (req.method === 'POST') return outc(chat.reply(seg[2], cm, (await readBody(req)).text));
+      return outc(chat.open(seg[2]));
+    }
+    return send(res, 404, { error: 'unknown chat route' });
+  }
   // ---- printer statement of account (accounts payable) ----
   // logistics (and the director) run the weekly payment; a printer reads its own statement
   if (seg[0] === 'printer-payments') {

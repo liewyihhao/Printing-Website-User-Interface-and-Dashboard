@@ -541,6 +541,7 @@ class Component extends DCLogic {
     try { fields = this.pkFields(); } catch (e) { return false; }
     const ph = this.cfgOv().placeholder || [];
     const ok = fields.every(f => { const d = f.def || {};
+      if (d.__followUp) return sc[d.key] != null && String(sc[d.key]).trim() !== '';
       if (d.type === 'number' || d.widget || !(f.options && f.options.length)) return true;
       if (ph.indexOf(d.key) < 0) return true; // optional question: its "Not Required" default is a valid answer
       return sc[d.key] != null && sc[d.key] !== ''; });
@@ -582,13 +583,20 @@ class Component extends DCLogic {
     // read the user's ACTUAL choice for a "please select" size (not the engine's auto-filled
     // default), so the preview stays empty until a size is picked and then clearly reacts.
     const sizePh = !!(ov.placeholder && ov.placeholder.indexOf('size') >= 0);
-    const sv = String((sizePh ? scfg.size : cfg.size) || '');
+    let sv = String((sizePh ? scfg.size : cfg.size) || '');
+    // products whose size is typed in as width / height (e.g. label stickers) preview those numbers
+    const fdefs = (() => { try { return this.pkFields().map(f => f.def); } catch (e) { return []; } })();
+    const hwDef = re => fdefs.find(d => d.type === 'number' && re.test(d.key || ''));
+    const hD = hwDef(/^(custom_h|height)$/), wD = hwDef(/^(custom_w|width)$/);
+    if (!sv && hD && wD) sv = 'custom';
     if (!sv) return { pendingSize: true };
     let a = null, b = null, custom = false;
     if (/other|custom/i.test(sv)) {
-      const ch = parseFloat(scfg.custom_h), cw = parseFloat(scfg.custom_w);
-      // only preview a complete, in-range custom size (Height 40–54, Width 40–89)
-      if (!(ch >= 40 && ch <= 54 && cw >= 40 && cw <= 89)) return { pending: true, msg: 'Enter a custom size within range — Height 40–54 mm, Width 40–89 mm.' };
+      const ch = parseFloat(scfg[(hD && hD.key) || 'custom_h']), cw = parseFloat(scfg[(wD && wD.key) || 'custom_w']);
+      // only preview a complete custom size within the product's own limits
+      const rng = d => [d && d.min != null ? +d.min : 1, d && d.max != null ? +d.max : Infinity];
+      const hr = rng(hD), wr = rng(wD), lim = r => r[1] === Infinity ? 'at least ' + r[0] + ' mm' : r[0] + '–' + r[1] + ' mm';
+      if (!(ch >= hr[0] && ch <= hr[1] && cw >= wr[0] && cw <= wr[1])) return { pending: true, msg: 'Enter the custom size — Height ' + lim(hr) + ', Width ' + lim(wr) + '.' };
       b = ch; a = cw; custom = true; // width, height
     } else {
       const m = sv.match(/(\d+(?:\.\d+)?)\s*mm\s*[x×]\s*(\d+(?:\.\d+)?)\s*mm/i);
@@ -697,7 +705,32 @@ class Component extends DCLogic {
       if (at >= 0) { let j = at + 1; while (j < list.length && list[j].def.__added) j++; list.splice(j, 0, Object.assign(node, { def: Object.assign({ __added: true }, af) })); }
       else list.push(Object.assign(node, { def: Object.assign({ __added: true }, af) }));
     });
+    // (user, 2026-09-28) every "custom" answer opens the input it needs, on every product: a custom / other size →
+    // Height × Width (mm); a custom die-cut / shape → the die-cut size; numbering → the number it starts from; a custom
+    // design → a short brief. Skipped where the product already opens its own follow-up for that answer.
+    const opensOwn = (key, v) => list.some(x => { const s = JSON.stringify(x.def.showWhen || {}); return x.def.key !== key && s.indexOf('"' + key + '"') >= 0 && s.indexOf(JSON.stringify(v)) >= 0; });
+    const follow = (dep, defs) => { let at = list.findIndex(x => x.def.key === dep.key); defs.forEach(d => { if (list.some(x => x.def.key === d.key)) return; at++; list.splice(at, 0, { def: Object.assign({ __added: true, __followUp: true, section: dep.section }, d), options: null }); }); };
+    list.slice().forEach(({ def }) => {
+      if (def.__added) return;
+      const v = String(cfg[def.key] == null ? '' : cfg[def.key]);
+      if (!v || opensOwn(def.key, v)) return;
+      if (/size/i.test(def.key) && /^(others?\b|other \(custom size\)|custom size)/i.test(v) && !list.some(x => /^(custom_[hw]|fold_[hw]_|height$|width$)/.test(x.def.key)))
+        follow(def, [{ key: 'custom_h', label: 'Height (mm)', type: 'number', min: 1 }, { key: 'custom_w', label: 'Width (mm)', type: 'number', min: 1 }]);
+      else if (/custom die.?cut|custom shape/i.test(v))
+        follow(def, [{ key: 'diecut_h', label: 'Die-cut height (mm)', type: 'number', min: 1 }, { key: 'diecut_w', label: 'Die-cut width (mm)', type: 'number', min: 1 }]);
+      else if (/numbering/i.test(def.key + ' ' + (def.label || '')) && /^yes/i.test(v))
+        follow(def, [{ key: 'numbering_start', label: 'Numbering starts from', type: 'number', min: 0, placeholder: 'e.g. 0001' }]);
+      else if (/custom (design|made)/i.test(v))
+        follow(def, [{ key: 'custom_brief', label: 'Describe your custom design', type: 'text', placeholder: 'Size, shape, content — anything we should know' }]);
+    });
     return list;
+  }
+  // does this product take a custom size? (the size preview is shown only for these — user, 2026-09-28)
+  pkHasCustomSize() {
+    const prod = this.pkProduct(); if (!prod) return false;
+    const ov = this.cfgOv(); if ((ov.addFields || []).some(a => /^(custom_|fold_)/.test(a.key || ''))) return true;
+    return (prod.fields || []).some(f => (/size/i.test(f.key || '') && (f.options || []).some(o => /\b(other|custom)/i.test(String(Array.isArray(o) ? o[0] : o))))
+      || (f.type === 'number' && /\(mm\)|width|height/i.test((f.label || '') + ' ' + (f.key || ''))));
   }
   // the configurator's questions as plain data: the same fields, labels, options and validity as the
   // product page (pkFields + display overrides). The outlet "New quote" form keys the answers in by hand.
@@ -1008,8 +1041,8 @@ class Component extends DCLogic {
     const dispLabel = def => niceLabel((ov.label && ov.label[def.key]) || def.label, def.key);
     const dispVal = (def, val) => { const m = (ov.optLabel && ov.optLabel[def.key]) || {}; return m[val] || val; };
     // combine the custom H/W input pairs into one dimension line instead of two rows
-    const PAIRS = { custom_w: ['custom_h', 'Custom Size'], fold_w_thin: ['fold_h_thin', 'Open Size'], fold_w_fat: ['fold_h_fat', 'Open Size'] };
-    const SKIP_H = { custom_h: 1, fold_h_thin: 1, fold_h_fat: 1 };
+    const PAIRS = { custom_w: ['custom_h', 'Custom Size'], fold_w_thin: ['fold_h_thin', 'Open Size'], fold_w_fat: ['fold_h_fat', 'Open Size'], diecut_w: ['diecut_h', 'Die-cut Size'] };
+    const SKIP_H = { custom_h: 1, fold_h_thin: 1, fold_h_fat: 1, diecut_h: 1 };
     const lines = [], seen = {};
     for (const f of fields) {
       const def = f.def, k = def && def.key; if (!k || seen[k]) continue; seen[k] = 1;
@@ -1399,15 +1432,18 @@ class Component extends DCLogic {
   // ---------- custom quotes ----------
   loadQuotes() { if (typeof fetch !== 'function') return; fetch('/api/quotes', { headers: this.authHeaders() }).then(r => r.json()).then(d => this.setState({ quotesList: d.quotes || [] })).catch(() => {}); }
   submitQuote() {
-    const u = this.state.user || {};
+    const u = this.state.user && this.state.user.type === 'customer' ? this.state.user : {};
+    const pick = (k, d) => this.state['qf' + k] != null ? this.state['qf' + k] : (d || '');
     const body = {
-      customer: { name: this.state.qfName || u.name || '', email: this.state.qfEmail || u.email || '', phone: this.state.qfPhone || u.phone || '', company: this.state.qfCompany || u.company || '' },
-      product: this.state.qfProduct, size: this.state.qfSize, material: this.state.qfMaterial, finishing: this.state.qfFinishing, qty: this.state.qfQty, remarks: this.state.qfRemarks,
+      customer: { name: pick('Name', u.name), email: pick('Email', u.email), phone: pick('Phone', u.phone), company: pick('Company', u.company) },
+      product: this.state.qfProduct, size: this.state.qfSize, material: this.state.qfMaterial, qty: this.state.qfQty, remarks: this.state.qfRemarks,
+      priceExpectation: this.state.qfPrice, artworkData: this.state.qfFile || undefined, artworkName: this.state.qfFileName || undefined,
     };
-    if (!body.product) { this.setState({ quoteErr: 'Please tell us what you want printed.' }); return; }
+    const need = [!body.customer.name && 'Name', !/\S+@\S+\.\S+/.test(body.customer.email || '') && 'Email', !body.customer.phone && 'Phone / WhatsApp', !String(body.product || '').trim() && 'What are you looking to print?', !String(body.priceExpectation || '').trim() && 'Price expectation'].filter(Boolean);
+    if (need.length) { this.setState({ quoteErr: 'Please fill in: ' + need.join(', ') + '.', qfOpen: ({ Name: 'Name', Email: 'Email', 'Phone / WhatsApp': 'Phone', 'What are you looking to print?': 'Product', 'Price expectation': 'Price' })[need[0]] }); return; }
     this.setState({ quoteBusy: true, quoteErr: null });
     fetch('/api/quotes', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify(body) })
-      .then(r => r.json()).then(d => this.setState({ quoteSent: d.quote, quoteBusy: false, qfProduct: '', qfSize: '', qfMaterial: '', qfFinishing: '', qfQty: '', qfRemarks: '' }))
+      .then(r => r.json()).then(d => { if (d.error) return this.setState({ quoteBusy: false, quoteErr: d.error }); this.setState({ quoteSent: d.quote, quoteBusy: false, qfProduct: '', qfSize: '', qfMaterial: '', qfQty: '', qfRemarks: '', qfPrice: '', qfFile: null, qfFileName: '', qfOpen: null }); if (this.state.user) this.loadQuotes(); })
       .catch(() => this.setState({ quoteBusy: false, quoteErr: 'Network error.' }));
   }
   quotePrice(qid) {
@@ -3773,7 +3809,8 @@ class Component extends DCLogic {
                     this.btn('Download quotation (PDF)', 'ghost', 'product', { justifyContent: 'center' }))
                 : h('span', { style: { textAlign: 'center', background: '#f1f3f5', color: MUT, fontWeight: 600, fontSize: 13.5, padding: '12px', borderRadius: 8 } }, 'Select your options to continue')),
           ]),
-          (() => { const sim = this.sizeSim(); return this.card([
+          // the size preview only for products that take a custom size (user, 2026-09-28)
+          !this.pkHasCustomSize() ? null : (() => { const sim = this.sizeSim(); return this.card([
             h('div', { key: 'a', style: { fontSize: 12.5, fontWeight: 600, marginBottom: 10 } }, 'Size preview & bleed'),
             sim && sim.svg ? h('div', { key: 's', style: { marginBottom: 10 } }, sim.svg,
               h('div', { style: { textAlign: 'center', fontSize: 12, fontWeight: 600, color: TEAL, marginTop: 4 } }, sim.label)) : null,
@@ -3782,11 +3819,8 @@ class Component extends DCLogic {
             h('div', { key: 'b', style: { border: '1px dashed #eaeaea', borderRadius: 8, padding: 12, background: '#fdf2f2', fontSize: 12, color: MUT, lineHeight: 1.6 } }, 'Bleed 3 mm all round · keep text 3–5 mm inside the trim'),
             h('div', { key: 'c', style: { marginTop: 10 } }, this.btn('Upload & check artwork', 'ghost', 'artwork', { justifyContent: 'center', width: '100%' })),
           ]); })(),
-          this.card([
-            h('div', { key: 'a', style: { fontSize: 12.5, fontWeight: 600, marginBottom: 6 } }, 'Need something off-catalogue?'),
-            h('div', { key: 'b', style: { fontSize: 12, color: MUT, lineHeight: 1.6, marginBottom: 10 } }, 'Custom sizes, special finishes or large volumes we don’t price online are quoted on request.'),
-            this.btn('Request a custom quote', 'ghost', 'contact', { justifyContent: 'center', width: '100%' }),
-          ]))),
+          null)),
+      this.customizedBanner(),
       this.productDetails(prod, NAME)));
   }
   // product banner over the configurator: the product's original photo, "Print Your {name}
@@ -4579,47 +4613,63 @@ class Component extends DCLogic {
     ]);
   }
 
-  // ===== CONTACT / CUSTOM QUOTE =====
+  // ===== CONTACT / CUSTOM QUOTE (user, 2026-09-28) =====
+  // configurator-style: three sections (Customer Details · Product Details · Price Expectation), one question per row that
+  // pops out when clicked; a signed-in customer's details are filled in for them
   s_contact() {
-    const inp = { border: '1px solid #eaeaea', borderRadius: 8, padding: '11px 13px', fontSize: 14, font: '400 14px Montserrat,sans-serif', width: '100%' };
-    const field = (label, key, wide, ta) => h('label', { key: label, style: { gridColumn: wide ? '1 / -1' : 'auto', display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, fontWeight: 600, color: MUT } }, label,
-      ta ? h('textarea', { value: this.state[key] || '', onChange: e => this.setField(key, e.target.value), style: Object.assign({}, inp, { minHeight: 90, resize: 'vertical' }) })
-        : h('input', { value: this.state[key] || '', onChange: e => this.setField(key, e.target.value), style: inp }));
+    const u = this.state.user && this.state.user.type === 'customer' ? this.state.user : null;
+    const val = k => { const v = this.state['qf' + k]; if (v != null) return v; if (!u) return ''; return ({ Name: u.name, Email: u.email, Phone: u.phone, Company: u.company })[k] || ''; };
+    const set = (k, v) => this.setState({ ['qf' + k]: v, quoteErr: null });
+    const Q = [['Customer Details', [['Name', 'Name', 1], ['Company', 'Company', 0], ['Email', 'Email', 1, 'email'], ['Phone', 'Phone / WhatsApp', 1, 'tel']]],
+      ['Product Details', [['Product', 'What are you looking to print?', 1], ['Size', 'Size', 0], ['Material', 'Material', 0], ['Qty', 'Quantity', 0, 'number'], ['Remarks', 'Tell us about the job', 0, 'area'], ['File', 'Upload a photo or artwork', 0, 'file']]],
+      ['Price Expectation', [['Price', 'Do you have a price expectation for this job?', 1, 'price']]]];
+    const order = Q.reduce((a, s) => a.concat(s[1].map(q => q[0])), []);
+    const openK = this.state.qfOpen;
+    const next = k => { const i = order.indexOf(k); const n = order.slice(i + 1).find(x => !String(val(x) || (x === 'File' ? this.state.qfFileName || '' : '')).trim()); this.setState({ qfOpen: n || null }); };
+    const inp = { font: '400 14px Montserrat,sans-serif', border: '1px solid ' + HAIR, borderRadius: 8, padding: '11px 13px', width: '100%', background: '#fff' };
+    const row = ([k, label, req, type]) => {
+      const open = openK === k, v = type === 'file' ? (this.state.qfFileName || '') : String(val(k) || '');
+      const shown = type === 'price' && v ? v : v;
+      const ctl = type === 'area' ? h('textarea', { autoFocus: true, rows: 4, value: v, onChange: e => set(k, e.target.value), placeholder: 'Anything that helps us price it: finishing, deadline, delivery…', style: Object.assign({}, inp, { resize: 'vertical' }) })
+        : type === 'file' ? h('label', { style: { display: 'inline-flex', alignItems: 'center', font: '600 13.5px Montserrat,sans-serif', padding: '10px 18px', borderRadius: 8, background: TEAL, color: '#fff', cursor: 'pointer', alignSelf: 'flex-start' } }, v ? 'Change file' : 'Upload',
+            h('input', { type: 'file', style: { display: 'none' }, onChange: e => { const f0 = e.target.files[0]; e.target.value = ''; if (!f0) return; const rd = new FileReader(); rd.onload = () => this.setState({ qfFile: rd.result, qfFileName: f0.name }); rd.readAsDataURL(f0); } }))
+        : h('input', { autoFocus: true, type: type === 'email' ? 'email' : type === 'tel' ? 'tel' : type === 'number' ? 'number' : 'text', value: v, onChange: e => set(k, e.target.value), onKeyDown: e => { if (e.key === 'Enter') next(k); },
+            placeholder: type === 'price' ? 'e.g. RM 500, or around RM 1 per piece' : '', style: inp });
+      return h('div', { key: k, style: open ? { padding: '16px 18px 18px', margin: '8px -18px', border: '1px solid rgba(229,34,32,.22)', borderRadius: 14, background: '#fff', boxShadow: '0 18px 44px rgba(33,33,33,.14)', position: 'relative', zIndex: 2 } : { padding: '16px 0', borderTop: '1px solid ' + LINE } },
+        h('div', { onClick: () => this.setState({ qfOpen: open ? null : k }), role: 'button', tabIndex: 0, 'aria-expanded': open ? 'true' : 'false', style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, cursor: 'pointer' } },
+          h('span', { style: { fontSize: 13.5, fontWeight: 600 } }, label, req ? h('span', { style: { color: TEAL } }, ' *') : null),
+          h('span', { style: { display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 } },
+            h('span', { style: { fontSize: 14, fontWeight: v ? 600 : 400, color: v ? INK : '#6f6f6f', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260 } }, v ? (type === 'file' ? '📄 ' + v : shown) : (req ? 'Please fill in' : 'Optional')),
+            h('span', { 'aria-hidden': 'true', style: { color: MUT, fontSize: 10, transform: open ? 'rotate(180deg)' : 'none' } }, '▼'))),
+        open ? h('div', { style: { marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 } }, ctl,
+          h('span', { onClick: () => next(k), style: { alignSelf: 'flex-start', fontSize: 13, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'Done ›')) : null);
+    };
     const sent = this.state.quoteSent;
+    const again = () => this.setState({ quoteSent: null, qfProduct: '', qfSize: '', qfMaterial: '', qfQty: '', qfRemarks: '', qfPrice: '', qfFile: null, qfFileName: '', qfOpen: 'Product' });
+    const secHead = s => h('div', { key: 'h_' + s, style: { display: 'flex', alignItems: 'center', gap: 10, margin: '22px 0 4px' } }, h('span', { style: { width: 4, height: 18, background: TEAL, borderRadius: 2 } }), h('span', { style: { fontSize: 15, fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase' } }, s));
     return h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px 0' } },
-      this.head('Request a custom quote', 'For off-catalogue, bulk or non-standard jobs. We reply with a price and lead time you can accept and pay online.'),
-      h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 320px', gap: 24, marginTop: 22, alignItems: 'start' } },
+      this.head('Request a custom quote'),
+      h('div', { className: 'pk-cfg-grid', style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 320px', gap: 24, marginTop: 22, alignItems: 'start' } },
         sent ? this.card([
-          h('div', { key: 'a', style: { fontSize: 18, fontWeight: 600, marginBottom: 6 } }, 'Quote request received ✓'),
-          h('div', { key: 'b', style: { fontSize: 14, color: MUT, lineHeight: 1.7, marginBottom: 14 } }, 'Your reference is ', h('b', { style: { color: TEAL } }, sent.id), '. Our team will price it and issue the quote to your account — you’ll be able to accept & pay it from ', h('b', null, 'My Quotes'), '.'),
-          h('div', { key: 'c', style: { display: 'flex', gap: 10, flexWrap: 'wrap' } }, this.state.user ? this.btn('Go to My Quotes', 'teal', 'dash') : this.btn('Sign in to track it', 'teal', 'auth'), this.btn('Submit another', 'ghost', 'contact'))
-        ]) : this.card([
-          this.state.quoteErr ? h('div', { key: 'e', style: { fontSize: 12.5, color: '#c0392b', background: '#fdecec', border: '1px solid #f5c8c7', borderRadius: 6, padding: '9px 11px', marginBottom: 12 } }, this.state.quoteErr) : null,
-          h('div', { key: 'g', style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 13 } },
-            field('Name', 'qfName'), field('Company', 'qfCompany'),
-            field('Email', 'qfEmail'), field('Phone / WhatsApp', 'qfPhone'),
-            field('What do you want printed? *', 'qfProduct'), field('Quantity', 'qfQty'),
-            field('Size', 'qfSize'), field('Material / stock', 'qfMaterial'),
-            field('Finishing', 'qfFinishing'),
-            field('Tell us about the job', 'qfRemarks', true, true)),
-          h('div', { key: 'u', style: { marginTop: 14, border: '1px dashed #eaeaea', borderRadius: 10, padding: 18, textAlign: 'center', fontSize: 12.5, color: MUT, background: '#fdf2f2' } },
-            'Attach artwork, a reference photo or a spec sheet · PDF, AI, EPS, PNG, JPG'),
-          h('div', { key: 'b', style: { display: 'flex', gap: 10, marginTop: 16, alignItems: 'center', flexWrap: 'wrap' } },
-            this.btn(this.state.quoteBusy ? 'Sending…' : 'Send request', 'amber', 'doquote'),
-            h('span', { style: { fontSize: 11.5, color: FAINT } }, 'Typical first response: under 2 working hours')),
-        ]),
+          h('div', { key: 'a', style: { fontSize: 20, fontWeight: 600, marginBottom: 10 } }, 'We have received your quotation request.'),
+          h('div', { key: 'b', style: { fontSize: 14.5, color: MUT, lineHeight: 1.8, marginBottom: 16 } }, 'Your Quotation ticket is ', h('b', { style: { color: TEAL } }, sent.id), '. Please allow us some time to check and revert.'),
+          h('div', { key: 'c', style: { display: 'flex', gap: 10, flexWrap: 'wrap' } },
+            h('span', { onClick: () => { this.setState({ cTab: 'Quotations' }); this.go(this.state.user ? 'dash' : 'auth'); }, style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 14, padding: '11px 22px', borderRadius: 8, cursor: 'pointer' } }, 'My Quotations'),
+            h('span', { onClick: again, style: { border: '1px solid ' + HAIR, color: TEAL, fontWeight: 600, fontSize: 14, padding: '11px 22px', borderRadius: 8, cursor: 'pointer' } }, 'I have another item to print'))
+        ]) : h('div', { style: { display: 'flex', flexDirection: 'column', border: '1px solid ' + HAIR, borderRadius: 14, padding: '6px 20px 20px', background: '#fff' } },
+          this.state.quoteErr ? h('div', { key: 'e', style: { fontSize: 12.5, color: '#c0392b', background: '#fdecec', border: '1px solid #f5c8c7', borderRadius: 6, padding: '9px 11px', marginTop: 14 } }, this.state.quoteErr) : null,
+          Q.map(s => h('div', { key: s[0], style: { display: 'flex', flexDirection: 'column' } }, secHead(s[0]), s[1].map(row))),
+          h('div', { key: 'b', style: { marginTop: 18 } }, this.btn(this.state.quoteBusy ? 'Sending…' : 'Submit', 'amber', 'doquote'))),
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
           this.card([
-            h('div', { key: 'a', style: { fontSize: 13, fontWeight: 600, marginBottom: 9 } }, 'Talk to us'),
-            h('div', { key: 'b', style: { fontSize: 12.5, color: MUT, lineHeight: 1.8 } },
-              h('div', null, 'Web chat · 9am–6pm MYT'), h('div', null, 'WhatsApp · +60 14 969 0799'),
-              h('div', null, 'print@printoka.com'), h('div', null, 'Miri facility + 30 partner vendors')),
-          ]),
+            h('div', { key: 'a', style: { fontSize: 14, fontWeight: 600, marginBottom: 10 } }, 'Speak to us via'),
+            h('div', { key: 'b', style: { display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13.5 } },
+              h('a', { href: 'https://wa.me/60149690799', target: '_blank', rel: 'noopener noreferrer', style: { color: INK, textDecoration: 'none' } }, h('b', null, 'WhatsApp'), ' · +60 14 969 0799'),
+              h('a', { href: 'mailto:print@printoka.com', style: { color: INK, textDecoration: 'none' } }, h('b', null, 'Email'), ' · print@printoka.com'),
+              h('span', { onClick: e => { e.stopPropagation(); this.chatToggle(true); }, style: { cursor: 'pointer' } }, h('b', null, 'Web Chat'), ' · chat with us now'))]),
           this.card([
-            h('div', { key: 'a', style: { fontSize: 13, fontWeight: 600, marginBottom: 9 } }, 'Already have a quote?'),
-            h('div', { key: 'b', style: { fontSize: 12.5, color: MUT, lineHeight: 1.7, marginBottom: 11 } }, 'Accept and pay, or request changes, from My Quotes.'),
-            this.btn('Open My Quotes', 'ghost', 'dash', { justifyContent: 'center', width: '100%' }),
-          ]))));
+            h('div', { key: 'a', style: { fontSize: 14, fontWeight: 600, marginBottom: 12 } }, 'Check My Quotations Status'),
+            h('span', { key: 'b', onClick: () => { this.setState({ cTab: 'Quotations' }); this.go(this.state.user ? 'dash' : 'auth'); }, style: { display: 'block', textAlign: 'center', border: '1px solid ' + HAIR, color: TEAL, fontWeight: 600, fontSize: 14, padding: '11px', borderRadius: 8, cursor: 'pointer' } }, 'My Quotations')]))));
   }
 
   // ===== CUSTOMER DASHBOARD =====
@@ -5258,76 +5308,102 @@ class Component extends DCLogic {
       { kpis: kpis, showAll: true });
   }
 
-  // ===== CHAT & INQUIRY CRM =====
+  // ===== CHAT INBOX (web chat, user 2026-09-28) =====
+  // every conversation started from the website chat; staff read it and reply here, the visitor sees the reply live
+  crmLoad(id) {
+    const hd = { headers: this.authHeaders() };
+    fetch('/api/chat/inbox', hd).then(r => r.json()).then(d => { if (d.threads) this.setState({ crmThreads: d.threads }); }).catch(() => {});
+    const open = id || this.state.crmOpen;
+    if (open) fetch('/api/chat/inbox/' + open, hd).then(r => r.json()).then(d => { if (d.thread) this.setState({ crmThread: d.thread }); }).catch(() => {});
+  }
   s_crm() {
-    const chan = this.state.chan || 'all';
-    const CHANNELS = [['all', 'All', 18], ['web', 'Web chat', 7], ['wa', 'WhatsApp', 6], ['email', 'Email', 3], ['form', 'Contact form', 2]];
-    const THREADS = [
-      ['Aiman Lim', 'Studio North', 'Web chat', 'Can you check if my bleed is right before I pay?', '2 m', 'Open', 'bad', true],
-      ['Nurul Izzah', 'Borneo Dental', 'WhatsApp', 'Is the quote QT-8846 still valid this week?', '14 m', 'Open', 'warn', false],
-      ['Kelvin Tan', 'Kopitiam 88', 'WhatsApp', 'Order PO-2026-04288 — can I change the delivery address?', '1 h', 'Pending', 'warn', false],
-      ['Sharifah A.', 'Rimba Resort', 'Email', 'Requesting a proforma invoice for finance approval.', '3 h', 'Pending', 'neutral', false],
-      ['Wong Li Ping', 'Astra Tuition', 'Contact form', 'Do you deliver to Brunei and how long does it take?', '5 h', 'Resolved', 'ok', false],
-    ];
-    const MSGS = [
-      ['in', 'Aiman Lim', '14:02', 'Hi — I uploaded my business card artwork but it says one check failed. Can someone look before I pay?'],
-      ['out', 'Suraya · CS', '14:04', 'Hi Aiman, I can see job J-04417-1. The background stops 1.2 mm short of the bleed on the right edge — everything else passes.'],
-      ['note', 'Internal note · Suraya', '14:05', 'Customer is Gold tier, second job this month. If they can’t fix it, prepress said they can extend the background themselves — 10 min job.'],
-      ['in', 'Aiman Lim', '14:09', 'Can you extend it for me? I don’t have the source file with me today.'],
-    ];
-    const MACROS = ['Bleed explainer + guide link', 'Quote validity', 'Delivery times MY/SG/BN', 'Artwork resubmission steps', 'Refund to credit balance'];
-    const list = chan === 'all' ? THREADS : THREADS.filter(t => (chan === 'web' && t[2] === 'Web chat') || (chan === 'wa' && t[2] === 'WhatsApp') || (chan === 'email' && t[2] === 'Email') || (chan === 'form' && t[2] === 'Contact form'));
+    if (!this._crmTimer && typeof window !== 'undefined') {
+      this.crmLoad();
+      this._crmTimer = setInterval(() => { if (this.state.route !== 'crm') { clearInterval(this._crmTimer); this._crmTimer = null; return; } this.crmLoad(); }, 4000);
+    }
+    const threads = this.state.crmThreads || []; const t = this.state.crmThread && this.state.crmThread.id === this.state.crmOpen ? this.state.crmThread : null;
+    const ago = ts => { const m = Math.round((Date.now() - Date.parse(ts)) / 60000); return m < 1 ? 'now' : m < 60 ? m + ' m' : m < 1440 ? Math.round(m / 60) + ' h' : Math.round(m / 1440) + ' d'; };
+    const post = (path, body) => fetch(path, { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify(body || {}) }).then(r => r.json());
+    const send = () => { const text = (this.state.crmReply || '').trim(); if (!text || !t) return; post('/api/chat/inbox/' + t.id, { text }).then(d => { if (d.thread) this.setState({ crmThread: d.thread, crmReply: '' }); this.crmLoad(); }); };
     return h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px 0' } },
-      this.head('Chat & Inquiry CRM', 'One inbox across web chat, WhatsApp, email and the contact form. Every conversation can be attached to an Order or Quote, so the agent reads live history instead of asking the customer to repeat it.'),
-      h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr)', gap: 16, marginTop: 18 } },
-        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 16, alignItems: 'start' } },
-          h('div', { style: { border: '1px solid ' + HAIR, background: '#fff' } },
-            h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap', padding: 10, borderBottom: '1px solid ' + HAIR } },
-              CHANNELS.map(c => h('span', { key: c[0], 'data-go': 'set:chan:' + c[0], style: { display: 'flex', gap: 6, alignItems: 'center', fontSize: 12, fontWeight: 600, padding: '6px 10px', borderRadius: 2, cursor: 'pointer', background: chan === c[0] ? TEAL : ALT, color: chan === c[0] ? '#fff' : MUT } }, c[1],
-                h('span', { style: { fontSize: 11 } }, c[2])))),
-            list.map((t, i) => h('div', { key: i, style: { padding: '13px 14px', borderTop: i ? '1px solid ' + LINE : 'none', background: t[7] ? '#fdf6f6' : '#fff', borderLeft: '3px solid ' + (t[7] ? TEAL : 'transparent'), cursor: 'pointer' } },
-              h('div', { style: { display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' } },
-                h('span', { style: { fontSize: 13.5, fontWeight: 600 } }, t[0]),
-                h('span', { style: { fontSize: 11.5, color: FAINT } }, t[4])),
-              h('div', { style: { fontSize: 11.5, color: FAINT, margin: '2px 0 5px' } }, t[1] + ' · ' + t[2]),
-              h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' } }, t[3]),
-              h('div', { style: { marginTop: 7 } }, this.chip(t[5], t[6]))))),
-          h('div', { style: { border: '1px solid ' + HAIR, background: '#fff', display: 'flex', flexDirection: 'column' } },
-            h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', padding: '12px 14px', borderBottom: '1px solid ' + HAIR } },
-              h('span', { style: { fontSize: 14, fontWeight: 600, marginRight: 'auto' } }, 'Aiman Lim · Web chat'),
-              this.chip('SLA 3 m left', 'warn'), this.chip('Open', 'bad')),
-            h('div', { style: { padding: 14, display: 'flex', flexDirection: 'column', gap: 12, background: ALT } },
-              MSGS.map((m, i) => h('div', { key: i, style: { alignSelf: m[0] === 'in' ? 'flex-start' : m[0] === 'out' ? 'flex-end' : 'stretch', maxWidth: m[0] === 'note' ? '100%' : '86%', background: m[0] === 'note' ? '#fff8e6' : m[0] === 'out' ? TEAL : '#fff', color: m[0] === 'out' ? '#fff' : INK, border: '1px solid ' + (m[0] === 'note' ? '#f0dfae' : m[0] === 'out' ? TEAL : HAIR), borderRadius: 6, padding: '10px 13px' } },
-                h('div', { style: { fontSize: 11, fontWeight: 600, marginBottom: 4, color: m[0] === 'out' ? 'rgba(255,255,255,.9)' : FAINT } }, m[1] + ' · ' + m[2]),
-                h('div', { style: { fontSize: 13, lineHeight: 1.6 } }, m[3])))),
-            h('div', { style: { padding: 12, borderTop: '1px solid ' + HAIR, display: 'flex', flexDirection: 'column', gap: 10 } },
-              h('div', { style: { display: 'flex', gap: 7, flexWrap: 'wrap' } },
-                MACROS.map((m, i) => h('span', { key: i, style: { fontSize: 11.5, fontWeight: 600, border: '1px solid ' + HAIR, borderRadius: 999, padding: '5px 11px', color: MUT, cursor: 'pointer' } }, m))),
-              h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 2, padding: '11px 13px', fontSize: 13, color: FAINT, minHeight: 62 } }, 'Reply to Aiman — or switch to an internal note that the customer never sees'),
-              h('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' } },
-                this.btn('Send reply', 'teal', 'crm', { borderRadius: 2 }),
-                this.btn('Add internal note', 'ghost', 'crm', { borderRadius: 2 }),
-                h('span', { style: { fontSize: 12, color: FAINT, marginLeft: 'auto' } }, 'Resolve · Reopen · Schedule follow-up')))),
-          h('div', { style: { border: '1px solid ' + HAIR, background: '#fff', padding: 16, display: 'flex', flexDirection: 'column', gap: 14 } },
-            h('div', { style: { fontSize: 13.5, fontWeight: 600 } }, 'Customer'),
-            h('div', { style: { fontSize: 13, color: MUT, lineHeight: 1.8 } },
-              h('div', { style: { fontSize: 15, fontWeight: 600, color: INK } }, 'Aiman Lim'),
-              'Studio North Sdn Bhd', h('br'), 'aiman@studionorth.my', h('br'), '+6012 345 6789'),
-            h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, this.chip('Gold tier', 'amber'), this.chip('Credit ' + this.money(96), 'ok'), this.chip('MY', 'neutral')),
-            h('div', null,
-              h('div', { style: { fontSize: 12, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: FAINT, marginBottom: 8 } }, 'Linked to this conversation'),
-              h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 2, padding: 12, fontSize: 12.5 } },
-                h('div', { style: { fontWeight: 600 } }, 'Order PO-2026-04417'),
-                h('div', { style: { color: MUT, marginTop: 3 } }, 'Job J-04417-1 · artwork issues found'),
-                h('span', { 'data-go': 'track', style: { display: 'inline-block', marginTop: 8, fontSize: 12, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'Open order'))),
-            h('div', null,
-              h('div', { style: { fontSize: 12, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: FAINT, marginBottom: 8 } }, 'Recent history'),
-              [['PO-2026-04288', '28 Aug · ' + this.money(1204) + ' · delivered'], ['QT-8830', '21 Aug · accepted · ' + this.money(4620)], ['PO-2026-04102', '09 Aug · ' + this.money(318.72) + ' · delivered']].map((r, i) =>
-                h('div', { key: i, style: { display: 'flex', justifyContent: 'space-between', gap: 10, padding: '7px 0', borderTop: i ? '1px solid ' + LINE : 'none', fontSize: 12.5 } },
-                  h('span', { style: { fontWeight: 600 } }, r[0]), h('span', { style: { color: MUT, textAlign: 'right' } }, r[1])))),
-            h('div', { style: { border: '1px solid ' + HAIR, background: ALT, padding: 12, fontSize: 12, color: MUT, lineHeight: 1.7 } },
-              h('b', { style: { color: INK } }, 'WhatsApp Business: '),
-              'outbound template messages need Meta approval before use; order-status broadcasts run from the approved template list only.')))));
+      this.head('Chat inbox', 'Conversations from the website chat. Reply here and the customer sees it straight away.'),
+      h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(260px,340px) minmax(0,1fr)', gap: 16, marginTop: 18, alignItems: 'start' } },
+        h('div', { style: { border: '1px solid ' + HAIR, background: '#fff', borderRadius: 10, overflow: 'hidden' } },
+          threads.length ? threads.map((x, i) => h('div', { key: x.id, onClick: () => { this.setState({ crmOpen: x.id, crmThread: null }); this.crmLoad(x.id); },
+            style: { padding: '13px 14px', borderTop: i ? '1px solid ' + LINE : 'none', background: this.state.crmOpen === x.id ? '#fdf6f6' : '#fff', borderLeft: '3px solid ' + (this.state.crmOpen === x.id ? TEAL : 'transparent'), cursor: 'pointer' } },
+            h('div', { style: { display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' } },
+              h('span', { style: { fontSize: 13.5, fontWeight: 600 } }, x.name), h('span', { style: { fontSize: 11.5, color: FAINT } }, ago(x.updatedAt))),
+            h('div', { style: { fontSize: 11.5, color: FAINT, margin: '2px 0 5px' } }, x.email + (x.customer ? ' · customer' : ' · guest')),
+            h('div', { style: { display: 'flex', gap: 8, alignItems: 'center' } },
+              h('div', { style: { flex: 1, fontSize: 12.5, color: MUT, lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, x.last ? (x.last.from === 'staff' ? 'You: ' : '') + x.last.text : ''),
+              x.unreadStaff ? h('span', { style: { background: TEAL, color: '#fff', fontSize: 11, fontWeight: 700, borderRadius: 999, padding: '1px 7px' } }, x.unreadStaff) : x.status === 'closed' ? this.chip('Closed', 'neutral') : null)))
+            : h('div', { style: { padding: 18, fontSize: 13, color: FAINT } }, 'No conversations yet.')),
+        h('div', { style: { border: '1px solid ' + HAIR, background: '#fff', borderRadius: 10, display: 'flex', flexDirection: 'column', minHeight: 420 } },
+          !t ? h('div', { style: { padding: 24, fontSize: 13, color: FAINT } }, threads.length ? 'Choose a conversation.' : 'When a customer starts a chat on the website it appears here.') : [
+            h('div', { key: 'h', style: { display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', padding: '12px 14px', borderBottom: '1px solid ' + HAIR } },
+              h('span', { style: { fontSize: 14, fontWeight: 600, marginRight: 'auto' } }, t.name + ' · ' + t.email),
+              t.status === 'open' ? h('span', { onClick: () => post('/api/chat/inbox/' + t.id + '/close').then(d => { if (d.thread) this.setState({ crmThread: d.thread }); this.crmLoad(); }), style: { fontSize: 12.5, fontWeight: 600, color: MUT, cursor: 'pointer' } }, 'Close conversation') : this.chip('Closed', 'neutral')),
+            h('div', { key: 'm', style: { padding: 14, display: 'flex', flexDirection: 'column', gap: 10, background: ALT, flex: 1, overflowY: 'auto', maxHeight: 460 } },
+              t.messages.map((m, i) => h('div', { key: i, style: { alignSelf: m.from === 'staff' ? 'flex-end' : 'flex-start', maxWidth: '82%', background: m.from === 'staff' ? TEAL : '#fff', color: m.from === 'staff' ? '#fff' : INK, border: '1px solid ' + (m.from === 'staff' ? TEAL : HAIR), borderRadius: 10, padding: '9px 12px' } },
+                h('div', { style: { fontSize: 11, fontWeight: 600, marginBottom: 3, color: m.from === 'staff' ? 'rgba(255,255,255,.9)' : FAINT } }, m.by + ' · ' + new Date(m.at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })),
+                h('div', { style: { fontSize: 13, lineHeight: 1.55, whiteSpace: 'pre-wrap' } }, m.text)))),
+            h('div', { key: 'r', style: { padding: 12, borderTop: '1px solid ' + HAIR, display: 'flex', gap: 10, alignItems: 'flex-end' } },
+              h('textarea', { rows: 2, value: this.state.crmReply || '', placeholder: 'Reply to ' + t.name + '…', onChange: e => this.setState({ crmReply: e.target.value }), onKeyDown: e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } },
+                style: { flex: 1, font: '400 13.5px Montserrat,sans-serif', border: '1px solid ' + HAIR, borderRadius: 8, padding: '10px 12px', resize: 'vertical' } }),
+              h('span', { onClick: send, style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13.5, padding: '11px 18px', borderRadius: 8, cursor: 'pointer' } }, 'Send'))])));
+  }
+
+  // web chat bubble on every storefront page (replaces the WhatsApp-only tab): name + email for a guest, then chat live
+  chatKey() { try { return localStorage.getItem('pk_chat_key') || ''; } catch (e) { return ''; } }
+  chatLoad() {
+    const key = this.chatKey(); if (!key && !this.state.user) return;
+    fetch('/api/chat' + (key ? '?key=' + encodeURIComponent(key) : ''), { headers: this.authHeaders() }).then(r => r.json()).then(d => { if (d && 'thread' in d) this.setState({ chatThread: d.thread }); }).catch(() => {});
+  }
+  chatToggle(open) {
+    this.setState({ chatOpen: open, chatErr: null });
+    if (open) { this.chatLoad(); if (!this._chatTimer) this._chatTimer = setInterval(() => { if (!this.state.chatOpen) { clearInterval(this._chatTimer); this._chatTimer = null; return; } this.chatLoad(); }, 4000); }
+  }
+  chatSend() {
+    const text = (this.state.chatText || '').trim(); if (!text) return;
+    const body = { text, visitorKey: this.chatKey(), name: this.state.chatName, email: this.state.chatEmail, page: this.state.route };
+    fetch('/api/chat', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify(body) }).then(r => r.json()).then(d => {
+      if (d.error) return this.setState({ chatErr: d.error });
+      try { if (d.visitorKey) localStorage.setItem('pk_chat_key', d.visitorKey); } catch (e) {}
+      this.setState({ chatThread: d.thread, chatText: '', chatErr: null });
+    }).catch(() => this.setState({ chatErr: 'Could not send. Please try again.' }));
+  }
+  webChat() {
+    const open = this.state.chatOpen, t = this.state.chatThread, u = this.state.user;
+    const tab = h('button', { type: 'button', onClick: e => { e.stopPropagation(); this.chatToggle(!open); }, 'aria-expanded': open ? 'true' : 'false', 'aria-label': 'Chat with Printoka',
+      style: { position: 'fixed', right: 0, bottom: 0, zIndex: 70, display: 'flex', alignItems: 'center', gap: 8, background: open ? TEAL : '#fff', color: open ? '#fff' : TEAL, border: '1px solid ' + (open ? TEAL : HAIR), borderBottom: 'none', borderRadius: '6px 6px 0 0', padding: '8px 20px', boxShadow: '0 -2px 14px rgba(33,33,33,.10)', font: '600 14px Montserrat,sans-serif', cursor: 'pointer' } },
+      open ? 'Close chat' : 'Chat', t && t.unreadVisitor && !open ? h('span', { style: { background: TEAL, color: '#fff', borderRadius: 999, fontSize: 11, padding: '1px 7px' } }, t.unreadVisitor) : null);
+    if (!open) return tab;
+    const guest = !t && !(u && u.type === 'customer');
+    const inp = { font: '400 13.5px Montserrat,sans-serif', border: '1px solid ' + HAIR, borderRadius: 8, padding: '9px 11px', width: '100%' };
+    return h('div', { onClick: e => e.stopPropagation() }, tab,
+      h('div', { role: 'dialog', 'aria-label': 'Web chat', style: { position: 'fixed', right: 16, bottom: 46, zIndex: 71, width: 'min(360px, calc(100vw - 32px))', height: 'min(480px, calc(100vh - 120px))', background: '#fff', border: '1px solid ' + HAIR, borderRadius: 14, boxShadow: '0 18px 44px rgba(33,33,33,.18)', display: 'flex', flexDirection: 'column', overflow: 'hidden' } },
+        h('div', { style: { background: TEAL, color: '#fff', padding: '14px 16px' } }, h('div', { style: { fontWeight: 700, fontSize: 15 } }, 'Chat with Printoka'), h('div', { style: { fontSize: 12, opacity: .9, marginTop: 2 } }, 'We usually reply within a few minutes, 9am–6pm MYT.')),
+        h('div', { style: { flex: 1, overflowY: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 9, background: ALT } },
+          h('div', { style: { alignSelf: 'flex-start', maxWidth: '85%', background: '#fff', border: '1px solid ' + HAIR, borderRadius: 10, padding: '9px 12px', fontSize: 13, lineHeight: 1.55 } }, 'Hi there! How can we help with your printing today?'),
+          (t ? t.messages : []).map((m, i) => h('div', { key: i, style: { alignSelf: m.from === 'visitor' ? 'flex-end' : 'flex-start', maxWidth: '85%', background: m.from === 'visitor' ? TEAL : '#fff', color: m.from === 'visitor' ? '#fff' : INK, border: '1px solid ' + (m.from === 'visitor' ? TEAL : HAIR), borderRadius: 10, padding: '9px 12px', fontSize: 13, lineHeight: 1.55, whiteSpace: 'pre-wrap' } },
+            m.from === 'staff' ? h('div', { style: { fontSize: 11, fontWeight: 600, color: FAINT, marginBottom: 2 } }, m.by) : null, m.text))),
+        h('div', { style: { padding: 12, borderTop: '1px solid ' + HAIR, display: 'flex', flexDirection: 'column', gap: 8 } },
+          guest ? h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 } },
+            h('input', { placeholder: 'Your name', value: this.state.chatName || '', onChange: e => this.setState({ chatName: e.target.value }), style: inp }),
+            h('input', { placeholder: 'Your email', type: 'email', value: this.state.chatEmail || '', onChange: e => this.setState({ chatEmail: e.target.value }), style: inp })) : null,
+          this.state.chatErr ? h('div', { style: { fontSize: 12, color: '#c0392b' } }, this.state.chatErr) : null,
+          h('div', { style: { display: 'flex', gap: 8, alignItems: 'flex-end' } },
+            h('textarea', { rows: 2, placeholder: 'Type your message…', value: this.state.chatText || '', onChange: e => this.setState({ chatText: e.target.value }), onKeyDown: e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.chatSend(); } }, style: Object.assign({}, inp, { resize: 'none', flex: 1 }) }),
+            h('span', { onClick: () => this.chatSend(), role: 'button', tabIndex: 0, style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13.5, padding: '10px 16px', borderRadius: 8, cursor: 'pointer' } }, 'Send')),
+          h('a', { href: 'https://wa.me/60149690799', target: '_blank', rel: 'noopener noreferrer', style: { fontSize: 12, color: MUT, textDecoration: 'none' } }, 'Prefer WhatsApp? +60 14 969 0799'))));
+  }
+  // the red "Need something customized?" banner — replaces "Need something off-catalogue?" (user, 2026-09-28)
+  customizedBanner() {
+    return h('section', { key: 'custom-banner', style: { position: 'relative', overflow: 'hidden', background: TEAL, borderRadius: 6, margin: '28px 0 0', padding: '26px 38px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' } },
+      h('span', { 'aria-hidden': 'true', style: { position: 'absolute', left: 40, top: -60, width: 190, height: 190, borderRadius: '50%', border: '28px solid rgba(0,0,0,.07)' } }),
+      h('span', { style: { position: 'relative', color: '#fff', fontSize: 26, fontWeight: 500 } }, 'Need something customized?'),
+      h('a', { href: 'https://wa.me/60149690799', target: '_blank', rel: 'noopener noreferrer', style: { position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 10, background: '#fff', color: INK, fontSize: 14.5, fontWeight: 500, padding: '12px 26px', borderRadius: 4, textDecoration: 'none' } },
+        h('img', { src: window.__asset('assets/icons/whatsapp--r.png'), alt: '', style: { height: 16, width: 16 } }), 'Chat with us'));
   }
 
   // ===== ADMIN BACKOFFICE =====

@@ -175,7 +175,7 @@
         header(v),
         h('main', { id: 'pk-main', tabIndex: -1, style: { outline: 'none' } }, v.screen),
         v.staff ? null : footer(v),
-        v.staff ? null : chat());
+        v.staff ? null : (this.webChat ? this.webChat() : chat()));
     }
   };
 })();

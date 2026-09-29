@@ -99,7 +99,7 @@ function saveSpec(qid, b, me) {
   const cust = store.findCustomer(b.requesterId); if (!cust || cust.type !== 'customer') return { error: 'Choose the requester (customer account).' };
   let q;
   if (!qid) {
-    q = { id: 'Q-' + crypto.randomBytes(3).toString('hex').toUpperCase(), channel: 'outlet', outlet: outletOf(me), issuedBy: { id: me.id, name: me.name }, requestedByStaff: me.name,
+    q = { id: store.newQuoteId(), channel: 'outlet', outlet: outletOf(me), issuedBy: { id: me.id, name: me.name }, requestedByStaff: me.name,
       status: 'requested', remarks: 'Issued', price: null, currency: 'MYR', weight: '', orderId: null, createdAt: now(), history: [{ ts: now(), actor: me.name, action: 'Pending Quote', note: 'Created at ' + (outletOf(me) || 'outlet') }] };
     store.quotes().push(q);
     store.notify({ type: 'role', role: 'scheduler' }, { kind: 'quote_request', title: 'New outlet quote to price', body: 'Outlet ' + (outletOf(me) || '') + ' requested a quote for ' + b.product + ' (' + cust.name + ').', cta: 'Price this quote →', quoteId: q.id });
@@ -362,4 +362,4 @@ function searchCustomers(q) {
   return store.customers().filter(c => c.type === 'customer' && (!s || [c.name, c.email, c.phone].join(' ').toLowerCase().indexOf(s) >= 0)).slice(0, 20).map(c => ({ value: c.id, label: c.name + ' (' + c.email + ')' }));
 }
 
-module.exports = { acceptByOutlet, amendQuote, stageOf, listQuotes, getQuote, saveSpec, onIssued, outletPrice, followUp, rejectQuote, quoteArtwork, onAccepted, onPaid, outletOrders, orderListView, orderDetail, orderAction, orderNote, orderAddress, dashboard, performance, staffList, searchCustomers, refreshFollowUp };
+module.exports = { saveQuoteArtwork, acceptByOutlet, amendQuote, stageOf, listQuotes, getQuote, saveSpec, onIssued, outletPrice, followUp, rejectQuote, quoteArtwork, onAccepted, onPaid, outletOrders, orderListView, orderDetail, orderAction, orderNote, orderAddress, dashboard, performance, staffList, searchCustomers, refreshFollowUp };

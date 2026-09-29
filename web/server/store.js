@@ -572,12 +572,17 @@ function vendorRequests(vendorId) { return jobs().filter(j => j.outsource && j.o
 function quotes() { const db = load(); if (!db.quotes) db.quotes = []; return db.quotes; }
 function quote(qid) { return quotes().find(q => q.id === qid); }
 function quotesForUser(userId) { return quotes().filter(q => q.userId === userId); }
+// quotation ticket numbers: "Q" + 8 digits (user, 2026-09-28)
+function newQuoteId() { let id; do { id = 'Q' + String(10000000 + Math.floor(Math.random() * 89999999)); } while (quotes().some(q => q.id === id)); return id; }
 function createQuote(body, user) {
-  const qid = 'QT-' + (1000 + Math.floor(Math.random() * 8999));
+  const qid = newQuoteId();
   const cust = body.customer || (user ? { name: user.name, email: user.email, phone: user.phone, company: user.company } : {});
+  // the request as the customer filled it in (product details + their price expectation) — what the scheduler reads
+  const rq = { product: body.product || '', size: body.size || '', material: body.material || '', finishing: body.finishing || '', qty: body.qty || '', remarks: body.remarks || '', priceExpectation: body.priceExpectation || '' };
+  rq.quoteData = [rq.size && 'Size: ' + rq.size, rq.material && 'Material: ' + rq.material, rq.finishing && 'Finishing: ' + rq.finishing, rq.qty && 'Quantity: ' + rq.qty, rq.remarks && 'About the job: ' + rq.remarks, rq.priceExpectation && 'Price expectation: ' + rq.priceExpectation].filter(Boolean).join('\n');
   const q = {
     id: qid, userId: user ? user.id : null, channel: (user && user.type === 'outlet') ? 'outlet' : 'online', customer: cust,
-    requirement: { product: body.product || '', size: body.size || '', material: body.material || '', finishing: body.finishing || '', qty: body.qty || '', remarks: body.remarks || '' },
+    requirement: rq,
     // custom-quote questionnaire (Customized Printing Solutions): form id + every [section, question, answer]
     form: body.form || null, answers: Array.isArray(body.answers) ? body.answers.slice(0, 80).map(a => [String(a[0] || ''), String(a[1] || ''), String(a[2] || '')]) : null,
     artworkFile: body.artworkFile || null, status: 'requested', price: null, leadDays: null, note: '', orderId: null,
@@ -585,6 +590,7 @@ function createQuote(body, user) {
   };
   quotes().push(q);
   logEvent({ actor: (user && user.email) || cust.email || 'guest', role: 'customer', action: 'quote_request', jobId: null, from: null, to: 'requested', note: qid + ' · ' + (q.requirement.product || 'custom') });
+  notify({ type: 'role', role: 'scheduler' }, { kind: 'quote_request', title: 'New quotation request ' + qid, body: (cust.name || 'A customer') + ' asked for a quote for ' + (q.requirement.product || 'a custom job') + (rq.priceExpectation ? ' (expects ' + rq.priceExpectation + ')' : '') + '.', cta: 'Price this quote →', quoteId: qid });
   save(); return q;
 }
 function priceQuote(qid, body, actor) {
@@ -817,5 +823,5 @@ function updateStaffAccount(id, b, actor) {
   logEvent({ actor, role: 'admin', action: 'user_update', jobId: null, from: before, to: c.role + (c.disabled ? ' (disabled)' : ''), note: c.email });
   save(); return { staff: publicCustomer(c) };
 }
-module.exports = {
+module.exports = { newQuoteId,
   productName, newSession, resetCheck, resetPassword, requestPasswordReset, STAFF_ROLES, createStaffAccount, updateStaffAccount, hashPassword, checkCoupon, load, save, reset, jobs, job, users, audit, applyTransition, logEvent, now, id, catalogue, setOverride, createJob, orders, order, createOrder, validateOrderPayment, orderView, registerCustomer, loginCustomer, sessionCustomer, logout, ordersForUser, publicCustomer, customers, findCustomer, getAddresses, addAddress, deleteAddress, setDefaultAddress, getCredit, creditEntry, vendorAccounts, requestVendorQuotes, submitVendorQuote, awardVendorPO, vendorRequests, quotes, quote, quotesForUser, createQuote, priceQuote, rejectQuote, acceptQuote, createManualQuote, setQuoteRemark, customInvoices, customInvoice, customInvoicesForUser, createCustomInvoice, updateCustomInvoice, notifications, notify, notificationsFor, markNotificationRead, viewQuote, createWalkinQuote, recordQuoteDecision, createCustomerByStaff, updateProfile, changePassword, settings, updateSettings, emailTemplates, emailOutbox, emailStats, setEmailActive, sendEmail };
