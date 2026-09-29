@@ -1126,7 +1126,9 @@ class Component extends DCLogic {
     setTimeout(() => {
       const els = Array.prototype.slice.call(document.querySelectorAll('[data-cfgkey]'));
       const i = els.findIndex(e => e.getAttribute('data-cfgkey') === fromKey);
-      const next = els.slice(i + 1).find(e => e.getAttribute('data-cfgsel') !== '1');
+      // (user, 2026-09-29) don't skip questions: open the next one in order, passing only those the customer has already answered
+      // (optional finishing questions that just show their default, e.g. "Not Required", are opened too)
+      const next = els.slice(i + 1).find(e => e.getAttribute('data-cfgans') !== '1');
       if (!next) return;
       const key = next.getAttribute('data-cfgkey');
       if (!next.hasAttribute('data-cfgalways')) this.setState({ ddOpen: key });
@@ -3634,7 +3636,7 @@ class Component extends DCLogic {
       // the open question is lifted out as a raised card; the others dim slightly so it's clear
       // which question is being answered
       const anyOpen = this.state.ddOpen != null;
-      return h('div', { key: key, 'data-cfgkey': key, 'data-cfgsel': (selected || optionalQ) ? '1' : '0', className: open ? 'pk-q-open' : undefined,
+      return h('div', { key: key, 'data-cfgkey': key, 'data-cfgsel': (selected || optionalQ) ? '1' : '0', 'data-cfgans': selected ? '1' : '0', className: open ? 'pk-q-open' : undefined,
         style: open
           ? { padding: '16px 18px 18px', margin: '8px -18px', border: '1px solid rgba(229,34,32,.22)', borderRadius: 14, background: '#fff', position: 'relative', zIndex: 3,
               boxShadow: '0 18px 44px rgba(33,33,33,.14), 0 3px 10px rgba(33,33,33,.06)', animation: 'pkPop .32s cubic-bezier(.2,.9,.3,1.15)' }
@@ -3713,7 +3715,7 @@ class Component extends DCLogic {
     const imgPicker = (def, options, sel, base) => {
       const label = niceLabel((ov.label && ov.label[def.key]) || def.label, def.key);
       const optLabel = (ov.optLabel && ov.optLabel[def.key]) || {};
-      return h('div', { key: def.key, 'data-cfgkey': def.key, 'data-cfgsel': sel != null && sel !== '' ? '1' : '0', 'data-cfgalways': '1', style: { padding: '15px 0', borderTop: '1px solid ' + LINE } },
+      return h('div', { key: def.key, 'data-cfgkey': def.key, 'data-cfgsel': sel != null && sel !== '' ? '1' : '0', 'data-cfgans': sel != null && sel !== '' ? '1' : '0', 'data-cfgalways': '1', style: { padding: '15px 0', borderTop: '1px solid ' + LINE } },
         h('div', { style: { fontSize: 13.5, fontWeight: 600, marginBottom: 10 } }, label),
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(92px,1fr))', gap: 10 } },
           options.map(v => { const val = Array.isArray(v) ? v[0] : v; const on = sel === val;
