@@ -217,7 +217,8 @@ function ordererOf(j) {
 // where the parcel goes: the outlet for an outlet order, the pickup outlet the customer chose, else the customer's address
 function ordererDestination(j) {
   const o = j.orderId && store.order(j.orderId); const by = ordererOf(j);
-  if (by.type === 'outlet') return destOf('outlet', by.id, j, o);
+  const toCustomer = o && o.fulfillment && o.fulfillment.method === 'delivery' && o.shipTo && typeof o.shipTo === 'object';
+  if (by.type === 'outlet' && !toCustomer) return destOf('outlet', (o && o.fulfillment && o.fulfillment.outlet) || by.id, j, o);
   const ful = (o && o.fulfillment) || {};
   if (ful.method === 'pickup' && ful.outlet) return destOf('outlet', ful.outlet, j, o);
   const ship = o && o.shipTo && typeof o.shipTo === 'object' ? o.shipTo : null;
@@ -250,10 +251,11 @@ function requestArtworkApproval(j, payload, actor) {
   const req = { issues, folding: !!payload.folding, note, file: file ? { id: file.id, name: file.name } : null, by: actor, at: now(),
     to: { type: to.type, name: to.type === 'outlet' ? to.name : to.name, email: to.email, phone: to.phone }, emailedTo: null, emailedAt: null };
   if (to.email) {
-    const lines = ['Hi ' + (to.type === 'outlet' ? to.short + ' outlet team' : (to.name || 'there')) + ',', '', note || 'We have amended your artwork for your approval. Please refer to the attached.', '',
+    const greeted = /^\s*(hi|hello|dear)\b/i.test(note);
+    const lines = (greeted ? [] : ['Hi ' + (to.type === 'outlet' ? to.short + ' outlet team' : (to.name || 'there')) + ',', '']).concat([note || 'We have amended your artwork for your approval. Please refer to the attached.', '',
       'Order: ' + ((o && o.id) || j.orderId), 'Item: ' + j.product + ' × ' + (j.qty || 0).toLocaleString() + ' (' + j.id + ')', '',
       to.type === 'outlet' ? 'Please check it with your customer, then approve it in the outlet dashboard or reply to this email.' : 'You can approve it in My Orders on printoka.com, or simply reply to this email.', '',
-      'Warm regards,', 'Printoka Prepress', 'print@printoka.com'];
+      'Warm regards,', 'Printoka Prepress', 'print@printoka.com']);
     const e = store.sendEmail('artwork-approval', { from: 'print@printoka.com', to: to.email, name: to.name, jobId: j.id, replyTo: 'print@printoka.com',
       subject: 'Please approve the artwork for order ' + ((o && o.id) || j.orderId),
       body: lines.join('\n'), attachments: file ? [{ id: file.id, name: file.name, jobId: j.id }] : [] });

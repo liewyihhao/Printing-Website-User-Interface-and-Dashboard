@@ -69,7 +69,7 @@ function quoteView(q, full) {
     qty: (q.requirement && q.requirement.qty) || null, config: (q.requirement && q.requirement.config) || null, notes: (q.requirement && q.requirement.notes) || '',
     requester: cust ? { id: cust.id, name: cust.name, email: cust.email, phone: cust.phone || (addr && addr.phone) || '', address: addr ? [addr.line1, addr.line2, [addr.postcode, addr.city].filter(Boolean).join(' '), addr.state, addr.country].filter(Boolean).join(', ') : '' } : (q.customer ? { name: q.customer.name, email: q.customer.email, phone: q.customer.phone } : null),
     rejectReason: q.rejectReason || '', lastFollowUp: q.lastFollowUpAt ? { at: q.lastFollowUpAt, by: q.lastFollowUpBy } : null,
-    amendments: (q.amendments || []).slice().reverse(), leadDays: q.leadDays || null,
+    amendments: (q.amendments || []).slice().reverse(), leadDays: q.leadDays || null, delivery: q.delivery || null,
     // HQ's raw 'issued' entry is shown once, as the outlet's "Quoted"
     statuses: (q.history || []).filter(h => h.action !== 'issued').slice().reverse().map(h => ({ status: String(h.action).charAt(0).toUpperCase() + String(h.action).slice(1), by: h.actor, at: h.ts, note: h.note || '' })),
   });
@@ -109,6 +109,7 @@ function saveSpec(qid, b, me) {
     if (!quoteView(q).canEdit) return { error: 'This quote can no longer be edited.' };
     q.history.push({ ts: now(), actor: me.name, action: 'Specifications updated' });
   }
+  if (!qid || b.delivery) { const dl = quoteDelivery(b, cust, me); if (dl.error) return dl; q.delivery = dl; }
   q.userId = cust.id; q.customer = { name: cust.name, email: cust.email, phone: cust.phone || '', company: cust.company || '' };
   // the configurator answers travel with the quote (product, every option, quantity, remarks)
   const lines = Array.isArray(b.specLines) ? b.specLines.filter(l => Array.isArray(l) && l.length === 2).slice(0, 60).map(l => [String(l[0]).slice(0, 80), String(l[1]).slice(0, 200)]) : null;
@@ -357,9 +358,30 @@ function performance(me, individual, staffId) {
   }
   return { performance: out };
 }
+function customerDetail(id) {
+  const c = store.findCustomer(id); if (!c || c.type !== 'customer') return { error: 'Customer not found.' };
+  return { customer: { id: c.id, name: c.name, email: c.email, phone: c.phone || '', company: c.company || '',
+    addresses: (c.addresses || []).map(a => ({ id: a.id, label: a.label || '', name: a.name || c.name, phone: a.phone || c.phone || '', line1: a.line1 || '', line2: a.line2 || '', postcode: a.postcode || '', city: a.city || '', state: a.state || '', country: a.country || 'MY', isDefault: !!a.isDefault })) } };
+}
+// where the finished job goes (user, 2026-09-29): "Pick up at Outlet" (this outlet's address) or "Delivery to Customer"
+// (one of the customer's saved addresses, or a new one — saved into their address book so it shows up next time)
+function quoteDelivery(b, cust, me) {
+  const d = b.delivery || {};
+  if (d.method === 'pickup') { const ol = ops().outletById(outletOf(me)) || { id: outletOf(me), name: outletOf(me), address: '' }; return { method: 'pickup', outlet: { id: ol.id, name: ol.name, address: ol.address || '' } }; }
+  if (d.method !== 'delivery') return { error: 'Choose Pick up at Outlet or Delivery to Customer.' };
+  let a = d.addressId ? (cust.addresses || []).find(x => x.id === d.addressId) : null;
+  if (!a) {
+    const t = d.address || {};
+    if (!String(t.line1 || '').trim() || !String(t.postcode || '').trim() || !String(t.city || '').trim() || !String(t.state || '').trim()) return { error: 'Enter the delivery address (street, postcode, city and state).' };
+    a = { id: 'A-' + crypto.randomBytes(3).toString('hex').toUpperCase(), label: 'Delivery', name: String(t.name || cust.name).slice(0, 80), phone: String(t.phone || cust.phone || '').slice(0, 40),
+      line1: String(t.line1).slice(0, 120), line2: String(t.line2 || '').slice(0, 120), postcode: String(t.postcode).slice(0, 12), city: String(t.city).slice(0, 60), state: String(t.state).slice(0, 60), country: t.country || 'MY', isDefault: !(cust.addresses || []).length };
+    cust.addresses = (cust.addresses || []).concat([a]); // into the customer's address book
+  }
+  return { method: 'delivery', address: { name: a.name || cust.name, phone: a.phone || cust.phone || '', line1: a.line1, line2: a.line2 || '', postcode: a.postcode, city: a.city, state: a.state, country: a.country || 'MY' } };
+}
 function searchCustomers(q) {
   const s = String(q || '').toLowerCase();
   return store.customers().filter(c => c.type === 'customer' && (!s || [c.name, c.email, c.phone].join(' ').toLowerCase().indexOf(s) >= 0)).slice(0, 20).map(c => ({ value: c.id, label: c.name + ' (' + c.email + ')' }));
 }
 
-module.exports = { saveQuoteArtwork, acceptByOutlet, amendQuote, stageOf, listQuotes, getQuote, saveSpec, onIssued, outletPrice, followUp, rejectQuote, quoteArtwork, onAccepted, onPaid, outletOrders, orderListView, orderDetail, orderAction, orderNote, orderAddress, dashboard, performance, staffList, searchCustomers, refreshFollowUp };
+module.exports = { customerDetail, saveQuoteArtwork, acceptByOutlet, amendQuote, stageOf, listQuotes, getQuote, saveSpec, onIssued, outletPrice, followUp, rejectQuote, quoteArtwork, onAccepted, onPaid, outletOrders, orderListView, orderDetail, orderAction, orderNote, orderAddress, dashboard, performance, staffList, searchCustomers, refreshFollowUp };

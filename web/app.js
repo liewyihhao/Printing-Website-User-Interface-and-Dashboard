@@ -700,6 +700,8 @@ class Component extends DCLogic {
       try { options = E.localOptions(prod, f.key, cfg) || []; } catch (e) { options = f.options || []; }
       // conditional validity: when a field's gate fails, offer only its first (safe) option
       if (gates[f.key] && options.length) { try { if (!gates[f.key](cfg, this.state.qty)) options = [options[0]]; } catch (e) {} }
+      // (user, 2026-09-29) Silkscreen Spot UV is a finishing: always under Optional Finishing, on every product
+      if (/spot_?uv|silkscreen/i.test(f.key) && f.section !== 'Optional Finishing') f = Object.assign({}, f, { section: 'Optional Finishing' });
       // (user, 2026-09-29) the N-in-1 "Package" question is "Duplicate with Same Configuration" (2 … 10 artworks)
       if (f.key === 'package' && options.some(o => /^\d+\s*in\s*1\b/i.test(String(Array.isArray(o) ? o[0] : o))))
         return { def: Object.assign({}, f, { label: 'Duplicate with Same Configuration', note: f.note ? 'Normal is priced exactly; 2 or more artworks are quoted on request.' : f.note }), options };
@@ -3752,6 +3754,8 @@ class Component extends DCLogic {
     const secOrder = (prod && prod.sectionOrder && prod.sectionOrder.length) ? prod.sectionOrder.slice() : ['General'];
     const qtySec = (prod && prod.quantitySection) || 'General';
     if (secOrder.indexOf(qtySec) < 0) secOrder.push(qtySec);
+    // a section a question was moved into (e.g. Optional Finishing) is shown even if the product didn't list it
+    fields.forEach(f => { const sc = f.def.section || 'General'; if (secOrder.indexOf(sc) < 0) secOrder.push(sc); });
     const usedKeys = {};
     const groups = secOrder.map(sec => {
       const secFields = fields.filter(f => (f.def.section || 'General') === sec);

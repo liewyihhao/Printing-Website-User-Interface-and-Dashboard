@@ -223,7 +223,7 @@ function view(j, me) {
   if (me.type === 'vendor') {
     v.requestRemarks = o.remarks || ''; // the scheduler's remarks on the quote request (delivery details)
     v.artworkPreview = mine && o.artworkPreview ? pub(o.artworkPreview) : null; // watermarked "PRINTOKA" artwork for quoting
-    v.myQuote = mine ? { amount: mine.price, leadDays: mine.leadDays, note: mine.note, submittedAt: mine.submittedAt, document: pub(mine.document), awardedAmount: o.awardedTo === co ? mine.price : null } : null;
+    v.myQuote = mine ? { amount: mine.price, unitPrice: mine.unitPrice || null, leadDays: mine.leadDays, note: mine.note, submittedAt: mine.submittedAt, document: pub(mine.document), awardedAmount: o.awardedTo === co ? mine.price : null } : null;
     v.canQuote = me.role !== 'printer_staff' && !o.awardedTo;
     // enter (or correct) the delivery details until Printoka has received the job
     const ps = printingStatus(j), mineJob = o.awardedTo === co;
@@ -235,7 +235,7 @@ function view(j, me) {
   } else {
     v.requestRemarks = o.remarks || '';
     v.approvedArtwork = approvedArtwork(j); v.artworkPreview = pub(o.artworkPreview);
-    v.quotes = (o.vendors || []).map(x => ({ vendorId: x.vendorId, vendorName: x.vendorName, location: vendorLocation(x.vendorId), amount: x.price, leadDays: x.leadDays, remarks: x.note || '', submittedAt: x.submittedAt, document: pub(x.document), awarded: x.vendorId === o.awardedTo }));
+    v.quotes = (o.vendors || []).map(x => ({ vendorId: x.vendorId, vendorName: x.vendorName, location: vendorLocation(x.vendorId), amount: x.price, unitPrice: x.unitPrice || null, leadDays: x.leadDays, remarks: x.note || '', submittedAt: x.submittedAt, document: pub(x.document), awarded: x.vendorId === o.awardedTo }));
     v.printerInvoice = o.printerInvoice ? Object.assign(pub(o.printerInvoice), { amount: o.printerInvoice.amount || null }) : null; v.processedAt = o.processedAt || null;
     v.billedAt = o.billedAt || null; v.billAmount = o.billAmount != null ? o.billAmount : null; v.paymentId = o.paymentId || null;
     v.customer = orderDetails(j);
@@ -269,7 +269,9 @@ function submitQuote(jid, me, b) {
   if (!b.documentData && !v.document) return { error: 'Please upload your quotation (PDF).' };
   if (b.documentData && !/\.pdf$/i.test(String(b.documentName || ''))) return { error: 'The quotation must be a PDF.' };
   if (v.submittedAt) return { error: 'Your quote has already been submitted.' }; // one quote per request; the request then closes
-  v.price = amount; v.leadDays = Number(b.leadDays) || v.leadDays || 0; v.note = String(b.remarks != null ? b.remarks : (b.note || v.note || '')).slice(0, 1000); v.submittedAt = now();
+  // (user, 2026-09-29) the printer replies with the price, the unit price and the production time
+  if (!(Number(b.leadDays) > 0)) return { error: 'Enter the production time (days).' };
+  v.price = amount; v.unitPrice = Number(b.unitPrice) > 0 ? Math.round(Number(b.unitPrice) * 10000) / 10000 : (j.qty ? Math.round(amount / j.qty * 10000) / 10000 : null); v.leadDays = Number(b.leadDays) || v.leadDays || 0; v.note = String(b.remarks != null ? b.remarks : (b.note || v.note || '')).slice(0, 1000); v.submittedAt = now();
   if (b.documentData) { const f = saveBlob(path.join(ROOT, jid), { data: b.documentData, name: b.documentName || 'quote.pdf' }, 'Q'); if (f.error) return f; v.document = f; }
   const n = j.outsource.vendors.filter(x => x.submittedAt).length;
   j.outsource.status = n === j.outsource.vendors.length ? 'quotes_received' : 'partly_received';

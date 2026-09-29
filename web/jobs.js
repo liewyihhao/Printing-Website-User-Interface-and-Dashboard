@@ -229,17 +229,19 @@
   P.vQuoteConfirm = function (id, p, q) {
     const J = p.job || {}; const box = { display: 'flex', flexDirection: 'column', gap: 10, border: '1px solid ' + HAIR, borderRadius: 10, padding: 14 };
     const send = () => { this.setState({ qSending: true });
-      return this.jPost('/api/jobs/' + id + '/vendor-quote', { amount: q.amt, leadDays: q.lead, remarks: q.rem, documentData: q.docData || undefined, documentName: q.docData ? q.docName : undefined }, 'Quote submitted.',
+      return this.jPost('/api/jobs/' + id + '/vendor-quote', { amount: q.amt, unitPrice: q.unit, leadDays: q.lead, remarks: q.rem, documentData: q.docData || undefined, documentName: q.docData ? q.docName : undefined }, 'Quote submitted.',
         () => this.setState({ acModal: null, acForm: {}, acView: null, sTab: 'Dashboard' })).then(() => this.setState({ qSending: false })); };
     this.setState({ acModal: { title: 'Confirm your quote', wide: true, body: () => [
       h('div', { key: 'j', style: box }, this.pSummary({ product: J.product, specLines: J.specLines, spec: J.spec, qty: J.qty, productionTime: J.productionTime, rows: [], artworks: [] })),
       p.deliverTo ? h('div', { key: 'd', style: box }, h('b', { style: { fontSize: 13 } }, 'Deliver to'), this.pDeliver(p.deliverTo, p.deliverTo.phone)) : null,
-      h('div', { key: 'q', style: Object.assign({ fontSize: 13 }, box) }, h('b', { style: { fontSize: 13 } }, 'Your quote'), this.acDL([['Quotation (PDF)', q.docName], ['Price (RM)', Number(q.amt).toFixed(2)], ['Lead time', q.lead ? q.lead + ' days' : ''], ['Remarks', q.rem]])),
+      h('div', { key: 'q', style: Object.assign({ fontSize: 13 }, box) }, h('b', { style: { fontSize: 13 } }, 'Your quote'), this.acDL([['Quotation (PDF)', q.docName], ['Price (RM)', Number(q.amt).toFixed(2)], ['Unit price (RM)', q.unit ? String(q.unit) : ''], ['Production time', q.lead ? q.lead + ' days' : ''], ['Remarks', q.rem]])),
       muted('No changes can be made after submission.'),
       h('div', { key: 'b' }, Btn(this.state.qSending ? 'Submitting…' : 'Confirm and submit', send, 'primary', !!this.state.qSending))] } });
   };
   P.vJob = function (d) {
     if (!d) return [h('div', { key: 'l', style: { color: FAINT } }, 'Loading…')];
+    if (d.closed) return this.acSingle({ home: 'Dashboard', type: 'Printing Jobs', title: d.jobId }, [this.acC(d.product || 'Quote', [muted(d.message),
+      d.myQuote && d.myQuote.submittedAt ? this.acDL([['Your price (RM)', Number(d.myQuote.amount).toFixed(2)], d.myQuote.unitPrice ? ['Unit price (RM)', String(d.myQuote.unitPrice)] : null, ['Production time', d.myQuote.leadDays ? d.myQuote.leadDays + ' days' : '—']]) : null])], []);
     if (d.error) return [h('div', { key: 'e', style: { color: '#c0392b' } }, d.error)];
     const j = d.job, p = d.printing || {}, s = p.status || {}, id = j.id, mq = p.myQuote || {};
     const staff = (this.state.user || {}).role === 'printer_staff';
@@ -252,16 +254,22 @@
     if (['quote-requested', 'quote-partly-received', 'quotes-received'].indexOf(s.id) >= 0) {
       const amt = this.acF('qAmount') !== '' ? this.acF('qAmount') : (mq.amount != null ? String(mq.amount) : '');
       const lead = this.acF('qLead') !== '' ? this.acF('qLead') : (mq.leadDays ? String(mq.leadDays) : '');
+      const qtyN = Number((p.job || {}).qty || j.qty) || 0;
+      // the unit price follows the price (and the other way round) for the job's quantity
+      const unit = this.acF('qUnit') !== '' ? this.acF('qUnit') : (mq.unitPrice ? String(mq.unitPrice) : (Number(amt) > 0 && qtyN ? String(Math.round(Number(amt) / qtyN * 10000) / 10000) : ''));
+      const setAmt = v => { this.acSetF('qAmount', v); this.acSetF('qUnit', Number(v) > 0 && qtyN ? String(Math.round(Number(v) / qtyN * 10000) / 10000) : ''); };
+      const setUnit = v => { this.acSetF('qUnit', v); if (Number(v) > 0 && qtyN) this.acSetF('qAmount', String(Math.round(Number(v) * qtyN * 100) / 100)); };
       // reply to the quote request: PDF quotation, price, lead time, remarks
       const rem = this.acF('qRem') !== '' ? this.acF('qRem') : (mq.note || '');
-      main.push(this.acC('Fill in Quote', p.canQuote ? [
+      main.push(this.acC('Fill in Quote', p.canQuote && (this.state.user || {}).type === 'vendor' ? [
         p.requestRemarks ? h('p', { key: 'rr', style: { margin: 0, fontSize: 13.5, lineHeight: 1.6, whiteSpace: 'pre-wrap' } }, p.requestRemarks) : null,
         FG('Quotation (PDF)', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } }, mq.document && !this.acF('qDocName') ? fileLink(mq.document) : null, this.jPickFile('qDoc', 'application/pdf,.pdf')), 1),
         h('div', { key: 'pl', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12 } },
-          FG('Price (RM)', h('input', { type: 'text', value: amt, onChange: e => this.acSetF('qAmount', e.target.value), style: inp }), 1),
-          FG('Lead time (days)', h('input', { type: 'number', value: lead, onChange: e => this.acSetF('qLead', e.target.value), style: inp }))),
+          FG('Price (RM)', h('input', { type: 'number', min: 0, step: '0.01', value: amt, onChange: e => setAmt(e.target.value), style: inp }), 1),
+          FG('Unit Price (RM)', h('input', { type: 'number', min: 0, step: '0.0001', value: unit, onChange: e => setUnit(e.target.value), style: inp }), 1, qtyN ? 'for ' + qtyN.toLocaleString() + ' pcs' : null),
+          FG('Production Time (days)', h('input', { type: 'number', min: 1, value: lead, onChange: e => this.acSetF('qLead', e.target.value), style: inp }), 1)),
         FG('Remarks', h('textarea', { rows: 3, value: rem, onChange: e => this.acSetF('qRem', e.target.value), style: Object.assign({}, inp, { resize: 'vertical' }) })),
-        h('div', { key: 'b' }, Btn('Submit quote', () => this.vQuoteConfirm(id, p, { amt, lead, rem, docName: this.acF('qDocName') || (mq.document || {}).name, docData: this.acF('qDocData') }), 'primary', !amt || !(this.acF('qDocData') || mq.document)))]
+        h('div', { key: 'b' }, Btn('Submit quote', () => this.vQuoteConfirm(id, p, { amt, unit, lead, rem, docName: this.acF('qDocName') || (mq.document || {}).name, docData: this.acF('qDocData') }), 'primary', !(Number(amt) > 0) || !(Number(lead) > 0) || !(this.acF('qDocData') || mq.document)))]
         : [p.requestRemarks ? h('p', { key: 'rr', style: { margin: 0, fontSize: 13.5, lineHeight: 1.6, whiteSpace: 'pre-wrap' } }, p.requestRemarks) : null, mq.submittedAt ? this.acDL([['Price (RM)', Number(mq.amount).toFixed(2)], ['Quotation', mq.document ? fileLink(mq.document) : '—'], mq.note ? ['Remarks', mq.note] : null]) : null, muted(staff ? 'Your printer manager submits the price for this job.' : 'Quoting is closed for this job.')]));
     }
     // quote accepted: New Order → (download the artwork, print) Mark as Processed → Unbilled → upload the invoice (PDF) → Prepare for Shipping
@@ -300,7 +308,7 @@
       // before the award: only the approved artwork watermarked "PRINTOKA"; the original files once the job is awarded to this printer
       artworks: p.awardedToMe ? (J.artworks || []) : p.artworkPreview ? [{ name: p.artworkPreview.name, open: () => this.jDownload('/api/jobs/' + id + '/files/' + p.artworkPreview.id, p.artworkPreview.name) }] : [] }));
     const deliverCard = p.deliverTo ? this.acC('Deliver to', this.pDeliver(p.deliverTo, p.deliverTo.phone)) : null;
-    const docCard = (p.documents || []).length ? this.acC('Documents (PDF)', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } }, p.documents.map(x => Btn('View ' + x.label, () => this.openJobDoc(id, x.id))))) : null;
+    const docCard = p.awardedToMe && (p.documents || []).length ? this.acC('Documents (PDF)', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } }, p.documents.map(x => Btn('View ' + x.label, () => this.openJobDoc(id, x.id))))) : null;
     // layout (user, 2026-09-26): Job details top-left, Deliver to bottom-left; the step to fill in (quote, order, invoice, shipping) on the right
     return this.acSingle({ home: 'Dashboard', type: 'Printing Jobs', title: id, statusNode: jobPill(s) }, [jobCard, deliverCard], main.concat([docCard]));
   };

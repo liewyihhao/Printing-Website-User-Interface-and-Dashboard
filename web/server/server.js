@@ -93,7 +93,11 @@ async function api(req, res, pathname, query) {
   }
   if (seg[0] === 'jobs' && seg[1] && !seg[2]) {
     const j = store.job(seg[1]); if (!j) return send(res, 404, { error: 'not found' });
-    if (!supplier.canSee(j, me0)) return send(res, 403, { error: 'Access denied: You are not authorized to view this.' });
+    if (!supplier.canSee(j, me0)) {
+      const co = me0.type === 'vendor' ? (me0.vendorId || me0.id) : null; const ov = co && j.outsource && (j.outsource.vendors || []).find(v => v.vendorId === co);
+      if (ov) return send(res, 200, { closed: true, jobId: j.id, product: j.product, message: j.outsource.awardedTo ? 'This job was awarded to another printer. Thank you for quoting.' : 'Your quote has been submitted. The job appears under Printing Jobs if Printoka accepts it.', myQuote: { amount: ov.price, unitPrice: ov.unitPrice || null, leadDays: ov.leadDays, submittedAt: ov.submittedAt } });
+      return send(res, 403, { error: 'Access denied: You are not authorized to view this.' });
+    }
     if (me0.type === 'vendor') return send(res, 200, { job: supplier.vendorJob(j, me0), printing: supplier.view(j, me0), audit: [], order: null });
     // "Quote Pending from Printer" is done once a received printer quote has been opened by the scheduler
     if (['scheduler_staff', 'scheduler_manager', 'production_director'].indexOf(role) >= 0 && j.outsource) { let seen = false; (j.outsource.vendors || []).forEach(v => { if (v.submittedAt && !v.seenAt) { v.seenAt = store.now(); seen = true; } }); if (seen) store.save(); }
@@ -532,6 +536,7 @@ async function api(req, res, pathname, query) {
     const b = req.method === 'POST' ? await readBody(req) : {};
     const out = r => send(res, r && r.error ? 400 : 200, r);
     if (seg[1] === 'dashboard') return out(outlet.dashboard(me));
+    if (seg[1] === 'customers' && seg[2]) return out(outlet.customerDetail(seg[2]));
     if (seg[1] === 'customers') return out({ customers: outlet.searchCustomers(query.q) });
     if (seg[1] === 'staff') return out({ staff: outlet.staffList(me) });
     if (seg[1] === 'performance') return out(outlet.performance(me, query.individual === '1', query.staff || null));

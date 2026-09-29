@@ -254,7 +254,8 @@
       h('div', { key: 'nu', style: { padding: 20, borderTop: '1px solid ' + HAIR, display: 'flex', justifyContent: 'flex-end' } }, Btn('＋ Create new user', () => this.outNewUser(), 'primary')),
     ]), this.notifPanel()];
   };
-  P.outNewUser = function () {
+  // onCreated: the outlet quote form's '+ Add customer' — the new customer becomes the requester (the quote form keeps its answers)
+  P.outNewUser = function (onCreated) {
     const f = k => this.acF(k), set = (k, v) => this.acSetF(k, v);
     const body = () => [
       h('div', { key: 'g', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12 } },
@@ -264,9 +265,9 @@
         FG('Town / City', h('input', { value: f('city'), onChange: e => set('city', e.target.value), style: inp })), FG('Postcode', h('input', { value: f('postcode'), onChange: e => set('postcode', e.target.value), style: inp })),
         FG('State', h('input', { value: f('state'), onChange: e => set('state', e.target.value), style: inp })), FG('Country', h('select', { value: f('country') || 'MY', onChange: e => set('country', e.target.value), style: inp }, [['MY', 'Malaysia'], ['SG', 'Singapore'], ['BN', 'Brunei']].map(c => h('option', { key: c[0], value: c[0] }, c[1]))))),
       h('label', { key: 'p', style: { display: 'flex', gap: 8, fontSize: 13, color: MUT } }, h('input', { type: 'checkbox', checked: !!f('promo'), onChange: e => set('promo', e.target.checked) }), 'Receive exclusive offers and promotions from Printoka.'),
-      h('div', { key: 'b' }, Btn('Create user', () => this.aFetchJ('/api/customers', Object.assign({ country: 'MY' }, this.state.acForm)).then(d => { if (this.acDone(d, d.message || 'User created successfully.')) this.setState({ acModal: null, acForm: {} }); }), 'primary', !f('email') || !f('firstName'))),
+      h('div', { key: 'b' }, Btn('Create user', () => this.aFetchJ('/api/customers', Object.assign({ country: 'MY' }, this.state.acForm)).then(d => { if (this.acDone(d, d.message || 'User created successfully.')) { this.setState(st => ({ acModal: null, acForm: onCreated ? Object.assign({}, st.acForm, { firstName: '', lastName: '', email: '', phone: '', company: '', address: '', city: '', postcode: '', state: '', promo: false }) : {} })); if (onCreated && d.customer) onCreated(d.customer); } }), 'primary', !f('email') || !f('firstName'))),
     ];
-    this.setState({ acModal: { title: 'Create new user', body, wide: true }, acForm: {} });
+    this.setState(st => ({ acModal: { title: onCreated ? 'Add customer' : 'Create new user', body, wide: true }, acForm: onCreated ? st.acForm : {} }));
   };
   P.outOrders = function () {
     const list = (this.acGet('out_orders', '/api/outlet/orders') || {}).orders;
@@ -380,23 +381,59 @@
         const text = lines.map(l => l[0] + ': ' + l[1]).concat(['Quantity: ' + Number(qty).toLocaleString() + ' pcs'], notes ? ['Remarks: ' + notes] : []).join('\n');
         return { product: prod.name, productId: prod.id, specLines: lines, qty: Number(qty), notes, config: this.state.cfg || {}, specifications: text };
       };
+      // (user, 2026-09-29) a new request starts with its own Requester step: find the customer, or add them (the same welcome
+      // and set-password emails as signing up); then the product and the configurator; then where it is delivered
+      const pickCust = c => { this.acSetF('requesterId', c.value || c.id); this.acSetF('requesterLabel', c.label || (c.name + ' (' + c.email + ')')); this.acSetF('dlAddr', ''); this.setState({ acCustQ: '' }); };
+      const custPick = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+        reqLabel ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5, background: ALT, borderRadius: 8, padding: '10px 12px' } }, h('b', { style: { flex: 1 } }, reqLabel), h('span', { style: { color: TEAL, fontWeight: 700 } }, '✓')) : null,
+        h('input', { placeholder: 'Search customer name or email', value: this.state.acCustQ || '', onChange: e => this.setState({ acCustQ: e.target.value }), style: inp }),
+        custQ && custRes && !cust.length ? h('div', { style: { fontSize: 13, color: FAINT, padding: '2px' } }, 'No customer found. Add them as a new customer.') : null,
+        custQ && cust.length ? h('div', { style: { maxHeight: 200, overflow: 'auto', border: '1px solid ' + LINE, borderRadius: 8 } }, cust.map(c => h('div', { key: c.value, onClick: () => pickCust(c), style: { padding: '9px 12px', fontSize: 13, cursor: 'pointer', background: F('requesterId') === c.value ? '#fdf2f2' : '#fff', borderTop: '1px solid ' + LINE } }, c.label))) : null,
+        h('div', null, Btn('+ Add customer', () => this.outNewUser(c => pickCust(c)))));
+      if (isNew && !this.acF('reqDone')) {
+        main.push(this.acC('Requester', [custPick, h('div', { key: 'n' }, Btn('Next', () => this.acSetF('reqDone', true), 'primary', !F('requesterId')))]));
+      } else {
+      // delivery: the outlet's own address for a pickup; for a delivery one of the customer's saved addresses or a new one
+      const cd = F('requesterId') ? (this.acGet('custd_' + F('requesterId'), '/api/outlet/customers/' + encodeURIComponent(F('requesterId'))) || {}).customer : null;
+      const outs = (this.acGet('out_outlets', '/api/ops/outlets') || {}).outlets || [];
+      const myOutlet = outs.find(o => o.id === (this.state.user || {}).outlet) || {};
+      const qd = (q && q.delivery) || {};
+      const dm = this.acF('dlMethod') || qd.method || '';
+      const addrs = (cd && cd.addresses) || [];
+      const dsel = this.acF('dlAddr') || (addrs.find(x => x.isDefault) || addrs[0] || {}).id || 'new';
+      const na = k => this.acF('na_' + k);
+      const dlOk = dm === 'pickup' || (dm === 'delivery' && (dsel !== 'new' || ['line1', 'postcode', 'city', 'state'].every(k => String(na(k)).trim())));
+      const dlPayload = () => !dm ? undefined : dm === 'pickup' ? { method: 'pickup' } : dsel !== 'new' ? { method: 'delivery', addressId: dsel }
+        : { method: 'delivery', address: { name: na('name') || (cd && cd.name), phone: na('phone') || (cd && cd.phone), line1: na('line1'), line2: na('line2'), postcode: na('postcode'), city: na('city'), state: na('state'), country: 'MY' } };
+      const fmtA = x => [x.line1, x.line2, [x.postcode, x.city].filter(Boolean).join(' '), x.state].filter(Boolean).join(', ');
+      const radio = (on, label, click, sub) => h('label', { key: label, style: { display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13.5, cursor: 'pointer' } },
+        h('input', { type: 'radio', checked: on, onChange: click, style: { marginTop: 3 } }), h('span', null, h('span', { style: { fontWeight: on ? 700 : 500 } }, label), sub ? h('span', { style: { display: 'block', fontSize: 12.5, color: MUT, marginTop: 2, lineHeight: 1.5 } }, sub) : null));
+      const naIn = (k, ph, w) => h('input', { key: k, placeholder: ph, value: na(k), onChange: e => this.acSetF('na_' + k, e.target.value), style: Object.assign({}, inp, w ? { gridColumn: '1 / -1' } : {}) });
+      const deliveryUI = FG('Delivery', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+        radio(dm === 'pickup', 'Pick up at Outlet', () => this.acSetF('dlMethod', 'pickup'), dm === 'pickup' ? [myOutlet.name, myOutlet.address].filter(Boolean).join(' · ') : null),
+        radio(dm === 'delivery', 'Delivery to Customer', () => this.acSetF('dlMethod', 'delivery')),
+        dm === 'delivery' ? h('div', { style: { marginLeft: 26, display: 'flex', flexDirection: 'column', gap: 10 } },
+          addrs.map(x => radio(dsel === x.id, (x.label || 'Address') + (x.isDefault ? ' (default)' : ''), () => this.acSetF('dlAddr', x.id), [x.name, fmtA(x), x.phone].filter(Boolean).join(' · '))),
+          radio(dsel === 'new', addrs.length ? 'Another address' : 'Delivery address', () => this.acSetF('dlAddr', 'new'), dsel === 'new' ? 'Saved to the customer’s address book.' : null),
+          dsel === 'new' ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 8 } },
+            naIn('name', 'Recipient name (' + ((cd && cd.name) || 'customer') + ')'), naIn('phone', 'Phone'), naIn('line1', 'Street address', 1), naIn('line2', 'Apartment, unit (optional)', 1), naIn('postcode', 'Postcode'), naIn('city', 'Town / City'), naIn('state', 'State')) : null) : null), 1);
       main.push(this.acC('Specifications', [
-        amend ? null : FG('Requester', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
-          reqLabel ? h('div', { style: { fontSize: 13, background: ALT, borderRadius: 8, padding: '8px 12px' } }, reqLabel) : null,
-          h('input', { placeholder: 'Search customer name or email…', value: this.state.acCustQ || '', onChange: e => this.setState({ acCustQ: e.target.value }), style: inp }),
-          custQ && custRes && !cust.length ? h('div', { style: { fontSize: 13, color: FAINT, padding: '4px 2px' } }, 'No customer found. Create the account first.') : null,
-          custQ && cust.length ? h('div', { style: { maxHeight: 160, overflow: 'auto', border: '1px solid ' + LINE, borderRadius: 8 } }, cust.map(c => h('div', { key: c.value, onClick: () => { this.acSetF('requesterId', c.value); this.acSetF('requesterLabel', c.label); this.setState({ acCustQ: '' }); }, style: { padding: '8px 12px', fontSize: 13, cursor: 'pointer', background: F('requesterId') === c.value ? '#fdf2f2' : '#fff', borderTop: '1px solid ' + LINE } }, c.label))) : null), 1),
+        amend ? null : isNew ? h('div', { key: 'rq', style: { display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5, background: ALT, borderRadius: 8, padding: '10px 12px' } },
+          h('span', { style: { color: MUT } }, 'Requester'), h('b', { style: { flex: 1 } }, reqLabel), h('span', { onClick: () => this.acSetF('reqDone', false), style: { color: TEAL, fontWeight: 600, cursor: 'pointer' } }, 'Change'))
+          : FG('Requester', custPick, 1),
         FG('Product', h('select', { value: pid, onChange: e => { const v = e.target.value; this.acSetF('productId', v); this.setState({ prodId: v === '' ? null : Number(v), cfg: {}, sizeConfirmed: false }); }, style: inp },
           [h('option', { key: '', value: '' }, prods.length ? 'Please Select' : 'Loading products…')].concat(prods.map(p => h('option', { key: p.id, value: String(p.id) }, p.name)))), 1),
         cq ? h('div', { key: 'qs', style: { display: 'flex', flexDirection: 'column' } }, cq.groups.map(g => h('div', { key: g.sec, style: { display: 'flex', flexDirection: 'column' } }, cq.sectionHeader(g.sec), g.nodes))) : null,
         prod ? FG('Remarks', h('textarea', { rows: 3, className: 'ac-hint', placeholder: 'Add-on remarks and the customer’s target price, if any.', value: notes, onChange: e => this.acSetF('notes', e.target.value), style: Object.assign({}, inp, { resize: 'vertical' }) })) : null,
         amend ? FG('Price (RM)', h('input', { type: 'number', min: 0, step: '0.01', value: this.acF('price') !== '' ? this.acF('price') : (q.price != null ? String(q.price) : ''), onChange: e => this.acSetF('price', e.target.value), style: Object.assign({}, inp, { maxWidth: 260 }) }), 1) : null,
+        amend || !prod ? null : deliveryUI,
         amend ? null : h('div', { key: 'aw', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12 } },
           FG('Artwork name', h('input', { value: this.acF('artworkName'), onChange: e => this.acSetF('artworkName', e.target.value), style: inp })),
           FG('Artwork file', h('label', { style: { color: TEAL, fontWeight: 600, fontSize: 14, cursor: 'pointer', padding: '8px 0', alignSelf: 'flex-start' } }, this.acF('artworkFileName') ? '📄 ' + this.acF('artworkFileName') : 'Upload',
             h('input', { type: 'file', style: { display: 'none' }, onChange: e => { const f0 = e.target.files[0]; e.target.value = ''; this.acReadFile(f0).then(f => { if (f) { this.acSetF('artworkData', f.data); this.acSetF('artworkFileName', f.name); } }); } })))),
         amend ? h('div', { key: 'b', style: { display: 'flex', gap: 8 } }, Btn('Save amendment', () => this.aFetchJ('/api/outlet/quotes/' + q.id + '/amend', Object.assign(payload(), { price: this.acF('price') !== '' ? this.acF('price') : q.price })).then(r => done(r, 'Quote amended.')), 'primary', !specDone), Btn('Cancel', () => this.setState({ acEdit: null })))
-          : h('div', { key: 'b', style: { display: 'flex', gap: 8 } }, Btn(isNew ? 'Submit Quotation Request' : 'Save', () => this.aFetchJ(isNew ? '/api/outlet/quotes' : '/api/outlet/quotes/' + q.id + '/spec', Object.assign(payload(), { requesterId: F('requesterId'), artworkName: this.acF('artworkName'), artworkData: this.acF('artworkData'), artworkFileName: this.acF('artworkFileName') })).then(r => done(r, isNew ? 'Quotation request sent to the scheduler.' : 'Specifications updated successfully', isNew)), 'primary', !specDone || !F('requesterId')), !isNew ? Btn('Cancel', () => this.setState({ acEdit: null })) : null)]));
+          : h('div', { key: 'b', style: { display: 'flex', gap: 8 } }, Btn(isNew ? 'Submit Quotation Request' : 'Save', () => this.aFetchJ(isNew ? '/api/outlet/quotes' : '/api/outlet/quotes/' + q.id + '/spec', Object.assign(payload(), { requesterId: F('requesterId'), delivery: dlPayload(), artworkName: this.acF('artworkName'), artworkData: this.acF('artworkData'), artworkFileName: this.acF('artworkFileName') })).then(r => done(r, isNew ? 'Quotation request sent to the scheduler.' : 'Specifications updated successfully', isNew)), 'primary', !specDone || !F('requesterId') || (isNew && !dlOk) || (!isNew && dm === 'delivery' && !dlOk)), !isNew ? Btn('Cancel', () => this.setState({ acEdit: null })) : null)]));
+      }
     } else if (q) {
       main.push(this.acC('Specifications', [q.specLines && this.pSummary ? h('div', { key: 's', style: { display: 'flex', flexDirection: 'column', gap: 10 } }, this.pSummary({ product: q.product, specLines: q.specLines, qty: q.qty, rows: [], artworks: [] })) : [h('b', { key: 'p' }, q.product), h('div', { key: 's', style: { whiteSpace: 'pre-wrap', lineHeight: 1.7 } }, q.spec)],
         q.specLines && q.notes ? h('p', { key: 'n', style: { margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.6 } }, q.notes) : null,
@@ -405,6 +442,8 @@
     }
     const aside = q ? [
       q.price != null ? this.acC('Quote', this.acDL([['Price', this.rm(q.price)], q.leadDays ? ['Lead time', q.leadDays + ' days'] : null, ['Requested by', q.issuedBy]])) : null,
+      (dv => dv ? this.acC('Delivery', dv.method === 'pickup' ? [h('b', { key: 'm' }, 'Pick up at Outlet'), h('div', { key: 'a', style: { color: MUT, lineHeight: 1.6 } }, [dv.outlet && dv.outlet.name, dv.outlet && dv.outlet.address].filter(Boolean).join(' · '))]
+        : [h('b', { key: 'm' }, 'Delivery to Customer'), h('div', { key: 'a', style: { color: MUT, lineHeight: 1.6 } }, [dv.address.name, [dv.address.line1, dv.address.line2, [dv.address.postcode, dv.address.city].filter(Boolean).join(' '), dv.address.state].filter(Boolean).join(', '), dv.address.phone].filter(Boolean).join(' · '))]) : null)(q.delivery),
       (q.amendments || []).length ? this.acC('Amendments', this.acStatusList(q.amendments.map(a => ({ title: 'Amended', at: a.at, by: a.by, text: a.changes.join(' · ') })))) : null,
       q.statuses && q.statuses.length ? this.acC('Statuses', this.acStatusList(q.statuses.map(s => ({ title: s.status, at: s.at, by: s.by, text: s.note })))) : null,
       q.requester && mode !== 'edit-spec' ? this.acC('Requester', [h('b', { key: 'n' }, q.requester.name), q.requester.phone ? h('a', { key: 'p', href: 'https://wa.me/' + String(q.requester.phone).replace(/\D/g, '').replace(/^0/, '60'), target: '_blank', rel: 'noopener', style: { color: TEAL, fontWeight: 600 } }, q.requester.phone) : null, q.requester.address ? h('p', { key: 'a', style: { margin: 0, color: MUT } }, q.requester.address) : null, h('a', { key: 'e', href: 'mailto:' + q.requester.email, style: { color: TEAL, fontWeight: 600 } }, q.requester.email)], q.canEdit ? { icon: 'edit', label: 'Change requester', onClick: () => this.outEditSpec(q) } : null) : null] : [];

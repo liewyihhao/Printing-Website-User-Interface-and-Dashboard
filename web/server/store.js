@@ -442,7 +442,8 @@ function registerCustomer(body) {
   const cpNew = c.coupons[0], cp = c.coupons[1];
   logEvent({ actor: email, role: 'customer', action: 'register', jobId: null, from: null, to: null, note: 'New customer account ' + c.id + ' · promo ' + cpNew.code + ', ' + cp.code });
   // accounts created by outlet staff / admin skip the new-account email — they get "Activate your account" instead
-  if (!body.adminCreated) sendEmail('new-account', { to: c.email, name: c.name, subject: 'Welcome to Printoka — here are your RM30 and 15% discount codes', body: 'Hi ' + c.name + ',\n\nYour Printoka account is ready. As a welcome, here are your discount codes:\n\n' + cpNew.code + '\nRM30 off your order of RM ' + cpNew.minSpend + ' or more. One-time use, on all products.\n\n' + cp.code + '\n15% off every order of RM ' + cp.minSpend + ' or more. No expiry, use it as many times as you like, on all products.\n\nOne code per order. Enter it in your cart.\n\nHappy printing,\nThe Printoka team' });
+  // (user, 2026-09-29) an account an outlet creates for a customer gets the same welcome as signing up themselves
+  if (!body.adminCreated || body.welcome) sendEmail('new-account', { to: c.email, name: c.name, subject: 'Welcome to Printoka — here are your RM30 and 15% discount codes', body: 'Hi ' + c.name + ',\n\nYour Printoka account is ready. As a welcome, here are your discount codes:\n\n' + cpNew.code + '\nRM30 off your order of RM ' + cpNew.minSpend + ' or more. One-time use, on all products.\n\n' + cp.code + '\n15% off every order of RM ' + cp.minSpend + ' or more. No expiry, use it as many times as you like, on all products.\n\nOne code per order. Enter it in your cart.\n\nHappy printing,\nThe Printoka team' });
   save();
   return { customer: publicCustomer(c), token: newSession(c.id) };
 }
@@ -635,6 +636,8 @@ function acceptQuote(qid, actor) {
       specLines: q.requirement.specLines ? q.requirement.specLines.concat(q.requirement.notes ? [['Remarks', q.requirement.notes]] : []) : null, productionTime: q.leadDays ? q.leadDays + (q.leadDays === 1 ? ' working day' : ' working days') : null,
       qty, unitPrice: q.price / qty, lineTotal: q.price, artworks: q.artworkFile ? [q.artworkFile] : [] }],
     subtotal: q.price, memberDiscount: 0, tax: 0, shipping: 0, total: q.price, payment: { method: 'card_test' }, fromQuote: qid,
+    fulfillment: q.delivery && q.delivery.method === 'delivery' ? { method: 'delivery' } : q.delivery && q.delivery.method === 'pickup' ? { method: 'pickup', outlet: (q.delivery.outlet && q.delivery.outlet.id) || q.outlet } : undefined,
+    shipTo: q.delivery && q.delivery.method === 'delivery' && q.delivery.address ? q.delivery.address : undefined,
   });
   q.status = 'accepted'; q.orderId = o.id; q.decision = 'proceed'; q.history.push({ ts: now(), actor: actor || 'customer', action: 'accepted', note: 'Order ' + o.id });
   // customer converted the quote to an order → the originating outlet is notified (prepress already notified by createOrder)
@@ -710,7 +713,7 @@ function createCustomerByStaff(body, staff) {
   if (!email) return { error: 'An email address is required to create the account.' };
   if (customers().find(c => c.email === email)) return { error: 'An account with that email already exists.' };
   const name = [body.firstName, body.lastName].filter(Boolean).join(' ') || body.name || email.split('@')[0];
-  const reg = registerCustomer({ email, password: crypto.randomBytes(24).toString('hex'), name, phone: body.phone || '', company: body.company || '', adminCreated: true });
+  const reg = registerCustomer({ email, password: crypto.randomBytes(24).toString('hex'), name, phone: body.phone || '', company: body.company || '', adminCreated: true, welcome: true });
   if (reg.error) return reg;
   const c = findCustomer(reg.customer.id);
   if (c) {

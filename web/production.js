@@ -144,7 +144,7 @@
   const inState = j => j.status === 'printing' ? ['Printing on ' + (j.machine || 'machine'), 'teal', false] : ['Ready to Ship', 'ok', true];
   // a list with a clear state per row; open rows first, done rows (last 30 days) after
   P.pStateList = function (key, title, rows, cols) {
-    rows = rows.filter(r => !r.state[2] || recent(r.date)).sort((a, b) => (a.state[2] - b.state[2]) || String(a.due || '9').localeCompare(String(b.due || '9')));
+    rows = rows.filter(r => !r.state[2] || recent(r.date)).sort((a, b) => (a.state[2] - b.state[2]) || String(a.due || '9').localeCompare(String(b.due || '9')) || String(b.date || '').localeCompare(String(a.date || '')));
     // same layout as the outlet's lists: Date first, Status last
     return this.acList({ key, title, cols: ['Date'].concat(cols, ['Status']), rows: rows.map(r => ({ date: r.date, status: r.state[0].replace(/ \(.*\)$/, ''), search: r.search, cells: [h('span', { style: { whiteSpace: 'nowrap' } }, dmy(r.date))].concat(r.cells, [this.pillDot(r.state[0], r.state[1])]) })) });
   };
@@ -549,9 +549,9 @@
     // the printers asked to quote — a full-width table like the dashboard lists; click a vendor to review and accept its quote
     const pdfLink = q => q.document ? link('📄 ' + q.document.name, () => this.jDownload('/api/jobs/' + id + '/files/' + q.document.id, q.document.name)) : '—';
     const quoteTable = quotes.length ? [h('h2', { key: 'qh', style: { fontSize: 22, fontWeight: 600, margin: '8px 0 0' } }, 'Quotes'),
-      h('div', { key: 'qt' }, this.dataCard(['Vendor', { label: 'Quoted Price', right: true }, 'Days of Production', 'Location', 'Quote PDF', 'Remarks'],
+      h('div', { key: 'qt' }, this.dataCard(['Vendor', { label: 'Quoted Price', right: true }, { label: 'Unit Price', right: true }, 'Production Time', 'Location', 'Quote PDF', 'Remarks'],
         quotes.map(q => [h('span', { style: { display: 'inline-flex', gap: 8, alignItems: 'center' } }, link(q.vendorName, () => this.pQuoteView(j, q, canAward)), q.awarded ? this.pillDot('Accepted', 'ok') : null),
-          q.amount != null ? h('b', null, 'RM ' + Number(q.amount).toFixed(2)) : h('span', { style: { color: FAINT } }, 'Awaiting quote'), q.leadDays ? q.leadDays + ' days' : '—', q.location || '—', pdfLink(q), q.remarks || '—']), { minWidth: 760 }))] : null;
+          q.amount != null ? h('b', null, 'RM ' + Number(q.amount).toFixed(2)) : h('span', { style: { color: FAINT } }, 'Awaiting quote'), q.unitPrice ? 'RM ' + Number(q.unitPrice).toFixed(4).replace(/0{1,2}$/, '') : '—', q.leadDays ? q.leadDays + ' days' : '—', q.location || '—', pdfLink(q), q.remarks || '—']), { minWidth: 760 }))] : null;
     const card = this.acC(o.awardedTo ? 'Outsourced' : 'Outsource', [
       !o.awardedTo && !quotes.length ? note('Select the printers to request for quotation.') : null,
       canAward && !quotes.length && vj.vendors && !vendors.length ? box('No registered printer can make this job. Ask Admin to add the product and finishing to a printer (Users & roles).', 'bad') : null,
@@ -570,7 +570,7 @@
   P.pQuoteView = function (j, q, canAward) {
     const id = j.id;
     this.setState({ acModal: { title: q.vendorName, body: () => [
-      this.acDL([['Quoted price', q.amount != null ? 'RM ' + Number(q.amount).toFixed(2) : 'Awaiting quote'], ['Days of production', q.leadDays ? q.leadDays + ' days' : '—'], ['Location', q.location || '—'],
+      this.acDL([['Quoted price', q.amount != null ? 'RM ' + Number(q.amount).toFixed(2) : 'Awaiting quote'], ['Unit price', q.unitPrice ? 'RM ' + Number(q.unitPrice).toFixed(4).replace(/0{1,2}$/, '') : '—'], ['Production time', q.leadDays ? q.leadDays + ' days' : '—'], ['Location', q.location || '—'],
         ['Quote PDF', q.document ? link('📄 ' + q.document.name, () => this.jDownload('/api/jobs/' + id + '/files/' + q.document.id, q.document.name)) : '—'], ['Remarks', q.remarks || '—'],
         q.submittedAt ? ['Submitted', when(q.submittedAt)] : null, ['Deliver to', 'Printoka Production']]),
       q.awarded ? box('Quote accepted — purchase order issued.', 'ok') : null,
@@ -594,14 +594,16 @@
     'The artwork size does not match the order size',
   ];
   // the message: what prepress found (as plain sentences), then that it was amended and is attached for approval
-  const amendMessage = (picked, fold) => picked.map(x => x.replace(/, so .*$/, '').replace(/need converting/, 'requires conversion').replace(/\.?$/, '.')).concat(fold ? ['Please also check that the folding is correct.'] : [])
-    .concat(['We have made the amendment for your approval. Please refer to the attached.']).join(' ');
+  const amendMessage = (picked, fold, name) => ['Hi ' + (name || 'there') + ',', '',
+    'Thank you for your order at Printoka.com. We have checked your artwork and identified some minor amendment is required on the issues at the following:', '']
+    .concat(picked.map(x => '-' + x.replace(/, so .*$/, '').replace(/need converting/, 'requires conversion').replace(/\.?$/, '.')), fold ? ['-Please check that the folding is correct.'] : [])
+    .concat(['', 'But no worry, we\'ve got you. We have made the amendment for your approval. Please refer to the attached.']).join('\n');
   P.pAmendedModal = function (j, order) {
     const to = j.orderedBy || {}; const email = to.email || (order && order.customer && order.customer.email);
     this.setState({ acForm: { am: {} }, acModal: { title: j.status === 'prepress_issue' ? 'Amendment required' : 'Require amendment', wide: true, body: () => {
       const am = this.acF('am') || {}; const setAm = (k, v) => this.acSetF('am', Object.assign({}, am, { [k]: v }));
       const picked = ARTWORK_ISSUES.filter(x => am[x]);
-      const msg = this.acF('amEdited') ? this.acF('amNote') : amendMessage(picked, !!this.acF('amFold'));
+      const msg = this.acF('amEdited') ? this.acF('amNote') : amendMessage(picked, !!this.acF('amFold'), to.type === 'outlet' ? (order && order.customer && order.customer.name) || j.customer : (to.name || j.customer));
       const send = fileId => this.jPost('/api/jobs/' + j.id + '/transition', { action: 'flag_minor', payload: {
         reason: picked.join('; ') || msg || 'Artwork amended',
         issues: picked.map(x => ({ text: x })), folding: !!this.acF('amFold'), note: msg, fileId: fileId || undefined } },
@@ -616,7 +618,7 @@
           h('label', { key: x, style: { display: 'flex', gap: 10, alignItems: 'center', fontSize: 13.5, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: !!am[x], onChange: e => setAm(x, e.target.checked), style: { width: 17, height: 17 } }), x))),
         h('label', { key: 'fo', style: { display: 'flex', gap: 10, alignItems: 'center', fontSize: 13.5, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: !!this.acF('amFold'), onChange: e => this.acSetF('amFold', e.target.checked), style: { width: 17, height: 17 } }), 'Ask the customer to check the folding'),
         FG('Amended file', upBtn(this, 'amFile')),
-        FG('Note to ' + (to.type === 'outlet' ? 'the outlet' : 'the customer'), ta(msg, v => { this.acSetF('amNote', v); this.acSetF('amEdited', true); }, 5), 1, 'Sent as the email from print@printoka.com'),
+        FG('Note to ' + (to.type === 'outlet' ? 'the outlet' : 'the customer'), ta(msg, v => { this.acSetF('amNote', v); this.acSetF('amEdited', true); }, 12), 1, 'Sent as the email from print@printoka.com'),
         h('div', { key: 'b' }, Btn('Send for approval', go, 'primary', !String(msg || '').trim()))];
     } } });
   };
@@ -776,6 +778,8 @@
     const aside = [
       this.acC('Handled by', this.acDL([['Requested by', q.issuedBy ? q.issuedBy.name + ' (' + quoteFrom(q) + ')' : 'Website customer'], ['Scheduler', q.handler ? q.handler.name : ((q.history || []).find(x => x.action === 'issued') || {}).actor || 'Not yet'], ['Printer', pq.length ? pq.map(p => p.vendorName).join(', ') : '—']])),
       this.acC('Customer', this.acDL([['Name', q.customer && q.customer.name], ['Email', q.customer && q.customer.email], ['Phone', q.customer && q.customer.phone]])),
+      (dv => dv ? this.acC('Delivery', dv.method === 'pickup' ? [h('b', { key: 'm' }, 'Pick up at Outlet'), h('div', { key: 'a', style: { color: MUT, lineHeight: 1.6 } }, [dv.outlet && dv.outlet.name, dv.outlet && dv.outlet.address].filter(Boolean).join(' · '))]
+        : [h('b', { key: 'm' }, 'Delivery to Customer'), h('div', { key: 'a', style: { color: MUT, lineHeight: 1.6 } }, [dv.address.name, [dv.address.line1, dv.address.line2, [dv.address.postcode, dv.address.city].filter(Boolean).join(' '), dv.address.state].filter(Boolean).join(', '), dv.address.phone].filter(Boolean).join(' · '))]) : null)(q.delivery),
       this.acC('Log', this.acStatusList(log)),
     ];
     return this.acSingle({ home: tabs[0], type: 'Quote Requests', title: q.id, statusNode: this.pillDot(qrState(q)[0], qrState(q)[1]) }, main, aside);
