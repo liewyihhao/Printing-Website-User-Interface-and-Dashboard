@@ -144,7 +144,7 @@
   const inState = j => j.status === 'printing' ? ['Printing on ' + (j.machine || 'machine'), 'teal', false] : ['Ready to Ship', 'ok', true];
   // a list with a clear state per row; open rows first, done rows (last 30 days) after
   P.pStateList = function (key, title, rows, cols) {
-    rows = rows.filter(r => !r.state[2] || recent(r.date)).sort((a, b) => (a.state[2] - b.state[2]) || String(a.due || '9').localeCompare(String(b.due || '9')) || String(b.date || '').localeCompare(String(a.date || '')));
+    rows = rows.filter(r => !r.state[2] || recent(r.date)).sort((a, b) => (a.state[2] - b.state[2]) || ((b.rank || 0) - (a.rank || 0)) || String(a.due || '9').localeCompare(String(b.due || '9')) || String(b.date || '').localeCompare(String(a.date || '')));
     // same layout as the outlet's lists: Date first, Status last
     return this.acList({ key, title, cols: ['Date'].concat(cols, ['Status']), rows: rows.map(r => ({ date: r.date, status: r.state[0].replace(/ \(.*\)$/, ''), search: r.search, cells: [h('span', { style: { whiteSpace: 'nowrap' } }, dmy(r.date))].concat(r.cells, [this.pillDot(r.state[0], r.state[1])]) })) });
   };
@@ -155,9 +155,10 @@
   };
   P.pPrinterPending = function () {
     const qs = ((this.acGet('p_quotes', '/api/quotes') || {}).quotes) || [];
-    const rows = this.opsJobs().filter(j => j.outsource && (j.outsource.vendors || []).length && j.outsource.requestedAt).map(j => ({ date: j.outsource.requestedAt, state: pqState(j.outsource.vendors, !!j.outsource.awardedTo), search: [j.id, j.product, j.customer],
+    const lastReply = ps => ps.map(p => p.submittedAt).filter(Boolean).sort().pop();
+    const rows = this.opsJobs().filter(j => j.outsource && (j.outsource.vendors || []).length && j.outsource.requestedAt).map(j => ({ date: lastReply(j.outsource.vendors) || j.outsource.requestedAt, rank: j.outsource.vendors.some(p => p.submittedAt && !p.seenAt) ? 1 : 0, state: pqState(j.outsource.vendors, !!j.outsource.awardedTo), search: [j.id, j.product, j.customer],
       cells: [link('#' + j.id, () => openJob(this, j)), 'Job', j.product, (j.outsource.vendors || []).map(v => v.vendorName + (v.submittedAt ? ' — RM ' + Number(v.price).toFixed(2) : '')).join(', ')] }))
-      .concat(qs.filter(q => q.printerQuotes && q.printerQuotes.printers.length).map(q => ({ date: q.printerQuotes.requestedAt, state: pqState(q.printerQuotes.printers, false), search: [q.id, q.requirement && q.requirement.product],
+      .concat(qs.filter(q => q.printerQuotes && q.printerQuotes.printers.length).map(q => ({ date: lastReply(q.printerQuotes.printers) || q.printerQuotes.requestedAt, rank: q.printerQuotes.printers.some(p => p.submittedAt && !p.seenAt) ? 1 : 0, state: pqState(q.printerQuotes.printers, false), search: [q.id, q.requirement && q.requirement.product],
         cells: [link(q.id, () => this.acOpen({ kind: 'quote', id: q.id })), 'Custom quote', (q.requirement && q.requirement.product) || '—', q.printerQuotes.printers.map(p => p.vendorName + (p.submittedAt ? ' — RM ' + Number(p.amount).toFixed(2) : '')).join(', ')] })));
     return this.pStateList('pq', 'Quote Pending Response from Printer', rows, ['Ref', 'For', 'Product', 'Printers']);
   };
