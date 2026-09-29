@@ -189,7 +189,7 @@
   };
 
   // ================================================================== PRINTER (original supplier account)
-  const V_TABS = ['Dashboard', 'Printing Jobs', 'Custom Quotes'];
+  const V_TABS = ['Dashboard', 'Printing Jobs', 'Custom Quotes', 'Statement of Account'];
   P.s_vendor = function () {
     const u = this.state.user || {}; const v = this.state.acView;
     const tab = V_TABS.indexOf(this.state.sTab) >= 0 ? this.state.sTab : 'Dashboard';
@@ -200,6 +200,7 @@
     else if (v && v.kind === 'cq') content = this.vCustomQuote(this.acGet('vcq_' + v.id, '/api/vendor/custom-quotes/' + encodeURIComponent(v.id)));
     else if (tab === 'Printing Jobs') content = this.vJobs();
     else if (tab === 'Custom Quotes') content = this.vCustomQuotes();
+    else if (tab === 'Statement of Account') content = this.vStatement();
     else content = this.vDashboard();
     return this.acPage(shell, content);
   };
@@ -270,9 +271,11 @@
     if (s.id === 'printer-assigned') main.push(this.acC('New Order', [
       this.acDL([['Artwork', artLink], ['Purchase order', link('📄 ' + (p.po || 'Purchase Order'), () => this.openJobDoc(id, 'purchase-order'))]]),
       p.canProcess ? h('div', { key: 'b' }, Btn('Mark as Processed', () => this.jPost('/api/jobs/' + id + '/vendor-processed', {}, 'Marked as processed.'), 'primary', !mq.document)) : null]), quoteCard());
-    if (s.id === 'processed') main.push(this.acC('Unbilled', [
+    if (s.id === 'processed') { const invAmt = this.acF('invAmt') !== '' ? this.acF('invAmt') : ((mq.awardedAmount != null ? mq.awardedAmount : mq.amount) != null ? String(mq.awardedAmount != null ? mq.awardedAmount : mq.amount) : '');
+      main.push(this.acC('Unbilled', [
       FG('Invoice (PDF)', this.jPickFile('inv', 'application/pdf,.pdf'), 1),
-      p.canInvoice ? h('div', { key: 'b' }, Btn('Submit', () => this.jPost('/api/jobs/' + id + '/vendor-invoice', { documentData: this.acF('invData'), documentName: this.acF('invName') }, 'Invoice submitted.', () => this.setState({ acForm: {} })), 'primary', !this.acF('invData'))) : null]), quoteCard());
+      FG('Invoice amount (RM)', h('input', { type: 'number', min: 0, step: '0.01', value: invAmt, onChange: e => this.acSetF('invAmt', e.target.value), style: inp }), 1),
+      p.canInvoice ? h('div', { key: 'b' }, Btn('Submit', () => this.jPost('/api/jobs/' + id + '/vendor-invoice', { documentData: this.acF('invData'), documentName: this.acF('invName'), amount: invAmt }, 'Invoice submitted.', () => this.setState({ acForm: {} })), 'primary', !this.acF('invData') || !(Number(invAmt) > 0))) : null]), quoteCard()); }
     // Prepare for Shipping → download the shipping label, ship to Printoka Production, enter the delivery details (logistics: Incoming Jobs)
     if (['invoiced', 'shipped-to-hub'].indexOf(s.id) >= 0) {
       const pd = p.printerDelivery || {};
@@ -302,6 +305,28 @@
     return this.acSingle({ home: 'Dashboard', type: 'Printing Jobs', title: id, statusNode: jobPill(s) }, [jobCard, deliverCard], main.concat([docCard]));
   };
   // ---- printer custom quotes (original printer-custom-quotes + single-printer-custom-quotes)
+  // statement of account: Printoka's purchases from this printer (credit, once the goods are received and accepted)
+  // and its payments by bank transfer (debit, with the transfer slip); Balance = what Printoka owes the printer
+  P.stmtTable = function (st) {
+    const money = n => n ? 'RM ' + Number(n).toFixed(2) : '';
+    const slip = r => r.slip ? link('📄 ' + r.slip.name, () => this.jDownload('/api/printer-payments/slip/' + r.paymentId, r.slip.name)) : null;
+    const inv = r => r.invoice && r.jobId ? link('📄 ' + r.invoice.name, () => this.jDownload('/api/jobs/' + r.jobId + '/files/' + r.invoice.id, r.invoice.name)) : null;
+    return this.dataCard(['Date', 'Description', 'Document', { label: 'Debit', right: true }, { label: 'Credit', right: true }, { label: 'Balance', right: true }],
+      (st.rows || []).map(r => [dmy(r.at), r.description, r.type === 'payment' ? slip(r) || '—' : inv(r) || '—', money(r.debit), money(r.credit), h('b', null, 'RM ' + Number(r.balance).toFixed(2))]),
+      { minWidth: 760, empty: 'No purchases or payments yet.' });
+  };
+  P.vStatement = function () {
+    const st = (this.acGet('v_stmt', '/api/vendor/statement') || {}).statement;
+    if (!st) return [h('div', { key: 'l', style: { color: FAINT } }, 'Loading…')];
+    const next = st.nextRun ? new Date(st.nextRun + 'T12:00:00') : null;
+    return [h('h1', { key: 't', style: { fontSize: 34, fontWeight: 600, margin: '6px 0 0' } }, 'Statement of Account'),
+      this.pTiles ? this.pTiles([
+        { label: 'Purchases (credit)', value: 'RM ' + st.totalCredit.toFixed(2), icon: 'file', color: 'teal' },
+        { label: 'Payments (debit)', value: 'RM ' + st.totalDebit.toFixed(2), icon: 'check', color: 'teal' },
+        { label: 'Balance owed to you', value: 'RM ' + st.balance.toFixed(2), icon: 'dollar-sign', color: 'orange' }]) : null,
+      next ? h('p', { key: 'n', style: { margin: 0, fontSize: 13.5, color: MUT } }, 'Printoka pays every Friday by bank transfer. Next payment run: ' + next.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' }) + '.') : null,
+      h('div', { key: 's' }, this.stmtTable(st))];
+  };
   P.vCustomQuotes = function () {
     const d = this.acGet('v_cqs', '/api/vendor/custom-quotes'); if (!d) return [h('div', { key: 'l', style: { color: FAINT } }, 'Loading…')];
     return this.acList({ key: 'vc', title: 'Custom Quotes', cols: ['Quote', 'Product', { label: 'Total Amount', right: true }, 'Status', 'Date'],

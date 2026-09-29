@@ -45,7 +45,7 @@ const ROLES = {
 const STATUS = {
   // prepress statuses (user, 2026-09-25): New Order → Preflight → (Pending Customer Approval | Pending Customer Amendment) → scheduler New Order
   intake: { label: 'New Order', queue: 'prepress', step: 2 },
-  prepress: { label: 'Preflight', queue: 'prepress', step: 2 },
+  prepress: { label: 'Preflight Check', queue: 'prepress', step: 2 },
   prepress_issue: { label: 'Pending Approval', queue: 'prepress', step: 2 },
   escalated: { label: 'Escalated to Manager', queue: 'prepress', step: 2 },
   // approved, but held in prepress until every artwork on the same order is approved (then all go to the scheduler together)
@@ -122,8 +122,12 @@ const TRANSITIONS = {
     { action: 'reject_major', to: 'rejected', roles: PREPRESS, requires: ['reason'], note: 'MAJOR ISSUE — prepress contacted the customer for a new file.' },
     { action: 'escalate', to: 'escalated', roles: ['prepress_staff'], requires: ['reason'], note: 'CRITICAL — escalated to the prepress manager.' },
   ],
+  // Pending Approval (user, 2026-09-28): Approved (by prepress, the customer or the outlet) → Artwork Approved;
+  // Amendment Required → prepress sends a new message + file and it stays in Pending Approval until approved
   prepress_issue: [
-    { action: 'approve', to: 'scheduling', roles: PREPRESS, gates: ['artworkPresent'], requires: ['approval'], note: 'Customer approved the amended file — released to the scheduler.' },
+    { action: 'approve', to: 'scheduling', roles: PREPRESS, gates: ['artworkPresent'], requires: ['approval'], note: 'Amended file approved — released to the scheduler.' },
+    { action: 'customer_approve', to: 'scheduling', roles: ['customer'].concat(OUTLET), note: 'The customer approved the amended file — released to the scheduler.' },
+    { action: 'flag_minor', to: 'prepress_issue', roles: PREPRESS, requires: ['reason'], note: 'Amendment required — prepress sent a new amended file for approval.' },
     { action: 'reject_major', to: 'rejected', roles: PREPRESS, requires: ['reason'] },
     { action: 'escalate', to: 'escalated', roles: ['prepress_staff'], requires: ['reason'] },
   ],
@@ -133,7 +137,7 @@ const TRANSITIONS = {
     { action: 'reject_major', to: 'rejected', roles: ['prepress_manager'], requires: ['reason'] },
   ],
   rejected: [
-    { action: 'resubmit', to: 'prepress', roles: OUTLET.concat(PREPRESS), requires: ['file'], note: 'Customer resubmitted the file — back to preflight.' },
+    { action: 'resubmit', to: 'prepress', roles: ['customer'].concat(OUTLET, PREPRESS), requires: ['file'], note: 'New artwork received — back to the preflight check.' },
   ],
   // Step 3 — Scheduler (§3.5 SOP: confirm prepress approval + payment, assign machine/printer, queue with a time slot)
   scheduling: [
@@ -168,12 +172,15 @@ const TRANSITIONS = {
     { action: 'receive', to: 'logistics', roles: LOGISTICS, note: 'Outsourced job received from the printer — to packing.' },
   ],
   logistics: [
-    { action: 'dispatch', to: 'dispatched', roles: LOGISTICS, gates: ['packingDone'], requires: ['courier'], note: 'Assigned to the courier and dispatched.' },
+    // Print Shipping Label ships it (user, 2026-09-28): no separate tracking page
+    { action: 'dispatch', to: 'dispatched', roles: LOGISTICS, gates: ['packingDone'], note: 'Shipping label printed — shipped.' },
   ],
   dispatched: [
     // shipped → complete when the customer (or outlet) receives it, or the scheduler confirms delivery
     { action: 'customer_received', to: 'completed', roles: ['customer'], gates: ['destCustomer'], note: 'Customer confirmed they received the order.' },
-    { action: 'deliver', to: 'completed', roles: SCHEDULER, gates: ['destCustomer'], note: 'Scheduler confirmed the delivery.' },
+    // logistics marks it delivered, or the customer / outlet marks it received (user, 2026-09-28)
+    { action: 'deliver', to: 'completed', roles: LOGISTICS, gates: ['destCustomer'], note: 'Logistics confirmed the delivery.' },
+    { action: 'deliver_outlet', to: 'ready_collect', roles: LOGISTICS, gates: ['destOutlet'], note: 'Logistics confirmed the delivery to the outlet.' },
     { action: 'receive_outlet', to: 'ready_collect', roles: OUTLET, gates: ['destOutlet'], note: 'Outlet received the parcel — customer notified it is ready for collection.' },
     { action: 'receive_hub', to: 'at_hub', roles: HUB, gates: ['destHub'], note: 'Hub received the parcel (legacy hub routing).' },
   ],

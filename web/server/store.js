@@ -206,7 +206,7 @@ function sendEmail(templateId, opts) {
   const t = EMAIL_TEMPLATES.find(x => x.id === templateId); if (!t) return null;
   const e = {
     id: 'E-' + crypto.randomBytes(4).toString('hex').toUpperCase(), ts: now(), templateId, template: t.name,
-    to: opts.to || '—', toName: opts.name || '', subject: opts.subject || t.name, body: opts.body || '',
+    from: opts.from || null, to: opts.to || '—', toName: opts.name || '', subject: opts.subject || t.name, body: opts.body || '',
     replyTo: opts.replyTo || null, attachments: opts.attachments || [], jobId: opts.jobId || null,
     opened: false, clicked: false,
   };

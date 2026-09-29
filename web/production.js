@@ -24,6 +24,11 @@
   const dmy = ts => { if (!ts) return '—'; const d = new Date(ts); return String(d.getDate()).padStart(2, '0') + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + d.getFullYear(); };
   const link = (t, fn) => h('span', { onClick: fn, style: { color: TEAL, fontWeight: 600, cursor: 'pointer', whiteSpace: /^#/.test(t) ? 'nowrap' : undefined } }, t);
   const ta = (v, set, rows) => h('textarea', { rows: rows || 4, value: v, onChange: e => set(e.target.value), style: Object.assign({}, inp, { resize: 'vertical' }) });
+  // a red Upload button (the chosen file name beside it)
+  const upBtn = (c, key, label, onFile) => h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' } },
+    h('label', { style: { display: 'inline-flex', alignItems: 'center', font: '600 13.5px Montserrat,sans-serif', padding: '10px 18px', borderRadius: 8, background: TEAL, color: '#fff', cursor: 'pointer' } }, label || 'Upload',
+      h('input', { type: 'file', style: { display: 'none' }, onChange: e => { const f0 = e.target.files[0]; e.target.value = ''; c.acReadFile(f0).then(f => { if (!f) return; if (onFile) return onFile(f); c.acSetF(key + 'Data', f.data); c.acSetF(key + 'Name', f.name); }); } })),
+    key && c.acF(key + 'Name') ? h('span', { style: { fontSize: 13, color: MUT } }, '📄 ' + c.acF(key + 'Name')) : null);
 
   // ---------------------------------------------------------------- who sees what
   const ROUTES = {
@@ -61,6 +66,7 @@
     let body;
     if (v && v.kind === 'job') { const d = this.acGet('job_' + v.id, '/api/jobs/' + encodeURIComponent(v.id)); const st = d && d.job ? STEP[d.job.status] || 1 : 0; if (st) shell.progress = { text: STEPS[st - 1] + ' - Step ' + st + ' of 5', width: st * 20 }; body = this.pJob(d, tabs); }
     else if (v && v.kind === 'quote') body = this.pQuote(v.id, tabs);
+    else if (v && v.kind === 'payable') body = this.pPayable(v.id, tabs);
     else if (v && v.kind === 'individual') body = this.opsIndividual(() => this.setState({ acView: null }));
     else body = content(tab);
     return this.acPage(shell, body);
@@ -80,12 +86,15 @@
 
   // ================================================================== PREPRESS
   // prepress tabs and the statuses each one lists
-  const PREPRESS_TABS = { 'New Orders': ['intake'], 'Preflight': ['prepress', 'escalated', 'artwork_ready'], 'Pending Approval': ['prepress_issue'], 'Pending Amendment': ['rejected'] };
+  // (user, 2026-09-28) New Orders = still being checked (payment, then the preflight check); Preflight = checked and
+  // approved, the same jobs as the scheduler's Artwork Approved; Pending Approval = prepress amended it and asked the
+  // customer / outlet to approve; Pending Amendment = waiting for a new file from the customer
+  const PREPRESS_TABS = { 'New Orders': ['intake', 'prepress', 'escalated'], 'Preflight': ['scheduling', 'artwork_ready'], 'Pending Approval': ['prepress_issue'], 'Pending Amendment': ['rejected'] };
   // each department's tabs; the Production Director sees the same dashboards inside the director account
   const DEPT_TABS = {
-    prepress: c => ['Dashboard', 'New Orders', 'Preflight', 'Pending Approval', 'Pending Amendment'].concat(isManager(c) ? ['KPI', 'Daily report'] : []),
-    scheduler: c => ['Dashboard', 'Artwork Approved', 'Outsourced', 'In House', 'Quote Requests', 'Quote Pending Response from Printer'].concat(isManager(c) ? ['KPI', 'Daily report'] : []),
-    logistics: c => ['Dashboard', 'Incoming Jobs', 'Completed Jobs', 'Shipped'].concat(isManager(c) ? ['KPI', 'Daily report'] : []),
+    prepress: c => ['Dashboard', 'New Orders', 'Preflight', 'Pending Approval', 'Pending Amendment'].concat(isManager(c) ? ['KPI'] : []),
+    scheduler: c => ['Dashboard', 'Artwork Approved', 'Outsourced', 'In House', 'Quote Requests', 'Quote Pending Response from Printer'].concat(isManager(c) ? ['KPI'] : []),
+    logistics: c => ['Dashboard', 'Incoming Jobs', 'Completed Jobs', 'Shipped', 'Printer Payments'].concat(isManager(c) ? ['KPI'] : []),
   };
   P.s_prepress = function () { return this.pShell('prepress', DEPT_TABS.prepress(this), tab => this.pPrepress(tab, (t, extra) => this.setState(Object.assign({ sTab: t }, extra)))); };
   P.pPrepress = function (tab, go) {
@@ -93,13 +102,12 @@
     const T = PREPRESS_TABS;
     if (T[tab]) return this.pTable('pp_' + T[tab][0], tab, jobsIn(this, T[tab]));
     if (tab === 'KPI') return this.pKpi('prepress');
-    if (tab === 'Daily report') return this.pDaily('prepress');
     return [this.pTiles([
       { label: 'New Orders', value: jobsIn(this, T['New Orders']).length, icon: 'file', color: 'red', onClick: () => go('New Orders') },
       { label: 'Preflight', value: jobsIn(this, T['Preflight']).length, icon: 'check', color: 'teal', onClick: () => go('Preflight') },
       { label: 'Pending Approval', value: jobsIn(this, T['Pending Approval']).length, icon: 'edit-3', color: 'orange', onClick: () => go('Pending Approval') },
       { label: 'Pending Amendment', value: jobsIn(this, T['Pending Amendment']).length, icon: 'layers', color: 'orange', onClick: () => go('Pending Amendment') }])]
-      .concat(this.pTable('pd', 'Tasks', jobsIn(this, Q.prepress)));
+      .concat(this.pTable('pd', 'Tasks', jobsIn(this, ['intake', 'prepress', 'escalated', 'prepress_issue', 'rejected'])));
   };
 
   // ================================================================== SCHEDULER
@@ -121,8 +129,11 @@
   };
   const receivedByLogistics = j => !!(j.statusAt && (j.statusAt.logistics || j.statusAt.dispatched && j.dispatchDelivery)) || ['logistics'].indexOf(j.status) >= 0;
   // the Outsourced / In House lists: jobs the scheduler sent that way (still being set up, or already running)
-  const outJobs = c => c.opsJobs().filter(j => j.status === 'to_outsource' || (j.outsource && j.outsource.awardedTo));
-  const inJobs = c => c.opsJobs().filter(j => j.status === 'to_inhouse' || (j.route === 'inhouse' && ['scheduling', 'to_outsource'].indexOf(j.status) < 0));
+  // (user, 2026-09-28) Outsourced +1 only when a printer's quote is accepted; In House +1 only when it is booked on a machine.
+  // Until then the job stays in Artwork Approved (or in Quote Pending Response from Printer once printers were asked).
+  const outJobs = c => c.opsJobs().filter(j => j.outsource && j.outsource.awardedTo);
+  const inJobs = c => c.opsJobs().filter(j => j.route === 'inhouse' && ['scheduling', 'to_outsource', 'to_inhouse'].indexOf(j.status) < 0);
+  const awaitingChoice = c => c.opsJobs().filter(j => j.status === 'scheduling' || j.status === 'to_inhouse' || (j.status === 'to_outsource' && !(j.outsource && j.outsource.requestedAt)));
   const outState = j => {
     if (j.status === 'to_outsource') return [j.outsource && j.outsource.requestedAt ? 'Quotes Requested' : 'To Outsource', 'warn', false];
     if (j.status === 'outsourcing') return [j.printing ? j.printing.status : 'Printing', 'teal', false];
@@ -130,7 +141,7 @@
     if (j.status === 'dispatched' && !receivedByLogistics(j)) return ['Shipped to Outlet', 'warn', false];
     return ['Received', 'ok', true];
   };
-  const inState = j => j.status === 'to_inhouse' ? ['To Print In House', 'warn', false] : j.status === 'printing' ? ['Printing on ' + (j.machine || 'machine'), 'teal', false] : j.status === 'printed' ? ['Pending Receiving', 'warn', false] : ['Received', 'ok', true];
+  const inState = j => j.status === 'printing' ? ['Printing on ' + (j.machine || 'machine'), 'teal', false] : ['Ready to Ship', 'ok', true];
   // a list with a clear state per row; open rows first, done rows (last 30 days) after
   P.pStateList = function (key, title, rows, cols) {
     rows = rows.filter(r => !r.state[2] || recent(r.date)).sort((a, b) => (a.state[2] - b.state[2]) || String(a.due || '9').localeCompare(String(b.due || '9')));
@@ -161,26 +172,24 @@
   P.s_scheduler = function () { return this.pShell('scheduler', DEPT_TABS.scheduler(this), tab => this.pScheduler(tab, t => this.setState({ sTab: t }))); };
   P.pScheduler = function (tab, go) {
     // Artwork Approved: passed preflight — choose Outsource or Print In House
-    if (tab === 'Artwork Approved') return this.pTable('sn', 'Artwork Approved', jobsIn(this, ['scheduling']));
+    if (tab === 'Artwork Approved') return this.pTable('sn', 'Artwork Approved', awaitingChoice(this));
     if (tab === 'Quote Requests') return this.pQuoteRequests();
     if (tab === 'Quote Pending Response from Printer') return this.pPrinterPending();
     if (tab === 'Outsourced') return this.pJobsOutsourced();
     if (tab === 'In House') return this.pJobsInhouse();
     if (tab === 'KPI') return this.pKpi('scheduler');
-    if (tab === 'Daily report') return this.pDaily('scheduler');
     const qs = ((this.acGet('p_quotes', '/api/quotes') || {}).quotes) || [], jobs = this.opsJobs();
     const open = arr => arr.filter(s => !s[2]).length;
     const pending = jobs.filter(j => j.outsource && (j.outsource.vendors || []).length && j.outsource.requestedAt).map(j => pqState(j.outsource.vendors, !!j.outsource.awardedTo)).concat(qs.filter(q => q.printerQuotes && q.printerQuotes.printers.length).map(q => pqState(q.printerQuotes.printers, false)));
     // two rows (user, 2026-09-26): Orders, then Quotations
     return [this.pTiles([
-      { label: 'Artwork Approved', value: jobsIn(this, ['scheduling']).length, icon: 'file', color: 'red', onClick: () => go('Artwork Approved') },
+      { label: 'Artwork Approved', value: awaitingChoice(this).length, icon: 'file', color: 'red', onClick: () => go('Artwork Approved') },
       { label: 'Outsourced', value: open(outJobs(this).map(outState)), icon: 'truck', color: 'teal', onClick: () => go('Outsourced') },
       { label: 'In House', value: open(inJobs(this).map(inState)), icon: 'printer', color: 'teal', onClick: () => go('In House') }], 'Orders'),
       this.pTiles([
       { label: 'Quote Requests', value: open(qs.map(qrState)), icon: 'edit-3', color: 'teal', onClick: () => go('Quote Requests') },
       { label: 'Quote Pending Response from Printer', value: open(pending), icon: 'file', color: 'orange', onClick: () => go('Quote Pending Response from Printer') }], 'Quotations')]
-      .concat(this.pTable('sd', 'Artwork Approved', jobsIn(this, ['scheduling'])))
-      .concat(this.pTable('sdl', 'Confirm delivery', jobs.filter(j => j.status === 'dispatched' && (j.destination || {}).type === 'customer')));
+      .concat(this.pTable('sd', 'Artwork Approved', awaitingChoice(this)));
   };
 
   // ================================================================== LOGISTICS
@@ -208,7 +217,7 @@
     if (tab === 'Completed Jobs') return this.pStateList('lc', 'Completed Jobs', logRows(this, completed, logState), cols);
     if (tab === 'Shipped') return this.pStateList('ls', 'Shipped', logRows(this, shipped, shipState), cols);
     if (tab === 'KPI') return this.pKpi('logistics');
-    if (tab === 'Daily report') return this.pDaily('logistics');
+    if (tab === 'Printer Payments') return this.pPayables();
     // counters and the task list hold only work still to do: shipped and completed jobs are not tasks
     return [this.pTiles([
       { label: 'Incoming Jobs', value: incoming.length, icon: 'truck', color: 'orange', onClick: () => go('Incoming Jobs') },
@@ -225,7 +234,7 @@
   };
   const DEPT_VIEW = { prepress: 'pPrepress', scheduler: 'pScheduler', logistics: 'pLogistics' };
   P.s_production = function () {
-    const tabs = ['Dashboard', 'Prepress', 'Scheduler', 'Logistics', 'Reports', 'Settings'];
+    const tabs = ['Dashboard', 'Prepress', 'Scheduler', 'Logistics', 'Settings'];
     return this.pShell('production', tabs, tab => {
       // the director works every department exactly as that department does
       if (tab === 'Prepress' || tab === 'Scheduler' || tab === 'Logistics') {
@@ -234,16 +243,11 @@
         const go = (t, extra) => this.setState(Object.assign({ [key]: t }, extra));
         return [this.pSubTabs(subs, sub, go)].concat(this[DEPT_VIEW[d]](sub, go));
       }
-      if (tab === 'Reports') return this.pReports();
       if (tab === 'Settings') return this.pSettings();
-      const all = this.opsJobs();
-      const attention = all.filter(j => j.status === 'escalated' || (overdue(j) && Q.prepress.concat(Q.scheduler, Q.logistics).indexOf(j.status) >= 0));
       return [this.pTiles([
         { label: 'Prepress', value: jobsIn(this, Q.prepress).length, icon: 'check', color: 'teal', onClick: () => this.setState({ sTab: 'Prepress' }) },
         { label: 'Scheduler', value: jobsIn(this, Q.scheduler).length, icon: 'printer', color: 'teal', onClick: () => this.setState({ sTab: 'Scheduler' }) },
-        { label: 'Logistics', value: jobsIn(this, Q.logistics).length, icon: 'truck', color: 'orange', onClick: () => this.setState({ sTab: 'Logistics' }) },
-        { label: 'Needs attention', value: attention.length, icon: 'layers', color: 'red' }])]
-        .concat(this.pTable('dir_att', 'Needs attention', attention));
+        { label: 'Logistics', value: jobsIn(this, Q.logistics).length, icon: 'truck', color: 'orange', onClick: () => this.setState({ sTab: 'Logistics' }) }])];
     });
   };
 
@@ -261,17 +265,19 @@
     const item = d.order && (d.order.items || [])[(Number(String(id).split('-').pop()) || 1) - 1];
     const summary = { product: j.product, specLines: j.specLines || (item && item.specLines), spec: (pr.job && pr.job.spec) || j.spec, qty: j.qty, productionTime: j.productionTime || (item && item.productionTime), artworks: pr.job && pr.job.artworks,
       rows: [['Customer', j.customer || '—'], j.instructions ? ['Instructions', j.instructions] : null, j.machine ? ['Machine', j.machine + (j.slot ? ' · ' + when(j.slot) : '')] : null],
-      onUpload: d.order && (inDept(this, 'prepress') || inDept(this, 'scheduler')) ? x => this.aFetchJ('/api/orders/' + encodeURIComponent(d.order.id) + '/files', { kind: 'artwork', line: (Number(String(id).split('-').pop()) || 1), name: x.name, data: x.data })
+      // only prepress may change the artwork (the scheduler has no authority to change the order details)
+      onUpload: d.order && inDept(this, 'prepress') && Q.prepress.indexOf(j.status) >= 0 ? x => this.aFetchJ('/api/orders/' + encodeURIComponent(d.order.id) + '/files', { kind: 'artwork', line: (Number(String(id).split('-').pop()) || 1), name: x.name, data: x.data })
         .then(r => { if (this.acDone(r, 'Artwork uploaded.')) { this.acDrop('job_'); this.forceUpdate(); } }) : null };
     const orderCard = this.acC('Order details', this.pSummary(summary));
     // delivery address in its own card, straight under the order details
-    const fd = j.finalDestination || {}, ship = (d.order && d.order.shipTo) || {};
+    // Deliver to = whoever placed the order: the customer's address (website order) or the outlet (outlet order)
+    const fd = d.deliverTo || j.finalDestination || {}, ship = (d.order && d.order.shipTo) || {};
     const deliverCard = this.acC('Deliver to', this.pDeliver(fd, fd.phone || (fd.type !== 'outlet' && ship.phone), j.customer));
     // Outsource page: shown once the scheduler chose Outsource (and afterwards, while the printer works on it)
     if ((j.outsource || j.status === 'to_outsource') && j.status !== 'scheduling' && j.status !== 'to_inhouse' && inDept(this, 'scheduler') && !logPage) { const oc = this.pOutsourceCard(j, pr, { summary, pr }); top = oc.top; main.push(oc.card); }
     // documents open as PDFs on the page (not for prepress — they only check files).
     // On the logistics pages the purchase order shows only on the receiving page; after that only the shipping label.
-    let docs = deptOf(this) === 'prepress' ? [] : (pr.documents || []);
+    let docs = deptOf(this) === 'prepress' || Q.prepress.indexOf(j.status) >= 0 ? [] : (pr.documents || []);
     if (logPage) docs = docs.filter(x => j.status === 'inbound' ? x.id === 'purchase-order' : x.id === 'shipping-label');
     // who took the job in each part (the first person in each department to open it)
     const hb = (d.handlers || []).map(x => [x.part, x.who ? h('span', null, x.who, x.at ? h('span', { style: { display: 'block', fontSize: 12, color: FAINT } }, when(x.at)) : null) : h('span', { style: { color: FAINT } }, 'Not yet')]);
@@ -280,10 +286,11 @@
     // order details sit on the right on every job page (user, 2026-09-25)
     const aside = [orderCard, deliverCard, docCard, hbCard];
     const st = STEP[j.status] || 1;
-    const typeTab = tabs.indexOf('Reports') >= 0 ? (st <= 2 ? 'Prepress' : st <= 4 ? 'Scheduler' : 'Logistics')
+    const typeTab = tabs.indexOf('Settings') >= 0 ? (st <= 2 ? 'Prepress' : st <= 4 ? 'Scheduler' : 'Logistics')
       : tabs.indexOf('Preflight') >= 0 ? (Object.keys(PREPRESS_TABS).find(k => PREPRESS_TABS[k].indexOf(j.status) >= 0) || 'Dashboard')
       : tabs.indexOf('In House') >= 0 ? (j.status === 'scheduling' ? 'Artwork Approved' : j.status === 'to_outsource' ? 'Outsourced' : j.status === 'to_inhouse' ? 'In House' : j.route === 'inhouse' ? 'In House' : j.route === 'outsource' ? 'Outsourced' : 'Dashboard')
       : tabs.indexOf('Incoming Jobs') >= 0 ? (j.status === 'dispatched' || j.status === 'completed' || j.status === 'ready_collect' ? 'Shipped' : j.route === 'inhouse' ? 'Completed Jobs' : 'Incoming Jobs') : tabs[1];
+    // (in the prepress tabs a checked job reads "Preflight", the scheduler's "Artwork Approved")
     return this.acSingle({ home: tabs[0], type: typeTab, title: '#' + id, statusNode: this.pillDot(j.statusLabel || j.status, tone(j)), top }, main, aside);
   };
   // the configurator-style summary (job page, quote-request confirmation, printer's item details):
@@ -352,7 +359,7 @@
           h('div', { key: 'b', style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
             // at most two decisions: validate the payment (the customer's slip, or upload one), then Process Order
             !paid ? (pay.proofFileId && o.id ? Btn('Validate the customer’s proof', () => this.jPost('/api/orders/' + o.id + '/pay', {}, 'Payment validated.')) : Btn('Upload payment proof', uploadProof)) : null,
-            acts.process ? Btn('Process Order', () => act('process', {}, 'Order processed — now in preflight.'), 'primary', !acts.process.enabled) : null)]);
+            acts.process ? Btn('Process Order', () => act('process', {}, 'Order processed — ready for the preflight check.'), 'primary', !acts.process.enabled) : null)]);
       }
       // approved, held until every other artwork on the order is approved — then the whole order goes to the scheduler
       if (st === 'artwork_ready') {
@@ -367,7 +374,9 @@
       // Pending Customer Amendment (major issue): prepress asked the customer for a new file
       if (st === 'rejected') return this.acC('Pending Amendment', [box('Issue: ' + (j.reason || '—') + (j.suggestion ? ' · Suggested correction: ' + j.suggestion : ''), 'bad'),
         (j.proofs || []).length ? link('📄 Screenshot: ' + j.proofs[j.proofs.length - 1].name, () => this.jDownload('/api/jobs/' + id + '/files/' + j.proofs[j.proofs.length - 1].id, j.proofs[j.proofs.length - 1].name)) : null,
-        acts.resubmit ? h('div', { key: 'b' }, Btn('New file received — back to preflight', () => this.pModal('New file received', [['file', 'File name', 'e.g. bizcard-v2.pdf']], v => act('resubmit', v, 'Back in preflight.')), 'primary')) : null]);
+        acts.resubmit ? h('div', { key: 'b' }, upBtn(this, null, 'Upload new artwork', f => order && order.id
+          ? this.aFetchJ('/api/orders/' + encodeURIComponent(order.id) + '/files', { kind: 'artwork', line: (Number(String(id).split('-').pop()) || 1), name: f.name, data: f.data }).then(r => { if (this.acDone(r, 'New artwork received — back to the preflight check.')) { this.acDrop('job_'); this.opsLoad(); } })
+          : act('resubmit', { file: f.name }, 'New artwork received — back to the preflight check.'))) : null]);
       const CL = [['Basic verification', ['Product type matches the file', 'Quantity is correct', 'Size matches the specs']],
         ['Technical check', ['Resolution at least 300 dpi', 'Colour mode is CMYK', 'Bleed at least 3 mm', 'Safe margin respected', 'Fonts outlined / embedded', 'No white lines', 'No RGB colour', 'No complex or risky die-cutting', 'No Pantone colour', 'No elements outside the safe zone', 'No similar colours under 10%', 'No toning / colour under 10%']],
         ['Content check', ['No missing fonts', 'No alignment issues', 'No cropping errors']]];
@@ -386,24 +395,30 @@
             g[1].map(x => h('label', { key: x, style: { display: 'flex', gap: 10, alignItems: 'center', fontSize: 14, cursor: 'pointer' } },
               h('input', { type: 'checkbox', checked: !!ticked[x], onChange: () => setTicks({ [x]: !ticked[x] }), style: { width: 18, height: 18 } }), x)),
             h('div', null, Btn(done ? 'All approved' : 'Approve all', () => { const o = {}; g[1].forEach(x => { o[x] = true; }); setTicks(o); this.setState({ pfOpen: null }); }, 'primary', done))) : null); };
-      return this.acC(st === 'prepress_issue' ? 'Pending Approval' : 'Preflight', [
-        st === 'prepress_issue' ? (() => { const ar = j.approvalRequest;
-          if (!ar) return box('Amended: ' + (j.reason || '') + '. Waiting for the customer to approve the amended file.');
-          return h('div', { key: 'ar', style: { display: 'flex', flexDirection: 'column', gap: 10 } },
-            box(ar.emailedTo ? 'Approval email sent to ' + ar.emailedTo + ' on ' + when(ar.emailedAt) + '. Waiting for the customer’s reply.' : 'No email on file. Contact the customer directly for their approval.', ar.emailedTo ? 'ok' : 'bad'),
-            ar.issues.length ? h('ul', { style: { margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 4, fontSize: 13.5 } }, ar.issues.map((x, i) => h('li', { key: i }, x.text))) : null,
-            this.acDL([ar.folding ? ['Folding', 'Customer asked to check'] : null, ar.file ? ['Amended file', link('📄 ' + ar.file.name, () => this.jDownload('/api/jobs/' + id + '/files/' + ar.file.id, ar.file.name))] : null, ar.note ? ['Note', ar.note] : null, ['Amended by', ar.by + ' · ' + when(ar.at)]])); })() : null,
-        st !== 'prepress_issue' ? h('div', { key: 'secs', style: { display: 'flex', flexDirection: 'column', gap: 10 } }, CL.map(sectionRow)) : null,
+      if (st === 'prepress_issue') {
+        // (user, 2026-09-28) the message sent to whoever placed the order, then two buttons: Approved or Amendment Required.
+        // The customer (My Orders) or the outlet can approve it too; Amendment Required sends a new message + file.
+        const ar = j.approvalRequest || {}; const to = ar.to || j.orderedBy || {};
+        const rounds = (j.approvalHistory || []).length + 1;
+        return this.acC('Pending Approval', [
+          this.acDL([['Sent to', to.type === 'outlet' ? 'Outlet — ' + (to.name || '') : (to.name || j.customer)], ['Email', ar.emailedTo || to.email || 'No email on file'], ['Phone', to.phone || '—'], ['Sent', (ar.at ? when(ar.at) : '—') + (ar.by ? ' by ' + ar.by : '') + (rounds > 1 ? ' · round ' + rounds : '')]]),
+          h('div', { key: 'msg', style: { whiteSpace: 'pre-wrap', fontSize: 13.5, lineHeight: 1.65, background: ALT, borderRadius: 8, padding: '12px 14px' } }, ar.note || j.reason || 'Amended for approval.'),
+          ar.file ? h('div', { key: 'f' }, link('📄 ' + ar.file.name, () => this.jDownload('/api/jobs/' + id + '/files/' + ar.file.id, ar.file.name))) : null,
+          blocked(approve),
+          h('div', { key: 'b', style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
+            approve ? Btn('Approved', () => act('approve', { approval: 'Approved at prepress' }, 'Approved — now in Preflight.'), 'primary', !approve.enabled) : null,
+            acts.flag_minor ? Btn('Amendment Required', () => this.pAmendedModal(j, order), 'danger') : null)]);
+      }
+      return this.acC('Preflight check', [
+        h('div', { key: 'secs', style: { display: 'flex', flexDirection: 'column', gap: 10 } }, CL.map(sectionRow)),
         blocked(approve),
         h('div', { key: 'b', style: { display: 'flex', flexDirection: 'column', gap: 8 } },
-          approve && st === 'prepress_issue' ? Btn('Proceed', () => this.pModal('Customer approved', [['approval', 'How did the customer approve it?', 'e.g. Approved by WhatsApp, 25 Sep 10:30']], v => act('approve', { approval: v.approval }, 'Passed to the scheduler.')), 'primary', !approve.enabled) : null,
-          approve && st !== 'prepress_issue' ? Btn('Proceed', () => act('approve', {}, 'Passed to the scheduler.'), 'primary', !approve.enabled || !allTicked) : null,
-          // at most two decisions per page: Preflight = Proceed / Issue Found (→ Amended or Request); Pending Approval = Proceed / Request
-          st !== 'prepress_issue' && (acts.flag_minor || acts.reject_major) ? Btn('Issue Found', () => this.setState({ acModal: { title: 'Issue found', body: () => [
+          approve ? Btn('Proceed', () => act('approve', {}, 'Approved — now in Preflight.'), 'primary', !approve.enabled || !allTicked) : null,
+          // two decisions: Proceed, or Issue Found → Require Amendment (prepress amends, asks for approval) / Request from Customer (new file)
+          (acts.flag_minor || acts.reject_major) ? Btn('Issue Found', () => this.setState({ acModal: { title: 'Issue found', body: () => [
             h('div', { key: 'b', style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
-              acts.flag_minor ? Btn('Amended', () => this.pAmendedModal(j, order), 'primary') : null,
-              acts.reject_major ? Btn('Request', () => this.pRejectModal(j), 'danger') : null)] } }), 'danger') : null,
-          st === 'prepress_issue' && acts.reject_major ? Btn('Request', () => this.pRejectModal(j), 'danger') : null)]);
+              acts.flag_minor ? Btn('Require Amendment', () => this.pAmendedModal(j, order), 'primary') : null,
+              acts.reject_major ? Btn('Request from Customer', () => this.pRejectModal(j), 'danger') : null)] } }), 'danger') : null)]);
     }
     // Step 3 — scheduler: first choose Outsource or Print In House (each changes the status and opens its page)
     if (st === 'scheduling') {
@@ -433,12 +448,8 @@
     // Step 4 — printing (in-house), monitored by the scheduler (§3.5 step 4, §3.6, §3.7)
     if (st === 'printing') {
       if (!inDept(this, 'scheduler')) return this.acC('Printing', note('Printing in-house on ' + (j.machine || 'a machine') + '.'));
-      return this.acC('Printing in-house', [this.acDL([['Machine', j.machine], ['Time slot', j.slot ? when(j.slot) : '—'], ['Due', j.deadline ? when(j.deadline) : '—']]),
-        null,
-        h('div', { key: 'b', style: { display: 'flex', flexDirection: 'column', gap: 8 } },
-          acts.finish ? Btn('Printing done — send to logistics', () => this.setState({ acForm: {}, acModal: { title: 'Printing done', body: () => [
-            h('label', { key: 'q', style: { display: 'flex', gap: 10, fontSize: 13.5, alignItems: 'flex-start', cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: !!this.acF('qc'), onChange: e => this.acSetF('qc', e.target.checked), style: { marginTop: 3 } }), 'The spec and print quality match the order.'),
-            h('div', { key: 'b' }, Btn('Send to logistics', () => act('finish', { qc: true }, 'Sent to logistics.'), 'primary', !this.acF('qc')))] } }), 'primary') : null)]);
+      return this.acC('Printing in Progress', [this.acDL([['Machine', j.machine], ['Time slot', j.slot ? when(j.slot) : '—'], ['Due', j.deadline ? when(j.deadline) : '—']]),
+        acts.finish ? h('div', { key: 'b' }, Btn('Ready to Ship', () => act('finish', { qc: true }, 'Ready to ship — sent to logistics.'), 'primary')) : null]);
     }
     if (st === 'outsourcing') return inDept(this, 'scheduler') ? null : this.acC('Printing', note('Outsourced to a printer.'));
     // Step 5 — logistics: 1 Received (printer jobs only) · 2 Print shipping label · 3 Shipping
@@ -456,38 +467,32 @@
     // Page 2 — print the shipping label; Page 3 — shipping (tracking number)
     if (st === 'printed' || st === 'logistics') {
       if (!inDept(this, 'logistics')) return this.acC('Logistics', note(st === 'printed' ? 'Printed — waiting for logistics.' : 'With logistics — being packed and shipped.'));
-      const labelled = !!((j.progress || {}).logistics || {}).labelled;
-      return st === 'logistics' && labelled ? this.pShipCard(j, pr, acts) : this.pLabelCard(j, acts);
+      return this.pLabelCard(j, acts);
     }
     // Shipped — complete when the customer or outlet receives it, or the scheduler confirms delivery
+    // Shipped: logistics marks it Delivered, or the customer / outlet marks it received
     if (st === 'dispatched') {
-      const toCustomer = (j.destination || {}).type === 'customer';
-      return this.acC('Shipped', [this.acDL([['Courier', j.courier], ['Tracking', j.tracking], ['To', ((j.destination || {}).name || '') + ((j.destination || {}).address ? ', ' + j.destination.address : '')]]),
-        note(toCustomer ? 'Complete when the customer confirms they received it, or when the scheduler confirms delivery.' : 'Complete when the outlet receives it.'),
-        toCustomer && acts.deliver && inDept(this, 'scheduler') ? h('div', { key: 'b' }, Btn('Delivered — mark complete', () => act('deliver', {}, 'Marked delivered.'), 'primary')) : null]);
+      const dv = acts.deliver && acts.deliver.enabled ? 'deliver' : acts.deliver_outlet && acts.deliver_outlet.enabled ? 'deliver_outlet' : null;
+      return this.acC('Shipped', [this.acDL([['To', ((j.destination || {}).name || '') + ((j.destination || {}).address ? ', ' + j.destination.address : '')], ['Parcels', j.parcels || 1], j.tracking ? ['Tracking', j.tracking] : null]),
+        dv && inDept(this, 'logistics') ? h('div', { key: 'b' }, Btn('Mark as Delivered', () => act(dv, {}, 'Marked as delivered.'), 'primary')) : null]);
     }
     if (st === 'at_hub') return this.acC('At the hub', note('This parcel was sent to a hub before hubs were removed from the flow. The hub team forwards it.'));
     if (st === 'ready_collect') return this.acC('At the outlet', note('Ready for the customer to collect.'));
-    if (st === 'completed') return this.acC('Completed', box('Delivered / collected.', 'ok'));
+    if (st === 'completed') return this.acC('Completed', note('Order Completed.'));
     return null;
   };
   const destLine = d => ((d || {}).name || '—') + ((d || {}).address ? ', ' + d.address : '');
   // Page 2 — print the shipping label, addressed as requested (outlet staff's request, or the website customer's own)
+  // (user, 2026-09-28) Ordered By · Deliver to (whoever placed the order) · Parcels (logistics decides once packed) ·
+  // one button: Print Shipping Label — it ships the job (outlet order → the outlet's Incoming)
   P.pLabelCard = function (j, acts) {
-    const rq = j.requestedBy || {};
-    const done = () => { this.acDrop('job_'); this.opsLoad(); this.setState({ acForm: {} }); };
-    // in-house jobs have no Received page: Printed receives it from production and opens shipping in one go
-    const printed = () => this.aFetchJ('/api/jobs/' + j.id + '/step', { group: 'logistics', key: 'labelled', done: true }).then(r => {
-      if (r.error) return this.acDone(r);
-      if (j.status !== 'printed') return this.acDone(r, 'Label printed.') && done();
-      return this.jPost('/api/jobs/' + j.id + '/transition', { action: 'receive', payload: {} }, 'Label printed.', done);
-    });
+    const by = j.orderedBy || {}; const d = (this.acGet('job_' + j.id, '/api/jobs/' + encodeURIComponent(j.id)) || {}).deliverTo || j.finalDestination || {};
+    const parcels = this.acF('parcels');
+    const ship = () => this.jPost('/api/jobs/' + j.id + '/ship-label', { parcels }, 'Shipping label printed — shipped.', () => { this.setState({ acForm: {} }); this.openJobDoc(j.id, 'shipping-label'); });
     return this.acC('Print shipping label', [
-      this.acDL([['Requested by', rq.type === 'outlet' ? 'Outlet staff' + (rq.outlet ? ' — ' + rq.outlet : '') : 'Customer (website order)'], ['Deliver to', destLine(j.destination)], ['Parcels', j.parcels || 1]]),
-      this.pSendTo(j),
-      h('div', { key: 'b', style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
-        Btn('Print Shipping Label (PDF)', () => this.openJobDoc(j.id, 'shipping-label')),
-        Btn('Printed', printed, 'primary', j.status === 'printed' && !acts.receive))]);
+      this.acDL([['Ordered By', by.type === 'outlet' ? 'Outlet — ' + (by.short || by.name) : (by.name || j.customer)], ['Deliver to', destLine(d)], d.phone ? ['Phone', d.phone] : null]),
+      FG('Parcels', h('input', { type: 'number', min: 1, value: parcels, placeholder: 'Number of parcels once fully packed', onChange: e => this.acSetF('parcels', e.target.value), style: inp }), 1),
+      h('div', { key: 'b' }, Btn('Print Shipping Label', ship, 'primary', !(Number(parcels) >= 1)))]);
   };
   // Page 3 — shipping: courier, tracking number, delivery order → Ship
   P.pShipCard = function (j, pr, acts) {
@@ -519,7 +524,7 @@
   P.pQuoteConfirm = function (j, ctx, picked) {
     // what the printers will see: no customer, deliver to Printoka Production, the approved artwork watermarked "PRINTOKA"
     const pr = ctx.pr || {}, art = pr.approvedArtwork;
-    const s = Object.assign({}, ctx.summary || { product: j.product, spec: j.spec, qty: j.qty }, { rows: [], artworks: art ? [{ name: art.name + ' (watermarked PRINTOKA)' }] : [] });
+    const s = Object.assign({}, ctx.summary || { product: j.product, spec: j.spec, qty: j.qty }, { rows: [], onUpload: null, artworks: art ? [{ name: art.name + ' (watermarked PRINTOKA)' }] : [] });
     const send = () => {
       this.setState({ qSending: true });
       const url = art ? (art.src === 'order' ? '/api/orders/' + art.orderId + '/files/' + art.id : '/api/jobs/' + j.id + '/files/' + art.id) : null;
@@ -557,10 +562,8 @@
       pr.po ? this.acDL([['Purchase order', pr.po], ['Printer delivers to', (j.destination || {}).name]]) : null,
       pr.printerDelivery ? this.acDL([['Printer shipped', when(pr.printerDelivery.at)], ['Delivery company', pr.printerDelivery.company], ['Tracking number', (pr.printerDelivery.tracking || []).join(', ')], pr.printerDelivery.document ? ['Delivery order', link(pr.printerDelivery.document.name, () => this.jDownload('/api/jobs/' + id + '/files/' + pr.printerDelivery.document.id, pr.printerDelivery.document.name))] : null]) : null,
       null,
-      // the scheduler pays the printer once Printoka has received the job
-      inDept(this, 'scheduler') && pr.awarded && !pr.paidAt && pr.status && pr.status.id === 'shipped' ? Btn('Mark printer paid', () => this.pModal('Mark printer paid', [['reference', 'Payment reference', 'e.g. IBG-7781']], v => this.jPost('/api/jobs/' + id + '/vendor-paid', v, 'Printer marked paid.', () => this.setState({ acModal: null }))), 'primary') : null,
-      pr.printerInvoice ? this.acDL([['Printer invoice', link('📄 ' + pr.printerInvoice.name, () => this.jDownload('/api/jobs/' + id + '/files/' + pr.printerInvoice.id, pr.printerInvoice.name))]]) : null,
-      pr.paidAt ? box('Printer paid.', 'ok') : null]);
+      pr.printerInvoice ? this.acDL([['Printer invoice', link('📄 ' + pr.printerInvoice.name, () => this.jDownload('/api/jobs/' + id + '/files/' + pr.printerInvoice.id, pr.printerInvoice.name))], pr.printerInvoice.amount ? ['Invoice amount', 'RM ' + Number(pr.printerInvoice.amount).toFixed(2)] : null,
+        ['Payment', pr.paidAt ? 'Paid ' + dmy(pr.paidAt) : pr.billedAt ? 'In the next Friday payment run (logistics)' : 'After logistics receives the goods']]) : null]);
     return { top: quoteTable, card };
   };
   // one printer's quote: the summary and Accept Quote (the scheduler's manual choice — nothing is awarded automatically)
@@ -590,35 +593,39 @@
     'Some fonts are not outlined or embedded',
     'The artwork size does not match the order size',
   ];
+  // the message: what prepress found (as plain sentences), then that it was amended and is attached for approval
+  const amendMessage = (picked, fold) => picked.map(x => x.replace(/, so .*$/, '').replace(/need converting/, 'requires conversion').replace(/\.?$/, '.')).concat(fold ? ['Please also check that the folding is correct.'] : [])
+    .concat(['We have made the amendment for your approval. Please refer to the attached.']).join(' ');
   P.pAmendedModal = function (j, order) {
-    const email = order && order.customer && order.customer.email;
-    this.setState({ acForm: { am: {} }, acModal: { title: 'Amended — ask the customer to approve', wide: true, body: () => {
+    const to = j.orderedBy || {}; const email = to.email || (order && order.customer && order.customer.email);
+    this.setState({ acForm: { am: {} }, acModal: { title: j.status === 'prepress_issue' ? 'Amendment required' : 'Require amendment', wide: true, body: () => {
       const am = this.acF('am') || {}; const setAm = (k, v) => this.acSetF('am', Object.assign({}, am, { [k]: v }));
       const picked = ARTWORK_ISSUES.filter(x => am[x]);
+      const msg = this.acF('amEdited') ? this.acF('amNote') : amendMessage(picked, !!this.acF('amFold'));
       const send = fileId => this.jPost('/api/jobs/' + j.id + '/transition', { action: 'flag_minor', payload: {
-        reason: picked.join('; ') || this.acF('amNote') || 'Artwork amended',
-        issues: picked.map(x => ({ text: x })), folding: !!this.acF('amFold'), note: this.acF('amNote') || '', fileId: fileId || undefined } },
-        email ? 'Pending approval — email sent to ' + email + '.' : 'Pending approval.', () => this.setState({ acModal: null, acForm: {} }));
+        reason: picked.join('; ') || msg || 'Artwork amended',
+        issues: picked.map(x => ({ text: x })), folding: !!this.acF('amFold'), note: msg, fileId: fileId || undefined } },
+        email ? 'Sent for approval to ' + email + '.' : 'Pending approval.', () => this.setState({ acModal: null, acForm: {} }));
       const go = () => this.acF('amFileData')
         ? this.aFetchJ('/api/jobs/' + j.id + '/proof', { name: this.acF('amFileName'), data: this.acF('amFileData') }).then(f => { if (this.acDone(f)) send(f.file.id); })
         : send(null);
       return [
+        this.acDL([['To', to.type === 'outlet' ? 'Outlet — ' + (to.name || '') : (to.name || j.customer)], ['Email', email || 'No email on file'], ['Phone', to.phone || '—']]),
         h('b', { key: 'h' }, 'What did you find?'),
         h('div', { key: 'l', style: { display: 'flex', flexDirection: 'column', gap: 8 } }, ARTWORK_ISSUES.map(x =>
           h('label', { key: x, style: { display: 'flex', gap: 10, alignItems: 'center', fontSize: 13.5, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: !!am[x], onChange: e => setAm(x, e.target.checked), style: { width: 17, height: 17 } }), x))),
         h('label', { key: 'fo', style: { display: 'flex', gap: 10, alignItems: 'center', fontSize: 13.5, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: !!this.acF('amFold'), onChange: e => this.acSetF('amFold', e.target.checked), style: { width: 17, height: 17 } }), 'Ask the customer to check the folding'),
-        FG('Amended file', this.jPickFile('amFile')),
-        FG('Note to the customer', ta(this.acF('amNote'), v => this.acSetF('amNote', v), 2)),
-        box(email ? 'A friendly approval email goes to ' + email + '. The customer replies to approve, or sends a new file.' : 'This order has no customer email. Please contact the customer directly.', email ? 'ok' : 'bad'),
-        h('div', { key: 'b' }, Btn(email ? 'Send for approval' : 'Mark pending approval', go, 'primary', !picked.length && !this.acF('amNote')))];
+        FG('Amended file', upBtn(this, 'amFile')),
+        FG('Note to ' + (to.type === 'outlet' ? 'the outlet' : 'the customer'), ta(msg, v => { this.acSetF('amNote', v); this.acSetF('amEdited', true); }, 5), 1, 'Sent as the email from print@printoka.com'),
+        h('div', { key: 'b' }, Btn('Send for approval', go, 'primary', !String(msg || '').trim()))];
     } } });
   };
   P.pRejectModal = function (j) {
     // major issue: prepress contacts the customer for a new file → Pending Customer Amendment
     const send = proofId => this.jPost('/api/jobs/' + j.id + '/transition', { action: 'reject_major', payload: { reason: this.acF('reason'), proof: proofId || undefined, suggestion: this.acF('suggestion') || undefined } }, 'Pending amendment.', () => this.setState({ acModal: null, acForm: {} }));
-    this.setState({ acForm: {}, acModal: { title: 'Request a new file', body: () => [
+    this.setState({ acForm: {}, acModal: { title: 'Request from Customer', body: () => [
       FG('Issue', ta(this.acF('reason'), v => this.acSetF('reason', v), 3), 1),
-      FG('Screenshot', this.jPickFile('proof')),
+      FG('Screenshot', upBtn(this, 'proof')),
       FG('Suggested correction', ta(this.acF('suggestion'), v => this.acSetF('suggestion', v), 3)),
       h('div', { key: 'b' }, Btn('Customer contacted — request sent', () => this.acF('proofData')
         ? this.aFetchJ('/api/jobs/' + j.id + '/proof', { name: this.acF('proofName'), data: this.acF('proofData') }).then(f => { if (this.acDone(f)) send(f.file.id); })
@@ -631,6 +638,45 @@
       q ? this.acDL([['Quote', 'RM ' + Number(q.amount).toFixed(2)], ['Production time', q.leadDays ? q.leadDays + ' days' : '—'], ['Deliver to', 'Printoka Production']]) : FG('Printer', h('select', { value: this.acF('vid'), onChange: e => this.acSetF('vid', e.target.value), style: inp }, [h('option', { key: '', value: '' }, 'Choose a printer…')].concat(vendors.map(v => h('option', { key: v.id, value: v.id }, v.name)))), 1),
       !q ? h('label', { key: 'c', style: { display: 'flex', gap: 10, fontSize: 13, color: '#8a4b00', background: '#fff8e6', borderRadius: 8, padding: '10px 12px', cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: !!this.acF('confirm'), onChange: e => this.acSetF('confirm', e.target.checked) }), 'This printer didn’t submit a quote yet. Please make sure it is internal production.') : null,
       h('div', { key: 'b' }, Btn(q ? 'Accept quote' : 'Confirm award', () => this.jPost('/api/jobs/' + j.id + '/award', { vendorId: q ? q.vendorId : this.acF('vid'), destType: 'production', confirmNoQuote: !q ? !!this.acF('confirm') : undefined }, q ? 'Quote accepted — purchase order sent to ' + q.vendorName + '.' : 'Job awarded.', () => this.setState({ acModal: null, acForm: {} })), 'primary', !q && (!this.acF('vid') || !this.acF('confirm'))))] } });
+  };
+
+  // ---------------------------------------------------------------- printer payments (logistics, weekly run)
+  // (user, 2026-09-26) goods received and accepted → the printer's invoice is credited; every Friday logistics finalises
+  // the invoices, pays by bank transfer and uploads the slip → the printer's statement is debited
+  const runDay = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+  P.pPayables = function () {
+    const d = this.acGet('p_pay', '/api/printer-payments'); if (!d) return [h('div', { key: 'l', style: { color: FAINT } }, 'Loading…')];
+    if (d.error) return [h('div', { key: 'e', style: { color: '#c0392b' } }, d.error)];
+    const due = d.printers.reduce((s, p) => s + p.due, 0);
+    return [h('h1', { key: 't', style: { fontSize: 34, fontWeight: 600, margin: '6px 0 0' } }, 'Printer Payments'),
+      this.pTiles([{ label: 'Next payment run', value: runDay(d.nextRun).split(' ').slice(0, 3).join(' '), icon: 'calendar', color: 'teal' },
+        { label: 'Printers to pay', value: d.printers.length, icon: 'printer', color: 'orange' },
+        { label: 'Amount due', value: 'RM ' + due.toFixed(2), icon: 'dollar-sign', color: 'red' }]),
+      h('div', { key: 'due' }, this.dataCard(['Printer', { label: 'Invoices', right: true }, 'Oldest received', { label: 'Amount due', right: true }, 'Status'],
+        d.printers.map(p => [link(p.vendor, () => this.acOpen({ kind: 'payable', id: p.vendorId })), String(p.invoices), dmy(p.oldest), h('b', null, 'RM ' + p.due.toFixed(2)), this.pillDot(p.missingInvoice ? 'Invoice missing' : 'Due ' + runDay(d.nextRun).split(' ')[0], p.missingInvoice ? 'bad' : 'warn')]),
+        { minWidth: 640, empty: 'Nothing to pay — every received job is paid.' })),
+      d.paid.length ? h('h2', { key: 'ph', style: { fontSize: 22, fontWeight: 600, margin: '8px 0 0' } }, 'Paid') : null,
+      d.paid.length ? h('div', { key: 'paid' }, this.dataCard(['Date', 'Payment', 'Printer', { label: 'Invoices', right: true }, { label: 'Amount', right: true }, 'Transfer slip'],
+        d.paid.map(p => [dmy(p.at), p.id + (p.reference ? ' · ' + p.reference : ''), link(p.vendor, () => this.acOpen({ kind: 'payable', id: p.vendorId })), String(p.invoices), 'RM ' + Number(p.amount).toFixed(2), p.slip ? link('📄 ' + p.slip.name, () => this.jDownload('/api/printer-payments/slip/' + p.id, p.slip.name)) : '—']), { minWidth: 700 })) : null];
+  };
+  P.pPayable = function (vid, tabs) {
+    const d = this.acGet('p_pay_' + vid, '/api/printer-payments/' + encodeURIComponent(vid)); if (!d) return [h('div', { key: 'l', style: { color: FAINT } }, 'Loading…')];
+    if (d.error) return [h('div', { key: 'e', style: { color: '#c0392b' } }, d.error)];
+    const pay = () => this.aFetchJ('/api/printer-payments/' + encodeURIComponent(vid), { slipData: this.acF('slipData'), slipName: this.acF('slipName'), reference: this.acF('payRef') || undefined })
+      .then(r => { if (this.acDone(r, 'Paid RM ' + (r.payment ? r.payment.amount.toFixed(2) : '') + ' — statement debited.')) { this.acDrop('p_pay'); this.setState({ acForm: {} }); } });
+    const main = [
+      this.acC('Invoices to pay', d.invoices.length ? [
+        this.dataCard(['Received', 'Job', 'PO', 'Invoice', { label: 'Amount', right: true }], d.invoices.map(x => [dmy(x.receivedAt), link('#' + x.jobId, () => this.acOpen({ kind: 'job', id: x.jobId })), x.po || '—',
+          x.invoice ? link('📄 ' + x.invoice.name, () => this.jDownload('/api/jobs/' + x.jobId + '/files/' + x.invoice.id, x.invoice.name)) : h('span', { style: { color: '#c71917' } }, 'Not uploaded'), 'RM ' + Number(x.amount).toFixed(2)]), { minWidth: 560 }),
+        this.acDL([['Total to pay', h('b', null, 'RM ' + d.due.toFixed(2))], ['Payment run', runDay(d.nextRun)]]),
+        FG('Transfer slip', upBtn(this, 'slip'), 1),
+        FG('Bank reference', h('input', { value: this.acF('payRef'), onChange: e => this.acSetF('payRef', e.target.value), placeholder: 'optional, e.g. IBG-7781', style: inp })),
+        h('div', { key: 'b' }, Btn('Mark as Paid', pay, 'primary', !this.acF('slipData')))] : note('Nothing to pay — every received job is paid.')),
+      this.acC('Statement of Account', h('div', null, this.stmtTable(d.statement)))];
+    const v = d.vendor, st = d.statement;
+    const aside = [this.acC('Printer', this.acDL([['Name', v.name], ['Email', v.email || '—'], ['Phone', v.phone || '—'], v.bank ? ['Bank', [v.bank.name, v.bank.account].filter(Boolean).join(' · ')] : null])),
+      this.acC('Balance', this.acDL([['Purchases', 'RM ' + st.totalCredit.toFixed(2)], ['Paid', 'RM ' + st.totalDebit.toFixed(2)], ['Owed to printer', h('b', null, 'RM ' + st.balance.toFixed(2))]]))];
+    return this.acSingle({ home: tabs[0], type: 'Printer Payments', title: v.name }, main, aside);
   };
 
   // ---------------------------------------------------------------- KPI (§7)

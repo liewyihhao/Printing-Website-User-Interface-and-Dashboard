@@ -230,13 +230,14 @@ function view(j, me) {
     v.canProcess = mineJob && ps === 'printer-assigned';                   // New Order → Mark as Processed
     v.canInvoice = mineJob && ps === 'processed';                          // Unbilled → upload the invoice (PDF)
     v.canShip = mineJob && (ps === 'invoiced' || ps === 'shipped-to-hub'); // Prepare for Shipping → shipping label + delivery details
-    v.printerInvoice = mineJob ? pub(o.printerInvoice) : null;
+    v.printerInvoice = mineJob && o.printerInvoice ? Object.assign(pub(o.printerInvoice), { amount: o.printerInvoice.amount || null }) : null;
     v.approvedArtwork = mineJob ? approvedArtwork(j) : null; // the non-watermarked, prepress-approved artwork — only for the awarded printer
   } else {
     v.requestRemarks = o.remarks || '';
     v.approvedArtwork = approvedArtwork(j); v.artworkPreview = pub(o.artworkPreview);
     v.quotes = (o.vendors || []).map(x => ({ vendorId: x.vendorId, vendorName: x.vendorName, location: vendorLocation(x.vendorId), amount: x.price, leadDays: x.leadDays, remarks: x.note || '', submittedAt: x.submittedAt, document: pub(x.document), awarded: x.vendorId === o.awardedTo }));
-    v.printerInvoice = pub(o.printerInvoice); v.processedAt = o.processedAt || null;
+    v.printerInvoice = o.printerInvoice ? Object.assign(pub(o.printerInvoice), { amount: o.printerInvoice.amount || null }) : null; v.processedAt = o.processedAt || null;
+    v.billedAt = o.billedAt || null; v.billAmount = o.billAmount != null ? o.billAmount : null; v.paymentId = o.paymentId || null;
     v.customer = orderDetails(j);
   }
   return v;
@@ -360,8 +361,11 @@ function uploadInvoice(jid, me, b) {
   if (printingStatus(j) !== 'processed') return { error: j.outsource.printerInvoice ? 'The invoice is already submitted.' : 'Mark the order as processed first.' };
   if (!b || !b.documentData) return { error: 'Please upload your invoice (PDF).' };
   if (!/\.pdf$/i.test(String(b.documentName || ''))) return { error: 'The invoice must be a PDF.' };
+  // the amount billed on the invoice goes to the printer's statement once Printoka receives the goods
+  const amount = Math.round(Number(b.amount) * 100) / 100;
+  if (!(amount > 0)) return { error: 'Enter the invoice amount.' };
   const f = saveBlob(path.join(ROOT, jid), { data: b.documentData, name: b.documentName }, 'I'); if (f.error) return f;
-  f.by = me.name; j.outsource.printerInvoice = f; j.outsource.invoicedAt = now();
+  f.by = me.name; f.amount = amount; j.outsource.printerInvoice = f; j.outsource.invoicedAt = now();
   store.logEvent({ actor: me.name, vendorId: co, role: 'printer', action: 'printer_invoice', jobId: jid, from: null, to: null, note: 'Invoice ' + f.name + ' — prepare for shipping' });
   store.save(); return { ok: true, message: 'Invoice submitted.' };
 }

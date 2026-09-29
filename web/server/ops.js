@@ -187,10 +187,9 @@ function claim(j, role, actor) {
 function handlers(j) {
   const o = j.orderId && store.order(j.orderId); const ow = j.owner || {}, at = j.ownerAt || {};
   const firstAt = (acts) => { const e = store.audit({ jobId: j.id }).find(x => acts.indexOf(x.action) >= 0); return e || null; };
-  const q = o && o.fromQuote && store.quote(o.fromQuote);
-  const orderBy = q && q.issuedBy ? 'Outlet — ' + q.issuedBy.name : o && o.outlet && o.createdByStaff ? 'Outlet — ' + o.createdByStaff : 'Online — ' + ((o && o.customer && o.customer.name) || j.customer);
+  const by = ordererOf(j); const orderBy = by.type === 'outlet' ? 'Outlet — ' + by.short : by.name;
   const printer = j.outsource && j.outsource.awardedTo ? ((j.outsource.vendors || []).find(v => v.vendorId === j.outsource.awardedTo) || {}).vendorName : null;
-  const dl = firstAt(['customer_received', 'receive_outlet', 'deliver']);
+  const dl = firstAt(['customer_received', 'receive_outlet', 'deliver', 'deliver_outlet']);
   const ev = a => { const e = firstAt(a); return e ? e.ts : null; };
   return [
     { part: 'Order', who: orderBy, at: (o && o.createdAt) || j.createdAt },
@@ -198,8 +197,33 @@ function handlers(j) {
     { part: 'Scheduler', who: ow.scheduler || null, at: at.scheduler || ev(['assign_inhouse', 'assign_outsource']) },
     { part: 'Printing', who: j.route === 'inhouse' ? 'In-house — ' + (j.machine || 'machine') : printer ? 'Printer — ' + printer : null, at: ev(['assign_inhouse', 'assign_outsource']) },
     { part: 'Logistics', who: ow.logistics || null, at: at.logistics || ev(['receive', 'dispatch']) },
-    { part: 'Delivery', who: dl ? (dl.action === 'customer_received' ? 'Customer — ' + dl.actor : dl.action === 'receive_outlet' ? 'Outlet — ' + dl.actor : 'Scheduler — ' + dl.actor) : null, at: dl ? dl.ts : null },
+    { part: 'Delivery', who: dl ? (dl.action === 'customer_received' ? 'Customer — ' + dl.actor : dl.action === 'receive_outlet' ? 'Outlet — ' + dl.actor : 'Logistics — ' + dl.actor) : null, at: dl ? dl.ts : null },
   ];
+}
+// who placed the order (user, 2026-09-28): an outlet (order converted from the outlet's quotation) or the website customer.
+// They get the artwork emails, and the parcel goes back to them.
+const outletShort = n => String(n || '').replace(/\s*\(.*\)\s*$/, '').replace(/\s+outlet$/i, '').trim();
+function ordererOf(j) {
+  const o = j.orderId && store.order(j.orderId);
+  const out = (o && o.outlet) || j.outlet || null;
+  if (out) {
+    const ol = outletById(out) || {}; const q = o && o.fromQuote && store.quote(o.fromQuote);
+    const staff = q && q.issuedBy && store.findCustomer(q.issuedBy.id);
+    return { type: 'outlet', id: ol.id || out, name: ol.name || String(out), short: outletShort(ol.name || out), email: ol.email || (staff && staff.email) || '', phone: ol.phone || (staff && staff.phone) || '', address: ol.address || '' };
+  }
+  const c = (o && o.customer) || {};
+  return { type: 'customer', name: c.name || j.customer || '', email: c.email || '', phone: c.phone || '' };
+}
+// where the parcel goes: the outlet for an outlet order, the pickup outlet the customer chose, else the customer's address
+function ordererDestination(j) {
+  const o = j.orderId && store.order(j.orderId); const by = ordererOf(j);
+  if (by.type === 'outlet') return destOf('outlet', by.id, j, o);
+  const ful = (o && o.fulfillment) || {};
+  if (ful.method === 'pickup' && ful.outlet) return destOf('outlet', ful.outlet, j, o);
+  const ship = o && o.shipTo && typeof o.shipTo === 'object' ? o.shipTo : null;
+  const addr = ship ? [ship.line1, ship.line2, [ship.postcode, ship.city].filter(Boolean).join(' '), ship.state].filter(Boolean).join(', ') : (o && typeof o.shipTo === 'string' ? o.shipTo : '');
+  const fd = j.customerDestination || (j.finalDestination && j.finalDestination.type === 'customer' ? j.finalDestination : null);
+  return { type: 'customer', id: null, name: (ship && ship.name) || by.name, address: addr || (fd && fd.address) || '', phone: (ship && ship.phone) || by.phone || (fd && fd.phone) || '' };
 }
 // who asked for this delivery: outlet staff (walk-in / counter order) or the customer on the website
 function requestedBy(j) {
@@ -219,34 +243,27 @@ function outletOfJob(j) {
 function requestArtworkApproval(j, payload, actor) {
   const issues = (Array.isArray(payload.issues) ? payload.issues : []).map(x => ({ text: String(x.text || '').slice(0, 200) })).filter(x => x.text);
   const file = payload.fileId ? (j.proofs || []).find(f => f.id === payload.fileId) : null;
-  const note = String(payload.note || '').trim().slice(0, 1000);
-  const o = j.orderId && store.order(j.orderId), c = (o && o.customer) || {};
-  const req = { issues, folding: !!payload.folding, note, file: file ? { id: file.id, name: file.name } : null, by: actor, at: now(), emailedTo: null, emailedAt: null };
-  if (c.email) {
-    const st = (store.settings().store) || {};
-    const who = String(actor || '').replace(/\s*\(.*\)\s*$/, '') || 'Our prepress team';
-    const lines = ['Hi ' + (c.name || 'there') + ',', '',
-      'Thank you so much for choosing Printoka! Before your order goes to print, our prepress team gave your artwork a careful check, and we’d love a quick thumbs-up from you.', '',
-      'Order: ' + (o.id || j.orderId), 'Item: ' + j.product + ' × ' + (j.qty || 0).toLocaleString() + ' (' + j.id + ')', ''];
-    if (issues.length) {
-      lines.push('Here’s what we noticed:');
-      issues.forEach(x => lines.push('  • ' + x.text));
-      lines.push('');
-    }
-    if (file) lines.push('We’ve amended the file for you and attached it (' + file.name + ') so you can see exactly how it will print.', '');
-    if (req.folding) lines.push('Could you also take a moment to check that the folding looks right to you?', '');
-    if (note) lines.push('A note from our team: ' + note, '');
-    lines.push('If everything looks good, simply reply to this email and we’ll send it to print straight away.', '',
-      'Would you rather make a change yourself? That’s perfectly fine. Just reply with your updated artwork and we’ll check it again for you right away.', '',
-      'If you have any questions at all, we’re always happy to help:',
-      '  ' + who + ', Printoka Prepress', '  ' + [st.supportPhone, st.supportEmail].filter(Boolean).join(' · '), '',
-      'Warm regards,', 'The Printoka Team');
-    const e = store.sendEmail('artwork-approval', { to: c.email, name: c.name, jobId: j.id, replyTo: st.supportEmail || null,
-      subject: 'A quick check on your artwork for order ' + (o.id || j.orderId),
+  // the prepress "Note to customer" IS the email (user, 2026-09-28), sent from print@printoka.com to whoever placed
+  // the order: the customer for a website order, the outlet for an outlet order
+  const note = String(payload.note || '').trim().slice(0, 2000);
+  const o = j.orderId && store.order(j.orderId); const to = ordererOf(j);
+  const req = { issues, folding: !!payload.folding, note, file: file ? { id: file.id, name: file.name } : null, by: actor, at: now(),
+    to: { type: to.type, name: to.type === 'outlet' ? to.name : to.name, email: to.email, phone: to.phone }, emailedTo: null, emailedAt: null };
+  if (to.email) {
+    const lines = ['Hi ' + (to.type === 'outlet' ? to.short + ' outlet team' : (to.name || 'there')) + ',', '', note || 'We have amended your artwork for your approval. Please refer to the attached.', '',
+      'Order: ' + ((o && o.id) || j.orderId), 'Item: ' + j.product + ' × ' + (j.qty || 0).toLocaleString() + ' (' + j.id + ')', '',
+      to.type === 'outlet' ? 'Please check it with your customer, then approve it in the outlet dashboard or reply to this email.' : 'You can approve it in My Orders on printoka.com, or simply reply to this email.', '',
+      'Warm regards,', 'Printoka Prepress', 'print@printoka.com'];
+    const e = store.sendEmail('artwork-approval', { from: 'print@printoka.com', to: to.email, name: to.name, jobId: j.id, replyTo: 'print@printoka.com',
+      subject: 'Please approve the artwork for order ' + ((o && o.id) || j.orderId),
       body: lines.join('\n'), attachments: file ? [{ id: file.id, name: file.name, jobId: j.id }] : [] });
-    if (e) { req.emailedTo = c.email; req.emailedAt = e.ts; }
+    if (e) { req.emailedTo = to.email; req.emailedAt = e.ts; }
   }
+  // each round is kept: "Amendment Required" sends a new message + file and the job stays in Pending Approval
+  if (j.approvalRequest) j.approvalHistory = (j.approvalHistory || []).concat([j.approvalRequest]);
   j.approvalRequest = req;
+  if (to.type === 'customer') custNotify(j, 'artwork_approval', 'Please approve your artwork', j.product + ': ' + (note || 'we amended your artwork for your approval.'));
+  else store.notify({ type: 'outlet', outlet: to.id }, { kind: 'artwork_approval', title: 'Artwork to approve — ' + j.id, body: j.product + ': ' + (note || 'prepress amended the artwork for approval.'), jobId: j.id });
 }
 // An order reaches the scheduler only when prepress has approved EVERY artwork on it (user, 2026-09-25):
 // an approved item waits as "Artwork Approved" while its siblings are still in prepress; the last approval releases them all.
@@ -268,6 +285,7 @@ function afterTransition(j, from, to, action, actor, payload) {
   payload = payload || {};
   normalizeJob(j);
   if (action === 'flag_minor') requestArtworkApproval(j, payload, actor);
+  if (from === 'prepress_issue' && (action === 'approve' || action === 'customer_approve') && j.approvalRequest) { j.approvalRequest.approvedBy = actor; j.approvalRequest.approvedAt = now(); j.approvalRequest.approvedVia = action === 'approve' ? 'prepress' : 'orderer'; }
   if (to === 'scheduling') { holdOrRelease(j, actor); if (j.status !== 'scheduling') { syncOrder(j.orderId); store.save(); return; } }
   j.statusAt[to] = now();
   if (to === 'printing') j.route = 'inhouse';
@@ -288,6 +306,8 @@ function afterTransition(j, from, to, action, actor, payload) {
   if (action === 'receive' || action === 'receive_hub' || action === 'receive_outlet' || action === 'deliver') { const legs = j.shipments || []; const last = legs[legs.length - 1]; if (last && !last.receivedAt) { last.receivedAt = now(); last.receivedBy = actor; } }
   // outsourced job received at production (§4.4): relabel it for its final destination
   if (action === 'receive') { j.destination = Object.assign({}, j.finalDestination); makeLabel(j); j.label.from = config().productionSite; }
+  // goods from a printer received and accepted → the printer's invoice is credited to its statement of account
+  if (action === 'receive' && j.outsource && j.outsource.awardedTo) require('./payables').onReceived(j, actor);
   if (to === 'inbound') store.notify({ type: 'role', role: 'logistics' }, { kind: 'inbound', title: 'Outsourced job on its way to production', body: j.id + ' · ' + j.product + ' for ' + j.customer + ' via ' + (j.courier || 'the printer') + (j.tracking ? ' · ' + j.tracking : '') + '. Receive and verify it when it arrives.', jobId: j.id });
   if (to === 'printed') store.notify({ type: 'role', role: 'logistics' }, { kind: 'to_pack', title: 'In-house job printed — receive it', body: j.id + ' · ' + j.product + ' for ' + j.customer + ' → ' + ((j.destination || {}).name || 'customer') + '.', jobId: j.id });
   if (to === 'scheduling') store.notify({ type: 'role', role: 'scheduler' }, { kind: 'to_schedule', title: 'Approved job ready to queue', body: j.id + ' · ' + j.product + ' for ' + j.customer + (j.deadline ? ' · due ' + j.deadline.slice(0, 10) : '') + '.', jobId: j.id });
@@ -383,6 +403,26 @@ function sendTo(jid, role, actor, body) {
   makeLabel(j); j.label.from = config().productionSite;
   store.logEvent({ actor, role, action: 'send_to', jobId: jid, from: null, to: null, note: 'Send to ' + (type === 'outlet' ? d.name : 'customer — ' + (d.address || d.name)) });
   store.save(); return { job: j };
+}
+
+// Print Shipping Label (user, 2026-09-28): logistics enters the parcels; the label is addressed to whoever placed the
+// order and printing it ships the job (in-house jobs are received in the same step — they have no Received page)
+function shipLabel(jid, role, actor, body) {
+  const j = store.job(jid); if (!j) return { error: 'Job not found' };
+  if (['logistics_staff', 'logistics_manager', 'production_director'].indexOf(role) < 0) return { error: 'Only logistics prints the shipping label.' };
+  if (['printed', 'logistics'].indexOf(j.status) < 0) return { error: j.status === 'inbound' ? 'Receive the job first.' : 'This job is not waiting for its shipping label.' };
+  const parcels = Math.floor(Number(body && body.parcels));
+  if (!(parcels >= 1)) return { error: 'Enter the number of parcels.' };
+  normalizeJob(j);
+  if (j.status === 'printed') { const r = transition(jid, role, actor, 'receive', {}); if (r.error) return r; }
+  const d = ordererDestination(j);
+  if (d.type === 'customer' && !d.address) return { error: 'This order has no delivery address.' };
+  j.parcels = parcels; j.finalDestination = Object.assign({}, d); j.destination = Object.assign({}, d);
+  makeLabel(j); j.label.from = config().productionSite;
+  j.progress = j.progress || {}; j.progress.logistics = Object.assign({}, j.progress.logistics, { labelled: { at: now(), by: actor } });
+  const r = transition(jid, role, actor, 'dispatch', {});
+  if (r.error) { store.save(); return r; }
+  return { job: store.job(jid) };
 }
 
 // ---- award (quoted, or Qn 752 CF2 direct award without a submitted quote) ------
@@ -635,5 +675,5 @@ function individual(me, staffId) {
   return { performance: r, staff: individualStaff(me) };
 }
 
-module.exports = { requestedBy, sendTo,individual, individualStaff, config, saveConfig, migrate, normalizeJob, makeLabel, syncOrder, onOrderCreated, afterTransition, transition, setStep, sendInternal, award, kpi, sales, hubPerformance, actions, hubById, outletById, STEP_GROUPS, PROGRESS_LABEL,
+module.exports = { requestedBy, ordererOf, ordererDestination, shipLabel, sendTo, individual, individualStaff, config, saveConfig, migrate, normalizeJob, makeLabel, syncOrder, onOrderCreated, afterTransition, transition, setStep, sendInternal, award, kpi, sales, hubPerformance, actions, hubById, outletById, STEP_GROUPS, PROGRESS_LABEL,
   reportFigures, submitReport, listReports, outletOfJob, destOf, claim, handlers };

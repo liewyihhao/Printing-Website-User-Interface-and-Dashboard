@@ -15,6 +15,7 @@ const admin = require('./admin');
 const files = require('./files');
 const outlet = require('./outlet');
 const supplier = require('./supplier');
+const payables = require('./payables');
 ops.migrate();
 const content = require('./content');
 const seoProduct = require('./seo-product');
@@ -39,6 +40,7 @@ function jobView(j, role) {
     queue: (D.STATUS[j.status] || {}).queue,
     actions: role ? D.availableActions(j, role) : [],
     requestedBy: ops.requestedBy(j),
+    orderedBy: ops.ordererOf(j),
   });
 }
 
@@ -100,7 +102,7 @@ async function api(req, res, pathname, query) {
     const acct = o && o.userId ? store.findCustomer(o.userId) : null;
     // the other items on the same order (an order goes to the scheduler only when every artwork is approved)
     const siblings = j.orderId ? store.jobs().filter(x => x.orderId === j.orderId && x.id !== j.id).map(x => ({ id: x.id, product: x.product, status: x.status, statusLabel: (D.STATUS[x.status] || {}).label || x.status })) : [];
-    return send(res, 200, { job: jobView(j, role), siblings, handlers: ops.handlers(j), printing: supplier.view(j, me0), audit: store.audit({ jobId: seg[1] }), order: o && me0.type !== 'hub' ? { id: o.id, customer: o.customer, shipTo: o.shipTo, fulfillment: o.fulfillment, payment: o.payment, total: o.total, progressLabel: o.progressLabel, createdAt: o.createdAt, items: o.items, files: (o.files || []).filter(f => f.kind === 'artwork'),
+    return send(res, 200, { job: jobView(j, role), siblings, handlers: ops.handlers(j), deliverTo: ops.ordererDestination(j), printing: supplier.view(j, me0), audit: store.audit({ jobId: seg[1] }), order: o && me0.type !== 'hub' ? { id: o.id, customer: o.customer, shipTo: o.shipTo, fulfillment: o.fulfillment, payment: o.payment, total: o.total, progressLabel: o.progressLabel, createdAt: o.createdAt, items: o.items, files: (o.files || []).filter(f => f.kind === 'artwork'),
       fromQuote: o.fromQuote || null, outlet: o.outlet || null, channel: o.channel || 'online', account: acct ? { name: acct.name, email: acct.email, phone: acct.phone || '', tier: acct.tier || 'Standard', since: acct.createdAt || null, disabled: !!acct.disabled } : null } : null });
   }
   // ---- printers & hubs (original printoka-3rd-party-supplier flow) ----
@@ -135,7 +137,8 @@ async function api(req, res, pathname, query) {
     if (seg[2] === 'vendor-invoice') return me0.type === 'vendor' ? out(supplier.uploadInvoice(seg[1], me0, b)) : send(res, 403, { error: 'printers only' });
     if (seg[2] === 'ship-to-hub') return me0.type === 'vendor' ? out(supplier.shipToHub(seg[1], me0, b)) : send(res, 403, { error: 'printers only' });
     if (seg[2] === 'delivery') return me0.type === 'vendor' ? send(res, 403, { error: 'not available to printers' }) : out(supplier.deliveryDetails(seg[1], me0, role, b));
-    if (seg[2] === 'vendor-paid') return APPROVERS.indexOf(role) >= 0 ? out(supplier.markPaid(seg[1], actor, role, b)) : send(res, 403, { error: 'Only the scheduler pays printers.' });
+    // printers are paid by logistics in the weekly payment run (Printer Payments), not per job
+    if (seg[2] === 'vendor-paid') return send(res, 403, { error: 'Printers are paid by logistics in Printer Payments.' });
   }
   // POST /api/jobs/:id/transition  { action, payload }
   if (seg[0] === 'jobs' && seg[2] === 'transition' && req.method === 'POST') {
@@ -149,6 +152,11 @@ async function api(req, res, pathname, query) {
   // POST /api/jobs/:id/step  { group, key, done, note }  — interactive progress forms
   if (seg[0] === 'jobs' && seg[2] === 'step' && req.method === 'POST') {
     const b = await readBody(req); const r = ops.setStep(seg[1], b.group, b.key, b.done !== false, role, actor, b.note);
+    return r.error ? send(res, 400, r) : send(res, 200, { ok: true, job: jobView(r.job, role) });
+  }
+  // POST /api/jobs/:id/ship-label  { parcels }  — Print Shipping Label: addressed to whoever placed the order, and ships the job
+  if (seg[0] === 'jobs' && seg[2] === 'ship-label' && req.method === 'POST') {
+    const r = ops.shipLabel(seg[1], role, actor, await readBody(req));
     return r.error ? send(res, 400, r) : send(res, 200, { ok: true, job: jobView(r.job, role) });
   }
   // POST /api/jobs/:id/send-to  { type: 'customer'|'outlet', outletId }  — logistics picks where the parcel goes before shipping
@@ -380,6 +388,28 @@ async function api(req, res, pathname, query) {
     if (r.error) return send(res, 400, r);
     return send(res, 200, { ok: true, order: store.orderView(seg[1]) });
   }
+  // POST /api/orders/:id/approve-artwork { jobId } — the customer (website order) or the outlet (outlet order) approves
+  // the artwork prepress amended (Pending Approval → Artwork Approved)
+  if (seg[0] === 'orders' && seg[2] === 'approve-artwork' && req.method === 'POST') {
+    const am = store.sessionCustomer(token); const o = store.order(seg[1]); const b = await readBody(req);
+    if (!am || !o || (o.jobIds || []).indexOf(b.jobId) < 0) return send(res, 403, { error: 'Not allowed.' });
+    const mine = am.type === 'customer' ? o.userId === am.id : am.type === 'outlet' ? !!o.outlet && o.outlet === am.outlet : false;
+    if (!mine) return send(res, 403, { error: 'Only the customer or outlet who placed the order can approve its artwork.' });
+    const r = ops.transition(b.jobId, am.type === 'customer' ? 'customer' : D.opsRoleFor(am), am.name || am.email, 'customer_approve', {});
+    if (r.error) return send(res, 400, r);
+    return send(res, 200, { ok: true, order: store.orderView(seg[1]) });
+  }
+  // GET /api/orders/:id/amended/:jobId/:fileId — the amended artwork prepress sent for approval (customer / outlet / staff)
+  if (seg[0] === 'orders' && seg[2] === 'amended' && seg[3] && seg[4]) {
+    const am = store.sessionCustomer(token); const o = store.order(seg[1]); const jj = store.job(seg[3]);
+    if (!am || !o || !jj || (o.jobIds || []).indexOf(jj.id) < 0 || am.type === 'vendor' || am.type === 'hub') return send(res, 403, { error: 'Not allowed.' });
+    if ((am.type === 'customer' && o.userId !== am.id) || (am.type === 'outlet' && o.outlet !== am.outlet)) return send(res, 403, { error: 'Not allowed.' });
+    const sent = [jj.approvalRequest].concat(jj.approvalHistory || []).filter(Boolean).some(x => x.file && x.file.id === seg[4]);
+    if (!sent) return send(res, 404, { error: 'File not found.' });
+    const r = supplier.readJobFile(jj, seg[4], { type: 'staff' }); if (r.error) return send(res, r.code || 400, { error: r.error });
+    res.writeHead(200, { 'Content-Type': r.type, 'Content-Disposition': 'inline; filename="' + r.file.name.replace(/"/g, '') + '"', 'Cache-Control': 'private, no-store' });
+    return res.end(r.data);
+  }
   // POST /api/orders/:id/received — the customer confirms their shipped order arrived (completes the shipment)
   if (seg[0] === 'orders' && seg[2] === 'received' && req.method === 'POST') {
     const cm = store.sessionCustomer(token); const o = store.order(seg[1]);
@@ -522,6 +552,21 @@ async function api(req, res, pathname, query) {
   // ---- outsource / vendor quotation flow ----
   // printer companies; ?job=ID → only the printers that make this product and can do its finishing (+ who is left out)
   if (seg[0] === 'vendors' && !seg[1]) { const vj = query.job && store.job(query.job); if (vj) return send(res, 200, supplier.vendorsForJob(vj)); return send(res, 200, { vendors: store.vendorAccounts().filter(v => !v.vendorId).map(v => ({ id: v.id, name: v.name, internal: !!v.internal })) }); }
+  // ---- printer statement of account (accounts payable) ----
+  // logistics (and the director) run the weekly payment; a printer reads its own statement
+  if (seg[0] === 'printer-payments') {
+    const pm = store.sessionCustomer(token); if (!pm) return send(res, 401, { error: 'sign-in required' });
+    const outp = r => send(res, r && r.error ? (r.code || 400) : 200, r);
+    if (seg[1] === 'slip' && seg[2]) { const r = payables.readSlip(seg[2], pm); if (r.error) return outp(r); res.writeHead(200, { 'Content-Type': r.type, 'Content-Disposition': 'inline; filename="' + r.file.name.replace(/"/g, '') + '"', 'Cache-Control': 'private, no-store' }); return res.end(r.data); }
+    if (['logistics_staff', 'logistics_manager', 'production_director'].indexOf(D.opsRoleFor(pm)) < 0) return send(res, 403, { error: 'Only logistics pays printers.' });
+    if (!seg[1]) return outp(payables.summary());
+    if (req.method === 'POST') return outp(payables.pay(seg[1], pm, await readBody(req)));
+    return outp(payables.detail(seg[1]));
+  }
+  if (seg[0] === 'vendor' && seg[1] === 'statement') {
+    const vm = store.sessionCustomer(token); if (!vm || vm.type !== 'vendor') return send(res, 401, { error: 'printer sign-in required' });
+    return send(res, 200, { statement: payables.statement(vm.vendorId || vm.id) });
+  }
   if (seg[0] === 'vendor' && seg[1] === 'requests') {
     const me = store.sessionCustomer(token); if (!me || me.type !== 'vendor') return send(res, 401, { error: 'vendor sign-in required' });
     return send(res, 200, { jobs: store.vendorRequests(me.vendorId || me.id).filter(j => supplier.vendorCanSee(j, me)).map(j => Object.assign(supplier.vendorJob(j, me), { printing: supplier.listRow(j, me) })), company: me.vendorId || me.id, canQuote: me.role !== 'printer_staff' });

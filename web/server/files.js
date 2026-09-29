@@ -43,7 +43,12 @@ function saveFile(oid, b, me) {
   if (kind === 'artwork') {
     it.artworks = (it.artworks || []).filter(a => !/^pending-upload/.test(a)).concat([name]);
     const j = store.job((o.jobIds || [])[line - 1]);
-    if (j && (!j.artwork || !j.artwork.file || /^pending-upload/.test(j.artwork.file) || ['intake', 'prepress', 'prepress_issue'].indexOf(j.status) >= 0)) j.artwork = Object.assign({}, j.artwork, { file: name, fileId: id, checkStatus: 'pending', uploadedAt: now() });
+    if (j && (!j.artwork || !j.artwork.file || /^pending-upload/.test(j.artwork.file) || ['intake', 'prepress', 'prepress_issue', 'rejected'].indexOf(j.status) >= 0)) j.artwork = Object.assign({}, j.artwork, { file: name, fileId: id, checkStatus: 'pending', uploadedAt: now() });
+    // Pending Amendment: the new file goes straight back to the preflight check (user, 2026-09-28)
+    if (j && j.status === 'rejected') {
+      const D = require('./domain'); const role = me.type === 'customer' ? 'customer' : D.opsRoleFor(me);
+      if (role) require('./ops').transition(j.id, role, me.name || me.email, 'resubmit', { file: name });
+    }
   } else { o.payment = Object.assign({}, o.payment, { proof: name, proofFileId: id, proofAt: now() }); }
   store.logEvent({ actor: me.name || me.email, role: me.type, action: kind === 'proof' ? 'payment_proof' : 'artwork_upload', jobId: kind === 'artwork' ? (o.jobIds || [])[line - 1] || null : null, from: null, to: null, note: oid + ' · ' + name + ' (' + Math.round(buf.length / 1024) + ' KB)' });
   if (kind === 'proof') store.notify({ type: 'role', role: 'prepress' }, { kind: 'payment_proof', title: 'Payment proof uploaded', body: 'Order ' + oid + ' has a bank-in slip to validate.', orderId: oid });
