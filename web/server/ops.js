@@ -448,7 +448,8 @@ function award(jid, role, actor, body) {
     if (body.leadDays != null && body.leadDays !== '') v.leadDays = Number(body.leadDays) || 0;
     v.directAward = true;
   }
-  const po = 'PO-' + (jid.replace(/[^0-9]/g, '').slice(0, 5) || '00000') + '-' + Math.floor(Math.random() * 900 + 100);
+  // the purchase order to the printer carries the job number (PO-K7M2Q9XA-1): one number from order to delivery
+  const po = 'PO-' + jid;
   const prev = JSON.stringify(j.outsource);
   j.outsource.awardedTo = vendor.id; j.outsource.status = 'awarded'; j.outsource.po = po; j.outsource.awardedAt = now(); j.outsource.direct = !quoted;
   // where the printer delivers (§3.5): to production (logistics receives, repacks, relabels, delivers),

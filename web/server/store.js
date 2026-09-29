@@ -257,11 +257,30 @@ function freeJobNumber(db) {
   for (let n = 10000; n < 100000; n++) if (!used[n]) return n;
   return 100000 + (db.jobs || []).length;
 }
+// (user, 2026-09-29) every order and quotation number is 8 random letters + digits (e.g. K7M2Q9XA / Q-K7M2Q9XA),
+// never repeated: each code ever issued is kept in db.codeRegistry (fresh-start keeps it), and the same code is
+// carried from the quote to the order and every job on it (K7M2Q9XA-1, K7M2Q9XA-2 …) until delivery.
+// "PO" is only for the purchase orders sent to printers.
+const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no O/0 or I/1, so a code read aloud or retyped is never ambiguous
+function codeTaken(db, code) {
+  if ((db.codeRegistry || {})[code]) return true;
+  return (db.orders || []).some(o => o.id === code) || (db.quotes || []).some(q => String(q.id).replace(/^Q-?/, '') === code) || (db.jobs || []).some(j => String(j.id).split('-')[0] === code);
+}
+function newCode(db) {
+  for (;;) {
+    let c = ''; const b = crypto.randomBytes(8);
+    for (let i = 0; i < 8; i++) c += CODE_CHARS[b[i] % CODE_CHARS.length];
+    if (!/[A-Z]/.test(c) || !/[0-9]/.test(c)) continue; // letters and numbers combined
+    if (!codeTaken(db, c)) return claimCode(db, c);
+  }
+}
+function claimCode(db, code) { db.codeRegistry = db.codeRegistry || {}; db.codeRegistry[code] = now(); return code; }
 function createJob(body) {
   const db = load();
-  const jid = 'J-' + freeJobNumber(db) + '-1';
+  const code = newCode(db);
+  const jid = code + '-1';
   const j = {
-    id: jid, orderId: 'O-' + jid.slice(2, 7), channel: body.channel || 'outlet',
+    id: jid, orderId: code, channel: body.channel || 'outlet',
     customer: body.customer || 'Walk-in customer', product: productName(body.product || 'Business Card'),
     spec: body.spec || '', qty: Number(body.qty) || 100, price: Number(body.price) || 0,
     status: 'intake', paymentValidated: !!body.paymentValidated, paymentValidatedAt: body.paymentValidated ? now() : null,
@@ -280,9 +299,9 @@ function orders() { const db = load(); if (!db.orders) db.orders = []; return db
 function order(oid) { return orders().find(o => o.id === oid); }
 function createOrder(body) {
   const db = load();
-  const yr = new Date().getFullYear();
-  const num = freeJobNumber(db);
-  const oid = 'PO-' + yr + '-' + num;
+  // the order number: the quote's own 8 characters when it comes from a quotation (Q-K7M2Q9XA → K7M2Q9XA), else a new code
+  const fromQ = body.fromQuote ? String(body.fromQuote).replace(/^Q-?/, '') : '';
+  const oid = /^[A-Z0-9]{8}$/.test(fromQ) && !(db.orders || []).some(o => o.id === fromQ) ? claimCode(db, fromQ) : newCode(db);
   const cust = body.customer || {};
   const items = (body.items || []).map((it, i) => ({
     lineNo: i + 1, productId: it.productId, product: productName(it.product || it.name), spec: it.spec || '',
@@ -300,7 +319,7 @@ function createOrder(body) {
   // Every order (website, or converted from an outlet quote) lands in prepress as a New Order: prepress checks the
   // order details, the payment and the customer, then marks it processed → Preflight (user, 2026-09-25).
   items.forEach(it => {
-    const jid = 'J-' + num + '-' + it.lineNo;
+    const jid = oid + '-' + it.lineNo;   // every job carries the order number
     const j = {
       id: jid, orderId: oid, channel: 'online', customer: cust.name || 'Online customer',
       product: it.product, spec: it.spec, specLines: it.specLines, productionTime: it.productionTime, qty: it.qty, price: it.lineTotal, status: 'intake',
@@ -567,7 +586,7 @@ function submitVendorQuote(jobId, vendorId, body) {
 function awardVendorPO(jobId, vendorId, actor) {
   const j = job(jobId); if (!j || !j.outsource) return { error: 'no quote request' };
   const v = j.outsource.vendors.find(x => x.vendorId === vendorId && x.submittedAt); if (!v) return { error: 'that vendor has not submitted a quote' };
-  const po = 'PO-' + (jobId.replace(/[^0-9]/g, '').slice(0, 5) || '00000') + '-' + Math.floor(Math.random() * 900 + 100);
+  const po = 'PO-' + jobId;   // the printer's purchase order carries the job number
   j.outsource.awardedTo = vendorId; j.outsource.status = 'awarded'; j.outsource.po = po; j.outsource.awardedAt = now();
   j.outsource.label = { id: 'LBL-' + po, po, vendor: v.vendorName, customer: j.customer, order: j.orderId, dest: (j.fulfillmentOutlet || 'KL Damansara Outlet'), product: j.product, qty: j.qty };
   j.status = 'outsourcing';
@@ -583,7 +602,7 @@ function quotes() { const db = load(); if (!db.quotes) db.quotes = []; return db
 function quote(qid) { return quotes().find(q => q.id === qid); }
 function quotesForUser(userId) { return quotes().filter(q => q.userId === userId); }
 // quotation ticket numbers: "Q" + 8 digits (user, 2026-09-28)
-function newQuoteId() { let id; do { id = 'Q' + String(10000000 + Math.floor(Math.random() * 89999999)); } while (quotes().some(q => q.id === id)); return id; }
+function newQuoteId() { return 'Q-' + newCode(load()); }
 function createQuote(body, user) {
   const qid = newQuoteId();
   const cust = body.customer || (user ? { name: user.name, email: user.email, phone: user.phone, company: user.company } : {});

@@ -2004,7 +2004,7 @@ class Component extends DCLogic {
           h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.5 } }, this.catName(j.product ? (this.pkProducts().find(p => p.name === j.product) || {}).id : null) || j.product),
           h('div', { style: { fontSize: 12, color: FAINT, lineHeight: 1.5 } }, j.spec),
           h('div', { style: { fontSize: 12, color: FAINT, marginTop: 3 } }, this.money(j.price || 0) + ' · qty ' + (j.qty || 0).toLocaleString() + (j.paymentValidated ? ' · paid' : ' · unpaid')),
-          (j.orderId && j.orderId.indexOf('PO-') === 0) ? h('span', { 'data-go': 'vieworder:' + j.orderId, style: { fontSize: 11.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'Open order ' + j.orderId + ' →') : null)),
+          (j.orderId && /^(PO-|[A-Z0-9]{8}$)/.test(j.orderId)) ? h('span', { 'data-go': 'vieworder:' + j.orderId, style: { fontSize: 11.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'Open order ' + j.orderId + ' →') : null)),
       owner && h('div', { style: { fontSize: 11.5, color: FAINT } }, 'Owner ' + owner),
       acts.length ? h('div', { style: { display: 'flex', gap: 7, flexWrap: 'wrap', borderTop: '1px solid ' + LINE, paddingTop: 10 } },
         acts.some(a => a.action === 'approve' || a.action === 'flag_minor')
@@ -5119,7 +5119,7 @@ class Component extends DCLogic {
     const o = this.state.trackOrder;
     const STAGES = ['Order received', 'Prepress check', 'In production', 'Shipped', 'Delivered'];
     const lookup = h('div', { key: 'lk', style: { display: 'flex', gap: 8, flexWrap: 'wrap', maxWidth: 460, marginBottom: 22 } },
-      h('input', { placeholder: 'Order number (e.g. PO-2026-04417)', value: this.state.trackInput != null ? this.state.trackInput : (this.state.order ? this.state.order.id : ''),
+      h('input', { placeholder: 'Order number (e.g. K7M2Q9XA)', value: this.state.trackInput != null ? this.state.trackInput : (this.state.order ? this.state.order.id : ''),
         onChange: e => this.setField('trackInput', e.target.value), style: { flex: 1, minWidth: 200, font: '400 14px Montserrat,sans-serif', padding: '11px 13px', border: '1px solid #eaeaea', borderRadius: 8 } }),
       h('span', { onClick: () => this.trackLookup(this.state.trackInput != null ? this.state.trackInput : (this.state.order ? this.state.order.id : '')),
         style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 14, padding: '11px 20px', borderRadius: 8, cursor: 'pointer' } }, 'Track'));
