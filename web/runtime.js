@@ -61,7 +61,7 @@
                   img('assets/icons/user.svg', { height: 18, width: 'auto', display: 'block' }), 'Login/ Signup'),
             h('span', { 'data-go': 'cart', style: { position: 'relative', display: 'flex', cursor: 'pointer' } },
               img('assets/icons/cart.svg', { height: 19, width: 'auto', display: 'block' }),
-              h('span', { style: { position: 'absolute', top: -6, right: -9, background: TEAL, color: '#fff', fontSize: 10, fontWeight: 700, borderRadius: 9, padding: '1px 5px' } }, v.cartCount)),
+              v.cartCount ? h('span', { style: { position: 'absolute', top: -6, right: -9, background: TEAL, color: '#fff', fontSize: 10, fontWeight: 700, borderRadius: 9, padding: '1px 5px' } }, v.cartCount) : null),
             h('span', { 'data-go': '_country', style: { display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' } },
               img(v.isSG ? 'assets/icons/flag-sg.jpg' : v.isBN ? 'assets/icons/flag-bn.jpg' : 'assets/icons/flag-my.jpg',
                 { height: 15, width: 22, objectFit: 'cover', display: 'block' }), v.countryLabel),

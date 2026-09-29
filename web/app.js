@@ -448,7 +448,7 @@ class Component extends DCLogic {
     if (v.indexOf('dialog:') === 0) return this.setState({ dialog: v.slice(7) });
     // Real pricing engine: product switch + per-field config change (values may contain ':')
     if (v.indexOf('prod:') === 0) return this.setState({ prodId: Number(v.slice(5)), cfg: {}, qty: 1000, qtyChosen: false });
-    if (v.indexOf('open:') === 0) { const pid = Number(v.slice(5)); if (typeof window !== 'undefined') window.scrollTo(0, 0); this.pushUrl(this.productPath(pid) || '/'); return this.setState({ prodId: pid, cfg: {}, qty: 1000, qtyChosen: false, route: 'product', megaOpen: false }); }
+    if (v.indexOf('open:') === 0) { const pid = Number(v.slice(5)); if (typeof window !== 'undefined') window.scrollTo(0, 0); this.pushUrl(this.productPath(pid) || '/'); return this.setState({ prodId: pid, cfg: {}, cfgFixed: {}, qty: 1000, qtyChosen: false, route: 'product', megaOpen: false }); }
     if (v.indexOf('catopen:') === 0) { const cf = v.slice(8); if (typeof window !== 'undefined') window.scrollTo(0, 0); this.pushUrl(cf === 'all' ? '/products' : '/products/' + cf); return this.setState({ catFilter: cf, route: 'category', megaOpen: false }); }
     // packaging: library landing + separate sub-pages (configure/quote/dielines) with their own URLs
     if (v === 'packaging') { if (typeof window !== 'undefined') window.scrollTo(0, 0); this.pushUrl('/packaging'); return this.setState({ route: 'packaging', pkTab: 'library', megaOpen: false }); }
@@ -1265,7 +1265,7 @@ class Component extends DCLogic {
     this.setState({ placing: true, orderErr: null });
     fetch('/api/orders', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify(body) })
       .then(r => r.json()).then(d => {
-        if (d && d.order) { this.setState({ order: d.order, placing: false, cart: [], coupon: null, cartCoupon: '', couponMsg: null, coStep: 1, coPay: null }); this.saveCart([]); this.go('confirm'); this.loadUserOrders(); this.loadAccount();
+        if (d && d.order) { this.setState({ order: d.order, placing: false, cart: [], coupon: null, cartCoupon: '', couponMsg: null, coStep: 1, coPay: null }); this.saveCart([]); if (typeof window !== 'undefined') window.scrollTo(0, 0); this.setState({ route: 'track', trackInput: d.order.id, trackOrder: null }); this.trackLookup(d.order.id); this.loadUserOrders(); this.loadAccount();
           fetch('/api/auth/me', { headers: this.authHeaders() }).then(r => r.ok ? r.json() : null).then(m => { if (m && m.customer) this.setState({ user: m.customer }); }).catch(() => {}); }
         else this.setState({ placing: false, orderErr: (d && d.error) || 'Could not place the order.' });
       }).catch(() => this.setState({ placing: false, orderErr: 'Network error — please try again.' }));
@@ -1864,7 +1864,24 @@ class Component extends DCLogic {
     if (!this.pkProducts().length) { this._urlPending = true; return; }
     this._urlPending = false;
     const pid = this.pkIdBySlug(segs[0]);
-    if (pid != null) { if (typeof window !== 'undefined') window.scrollTo(0, 0); return this.setState({ prodId: pid, cfg: {}, qty: 1000, qtyChosen: false, sizeConfirmed: false, route: 'product' }); }
+    if (pid != null) {
+      if (typeof window !== 'undefined') window.scrollTo(0, 0);
+      // (user, 2026-09-29) the type picked on the product page ("Choose the type … to configure") arrives as
+      // ?<field>=<value>: it is set for the customer and that question is not asked again
+      const cfg = {}, fixed = {};
+      try {
+        const prod = this.pkProducts().find(p => p.id === pid), E = this.pkEngine();
+        new URLSearchParams(window.location.search).forEach((v, k) => {
+          const f = prod && (prod.fields || []).find(x => x.key === k); if (!f || !v) return;
+          const opts = ((E && E.localOptions(prod, k, {})) || f.options || []).map(o => Array.isArray(o) ? o[0] : o);
+          const lab = ((CFG_OVERRIDES[prod.name] || {}).optLabel || {})[k] || {};
+          const norm = x => String(x).toLowerCase().replace(/[^a-z0-9]/g, '');
+          const hit = opts.find(o => norm(o) === norm(v) || norm(lab[o] || '') === norm(v) || norm(o).indexOf(norm(v)) === 0);
+          if (hit != null) { cfg[k] = hit; fixed[k] = hit; }
+        });
+      } catch (e) {}
+      return this.setState({ prodId: pid, cfg, cfgFixed: fixed, qty: 1000, qtyChosen: false, sizeConfirmed: false, route: 'product' });
+    }
     const LOC = { au: 1, nz: 1, sg: 1, bn: 1 };
     let locale = 'my', rest = segs;
     if (LOC[segs[0]]) { locale = segs[0]; rest = segs.slice(1); }
@@ -3829,6 +3846,7 @@ class Component extends DCLogic {
     };
     // render one field (image picker, dropdown, or value input with range hint)
     const renderField = ({ def, options }) => {
+      if ((this.state.cfgFixed || {})[def.key] != null && (this.state.cfg || {})[def.key] === this.state.cfgFixed[def.key]) return null;
       if (def.widget === 'foilColours') return this.foilColourPicker(def, cfg);
       const imgBase = ov.optImages && ov.optImages[def.key];
       if (imgBase && options && options.length) return imgPicker(def, options, (this.state.cfg || {})[def.key], imgBase);  // nothing highlighted until picked
@@ -4251,7 +4269,7 @@ class Component extends DCLogic {
     if (!cart.length) return page(box([title('Cart'),
       h('div', { key: 'e', style: { fontSize: 15, color: MUT, marginBottom: 18 } }, 'Your cart is empty.'),
       h('div', { key: 'b' }, this.btn('Browse products', 'teal', 'category'))], { maxWidth: 760 }));
-    const row = (label, value, extra) => h('div', { key: label, style: { display: 'grid', gridTemplateColumns: 'minmax(96px,42%) minmax(0,1fr)', gap: 12, padding: '7px 0', fontSize: 14.5, alignItems: 'center' } },
+    const row = (label, value, extra) => h('div', { key: label, style: { display: 'grid', gridTemplateColumns: 'minmax(96px,42%) minmax(0,1fr)', gap: 12, padding: '8px 0', fontSize: 14.5, lineHeight: 1.45, alignItems: 'start' } },
       h('span', { style: { color: MUT } }, label), h('span', { style: Object.assign({ color: INK }, extra || {}) }, value));
     const sel = this.state.cartSel || {}, nSel = cart.filter((_, i) => sel[i]).length;
     const setSel = (i, on) => this.setState({ cartSel: Object.assign({}, sel, { [i]: on }) });
@@ -4259,7 +4277,6 @@ class Component extends DCLogic {
     const check = (on, onChange, label) => h('input', { type: 'checkbox', checked: !!on, 'aria-label': label, onChange: e => onChange(e.target.checked), style: { width: 17, height: 17, accentColor: TEAL, cursor: 'pointer', margin: 0 } });
     const items = cart.map((it, i) => {
       const lines = it.specLines && it.specLines.length ? it.specLines : String(it.spec || '').split(' · ').filter(Boolean).map(s => ['', s]);
-      const more = !!(this.state.cartMore || {})[i], shown = more ? lines : lines.slice(0, 3);
       return h('div', { key: i, style: { borderTop: '1px solid #e6e8eb', padding: '26px 0 24px' } },
         h('div', null,
           h('div', null,
@@ -4277,10 +4294,8 @@ class Component extends DCLogic {
                 row('Urgency', it.urgency || 'Standard'),
                 row('Total', this.money(it.lineTotal), { fontWeight: 600 }),
                 this.cartArtworkBlock(it, i, row),
-                h('div', { style: { fontSize: 14.5, color: MUT, padding: '12px 0 4px' } }, 'Specification'),
-                shown.map((l, k) => h('div', { key: 'sp' + k, style: { display: 'grid', gridTemplateColumns: 'minmax(96px,42%) minmax(0,1fr)', gap: 12, padding: '5px 0', fontSize: 14 } },
-                  h('span', { style: { color: MUT } }, l[0]), h('span', { style: { color: INK } }, l[1]))),
-                lines.length > 3 ? h('div', { style: { marginTop: 8 } }, h('span', { role: 'button', tabIndex: 0, onClick: () => this.setState({ cartMore: Object.assign({}, this.state.cartMore, { [i]: !more }) }), style: { fontSize: 11, fontWeight: 700, letterSpacing: '.12em', color: TEAL, cursor: 'pointer' } }, more ? 'SHOW LESS' : 'SHOW MORE')) : null,
+                h('div', { style: { fontSize: 14.5, fontWeight: 600, color: INK, padding: '16px 0 4px' } }, 'Specification'),
+                lines.map((l, k) => h('div', { key: 'sp' + k }, row(l[0] || 'Specification', l[1]))),
                 h('div', { style: { display: 'flex', gap: 18, marginTop: 16 } }, link('Edit', () => openProd(it.productId)), link('Duplicate', () => this.dupCart(i))))))));
     });
     return page(h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 30, alignItems: 'flex-start' } },
@@ -4430,11 +4445,11 @@ class Component extends DCLogic {
     const PAYKEYS = ['bank_transfer', 'ipay88', 'card_test', 'wallet'];
     const pay = PAYKEYS.indexOf(this.state.coPay) >= 0 ? this.state.coPay : null;
     const s3 = h('div', null,
-      this.payList({ value: pay, total: t.total, onChange: k => this.setState({ coPay: k, orderErr: null }) }),
-      h('div', { style: { fontSize: 13.5, color: MUT, lineHeight: 1.7, marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10 } },
+      this.payList({ value: pay, total: t.total, onChange: k => this.setState({ coPay: k, orderErr: null }) }));
+    const notices = h('div', { style: { fontSize: 13.5, color: MUT, lineHeight: 1.7, margin: '0 0 16px', display: 'flex', flexDirection: 'column', gap: 10 } },
         h('div', null, 'Your personal data will be used to process your order, support your experience throughout this website, and for other purposes described in our ', h('a', { href: '/terms/', target: '_blank', rel: 'noopener', style: { color: TEAL } }, 'privacy policy'), '.'),
         h('div', null, h('b', { style: { color: INK } }, 'Notice: '), 'Please make sure all the details and artwork were ordered correctly. There will be ', h('b', { style: { color: INK } }, 'No Withdrawal Refund for Bank Transfers, Stripe & Ipay88 payment'), '. All refunds will only be ', h('b', { style: { color: INK } }, 'credited to your Printoka Wallet'), '.'),
-        h('div', null, 'Shall you need clarification about your order, please contact us before proceeding to payment.')));
+        h('div', null, 'Shall you need clarification about your order, please contact us before proceeding to payment.'));
 
     // ---- order summary + place order
     const applied = 0, avail = 0;
@@ -4450,9 +4465,10 @@ class Component extends DCLogic {
       this.setState({ coTermsOpen: true, orderErr: null });
     };
     const termsPopup = this.state.coTermsOpen ? h('div', { key: 'tc', onClick: () => this.setState({ coTermsOpen: false }), style: { position: 'fixed', inset: 0, zIndex: 98, background: 'rgba(15,20,25,.5)', display: 'grid', placeItems: 'center', padding: 16 } },
-      h('div', { onClick: e => e.stopPropagation(), role: 'alertdialog', 'aria-modal': 'true', 'aria-label': 'Terms and Conditions', style: { background: '#fff', borderRadius: 12, maxWidth: 460, width: '100%', padding: '22px 24px', boxShadow: '0 18px 50px rgba(0,0,0,.25)' } },
+      h('div', { onClick: e => e.stopPropagation(), role: 'alertdialog', 'aria-modal': 'true', 'aria-label': 'Terms and Conditions', style: { background: '#fff', borderRadius: 12, maxWidth: 560, width: '100%', padding: '22px 24px', boxShadow: '0 18px 50px rgba(0,0,0,.25)' } },
         h('div', { style: { fontSize: 17, fontWeight: 700, marginBottom: 10 } }, 'Before we place your order'),
-        h('div', { style: { fontSize: 13.5, color: INK, lineHeight: 1.6, marginBottom: 20 } }, 'I confirm that I have read and understood all the ', h('a', { href: '/terms/', target: '_blank', rel: 'noopener', style: { color: '#2f7fd1' } }, 'Terms and Conditions'), ', and I agree on the terms and conditions above.'),
+        notices,
+        h('div', { style: { fontSize: 13.5, color: INK, lineHeight: 1.6, marginBottom: 20, paddingTop: 14, borderTop: '1px solid ' + LINE } }, 'I confirm that I have read and understood all the ', h('a', { href: '/terms/', target: '_blank', rel: 'noopener', style: { color: '#2f7fd1' } }, 'Terms and Conditions'), ', and I agree on the terms and conditions above.'),
         h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
           h('button', { type: 'button', onClick: () => this.setState({ coTermsOpen: false }), style: { font: '600 13.5px Montserrat,sans-serif', background: '#fff', color: INK, border: '1px solid ' + HAIR, borderRadius: 8, padding: '10px 18px', cursor: 'pointer' } }, 'Cancel'),
           h('button', { type: 'button', onClick: () => { this.setState({ coTermsOpen: false }); this.placeOrder(); }, style: { font: '600 13.5px Montserrat,sans-serif', background: TEAL, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', cursor: 'pointer' } }, 'I agree · Place order')))) : null;
@@ -5110,11 +5126,13 @@ class Component extends DCLogic {
       if (s === 'completed') return toOutlet ? 'Collected' : 'Delivered';
       return 'In production';
     };
-    return h('div', { style: { maxWidth: 1000, margin: '0 auto', padding: '10px 20px 0' } },
-      this.head('Order ' + o.id, null,
-        [this.btn('Invoice', 'ghost', 'doc:invoice:' + o.id), this.btn('Order slip', 'ghost', 'doc:slip:' + o.id), this.btn('Contact support', 'teal', 'crm')]),
-      lookup,
-      h('div', { key: 't', style: { border: '1px solid ' + HAIR, borderRadius: 14, padding: 20, marginBottom: 20 } },
+    const own = this.userType() === 'customer' && o.userId === (this.state.user || {}).id;
+    return h('div', { style: { background: '#f5f6f8', margin: '-10px -20px 0', padding: '36px 20px 60px' } }, h('div', { style: { maxWidth: 1080, margin: '0 auto' } },
+      h('div', { style: { display: 'flex', alignItems: 'flex-end', gap: 14, flexWrap: 'wrap', marginBottom: 20 } },
+        h('div', { style: { flex: '1 1 300px' } }, h('div', { style: { width: 24, height: 3, background: TEAL, marginBottom: 12 } }), h('h1', { style: { margin: 0, fontSize: 30, fontWeight: 500, letterSpacing: '-.01em' } }, 'Order ' + o.id)),
+        h('div', { style: { display: 'flex', gap: 9, flexWrap: 'wrap' } }, this.btn('Invoice', 'ghost', 'doc:invoice:' + o.id), this.btn('Order slip', 'ghost', 'doc:slip:' + o.id), this.btn('Contact support', 'teal', 'crm'))),
+      own ? null : lookup,
+      h('div', { key: 't', style: { border: '1px solid #e6e8eb', background: '#fff', padding: '22px 24px', marginBottom: 16 } },
         h('div', { style: { fontSize: 12.5, fontWeight: 600, marginBottom: 16 } }, 'Status timeline'),
         h('div', { style: { display: 'flex', gap: 0, flexWrap: 'wrap' } },
           STAGES.map((s, i) => h('div', { key: i, style: { flex: '1 1 120px', display: 'flex', flexDirection: 'column', gap: 8 } },
@@ -5152,7 +5170,7 @@ class Component extends DCLogic {
                   : ((j.artwork && j.artwork.file && !/^pending-upload/.test(j.artwork.file)) ? j.artwork.file : '—')),
                 this.artworkAction(o, j, i))));
         }),
-        jobs.length === 0 ? h('div', { style: { color: FAINT, fontSize: 13 } }, 'No jobs on this order.') : null));
+        jobs.length === 0 ? h('div', { style: { color: FAINT, fontSize: 13 } }, 'No jobs on this order.') : null)));
   }
 
   // the artwork step the customer can act on from My Orders (user, 2026-09-28):
