@@ -34,6 +34,11 @@ function commerce() {
   if (!s.payments) s.payments = { testMode: true, methods: {
     card_test: { enabled: true, label: 'Card (Stripe)' }, ipay88: { enabled: true, label: 'iPay88 · FPX / cards' }, tng: { enabled: true, label: "Touch 'n Go eWallet" },
     bank_transfer: { enabled: true, label: 'Bank transfer', bankName: 'Maybank', accountName: 'Yushan Corporation Sdn Bhd', accountNo: '' }, credit_term: { enabled: true, label: 'Credit terms (approved accounts)' } } };
+  // the bank account customers transfer to — as on printoka.com's checkout (Direct bank transfer)
+  const bt = s.payments.methods.bank_transfer = s.payments.methods.bank_transfer || { enabled: true, label: 'Direct bank transfer' };
+  if (!bt.accountNo) Object.assign(bt, { bankName: 'Maybank', accountName: 'Yushan Corporation Sdn Bhd', accountNo: '511010564433' });
+  // Printoka Wallet (the original TeraWallet): pay an order from the wallet balance
+  if (!s.payments.methods.wallet) s.payments.methods.wallet = { enabled: true, label: 'Wallet payment' };
   if (!s.membership) s.membership = { tiers: DEFAULT_TIERS.map(t => Object.assign({}, t)), windowMonths: 12 };
   if (!s.currency) s.currency = { MY: 1, SG: 0.31, BN: 0.31 }; // display rate from RM (Printoka Settings → Country)
   return s;

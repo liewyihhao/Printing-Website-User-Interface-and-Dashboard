@@ -353,7 +353,7 @@
             ['Placed', o.createdAt ? when(o.createdAt) : '—'], ['Total', o.total != null ? this.rm(o.total) : '—']]),
           h('b', { key: 'ph' }, 'Payment'),
           // prepress checks the payment and validates it (bank transfer: against the bank-in slip / the bank account)
-          this.acDL([['Method', pay.gateway || pay.method || '—'], ['Status', this.pillDot(paid ? (j.creditTerms && pay.status !== 'validated' ? 'Credit Terms' : 'Paid') : 'Not Paid', paid ? 'ok' : 'bad')], pay.reference ? ['Reference', pay.reference] : null,
+          this.acDL([['Method', pay.gateway || pay.method || '—'], ['Status', this.pillDot(paid ? (j.creditTerms && pay.status !== 'validated' ? 'Credit Terms' : 'Payment received') : 'Pending payment', paid ? 'ok' : 'bad')], pay.reference ? ['Reference', pay.reference] : null,
             pay.proof ? ['Payment proof', pay.proofFileId ? link('📄 ' + pay.proof, () => this.openOrderFile(o.id, { id: pay.proofFileId, name: pay.proof })) : pay.proof] : null,
             jp ? ['Payment proof', link('📄 ' + jp.name, () => this.jDownload('/api/jobs/' + id + '/files/' + jp.id, jp.name))] : null,
             (pay.validatedBy || j.paymentValidatedBy) ? ['Validated by', (pay.validatedBy || j.paymentValidatedBy) + ((pay.validatedAt || j.paymentValidatedAt) ? ' · ' + when(pay.validatedAt || j.paymentValidatedAt) : '')] : null]),
@@ -362,7 +362,7 @@
           null,
           h('div', { key: 'b', style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
             // at most two decisions: validate the payment (the customer's slip, or upload one), then Process Order
-            !paid ? (pay.proofFileId && o.id ? Btn('Validate the customer’s proof', () => this.jPost('/api/orders/' + o.id + '/pay', {}, 'Payment validated.')) : Btn('Upload payment proof', uploadProof)) : null,
+            !paid ? (pay.proofFileId && o.id ? Btn('Confirm payment received', () => this.jPost('/api/orders/' + o.id + '/pay', {}, 'Payment received.')) : Btn('Upload payment proof', uploadProof)) : null,
             acts.process ? Btn('Process Order', () => act('process', {}, 'Order processed — ready for the preflight check.'), 'primary', !acts.process.enabled) : null)]);
       }
       // approved, held until every other artwork on the order is approved — then the whole order goes to the scheduler

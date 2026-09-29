@@ -604,6 +604,7 @@ class Component extends DCLogic {
     const ph = this.cfgOv().placeholder || [];
     const ok = fields.every(f => { const d = f.def || {};
       if (d.__followUp) return sc[d.key] != null && String(sc[d.key]).trim() !== '';
+      if (d.widget === 'foilColours') return this.foilSlots(sc).every(k => !!sc[k]);
       if (d.type === 'number' || d.widget || !(f.options && f.options.length)) return true;
       if (ph.indexOf(d.key) < 0) return true; // optional question: its "Not Required" default is a valid answer
       return sc[d.key] != null && sc[d.key] !== ''; });
@@ -712,6 +713,12 @@ class Component extends DCLogic {
         h('text', { x: x0 - 24, y: midy, textAnchor: 'middle', fontSize: 12, fontWeight: 600, fill: INK, transform: 'rotate(-90 ' + (x0 - 24) + ' ' + midy + ')' }, 'Height ' + Math.round(H) + ' mm')),
       label: 'Open ' + Math.round(W) + ' × ' + Math.round(H) + ' mm · crease at ' + Math.round(creaseAt) + ' mm (' + Math.round(leftW) + ' + ' + Math.round(rightW) + ')',
     };
+  }
+  // the foil colour slots the chosen hot stamping needs, e.g. "1C (Front) + 1C (Back)" → hs_front_1, hs_back_1
+  foilSlots(cfg) {
+    const out = [];
+    String((cfg || {}).hot_stamping || '').split('+').forEach(part => { const m = part.match(/(\d)\s*C\s*\((Front|Back)\)/i); if (m) for (let i = 1; i <= +m[1]; i++) out.push('hs_' + (/front/i.test(m[2]) ? 'front' : 'back') + '_' + i); });
+    return out;
   }
   // hot-stamping foil picker: one 6-colour swatch row per colour in the chosen option
   // (Front/Back × Colour 1/2), plus a Hot Stamping Block choice — matching Excard.
@@ -1245,7 +1252,7 @@ class Component extends DCLogic {
     const addrText = shipTo ? [shipTo.line1, shipTo.line2, [shipTo.postcode, shipTo.city].filter(Boolean).join(' '), shipTo.state].filter(Boolean).join(', ') : '';
     const outlet = method === 'pickup' ? (this.state.pickupOutlets || []).find(o => o.id === this.state.coOutlet) : null;
     const creditAvail = (this.state.credit && this.state.credit.balance) || 0;
-    const creditApplied = this.state.coCredit ? Math.min(creditAvail, t.total) : 0;
+    const creditApplied = 0;
     const body = {
       customer: who,
       fulfillment: { method, address: addrText, addressId: method === 'delivery' && picked ? picked.id : null, outlet: outlet ? outlet.id : '', outletName: outlet ? outlet.name : '', receiver: method === 'direct' ? { name: shipTo.name, phone: shipTo.phone } : null },
@@ -1258,7 +1265,7 @@ class Component extends DCLogic {
     this.setState({ placing: true, orderErr: null });
     fetch('/api/orders', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify(body) })
       .then(r => r.json()).then(d => {
-        if (d && d.order) { this.setState({ order: d.order, placing: false, cart: [], coupon: null, cartCoupon: '', couponMsg: null, coStep: 1, coTerms: false, coPay: null }); this.saveCart([]); this.go('confirm'); this.loadUserOrders();
+        if (d && d.order) { this.setState({ order: d.order, placing: false, cart: [], coupon: null, cartCoupon: '', couponMsg: null, coStep: 1, coPay: null }); this.saveCart([]); this.go('confirm'); this.loadUserOrders(); this.loadAccount();
           fetch('/api/auth/me', { headers: this.authHeaders() }).then(r => r.ok ? r.json() : null).then(m => { if (m && m.customer) this.setState({ user: m.customer }); }).catch(() => {}); }
         else this.setState({ placing: false, orderErr: (d && d.error) || 'Could not place the order.' });
       }).catch(() => this.setState({ placing: false, orderErr: 'Network error — please try again.' }));
@@ -1667,7 +1674,7 @@ class Component extends DCLogic {
       h('div', { onClick: e => e.stopPropagation(), style: { background: '#fff', borderRadius: 14, maxWidth: 900, width: '100%', margin: '10px 0', boxShadow: '0 24px 60px rgba(33,33,33,.3)' } },
         h('div', { style: { padding: '15px 22px', borderBottom: '1px solid ' + HAIR, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', position: 'sticky', top: 0, background: '#fff', borderRadius: '14px 14px 0 0', zIndex: 1 } },
           h('span', { style: { font: '600 13px ui-monospace,Menlo,monospace', color: TEAL } }, this.state.ordViewId),
-          o ? this.chip(paid ? 'Paid' : 'Payment pending', paid ? 'ok' : 'warn') : null,
+          o ? this.chip(paid ? 'Payment received' : 'Pending payment', paid ? 'ok' : 'warn') : null,
           o ? h('span', { style: { fontSize: 12.5, color: MUT } }, (o.channel || 'online') + ' · ' + (o.createdAt || '').slice(0, 10)) : null,
           h('span', { style: { marginLeft: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap' } },
             o ? h('span', { onClick: () => this.openDoc(o.id, 'invoice'), style: { fontSize: 12.5, fontWeight: 600, color: TEAL, border: '1px solid ' + HAIR, borderRadius: 7, padding: '7px 12px', cursor: 'pointer' } }, 'Invoice PDF') : null,
@@ -1761,9 +1768,16 @@ class Component extends DCLogic {
   // ---------- customer: wallet top-up, profile, password ----------
   walletTopUp() {
     const amt = Number(this.state.tu_amount); if (!amt || amt <= 0) { this.setState({ tu_err: 'Enter an amount.' }); return; }
+    const method = this.state.tu_method; if (!method) { this.setState({ tu_err: 'Choose how you would like to pay.' }); return; }
     this.setState({ tu_busy: true, tu_err: null });
-    fetch('/api/account/credit', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify({ reason: 'TOPUP', amount: amt, actor: 'customer' }) })
-      .then(r => r.json()).then(d => { this.setState({ tu_busy: false, tu_open: false, tu_amount: '', credit: d }); }).catch(() => this.setState({ tu_busy: false, tu_err: 'Network error.' }));
+    fetch('/api/account/credit', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify({ reason: 'TOPUP', amount: amt, method }) })
+      .then(r => r.json()).then(d => {
+        if (d.error) return this.setState({ tu_busy: false, tu_err: d.error });
+        const credit = { balance: d.balance, ledger: d.ledger };
+        // bank transfer: the top-up waits for the slip; iPay88 / Stripe credit the wallet straight away
+        if (d.pending) this.setState({ tu_busy: false, tu_amount: '', tu_pending: d.pending, credit });
+        else this.setState({ tu_busy: false, tu_amount: '', tu_method: null, tu_done: this.money(amt) + ' has been added to your wallet.', credit });
+      }).catch(() => this.setState({ tu_busy: false, tu_err: 'Network error.' }));
   }
   submitProfile() {
     const s = this.state, u = this.state.user || {};
@@ -2327,22 +2341,37 @@ class Component extends DCLogic {
         tabs.map(t => { const on = t === active; return h('span', { key: t, 'data-go': 'set:cTab:' + t, style: { fontSize: 14, fontWeight: on ? 600 : 500, color: on ? INK : MUT, padding: '18px 12px', cursor: 'pointer', borderBottom: '3px solid ' + (on ? '#E52220' : 'transparent') } }, t); })));
     return h('div', { style: { background: '#f4f5f6' } }, bar,
       h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '26px 20px 60px', display: 'flex', flexDirection: 'column', gap: 20 } }, children),
-      this.walletModal(), this.passwordModal());
+      this.passwordModal());
   }
   walletModal() {
     if (!this.state.tu_open) return null;
-    const close = () => this.setState({ tu_open: false, tu_err: null });
-    return h('div', { key: 'tu', onClick: close, style: { position: 'fixed', inset: 0, zIndex: 96, background: 'rgba(20,25,30,.45)', display: 'grid', placeItems: 'start center', padding: 20, overflow: 'auto' } },
-      h('div', { onClick: e => e.stopPropagation(), style: { background: '#fff', borderRadius: 14, maxWidth: 520, width: '100%', margin: '40px 0', overflow: 'hidden', boxShadow: '0 24px 60px rgba(33,33,33,.3)' } },
+    const close = () => this.setState({ tu_open: false, tu_err: null, tu_pending: null, tu_done: null });
+    const pend = this.state.tu_pending;
+    const slip = e => { const f = e.target.files && e.target.files[0]; if (!f || !pend) return; const rd = new FileReader();
+      rd.onload = () => { this.setState({ tu_busy: true, tu_err: null }); fetch('/api/account/topups/' + pend.id + '/slip', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify({ name: f.name, data: rd.result }) })
+        .then(r => r.json()).then(d => this.setState(d.ok ? { tu_busy: false, tu_pending: null, tu_done: 'Slip received. Your wallet is topped up once we confirm the transfer.' } : { tu_busy: false, tu_err: d.error || 'Upload failed.' })).catch(() => this.setState({ tu_busy: false, tu_err: 'Network error.' })); };
+      rd.readAsDataURL(f); };
+    const btnS = { display: 'block', textAlign: 'center', background: '#E52220', color: '#fff', fontWeight: 600, fontSize: 15, padding: '12px', borderRadius: 4, cursor: this.state.tu_busy ? 'wait' : 'pointer' };
+    return h('div', { key: 'tu', onClick: close, style: { position: 'fixed', inset: 0, zIndex: 99, background: 'rgba(20,25,30,.45)', display: 'grid', placeItems: 'start center', padding: 20, overflow: 'auto' } },
+      h('div', { onClick: e => e.stopPropagation(), role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Wallet top-up', style: { background: '#fff', maxWidth: 560, width: '100%', margin: '40px 0', overflow: 'hidden', boxShadow: '0 24px 60px rgba(33,33,33,.3)' } },
         h('div', { style: { height: 4, background: '#E52220' } }),
-        h('div', { style: { padding: '20px 26px 26px' } },
-          h('div', { style: { display: 'flex', alignItems: 'center', marginBottom: 16 } }, h('span', { style: { fontSize: 20, fontWeight: 600 } }, 'Wallet top-up'), h('span', { onClick: close, style: { marginLeft: 'auto', color: FAINT, fontSize: 22, cursor: 'pointer' } }, '×')),
-          h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, 'Top Up Amount ', h('span', { style: { color: '#E52220' } }, '*')),
-          h('div', { style: { display: 'flex', border: '1px solid ' + HAIR, borderRadius: 8, overflow: 'hidden', marginBottom: 8 } },
-            h('span', { style: { background: ALT, padding: '10px 12px', fontSize: 13, color: MUT, borderRight: '1px solid ' + HAIR } }, this.currency()),
-            h('input', { type: 'number', value: this.state.tu_amount || '', onChange: e => this.setField('tu_amount', e.target.value), style: { border: 'none', outline: 'none', padding: '10px 12px', font: '400 14px Montserrat,sans-serif', flex: 1 } })),
-          this.state.tu_err ? h('div', { style: { fontSize: 12.5, color: '#c0392b', marginBottom: 8 } }, this.state.tu_err) : null,
-          h('span', { onClick: () => this.walletTopUp(), style: { display: 'block', textAlign: 'center', background: '#E52220', color: '#fff', fontWeight: 600, fontSize: 15, padding: '12px', borderRadius: 999, cursor: this.state.tu_busy ? 'wait' : 'pointer' } }, this.state.tu_busy ? 'Processing…' : 'Proceed'))));
+        h('div', { style: { padding: '20px 26px 26px', display: 'flex', flexDirection: 'column', gap: 12 } },
+          h('div', { style: { display: 'flex', alignItems: 'center' } }, h('span', { style: { fontSize: 20, fontWeight: 600 } }, 'Wallet top-up'), h('span', { role: 'button', tabIndex: 0, 'aria-label': 'Close', onClick: close, style: { marginLeft: 'auto', color: FAINT, fontSize: 22, cursor: 'pointer' } }, '×')),
+          this.state.tu_done ? [h('div', { key: 'd', style: { fontSize: 14, color: INK, lineHeight: 1.6 } }, this.state.tu_done), h('span', { key: 'c', onClick: close, style: btnS }, 'Done')]
+          : pend ? [
+            h('div', { key: 'p', style: { fontSize: 14, color: INK, lineHeight: 1.6 } }, 'Transfer ', h('b', null, this.money(pend.amount)), ' to our bank account, using ', h('b', null, pend.id), ' as the payment reference. Then upload your bank transfer slip.'),
+            h('div', { key: 'l' }, this.payList({ value: 'bank_transfer', only: ['bank_transfer'], onChange: () => {} })),
+            h('label', { key: 'u', style: btnS }, h('input', { type: 'file', accept: '.pdf,.png,.jpg,.jpeg,.webp,.heic', style: { display: 'none' }, onChange: slip }), this.state.tu_busy ? 'Uploading…' : 'Upload bank transfer slip'),
+            this.state.tu_err ? h('div', { key: 'e', style: { fontSize: 12.5, color: '#c0392b' } }, this.state.tu_err) : null]
+          : [
+            h('div', { key: 'al', style: { fontSize: 13, fontWeight: 600 } }, 'Top Up Amount ', h('span', { style: { color: '#E52220' } }, '*')),
+            h('div', { key: 'a', style: { display: 'flex', border: '1px solid ' + HAIR, overflow: 'hidden' } },
+              h('span', { style: { background: ALT, padding: '10px 12px', fontSize: 13, color: MUT, borderRight: '1px solid ' + HAIR } }, this.currency()),
+              h('input', { type: 'number', min: 1, value: this.state.tu_amount || '', 'aria-label': 'Top up amount', onChange: e => this.setField('tu_amount', e.target.value), style: { border: 'none', outline: 'none', padding: '10px 12px', font: '400 14px Montserrat,sans-serif', flex: 1 } })),
+            h('div', { key: 'pl', style: { fontSize: 13, fontWeight: 600, marginTop: 4 } }, 'Pay with'),
+            h('div', { key: 'm' }, this.payList({ value: this.state.tu_method || null, only: ['bank_transfer', 'ipay88', 'card_test'], onChange: k => this.setState({ tu_method: k, tu_err: null }) })),
+            this.state.tu_err ? h('div', { key: 'e', style: { fontSize: 12.5, color: '#c0392b' } }, this.state.tu_err) : null,
+            h('span', { key: 'go', role: 'button', tabIndex: 0, onClick: () => this.walletTopUp(), style: btnS }, this.state.tu_busy ? 'Processing…' : 'Proceed')])));
   }
   passwordModal() {
     if (!this.state.pw_open) return null;
@@ -2435,7 +2464,7 @@ class Component extends DCLogic {
       tMenu: this.t('menu'),
       localeLabel: this.loc(),
       megaOpen: s.megaOpen,
-      cartCount: s.cartCount,
+      cartCount: (s.cart || []).length,
       showSpec: false,
       staff: this.userType() !== 'guest' && this.userType() !== 'customer',
       // the 5 role dashboards render their own white top-nav (staffPage) — hide the storefront header.
@@ -2542,7 +2571,7 @@ class Component extends DCLogic {
     const f = this['s_' + route];
     const screen = f ? f.call(this) : h('div', { style: { padding: 60, textAlign: 'center', color: MUT } }, 'Screen coming next.');
     const bar = this.staffBar(route);
-    return h('div', null, bar, screen, this.orderDialog(), this.docDialog(), this.newUserModal(), this.announcementPopup(), this.artStorageModal ? this.artStorageModal() : null);
+    return h('div', null, bar, screen, this.orderDialog(), this.docDialog(), this.newUserModal(), this.announcementPopup(), this.artStorageModal ? this.artStorageModal() : null, this.walletModal());
   }
 
   // ===== HOME =====
@@ -2920,7 +2949,7 @@ class Component extends DCLogic {
         h('div', { style: { flex: '1 1 380px', minWidth: 0 } },
           h('h1', { style: { margin: '0 0 10px', fontSize: 'clamp(21px,2.6vw,27px)', fontWeight: 600, letterSpacing: '-.01em' } }, 'Thank you — your order is in'),
           h('p', { style: { margin: 0, fontSize: 14.5, color: MUT, lineHeight: 1.7 } }, 'Order ', h('b', { style: { color: INK } }, o.id), ' · ' + o.jobIds.length + ' job(s) · ',
-            this.chip(paid ? 'Paid' : 'Payment pending', paid ? 'ok' : 'warn'),
+            this.chip(paid ? 'Payment received' : 'Pending payment', paid ? 'ok' : 'warn'),
             (o.customer && o.customer.email) ? h('span', null, ' · confirmation sent to ' + o.customer.email) : '')),
         h('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap' } },
           h('span', { role: 'button', tabIndex: 0, onClick: () => { this.setState({ cTab: 'Orders' }); this.loadUserOrders(); this.go('dash'); }, style: { display: 'inline-flex', alignItems: 'center', background: TEAL, color: '#fff', fontWeight: 600, fontSize: 14, borderRadius: 8, padding: '11px 20px', cursor: 'pointer' } }, 'Track in my dashboard'),
@@ -4207,73 +4236,87 @@ class Component extends DCLogic {
 
   // ===== CART =====
   s_cart() {
+    // (user, 2026-09-29) the original printoka.com cart look: two white cards on a light page, a short red bar over
+    // each title, label / value rows, Edit · Duplicate links, Select All + Delete, and the Summary card on the right
     const cart = this.state.cart || [];
     const t = this.cartTotals();
-    if (!cart.length) return h('div', { style: { maxWidth: 700, margin: '0 auto', padding: '10px 20px 0' } },
-      this.head('Cart', 'Your cart is empty.'),
-      h('div', { style: { border: '1px dashed ' + HAIR, borderRadius: 12, padding: 44, textAlign: 'center', marginTop: 20 } },
-        h('div', { style: { fontSize: 15, color: MUT, marginBottom: 16 } }, 'Nothing here yet — configure a product to get an instant price and add it to your cart.'),
-        this.btn('Browse products →', 'teal', 'category', { justifyContent: 'center' })));
-    const addr = (this.state.addresses || []).find(a => a.isDefault) || (this.state.addresses || [])[0] || null;
-    const u = this.state.user || {};
-    const kvRow = (label, value, strong) => h('div', { key: label, style: { display: 'flex', justifyContent: 'space-between', gap: 12, padding: '7px 0', borderBottom: '1px solid ' + LINE, fontSize: 13 } },
-      h('span', { style: { color: MUT } }, label), h('span', { style: { fontWeight: strong ? 600 : 500, color: INK, textAlign: 'right' } }, value));
-    return h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px 0' } },
-      h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 340px', gap: 24, marginTop: 6, alignItems: 'start' } },
-        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
-          h('h1', { style: { margin: '0 0 2px', fontSize: 28, fontWeight: 600, letterSpacing: '-.02em' } }, 'Cart'),
-          // line items
-          cart.map((it, i) => this.card([
-            h('div', { key: 'top', style: { display: 'flex', gap: 16 } },
-              h('div', { style: { flex: '0 0 120px' } }, this.art((this.pkProducts().find(p => p.id === it.productId) || {}).name || 'card')),
-              h('div', { style: { flex: 1, minWidth: 0 } },
-                h('div', { style: { display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 } },
-                  h('span', { style: { fontSize: 16, fontWeight: 600 } }, it.name),
-                  h('span', { 'data-go': 'open:' + it.productId, style: { fontSize: 12.5, color: TEAL, fontWeight: 600, cursor: 'pointer' } }, 'Edit'),
-                  h('span', { onClick: () => this.rmCart(i), style: { marginLeft: 'auto', fontSize: 18, color: FAINT, cursor: 'pointer' } }, '🗑')),
-                [['Quantity (pcs)', it.qty.toLocaleString()], ['Price per piece', this.currency() + ' ' + (it.unitPrice * this.fx()).toFixed(3)], ['Subtotal', this.money(it.lineTotal)], ['Urgency', it.urgency || 'Standard'], ['Total', this.money(it.lineTotal), true]].map(r => kvRow(r[0], r[1], r[2])))),
-            (it.spec || (it.specLines && it.specLines.length)) ? h('div', { key: 'spec', style: { marginTop: 12 } },
-              h('div', { style: { fontSize: 12.5, fontWeight: 600, marginBottom: 4 } }, 'Specification'),
-              h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.7 } }, this.specView(it))) : null,
-            h('div', { key: 'act', style: { display: 'flex', gap: 18, marginTop: 12 } },
-              h('span', { 'data-go': 'open:' + it.productId, style: { fontSize: 12.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'Edit'),
-              h('span', { onClick: () => this.dupCart(i), style: { fontSize: 12.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'Duplicate')),
-            // artwork: picked from the customer's Artwork Storage (Preview · Change · Remove)
-            this.cartArtworkBlock(it, i),
-          ])),
-          h('div', { style: { display: 'flex', gap: 10, marginTop: 2 } }, this.btn('+ Add another product', 'ghost', 'category'))),
-        // summary
-        h('div', { style: { position: 'sticky', top: 122, display: 'flex', flexDirection: 'column', gap: 14 } },
-          this.card([
-            h('div', { key: 'a', style: { fontSize: 13, fontWeight: 600, marginBottom: 10 } }, 'Summary'),
-            h('div', { key: 'cpn', style: { marginBottom: 12 } },
-              h('div', { style: { fontSize: 12, color: TEAL, marginBottom: 6 } }, 'Discount code'),
-              this.state.coupon
-                ? h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, border: '1px dashed ' + TEAL, background: '#fdf2f2', borderRadius: 8, padding: '9px 12px' } },
-                    h('span', { style: { fontSize: 13.5, fontWeight: 600, color: TEAL, letterSpacing: '.02em' } }, this.state.coupon.code),
-                    h('span', { onClick: () => this.removeCoupon(), style: { fontSize: 12.5, fontWeight: 600, color: MUT, cursor: 'pointer' } }, 'Remove'))
-                : h('div', { style: { display: 'flex', gap: 8 } },
-                    h('input', { placeholder: 'Discount code', value: this.state.cartCoupon || '', onChange: e => this.setField('cartCoupon', e.target.value), style: { flex: 1, minWidth: 0, font: '400 13.5px Montserrat,sans-serif', padding: '10px 12px', border: '1px solid ' + HAIR, borderRadius: 8 } }),
-                    h('span', { onClick: () => this.applyCoupon(), style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13.5, borderRadius: 8, padding: '10px 18px', cursor: 'pointer', whiteSpace: 'nowrap' } }, 'Apply')),
-              (!this.state.coupon && this.usableCoupons().length) ? h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 } },
-                h('span', { style: { fontSize: 11.5, color: FAINT, alignSelf: 'center' } }, 'Your codes:'),
-                this.usableCoupons().map(cp => h('button', { key: cp.code, type: 'button', onClick: () => this.setState({ cartCoupon: cp.code }, () => this.applyCoupon()),
-                  title: this.couponOff(cp) + ' off orders of RM ' + cp.minSpend + ' or more',
-                  style: { font: '600 11.5px Montserrat,sans-serif', color: TEAL, background: '#fff', border: '1px dashed ' + TEAL, borderRadius: 6, padding: '4px 8px', cursor: 'pointer' } },
-                  this.couponOff(cp) + ' off · RM ' + cp.minSpend + '+'))) : null),
-            t.couponShort
-              ? h('div', { key: 'cm', style: { fontSize: 12, color: '#a1660a', marginBottom: 10 } }, 'Add ' + this.money(this.state.coupon.minSpend - t.subtotal) + ' more to use your ' + this.couponOff(this.state.coupon) + ' code.')
-              : (this.state.couponMsg ? h('div', { key: 'cm', style: { fontSize: 12, color: this.state.couponOk ? '#3d8b40' : '#c0392b', marginBottom: 10 } }, this.state.couponMsg) : null),
-            h('div', { key: 'b', style: { display: 'flex', flexDirection: 'column', gap: 9, fontSize: 13, borderTop: '1px solid ' + LINE, paddingTop: 12 } },
-              [['Subtotal', this.money(t.subtotal)], [this.tier() + ' member −' + this.tierPct() + '%', '−' + this.money(t.memberDiscount), TEAL], t.couponCode ? ['Code ' + t.couponCode + ' −' + t.couponOffLabel, '−' + this.money(t.couponDiscount), TEAL] : null, [this.taxLabel(), this.money(t.tax)], ['Estimated shipping', this.money(t.shipping)]].filter(Boolean)
-                .map((r, i) => h('div', { key: i, style: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, lineHeight: 1.5, color: r[2] || MUT } }, h('span', { style: { flex: '1 1 auto', minWidth: 0 } }, r[0]), h('span', { style: { flex: 'none', fontWeight: 500, whiteSpace: 'nowrap', color: r[2] || INK } }, r[1])))),
-            h('div', { key: 'e', style: { borderTop: '1px solid ' + HAIR, marginTop: 14, paddingTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' } },
-              h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'Total'),
-              h('span', { style: { fontSize: 26, fontWeight: 600, color: TEAL, letterSpacing: '-.02em' } }, this.money(t.total))),
-            h('div', { key: 'f', style: { marginTop: 14 } }, this.btn('Checkout', 'teal', 'checkout', { justifyContent: 'center', width: '100%' })),
-            h('div', { key: 'g', style: { marginTop: 10, textAlign: 'center' } },
-              h('span', { onClick: () => this.downloadQuotation(), style: { fontSize: 12.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'Download Quotation')),
-          ]))));
+    const page = kids => h('div', { style: { background: '#f5f6f8', margin: '-10px -20px 0', padding: '36px 20px 60px' } }, h('div', { style: { maxWidth: 1180, margin: '0 auto' } }, kids));
+    const box = (kids, extra) => h('div', { style: Object.assign({ background: '#fff', border: '1px solid #e6e8eb', padding: '26px 24px' }, extra || {}) }, kids);
+    const title = text => [h('div', { key: 'bar', style: { width: 24, height: 3, background: TEAL, marginBottom: 12 } }), h('h1', { key: 'h', style: { margin: '0 0 18px', fontSize: 30, fontWeight: 500, letterSpacing: '-.01em' } }, text)];
+    const link = (label, on, color) => h('span', { role: 'button', tabIndex: 0, onClick: on, onKeyDown: e => { if (e.key === 'Enter') on(); }, style: { fontSize: 14, color: color || '#2f7fd1', textDecoration: 'underline', cursor: 'pointer' } }, label);
+    const icon = (d, on, label) => h('span', { role: 'button', tabIndex: 0, 'aria-label': label, title: label, onClick: on, onKeyDown: e => { if (e.key === 'Enter') on(); }, style: { display: 'inline-grid', placeItems: 'center', cursor: 'pointer', color: MUT } },
+      h('svg', { width: 17, height: 17, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }, d.map((p, k) => h('path', { key: k, d: p }))));
+    const openProd = pid => { if (typeof window !== 'undefined') window.scrollTo(0, 0); this.pushUrl(this.productPath(pid) || '/'); this.setState({ prodId: pid, cfg: {}, qty: 1000, qtyChosen: false, route: 'product', megaOpen: false }); };
+    const PENCIL = ['M12 20h9', 'M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z'], TRASH = ['M3 6h18', 'M8 6V4h8v2', 'M19 6l-1 14H6L5 6', 'M10 11v6', 'M14 11v6'];
+    if (!cart.length) return page(box([title('Cart'),
+      h('div', { key: 'e', style: { fontSize: 15, color: MUT, marginBottom: 18 } }, 'Your cart is empty.'),
+      h('div', { key: 'b' }, this.btn('Browse products', 'teal', 'category'))], { maxWidth: 760 }));
+    const row = (label, value, extra) => h('div', { key: label, style: { display: 'grid', gridTemplateColumns: 'minmax(96px,42%) minmax(0,1fr)', gap: 12, padding: '7px 0', fontSize: 14.5, alignItems: 'center' } },
+      h('span', { style: { color: MUT } }, label), h('span', { style: Object.assign({ color: INK }, extra || {}) }, value));
+    const sel = this.state.cartSel || {}, nSel = cart.filter((_, i) => sel[i]).length;
+    const setSel = (i, on) => this.setState({ cartSel: Object.assign({}, sel, { [i]: on }) });
+    const delSel = () => { const next = cart.filter((_, i) => !sel[i]); this.setState({ cart: next, cartSel: {} }); this.saveCart(next); };
+    const check = (on, onChange, label) => h('input', { type: 'checkbox', checked: !!on, 'aria-label': label, onChange: e => onChange(e.target.checked), style: { width: 17, height: 17, accentColor: TEAL, cursor: 'pointer', margin: 0 } });
+    const items = cart.map((it, i) => {
+      const lines = it.specLines && it.specLines.length ? it.specLines : String(it.spec || '').split(' · ').filter(Boolean).map(s => ['', s]);
+      const more = !!(this.state.cartMore || {})[i], shown = more ? lines : lines.slice(0, 3);
+      return h('div', { key: i, style: { borderTop: '1px solid #e6e8eb', padding: '26px 0 24px' } },
+        h('div', null,
+          h('div', null,
+            h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: 10, fontSize: 12.5, color: FAINT, cursor: 'pointer' } }, check(sel[i], on => setSel(i, on), 'Select ' + it.name), 'Job ' + (i + 1)),
+            h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0 16px' } },
+              h('span', { style: { fontSize: 21, fontWeight: 500 } }, it.name),
+              icon(PENCIL, () => openProd(it.productId), 'Edit'),
+              h('span', { style: { marginLeft: 'auto' } }, icon(TRASH, () => this.rmCart(i), 'Remove from cart'))),
+            h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 18, alignItems: 'flex-start' } },
+              h('div', { style: { flex: '0 0 150px' } }, this.art((this.pkProducts().find(p => p.id === it.productId) || {}).name || 'card')),
+              h('div', { style: { flex: '1 1 300px', minWidth: 0 } },
+                row('Quantity (pcs)', it.qty.toLocaleString()),
+                row('Price per piece', this.currency() + ' ' + (it.unitPrice * this.fx()).toFixed(3)),
+                row('Subtotal', this.money(it.lineTotal)),
+                row('Urgency', it.urgency || 'Standard'),
+                row('Total', this.money(it.lineTotal), { fontWeight: 600 }),
+                this.cartArtworkBlock(it, i, row),
+                h('div', { style: { fontSize: 14.5, color: MUT, padding: '12px 0 4px' } }, 'Specification'),
+                shown.map((l, k) => h('div', { key: 'sp' + k, style: { display: 'grid', gridTemplateColumns: 'minmax(96px,42%) minmax(0,1fr)', gap: 12, padding: '5px 0', fontSize: 14 } },
+                  h('span', { style: { color: MUT } }, l[0]), h('span', { style: { color: INK } }, l[1]))),
+                lines.length > 3 ? h('div', { style: { marginTop: 8 } }, h('span', { role: 'button', tabIndex: 0, onClick: () => this.setState({ cartMore: Object.assign({}, this.state.cartMore, { [i]: !more }) }), style: { fontSize: 11, fontWeight: 700, letterSpacing: '.12em', color: TEAL, cursor: 'pointer' } }, more ? 'SHOW LESS' : 'SHOW MORE')) : null,
+                h('div', { style: { display: 'flex', gap: 18, marginTop: 16 } }, link('Edit', () => openProd(it.productId)), link('Duplicate', () => this.dupCart(i))))))));
+    });
+    return page(h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 30, alignItems: 'flex-start' } },
+      box([title('Cart'),
+        h('div', { key: 'items' }, items),
+        h('div', { key: 'sa', style: { borderTop: '1px solid #e6e8eb', paddingTop: 18, display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' } },
+          h('label', { style: { display: 'flex', alignItems: 'center', gap: 12, fontSize: 14, color: INK, cursor: 'pointer' } },
+            check(nSel === cart.length, on => { const n = {}; if (on) cart.forEach((_, i) => { n[i] = true; }); this.setState({ cartSel: n }); }, 'Select all'), 'Select All (' + cart.length + ')'),
+          nSel ? link('Delete', delSel, TEAL) : h('span', { style: { fontSize: 14, color: FAINT } }, 'Delete'),
+          h('span', { style: { marginLeft: 'auto' } }, this.btn('+ Add another product', 'ghost', 'category')))], { flex: '1 1 560px', minWidth: 0 }),
+      h('div', { style: { position: 'sticky', top: 122, flex: '1 1 320px', maxWidth: 420 } },
+        box([title('Summary'),
+          h('div', { key: 'cpn', style: { marginBottom: 18 } },
+            h('div', { style: { fontSize: 14, color: MUT, marginBottom: 8 } }, 'Discount / membership code'),
+            this.state.coupon
+              ? h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, border: '1px dashed ' + TEAL, background: '#fdf2f2', padding: '11px 12px' } },
+                  h('span', { style: { fontSize: 14, fontWeight: 600, color: TEAL, letterSpacing: '.02em' } }, this.state.coupon.code),
+                  h('span', { onClick: () => this.removeCoupon(), style: { fontSize: 13, fontWeight: 600, color: MUT, cursor: 'pointer' } }, 'Remove'))
+              : h('div', { style: { display: 'flex', gap: 14 } },
+                  h('input', { placeholder: 'Discount code', value: this.state.cartCoupon || '', onChange: e => this.setField('cartCoupon', e.target.value), style: { flex: 1, minWidth: 0, font: '400 14px Montserrat,sans-serif', padding: '12px 14px', border: '1px solid #e6e8eb', borderRadius: 0 } }),
+                  h('span', { role: 'button', tabIndex: 0, onClick: () => this.applyCoupon(), style: { background: TEAL, color: '#fff', fontWeight: 500, fontSize: 15, padding: '12px 24px', cursor: 'pointer', whiteSpace: 'nowrap' } }, 'Apply')),
+            (!this.state.coupon && this.usableCoupons().length) ? h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 } },
+              h('span', { style: { fontSize: 11.5, color: FAINT, alignSelf: 'center' } }, 'Your codes:'),
+              this.usableCoupons().map(cp => h('button', { key: cp.code, type: 'button', onClick: () => this.setState({ cartCoupon: cp.code }, () => this.applyCoupon()),
+                style: { font: '600 11.5px Montserrat,sans-serif', color: TEAL, background: '#fff', border: '1px dashed ' + TEAL, padding: '4px 8px', cursor: 'pointer' } }, this.couponOff(cp) + ' off · RM ' + cp.minSpend + '+'))) : null,
+            t.couponShort ? h('div', { style: { fontSize: 12, color: '#a1660a', marginTop: 8 } }, 'Add ' + this.money(this.state.coupon.minSpend - t.subtotal) + ' more to use your ' + this.couponOff(this.state.coupon) + ' code.')
+              : (this.state.couponMsg ? h('div', { style: { fontSize: 12, color: this.state.couponOk ? '#3d8b40' : '#c0392b', marginTop: 8 } }, this.state.couponMsg) : null)),
+          h('div', { key: 'rows', style: { borderTop: '1px solid #e6e8eb', paddingTop: 12 } },
+            [['Subtotal', this.money(t.subtotal)], t.memberDiscount ? [this.tier() + ' member −' + this.tierPct() + '%', '−' + this.money(t.memberDiscount)] : null, t.couponCode ? ['Code ' + t.couponCode, '−' + this.money(t.couponDiscount)] : null, [this.taxLabel(), this.money(t.tax)], ['Shipping', this.money(t.shipping)]].filter(Boolean)
+              .map(r => h('div', { key: r[0], style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '9px 0', fontSize: 14.5 } }, h('span', { style: { color: MUT } }, r[0]), h('span', { style: { color: INK } }, r[1]))),
+            h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, padding: '12px 0 4px', alignItems: 'baseline' } }, h('span', { style: { color: MUT, fontSize: 14.5 } }, 'Total'), h('span', { style: { fontSize: 18, fontWeight: 600, color: INK } }, this.money(t.total)))),
+          (() => { const miss = this.cartMissingArt ? this.cartMissingArt() : 0;
+            return h('div', { key: 'go', style: { marginTop: 22 } },
+              miss ? h('div', { style: { fontSize: 13, color: '#c0392b', marginBottom: 10 } }, 'Upload the artwork for ' + (miss > 1 ? miss + ' jobs' : 'your job') + ' to continue.') : null,
+              h('span', { role: 'button', tabIndex: 0, 'aria-disabled': !!miss, onClick: () => { if (!miss) this.go('checkout'); }, style: { display: 'block', textAlign: 'center', background: '#c9191b', color: '#fff', fontSize: 16, fontWeight: 500, padding: '15px 16px', cursor: miss ? 'not-allowed' : 'pointer', opacity: miss ? .45 : 1, boxShadow: '0 2px 6px rgba(201,25,27,.25)' } }, 'Checkout')); })(),
+          h('div', { key: 'q', style: { textAlign: 'center', marginTop: 20 } }, link('Download Quotation', () => this.downloadQuotation(), TEAL))]))));
   }
 
   // ===== CHECKOUT =====
@@ -4303,7 +4346,7 @@ class Component extends DCLogic {
     const goStep = n => { this.setState({ coStep: n, coErr: null }); setTimeout(() => { const el = typeof document !== 'undefined' && document.getElementById('co-step-' + n); if (el) window.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top + window.scrollY - 130), behavior: 'smooth' }); }, 40); };
     const section = (n, title, body, summary) => {
       const active = step === n, done = step > n;
-      return h('div', { key: 's' + n, id: 'co-step-' + n, style: { border: '1px solid ' + HAIR, borderRadius: 12, padding: '18px 20px', background: '#fff', opacity: step < n ? .55 : 1 } },
+      return h('div', { key: 's' + n, id: 'co-step-' + n, style: { border: '1px solid #e6e8eb', padding: '20px 22px', background: '#fff', opacity: step < n ? .55 : 1 } },
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 12 } },
           h('span', { style: { height: 26, width: 26, borderRadius: '50%', flex: 'none', display: 'grid', placeItems: 'center', fontSize: 12.5, fontWeight: 700, background: done || active ? TEAL : '#fff', color: done || active ? '#fff' : FAINT, border: '1px solid ' + (done || active ? TEAL : HAIR) } }, done ? '✓' : n),
           h('div', { style: { fontSize: 15, fontWeight: 600 } }, 'Step ' + n + ' · ' + title),
@@ -4382,41 +4425,40 @@ class Component extends DCLogic {
       : ful === 'direct' ? 'Direct to Customer · ' + [val('coRcvName'), val('coRcvPhone'), addrText(readAddr('coRcv'))].filter(Boolean).join(' · ')
         : 'Delivery · ' + (pickedAddr ? addrText(pickedAddr) : '');
 
-    // ---- step 3 · payment
-    const methods = ((this.state.settings && this.state.settings.payments) || {}).methods || {};
-    const PAYS = [['ipay88', 'iPay88', 'FPX online banking, cards & e-wallets'], ['bank_transfer', 'Manual Bank Transfer', 'Pay by bank-in'], ['card_test', 'Stripe', 'Credit or debit card']]
-      .filter(m => !methods[m[0]] || methods[m[0]].enabled !== false);
-    const pay = PAYS.some(m => m[0] === this.state.coPay) ? this.state.coPay : null;
-    const bank = methods.bank_transfer || {};
+    // ---- step 3 · payment (printoka.com's checkout: Direct bank transfer · iPay88 · Stripe · Wallet payment)
+    if (u && !this.state.credit && !this._coCredit) { this._coCredit = true; this.loadAccount(); }
+    const PAYKEYS = ['bank_transfer', 'ipay88', 'card_test', 'wallet'];
+    const pay = PAYKEYS.indexOf(this.state.coPay) >= 0 ? this.state.coPay : null;
     const s3 = h('div', null,
-      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 10 } },
-        PAYS.map(m => h('div', { key: m[0] }, choice(pay === m[0], m[1], m[2], () => this.setState({ coPay: m[0], orderErr: null }))))),
-      pay === 'bank_transfer' ? h('div', { style: { marginTop: 12, border: '1px solid ' + HAIR, background: ALT, borderRadius: 10, padding: '14px 16px', fontSize: 13, lineHeight: 1.8 } },
-        bank.accountNo
-          ? [h('div', { key: 'b', style: { fontWeight: 600 } }, bank.bankName || 'Bank'),
-             h('div', { key: 'n' }, h('span', { style: { color: MUT } }, 'Acc no. '), h('b', null, bank.accountNo)),
-             h('div', { key: 'a' }, h('span', { style: { color: MUT } }, 'Name '), h('b', null, bank.accountName || '')),
-             h('div', { key: 'x', style: { fontSize: 12, color: MUT, marginTop: 4 } }, 'Upload your bank-in slip from your dashboard after you place the order.')]
-          : h('div', { style: { color: MUT } }, 'We’ll email you our bank account details with your order confirmation.')) : null,
-      h('label', { style: { display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13, color: INK, marginTop: 16, cursor: 'pointer', lineHeight: 1.5 } },
-        h('input', { type: 'checkbox', checked: !!this.state.coTerms, onChange: e => this.setState({ coTerms: e.target.checked, orderErr: null }), style: { marginTop: 3, accentColor: TEAL } }),
-        h('span', null, 'I confirm that I have read and understood all the ', h('a', { href: '/terms/', target: '_blank', rel: 'noopener', style: { color: '#2f7fd1' } }, 'Terms and Conditions'), '.')));
+      this.payList({ value: pay, total: t.total, onChange: k => this.setState({ coPay: k, orderErr: null }) }),
+      h('div', { style: { fontSize: 13.5, color: MUT, lineHeight: 1.7, marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10 } },
+        h('div', null, 'Your personal data will be used to process your order, support your experience throughout this website, and for other purposes described in our ', h('a', { href: '/terms/', target: '_blank', rel: 'noopener', style: { color: TEAL } }, 'privacy policy'), '.'),
+        h('div', null, h('b', { style: { color: INK } }, 'Notice: '), 'Please make sure all the details and artwork were ordered correctly. There will be ', h('b', { style: { color: INK } }, 'No Withdrawal Refund for Bank Transfers, Stripe & Ipay88 payment'), '. All refunds will only be ', h('b', { style: { color: INK } }, 'credited to your Printoka Wallet'), '.'),
+        h('div', null, 'Shall you need clarification about your order, please contact us before proceeding to payment.')));
 
     // ---- order summary + place order
-    const avail = (this.state.credit && this.state.credit.balance) || 0;
-    const applied = this.state.coCredit ? Math.min(avail, t.total) : 0;
-    const due = t.total - applied;
-    const missingArt = cart.filter(it => !it.artLater && !(it.artworks || []).some(Boolean)).length;
-    const canPlace = step === 3 && !!pay && !!this.state.coTerms && !this.state.placing;
+    const applied = 0, avail = 0;
+    const due = t.total;
+    const missingArt = this.cartMissingArt ? this.cartMissingArt() : 0;
+    const canPlace = step === 3 && !!pay && !missingArt && !this.state.placing;
     const place = () => {
       if (this.state.placing) return;
+      if (missingArt) return this.setState({ orderErr: 'Upload the artwork for every job in your cart first.' });
       if (step !== 3) return this.setState({ orderErr: 'Finish the steps on the left first.' });
       if (!pay) return this.setState({ orderErr: 'Choose how you would like to pay.' });
-      if (!this.state.coTerms) return this.setState({ orderErr: 'Please confirm the Terms and Conditions.' });
-      this.placeOrder();
+      if (pay === 'wallet' && ((this.state.credit && this.state.credit.balance) || 0) + 0.001 < t.total) return this.setState({ orderErr: 'Your wallet balance is not enough. Top up or choose another payment method.' });
+      this.setState({ coTermsOpen: true, orderErr: null });
     };
-    return h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px 0' } },
-      h('h1', { style: { margin: '2px 0 16px', fontSize: 28, fontWeight: 600, letterSpacing: '-.02em' } }, 'Checkout'),
+    const termsPopup = this.state.coTermsOpen ? h('div', { key: 'tc', onClick: () => this.setState({ coTermsOpen: false }), style: { position: 'fixed', inset: 0, zIndex: 98, background: 'rgba(15,20,25,.5)', display: 'grid', placeItems: 'center', padding: 16 } },
+      h('div', { onClick: e => e.stopPropagation(), role: 'alertdialog', 'aria-modal': 'true', 'aria-label': 'Terms and Conditions', style: { background: '#fff', borderRadius: 12, maxWidth: 460, width: '100%', padding: '22px 24px', boxShadow: '0 18px 50px rgba(0,0,0,.25)' } },
+        h('div', { style: { fontSize: 17, fontWeight: 700, marginBottom: 10 } }, 'Before we place your order'),
+        h('div', { style: { fontSize: 13.5, color: INK, lineHeight: 1.6, marginBottom: 20 } }, 'I confirm that I have read and understood all the ', h('a', { href: '/terms/', target: '_blank', rel: 'noopener', style: { color: '#2f7fd1' } }, 'Terms and Conditions'), ', and I agree on the terms and conditions above.'),
+        h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
+          h('button', { type: 'button', onClick: () => this.setState({ coTermsOpen: false }), style: { font: '600 13.5px Montserrat,sans-serif', background: '#fff', color: INK, border: '1px solid ' + HAIR, borderRadius: 8, padding: '10px 18px', cursor: 'pointer' } }, 'Cancel'),
+          h('button', { type: 'button', onClick: () => { this.setState({ coTermsOpen: false }); this.placeOrder(); }, style: { font: '600 13.5px Montserrat,sans-serif', background: TEAL, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', cursor: 'pointer' } }, 'I agree · Place order')))) : null;
+    return h('div', { style: { background: '#f5f6f8', margin: '-10px -20px 0', padding: '36px 20px 60px' } }, h('div', { style: { maxWidth: 1180, margin: '0 auto' } },
+      h('div', { style: { width: 24, height: 3, background: TEAL, marginBottom: 12 } }),
+      h('h1', { style: { margin: '0 0 20px', fontSize: 30, fontWeight: 500, letterSpacing: '-.01em' } }, 'Checkout'),
       h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 340px', gap: 24, alignItems: 'start' } },
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
           section(1, 'Your details', s1, u ? [who.name, u.email, who.phone, who.company].filter(Boolean).join(' · ') : null),
@@ -4436,13 +4478,14 @@ class Component extends DCLogic {
             h('div', { key: 'c', style: { borderTop: '1px solid ' + HAIR, marginTop: 13, paddingTop: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' } },
               h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'Total'),
               h('span', { style: { fontSize: 25, fontWeight: 600, color: TEAL } }, this.money(due))),
-            missingArt ? h('div', { key: 'm', style: { fontSize: 12, color: '#a1660a', marginTop: 10 } }, missingArt + ' job' + (missingArt > 1 ? 's have' : ' has') + ' no artwork yet. ', h('span', { 'data-go': 'cart', style: { color: TEAL, fontWeight: 600, cursor: 'pointer' } }, 'Add it in your cart')) : null,
+            missingArt ? h('div', { key: 'm', style: { fontSize: 12.5, color: '#c0392b', marginTop: 10 } }, 'Upload the artwork for ' + (missingArt > 1 ? missingArt + ' jobs' : 'your job') + ' first. ', h('span', { 'data-go': 'cart', style: { color: TEAL, fontWeight: 600, cursor: 'pointer' } }, 'Go to cart')) : null,
             h('div', { key: 'd', style: { marginTop: 14, display: 'flex', flexDirection: 'column', gap: 9 } },
               h('button', { type: 'button', onClick: place, 'aria-disabled': !canPlace, style: { font: '600 14.5px Montserrat,sans-serif', background: TEAL, color: '#fff', border: 'none', borderRadius: 8, padding: '13px 16px', cursor: canPlace ? 'pointer' : 'not-allowed', opacity: canPlace || this.state.placing ? 1 : .55 } },
                 this.state.placing ? 'Placing…' : 'Place order · ' + this.money(due)),
               this.state.orderErr ? h('div', { role: 'alert', style: { fontSize: 12.5, color: '#c0392b', lineHeight: 1.5 } }, this.state.orderErr) : null,
               this.btn('Back to cart', 'ghost', 'cart', { justifyContent: 'center' })),
-          ]))));
+          ]))),
+      termsPopup));
   }
 
   // ===== LEARNING HUB =====
@@ -4774,24 +4817,23 @@ class Component extends DCLogic {
         ) : null),
     ]);
   }
+  // Terms & Conditions — the original printoka.com wording (web/content/terms.json, served by /api/content/terms)
   s_terms() {
-    const S = [
-      ['Terms of service', 'By placing an order you agree to these terms. Prices shown are for the specified specification and quantity; final artwork must match the order. Production begins only after payment is confirmed (or on approved credit terms) and artwork passes prepress checks.'],
-      ['Artwork & proofing', 'You are responsible for the accuracy of supplied artwork — spelling, layout, colour intent and bleed. We check files against the order and flag issues, but we do not amend content without your authorisation. Colour may vary slightly between screen and print, and between print runs.'],
-      ['Delivery & risk', 'Estimated lead times begin once artwork is approved and payment confirmed. Delivery dates are estimates; risk passes on dispatch. Import duties and taxes for cross-border shipments are borne by the recipient.'],
-      ['Refunds & remakes', 'If a job is defective due to our error, we remake or refund it. Claims must be raised within 7 days of delivery with photos. We are not liable for errors present in approved artwork, or for delays caused by incorrect delivery details.'],
-      ['Privacy (PDPA)', 'We collect only what we need to fulfil your orders and run your account, and we process it under Malaysia’s PDPA. We never sell your data. Artwork and order history are stored securely and visible only to you and the staff processing your job.'],
-      ['Membership & credit', 'Membership tiers are based on trailing-12-month spend and evaluated continuously. Store credit is a ledger balance usable on any job; it is non-transferable and non-refundable to cash except where required by law.'],
-    ];
-    return this.pageWrap([
-      this.head('Terms & policies', 'The essentials, in plain language. This summary is provided for the prototype and is not a substitute for the final legal agreement.'),
-      h('div', { key: 'b', style: { display: 'flex', flexDirection: 'column', gap: 16, marginTop: 22 } },
-        S.map((s, i) => h('div', { key: i, style: { border: '1px solid ' + HAIR, borderRadius: 12, padding: 20, background: '#fff' } },
-          h('div', { style: { fontSize: 16, fontWeight: 600, marginBottom: 8 } }, s[0]),
-          h('p', { style: { margin: 0, fontSize: 13.5, color: MUT, lineHeight: 1.8 } }, s[1])))),
-      h('div', { key: 'f', style: { marginTop: 20, fontSize: 12.5, color: FAINT } }, 'Questions about these terms? ', h('span', { 'data-go': 'support', style: { color: TEAL, fontWeight: 600, cursor: 'pointer' } }, 'Contact support →')),
-    ]);
+    const T = this.state.terms;
+    if (T === undefined && typeof fetch === 'function' && !this._termsLoading) { this._termsLoading = true; fetch('/api/content/terms').then(r => r.json()).then(d => this.setState({ terms: d.terms || null })).catch(() => this.setState({ terms: null })); }
+    return h('div', { style: { background: '#f5f6f8', margin: '-10px -20px 0', padding: '36px 20px 60px' } },
+      h('div', { style: { maxWidth: 980, margin: '0 auto', background: '#fff', border: '1px solid #e6e8eb', padding: '32px 36px 40px' } },
+        h('div', { style: { width: 24, height: 3, background: TEAL, marginBottom: 12 } }),
+        h('h1', { style: { margin: '0 0 20px', fontSize: 32, fontWeight: 500, letterSpacing: '-.01em' } }, 'Terms & Conditions'),
+        !T ? h('div', { style: { color: FAINT, fontSize: 14 } }, T === null ? 'The terms could not be loaded.' : 'Loading…')
+        : h('div', { style: { fontSize: 14.5, color: '#444', lineHeight: 1.75 } },
+            (T.intro || []).map((p, i) => h('p', { key: 'i' + i, style: { margin: '0 0 14px' } }, p)),
+            (T.sections || []).map((sec, i) => h('section', { key: 's' + i, style: { marginTop: 26 } },
+              h('h2', { style: { fontSize: 16, fontWeight: 600, letterSpacing: '.02em', color: INK, margin: '0 0 10px' } }, sec.title),
+              sec.items.length > 1 ? h('ul', { style: { margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 8 } }, sec.items.map((x, k) => h('li', { key: k }, x)))
+                : h('p', { style: { margin: 0 } }, sec.items[0] || ''))))));
   }
+
 
   // ===== CONTACT / CUSTOM QUOTE (user, 2026-09-28) =====
   // configurator-style: three sections (Customer Details · Product Details · Price Expectation), one question per row that
@@ -4907,7 +4949,7 @@ class Component extends DCLogic {
       const rows = orders.filter(o => !oq || o.id.toLowerCase().indexOf(oq) >= 0).map(o => [
         (o.createdAt || '').slice(0, 10),
         h('span', { 'data-go': 'trackorder:' + o.id, style: { color: '#E52220', fontWeight: 600, cursor: 'pointer' } }, o.id.replace('PO-2026-', '')),
-        this.pillDot(o.status === 'paid' ? 'Paid' : o.status === 'completed' ? 'Completed' : (o.status || '').replace(/_/g, ' '), o.status === 'completed' ? 'ok' : o.status === 'paid' ? 'teal' : 'warn'),
+        this.pillDot(o.status === 'paid' ? 'Payment received' : o.status === 'completed' ? 'Completed' : o.status === 'pending_payment' ? 'Pending payment' : (o.status || '').replace(/_/g, ' '), o.status === 'completed' ? 'ok' : o.status === 'paid' ? 'teal' : 'warn'),
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } }, (o.items || []).map((it, i) => h('span', { key: i, style: { fontSize: 12.5 } }, it.product))),
         this.money(o.total),
         h('span', { style: { display: 'flex', gap: 12 } },
@@ -4916,7 +4958,7 @@ class Component extends DCLogic {
           h('span', { role: 'button', tabIndex: 0, onClick: () => this.reorder(o), title: 'Order the same again', style: { cursor: 'pointer', color: TEAL, fontWeight: 600, fontSize: 12.5 } }, 'Reorder')),
       ]);
       content = [stitle('Orders'),
-        this.filterRow({ searchKey: 'coSearch', dateKey: 'coDate', statusKey: 'coStatus', statuses: ['Paid', 'Completed', 'Pending payment'] }),
+        this.filterRow({ searchKey: 'coSearch', dateKey: 'coDate', statusKey: 'coStatus', statuses: ['Payment received', 'Completed', 'Pending payment'] }),
         this.dataCard([{ label: 'Date' }, { label: 'Order' }, { label: 'Status' }, { label: 'Items' }, { label: 'Amount', right: true }, { label: '', right: true }], rows, { empty: 'No orders yet.', minWidth: 760 })];
     } else if (tab === 'Invoices') {
       const orderInv = orders.map(o => ({ date: (o.createdAt || '').slice(0, 10), inv: 'INV-' + o.id.replace('PO-', ''), order: o.id, job: (o.items || []).map(it => it.product).join(', '), amount: o.total, open: () => this.openDoc(o.id, 'invoice') }));
@@ -4935,7 +4977,7 @@ class Component extends DCLogic {
       const rows = (credit.ledger || []).map(e => [
         (e.ts || '').slice(0, 10),
         e.orderId ? h('span', { style: { color: '#E52220', fontWeight: 600 } }, e.orderId.replace('PO-2026-', '')) : '',
-        (e.reason === 'TOPUP' ? 'Reload' : e.reason === 'ORDER_OFFSET' ? 'Order' : e.reason) + (e.orderId ? ' #' + e.orderId.replace('PO-2026-', '') : ''),
+        (e.reason === 'TOPUP' ? 'Reload' : (e.reason === 'ORDER_OFFSET' || e.reason === 'ORDER_PAYMENT') ? 'Order' : e.reason === 'REFUND' ? 'Refund for Order' : e.reason) + (e.orderId ? ' #' + e.orderId.replace('PO-2026-', '') : ''),
         this.pillDot(e.amount < 0 ? 'DEBIT' : 'CREDIT', e.amount < 0 ? 'warn' : 'ok'),
         e.amount < 0 ? Math.abs(e.amount).toFixed(2) : '0.00',
         e.amount >= 0 ? e.amount.toFixed(2) : '0.00',
@@ -5069,7 +5111,7 @@ class Component extends DCLogic {
       return 'In production';
     };
     return h('div', { style: { maxWidth: 1000, margin: '0 auto', padding: '10px 20px 0' } },
-      this.head('Order ' + o.id, (o.customer && o.customer.name ? o.customer.name + ' · ' : '') + jobs.length + ' job(s) · ' + (o.channel || 'online') + ' · ' + (paid ? 'paid' : 'payment pending'),
+      this.head('Order ' + o.id, null,
         [this.btn('Invoice', 'ghost', 'doc:invoice:' + o.id), this.btn('Order slip', 'ghost', 'doc:slip:' + o.id), this.btn('Contact support', 'teal', 'crm')]),
       lookup,
       h('div', { key: 't', style: { border: '1px solid ' + HAIR, borderRadius: 14, padding: 20, marginBottom: 20 } },
@@ -5081,24 +5123,35 @@ class Component extends DCLogic {
               i < STAGES.length - 1 && h('span', { style: { flex: 1, height: 2, background: i < cur ? TEAL : '#eaeaea' } })),
             h('div', { style: { fontSize: 12.5, fontWeight: i === cur ? 600 : 500, color: i > cur ? FAINT : INK } }, s)))),
         dest ? h('div', { style: { marginTop: 16, fontSize: 13, color: INK, lineHeight: 1.6 } }, h('b', null, atOutlet ? 'Collect at: ' : 'Delivering to: '), (dest.name || '') + (dest.address ? ', ' + dest.address : '')) : null,
-        !paid ? h('div', { style: { marginTop: 16, background: '#fff5e2', color: '#a1660a', borderRadius: 8, padding: '11px 13px', fontSize: 12.5, lineHeight: 1.6 } }, 'Payment is pending — production starts once payment is confirmed. Paid by bank transfer? Our team validates it shortly.') : null,
+        !paid ? this.orderPayPanel(o) : null,
         // shipped to the customer: they confirm it arrived (completes the delivery)
         this.userType() === 'customer' && o.userId === (this.state.user || {}).id && jobs.some(j => j.status === 'dispatched' && (j.destination || {}).type === 'customer')
           ? h('div', { style: { marginTop: 16, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: '#e6f4ea', borderRadius: 8, padding: '11px 13px' } },
             h('span', { style: { fontSize: 13, color: '#1f5e2a', flex: 1 } }, 'Your order is on its way. Let us know once it arrives.'),
             h('span', { onClick: () => fetch('/api/orders/' + o.id + '/received', { method: 'POST', headers: this.authHeaders() }).then(r => r.json()).then(d => { if (d.order) this.setState({ trackOrder: d.order }); }).catch(() => {}),
               style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13.5, padding: '10px 18px', borderRadius: 8, cursor: 'pointer' } }, 'I’ve received my order')) : null),
-      h('div', { key: 'j', style: { display: 'flex', flexDirection: 'column', gap: 14 } },
-        jobs.map((j, i) => h('div', { key: i, style: { border: '1px solid ' + HAIR, borderRadius: 12, padding: 16, display: 'flex', gap: 14, background: '#fff' } },
-          h('div', { style: { flex: '0 0 96px' } }, this.art((this.pkProducts().find(p => p.name === j.product) || {}).name || j.product)),
-          h('div', { style: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 7 } },
-            h('div', { style: { display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' } },
-              h('span', { style: { font: '600 12px ui-monospace,Menlo,monospace', color: TEAL } }, j.id),
-              h('span', { style: { fontSize: 14.5, fontWeight: 600 } }, j.product),
+      h('div', { key: 'j', style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+        jobs.map((j, i) => {
+          const it = (o.items || [])[i] || {};
+          const lines = (j.specLines && j.specLines.length ? j.specLines : it.specLines) || String(j.spec || '').split(' · ').filter(Boolean).map(x => ['', x]);
+          const arts = (o.files || []).filter(f => f.kind === 'artwork' && (f.line || 1) === i + 1);
+          const row = (label, value, strong) => h('div', { key: label, style: { display: 'grid', gridTemplateColumns: 'minmax(120px,240px) minmax(0,1fr)', gap: 12, padding: '9px 0', borderTop: '1px solid ' + LINE, fontSize: 14 } },
+            h('span', { style: { color: MUT } }, label), h('span', { style: { color: INK, fontWeight: strong ? 600 : 400 } }, value));
+          return h('div', { key: i, style: { border: '1px solid #e6e8eb', background: '#fff', padding: '22px 24px' } },
+            h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 14 } },
+              h('div', null, h('div', { style: { fontSize: 12.5, color: FAINT } }, 'Job ' + (i + 1) + ' · ' + j.id), h('div', { style: { fontSize: 20, fontWeight: 500, marginTop: 2 } }, j.product)),
               h('span', { style: { marginLeft: 'auto' } }, this.chip(custLabel(j), j.status === 'completed' ? 'ok' : (j.status === 'rejected' ? 'bad' : 'teal')))),
-            h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.6 } }, j.spec || '—'),
-            h('div', { style: { fontSize: 12, color: FAINT } }, 'Qty ' + (j.qty || 0).toLocaleString() + ' · ' + this.money(j.price || 0) + ' · artwork: ' + ((j.artwork && j.artwork.file) || '—')),
-            this.artworkAction(o, j, i)))),
+            h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(110px,150px) minmax(0,1fr)', gap: 22, alignItems: 'start' } },
+              h('div', null, this.art((this.pkProducts().find(p => p.name === j.product) || {}).name || j.product)),
+              h('div', null,
+                lines.map((l, k) => row(l[0] || 'Specification', l[1])),
+                row('Quantity (pcs)', (j.qty || 0).toLocaleString()),
+                j.productionTime || it.productionTime ? row('Production time', j.productionTime || it.productionTime) : null,
+                row('Total', this.money(j.price || it.lineTotal || 0), true),
+                row('Artwork', arts.length ? h('span', { style: { display: 'flex', flexDirection: 'column', gap: 4 } }, arts.map(f => h('span', { key: f.id, role: 'button', tabIndex: 0, onClick: () => this.openOrderFile ? this.openOrderFile(o.id, f) : null, style: { color: '#2f7fd1', cursor: 'pointer', wordBreak: 'break-word' } }, f.name)))
+                  : ((j.artwork && j.artwork.file && !/^pending-upload/.test(j.artwork.file)) ? j.artwork.file : '—')),
+                this.artworkAction(o, j, i))));
+        }),
         jobs.length === 0 ? h('div', { style: { color: FAINT, fontSize: 13 } }, 'No jobs on this order.') : null));
   }
 

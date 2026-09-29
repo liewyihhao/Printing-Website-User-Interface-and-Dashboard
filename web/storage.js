@@ -76,18 +76,18 @@
     const pages = Math.max(1, Math.ceil(list.length / PER_PAGE)), page = Math.min(this.state.agPage || 1, pages);
     const shown = list.slice((page - 1) * PER_PAGE, page * PER_PAGE);
     const del = !!this.state.agDelMode, sel = this.state.agSel || {}, nSel = Object.keys(sel).filter(k => sel[k]).length;
-    const consent = !!this.state.agConsent;
-    const onFiles = fl => this.agUpload(fl).then(done => { if (mode === 'pick' && done.length === 1 && consent && onPick) onPick(done[0]); });
+    const picked = mode === 'pick' ? (all || []).find(a => a.id === this.state.agPick) : null;
+    // a file just uploaded while choosing for a job is selected, ready to confirm
+    const onFiles = fl => this.agUpload(fl).then(done => { if (mode === 'pick' && done.length) this.setState({ agPick: done[0].id }); });
     const choose = a => {
       if (del) return this.setState({ agSel: Object.assign({}, sel, { [a.id]: !sel[a.id] }) });
       if (mode !== 'pick') return this.agPreview(a);
-      if (!consent) return this.setState({ agErr: 'Please tick the box to confirm your artwork is final.' });
-      if (onPick) onPick(a);
+      this.setState({ agPick: this.state.agPick === a.id ? null : a.id, agErr: null });
     };
     const badge = ext => h('div', { style: { display: 'grid', placeItems: 'center', height: '100%' } },
       h('div', { style: { position: 'relative', width: 44, height: 54, background: '#fff', border: '1px solid #d5d8dc', borderRadius: 3 } },
         h('span', { style: { position: 'absolute', left: -6, bottom: 9, background: TEAL, color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 2 } }, (ext || 'file').toUpperCase().slice(0, 4))));
-    const card = a => { const on = !!sel[a.id];
+    const card = a => { const on = del ? !!sel[a.id] : (mode === 'pick' && this.state.agPick === a.id);
       return h('div', { key: a.id, role: 'button', tabIndex: 0, onClick: () => choose(a), onKeyDown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(a); } },
         title: a.name, style: { position: 'relative', background: '#fff', border: '1px solid ' + (on ? TEAL : HAIR), boxShadow: on ? '0 0 0 2px ' + TEAL : 'none', borderRadius: 8, overflow: 'hidden', cursor: 'pointer', display: 'flex', flexDirection: 'column' } },
         del ? h('span', { style: { position: 'absolute', top: 8, left: 8, height: 18, width: 18, borderRadius: 4, border: '2px solid ' + (on ? TEAL : '#b8bcc2'), background: on ? TEAL : '#fff', color: '#fff', fontSize: 12, lineHeight: '14px', textAlign: 'center', zIndex: 1 } }, on ? '✓' : '') : null,
@@ -99,9 +99,6 @@
           h('div', { style: { fontSize: 10.5, color: '#c4c7cc' } }, fmtDate(a.at)))); };
     const btn = (label, onClick, kind, extra) => h('button', { type: 'button', onClick, style: Object.assign({ font: '600 12.5px Montserrat,sans-serif', letterSpacing: '.04em', border: kind === 'ghost' ? '1px solid ' + HAIR : 'none', background: kind === 'ghost' ? '#fff' : TEAL, color: kind === 'ghost' ? INK : '#fff', borderRadius: 6, padding: '9px 16px', cursor: 'pointer' }, extra || {}) }, label);
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
-      mode === 'pick' ? h('label', { style: { display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13, color: INK, background: consent ? '#f3faf5' : '#fdf2f2', border: '1px solid ' + (consent ? '#cfe8d6' : '#f3c6c5'), borderRadius: 8, padding: '10px 12px', cursor: 'pointer', lineHeight: 1.5 } },
-        h('input', { type: 'checkbox', checked: consent, onChange: e => this.setState({ agConsent: e.target.checked, agErr: null }), style: { marginTop: 3, accentColor: TEAL } }),
-        'I confirm this artwork is final. I understand it cannot be changed after my order is submitted.') : null,
       // drop zone
       h('label', { onDragOver: e => e.preventDefault(), onDrop: e => { e.preventDefault(); onFiles(e.dataTransfer.files); },
         style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap', background: '#e6eaf2', border: '1px dashed #c4ccda', borderRadius: 8, padding: '26px 16px', cursor: 'pointer', color: '#6b7380', fontSize: 17 } },
@@ -118,7 +115,8 @@
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', borderTop: '1px solid ' + HAIR, paddingTop: 12 } },
         del ? [btn(nSel ? 'DELETE ' + nSel + ' FILE' + (nSel > 1 ? 'S' : '') : 'SELECT FILES TO DELETE', () => { if (nSel && (typeof window === 'undefined' || window.confirm('Delete ' + nSel + ' file' + (nSel > 1 ? 's' : '') + ' from your Artwork Storage?'))) this.agDelete(Object.keys(sel).filter(k => sel[k])); }, 'red', { key: 'd', opacity: nSel ? 1 : .6 }),
           btn('Cancel', () => this.setState({ agDelMode: false, agSel: {} }), 'ghost', { key: 'c' })]
-          : (list.length ? btn('DELETE FILES', () => this.setState({ agDelMode: true, agSel: {} }), 'red') : null),
+          : [mode === 'pick' ? btn('CONFIRM', () => { if (picked) this.setState({ agAgree: true }); }, 'red', { key: 'ok', opacity: picked ? 1 : .45, cursor: picked ? 'pointer' : 'not-allowed', padding: '10px 26px' }) : null,
+             list.length ? btn('DELETE FILES', () => this.setState({ agDelMode: true, agSel: {}, agPick: null }), 'ghost', { key: 'del' }) : null],
         h('label', { style: { marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: MUT } }, 'Sort By',
           h('select', { value: sort, onChange: e => this.setState({ agSort: e.target.value, agPage: 1 }), style: { font: '400 13px Montserrat,sans-serif', padding: '7px 10px', border: '1px solid ' + HAIR, borderRadius: 6, background: '#fff' } },
             h('option', { value: 'date_desc' }, 'Date Desc'), h('option', { value: 'date_asc' }, 'Date Asc'), h('option', { value: 'name' }, 'Name A–Z'))),
@@ -130,15 +128,24 @@
   // the modal: opened from a cart job's artwork slot (state.ag = { line, slot })
   P.artStorageModal = function () {
     const ag = this.state.ag; if (!ag) return null;
-    const close = () => this.setState({ ag: null, agErr: null, agDelMode: false, agSel: {} });
+    const close = () => this.setState({ ag: null, agErr: null, agDelMode: false, agSel: {}, agPick: null, agAgree: false });
     const pick = a => { this.cartSetArtwork(ag.line, ag.slot, a); close(); };
+    const picked = (this.state.agList || []).find(a => a.id === this.state.agPick);
     return h('div', { key: 'ag', onClick: close, style: { position: 'fixed', inset: 0, zIndex: 98, background: 'rgba(15,20,25,.55)', display: 'grid', placeItems: 'start center', padding: '4vh 16px', overflow: 'auto' } },
       h('div', { onClick: e => e.stopPropagation(), role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Artwork Storage', style: { position: 'relative', background: '#fff', borderRadius: 10, width: '100%', maxWidth: 1180, padding: '20px 22px 18px', boxShadow: '0 24px 60px rgba(0,0,0,.3)' } },
         h('button', { type: 'button', onClick: close, 'aria-label': 'Close', style: { position: 'absolute', top: 12, right: 12, height: 30, width: 30, borderRadius: '50%', border: 'none', background: INK, color: '#fff', fontSize: 16, cursor: 'pointer' } }, '×'),
         h('div', { style: { marginBottom: 14, paddingRight: 40 } },
           h('div', { style: { fontSize: 20, fontWeight: 700, letterSpacing: '.02em', textTransform: 'uppercase' } }, 'Artwork Storage'),
-          h('div', { style: { fontSize: 13, color: MUT, marginTop: 2 } }, 'Choose & click to select the file for ' + (ag.label || 'this job'))),
-        this.agPanel('pick', pick)));
+          h('div', { style: { fontSize: 13, color: MUT, marginTop: 2 } }, 'Choose & click to select the file for ' + (ag.label || 'this job') + ', then Confirm')),
+        this.agPanel('pick', pick),
+        this.state.agAgree && picked ? h('div', { onClick: e => { e.stopPropagation(); this.setState({ agAgree: false }); }, style: { position: 'absolute', inset: 0, borderRadius: 10, background: 'rgba(255,255,255,.72)', display: 'grid', placeItems: 'center', padding: 16 } },
+          h('div', { onClick: e => e.stopPropagation(), role: 'alertdialog', 'aria-modal': 'true', 'aria-label': 'Confirm artwork', style: { background: '#fff', borderRadius: 12, maxWidth: 440, width: '100%', padding: '22px 24px', boxShadow: '0 18px 50px rgba(0,0,0,.25)', border: '1px solid ' + HAIR } },
+            h('div', { style: { fontSize: 17, fontWeight: 700, marginBottom: 8 } }, 'Confirm your artwork'),
+            h('div', { style: { fontSize: 13.5, color: INK, lineHeight: 1.6, marginBottom: 6 } }, 'I confirm this artwork is finalised. I understand it cannot be changed after my order is submitted.'),
+            h('div', { style: { fontSize: 12.5, color: MUT, marginBottom: 18, wordBreak: 'break-word' } }, picked.name),
+            h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
+              h('button', { type: 'button', onClick: () => this.setState({ agAgree: false }), style: { font: '600 13.5px Montserrat,sans-serif', background: '#fff', color: INK, border: '1px solid ' + HAIR, borderRadius: 8, padding: '10px 18px', cursor: 'pointer' } }, 'Cancel'),
+              h('button', { type: 'button', onClick: () => { this.setState({ agAgree: false, agPick: null }); pick(picked); }, style: { font: '600 13.5px Montserrat,sans-serif', background: TEAL, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', cursor: 'pointer' } }, 'I agree')))) : null));
   };
 
   // ---------------------------------------------------------------- cart job artwork slots
@@ -160,31 +167,112 @@
     const cart = (this.state.cart || []).map((it, i) => i === line ? Object.assign({}, it, { artLater: on }) : it);
     this.setState({ cart }); this.saveCart(cart);
   };
-  P.cartArtworkBlock = function (it, i) {
+  P.cartMissingArt = function () {
+    return (this.state.cart || []).filter(it => { const n = this.artSlots(it); for (let k = 0; k < n; k++) if (!(it.artworks || [])[k]) return true; return false; }).length;
+  };
+  // the job's artwork rows, in the cart's label / value layout (row = the cart's row renderer)
+  P.cartArtworkBlock = function (it, i, row) {
     if (this.state.user) this.agLoad();
     const n = this.artSlots(it), lib = this.state.agList || [];
-    const link = (label, on) => h('span', { role: 'button', tabIndex: 0, onClick: on, onKeyDown: e => { if (e.key === 'Enter') on(); }, style: { fontSize: 12.5, fontWeight: 600, color: '#2f7fd1', cursor: 'pointer' } }, label);
-    const open = k => this.setState({ ag: { line: i, slot: k, label: it.name + (n > 1 ? ' · Artwork ' + (k + 1) : '') }, agErr: null });
-    const rows = [];
+    const link = (label, on) => h('span', { role: 'button', tabIndex: 0, onClick: on, onKeyDown: e => { if (e.key === 'Enter') on(); }, style: { fontSize: 13.5, color: '#2f7fd1', cursor: 'pointer' } }, label);
+    const open = k => this.setState({ ag: { line: i, slot: k, label: it.name + (n > 1 ? ' · Artwork ' + (k + 1) : '') }, agErr: null, agPick: null });
+    const out = [];
     for (let k = 0; k < n; k++) {
       const a = (it.artworks || [])[k], full = a && (lib.find(x => x.id === a.id) || a);
       const label = n > 1 ? 'Artwork ' + (k + 1) : 'Artwork';
-      rows.push(h('div', { key: k, style: { display: 'flex', alignItems: 'center', gap: 14, padding: '10px 0', borderTop: k ? '1px solid ' + LINE : 'none', flexWrap: 'wrap' } },
-        h('div', { style: { fontSize: 12.5, fontWeight: 600, minWidth: 74 } }, label),
-        a ? [
-          h('div', { key: 't', style: { height: 64, width: 88, borderRadius: 6, background: '#e2e4e7', display: 'grid', placeItems: 'center', overflow: 'hidden', flex: 'none' } },
-            full.thumb ? h('img', { src: full.thumb, alt: '', style: { maxHeight: '100%', maxWidth: '100%' } }) : h('span', { style: { fontSize: 10, fontWeight: 700, color: '#fff', background: TEAL, borderRadius: 2, padding: '2px 6px' } }, (full.name.split('.').pop() || 'file').toUpperCase().slice(0, 4))),
-          h('div', { key: 'n', style: { minWidth: 0, flex: '1 1 160px', display: 'flex', flexDirection: 'column', gap: 5 } },
-            h('div', { style: { fontSize: 12.5, color: INK, wordBreak: 'break-word' } }, full.name),
-            h('div', { style: { display: 'flex', gap: 6, alignItems: 'center', fontSize: 12.5, color: FAINT } },
-              link('Preview', () => this.agPreview(full)), '|', link('Change', () => open(k)), '|', link('Remove', () => this.cartSetArtwork(i, k, null))))]
-          : it.artLater ? h('div', { style: { display: 'flex', gap: 12, alignItems: 'center', fontSize: 12.5, color: MUT } }, 'Upload later', link('Upload now', () => this.cartArtLater(i, false)))
-            : h('div', { style: { display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' } },
-              h('span', { role: 'button', tabIndex: 0, onClick: () => open(k), onKeyDown: e => { if (e.key === 'Enter') open(k); }, style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13, borderRadius: 8, padding: '8px 16px', cursor: 'pointer' } }, 'Upload artwork'),
-              k === 0 ? h('span', { role: 'button', tabIndex: 0, onClick: () => this.cartArtLater(i, true), style: { fontSize: 12.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'Upload files later') : null)));
+      const value = a
+        ? h('span', { style: { display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' } },
+            h('span', { style: { height: 64, width: 88, background: '#e2e4e7', display: 'grid', placeItems: 'center', overflow: 'hidden', flex: 'none' } },
+              full.thumb ? h('img', { src: full.thumb, alt: '', style: { maxHeight: '100%', maxWidth: '100%' } }) : h('span', { style: { fontSize: 10, fontWeight: 700, color: '#fff', background: TEAL, padding: '2px 6px' } }, (full.name.split('.').pop() || 'file').toUpperCase().slice(0, 4))),
+            h('span', { style: { minWidth: 0, flex: '1 1 150px', display: 'flex', flexDirection: 'column', gap: 5 } },
+              h('span', { style: { fontSize: 13.5, wordBreak: 'break-word' } }, full.name),
+              h('span', { style: { display: 'flex', gap: 6, alignItems: 'center', fontSize: 13.5, color: FAINT } },
+                link('Preview', () => this.agPreview(full)), '|', link('Change', () => open(k)), '|', link('Remove', () => this.cartSetArtwork(i, k, null)))))
+        : h('span', { role: 'button', tabIndex: 0, onClick: () => open(k), onKeyDown: e => { if (e.key === 'Enter') open(k); }, style: { display: 'inline-block', background: TEAL, color: '#fff', fontWeight: 500, fontSize: 14, padding: '9px 18px', cursor: 'pointer' } }, 'Upload artwork');
+      out.push(row ? row(label, value) : h('div', { key: k, style: { display: 'flex', gap: 14, alignItems: 'center', padding: '8px 0' } }, h('b', { style: { fontSize: 13, minWidth: 80 } }, label), value));
     }
-    return h('div', { key: 'art', style: { marginTop: 14, background: ALT, borderRadius: 10, padding: '13px 15px' } },
-      h('div', { style: { fontSize: 12.5, fontWeight: 600, marginBottom: 4 } }, 'Artwork upload'),
-      rows);
+    return h('div', { key: 'art' }, out);
+  };
+})();
+
+// ---------------------------------------------------------------- payment methods, as on printoka.com's checkout
+// Direct bank transfer (opens the bank account) · iPay88 · Stripe · Wallet payment (balance + Top up).
+// Used by the checkout and by My Orders ("pay this pending order"). opts: { value, onChange, total, only }
+(function () {
+  const C = window.PKComponent; if (!C) return;
+  const P = C.prototype;
+  const A = p => (typeof window !== 'undefined' && window.__asset ? window.__asset(p) : '/' + p);
+  P.payList = function (opts) {
+    const methods = ((this.state.settings && this.state.settings.payments) || {}).methods || {};
+    const bank = methods.bank_transfer || {};
+    const bal = (this.state.credit && this.state.credit.balance) || 0;
+    const total = opts.total || 0;
+    const on = k => methods[k] ? methods[k].enabled !== false : true;
+    const cards = h('span', { style: { display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto' } },
+      h('img', { src: A('assets/payments/visa.svg'), alt: 'Visa', style: { height: 22 } }), h('img', { src: A('assets/payments/mastercard.svg'), alt: 'Mastercard', style: { height: 26 } }));
+    const ROWS = [
+      ['bank_transfer', h('span', { style: { fontSize: 15 } }, 'Direct bank transfer'), null],
+      ['ipay88', h('img', { src: A('assets/payments/ipay88.jpg'), alt: 'iPay88', style: { height: 38, borderRadius: 3 } }), cards],
+      ['card_test', h('img', { src: A('assets/payments/stripe.svg'), alt: 'Stripe', style: { height: 30 } }), cards],
+      ['wallet', h('span', { style: { fontSize: 15 } }, 'Wallet payment (' + this.money(bal) + ')'), h('span', { role: 'button', tabIndex: 0, onClick: e => { e.stopPropagation(); this.setState({ tu_open: true }); }, style: { marginLeft: 'auto', border: '1px solid ' + TEAL, color: TEAL, borderRadius: 999, padding: '5px 14px', fontSize: 13.5, fontWeight: 500, cursor: 'pointer', whiteSpace: 'nowrap' } }, 'Top up')],
+    ].filter(r => on(r[0]) && (!opts.only || opts.only.indexOf(r[0]) >= 0));
+    const radio = sel => h('span', { style: { height: 16, width: 16, borderRadius: '50%', flex: 'none', border: '1.5px solid ' + (sel ? TEAL : '#9aa0a6'), background: '#fff', boxShadow: sel ? 'inset 0 0 0 3px #fff' : 'none', backgroundColor: sel ? TEAL : '#fff' } });
+    return h('div', { style: { border: '1px solid #e6e8eb' } },
+      ROWS.map((r, i) => {
+        const k = r[0], sel = opts.value === k, short = k === 'wallet' && bal + 0.001 < total;
+        const pick = () => { if (!short) opts.onChange(k); };
+        return h('div', { key: k, style: { borderTop: i ? '1px solid #e6e8eb' : 'none' } },
+          h('div', { role: 'radio', 'aria-checked': sel, 'aria-disabled': short, tabIndex: 0, onClick: pick, onKeyDown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); } },
+            style: { display: 'flex', alignItems: 'center', gap: 14, padding: '16px 14px', minHeight: 40, cursor: short ? 'default' : 'pointer' } },
+            radio(sel), h('span', { style: { opacity: short ? .5 : 1 } }, r[1]),
+            short ? h('span', { style: { fontSize: 12, color: FAINT } }, 'Not enough balance') : null,
+            r[2]),
+          sel && k === 'bank_transfer' ? h('div', { style: { background: '#f5f6f8', borderTop: '1px solid #e6e8eb', padding: '16px 18px 18px' } },
+            h('div', { style: { fontSize: 15, fontWeight: 500, marginBottom: 6 } }, 'Direct bank transfer'),
+            h('div', { style: { fontSize: 13.5, color: MUT, lineHeight: 1.6, marginBottom: 14 } }, 'Make your payment directly into our bank account. Please use your Order ID as the payment reference. Your order will not be shipped until the funds have cleared in our account.'),
+            h('div', { style: { background: '#fff', display: 'flex', alignItems: 'center', gap: 22, padding: '18px 22px' } },
+              h('span', { style: { height: 60, width: 60, borderRadius: '50%', background: '#FFC72C', display: 'grid', placeItems: 'center', flex: 'none', overflow: 'hidden' } }, h('img', { src: A('assets/payments/maybank.png'), alt: bank.bankName || 'Maybank', style: { width: 42, height: 'auto' } })),
+              h('div', { style: { fontSize: 14, lineHeight: 1.6 } },
+                h('div', null, bank.bankName || 'Maybank'),
+                h('div', null, h('span', { style: { color: MUT } }, 'Acc no. '), h('b', { style: { fontWeight: 600 } }, bank.accountNo || '')),
+                h('div', null, h('span', { style: { color: MUT } }, 'Name '), h('b', { style: { fontWeight: 600 } }, bank.accountName || ''))))) : null);
+      }));
+  };
+})();
+
+// ---------------------------------------------------------------- My Orders: a pending order's payment (user, 2026-09-29)
+// "Pending for payment to be verified. Upload your payment slip here." — or pay now with iPay88 / Stripe / the wallet.
+// The order stays Pending payment until it is paid online, or prepress confirms the slip (Payment received).
+(function () {
+  const C = window.PKComponent; if (!C) return;
+  const P = C.prototype;
+  P.orderPayPanel = function (o) {
+    const u = this.state.user || {}, pay = o.payment || {};
+    const mine = this.userType() === 'customer' && o.userId === u.id;
+    const wrap = kids => h('div', { style: { marginTop: 16, background: '#fff8ec', border: '1px solid #f3dfb8', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 12 } }, kids);
+    const title = h('div', { key: 't', style: { fontSize: 15, fontWeight: 600, color: '#8a5a00' } }, 'Pending for payment to be verified.');
+    if (!mine) return wrap([title]);
+    if (!this.state.credit && !this._tpCredit) { this._tpCredit = true; this.loadAccount(); }
+    const refresh = d => { if (d && d.order) this.setState({ trackOrder: d.order }); else this.trackLookup(o.id); this.loadUserOrders(); this.loadAccount(); };
+    const upload = e => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (!f) return; const rd = new FileReader();
+      rd.onload = () => { this.setState({ tpBusy: true, tpErr: null }); fetch('/api/orders/' + o.id + '/files', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify({ kind: 'proof', name: f.name, data: rd.result }) })
+        .then(r => r.json()).then(d => { this.setState({ tpBusy: false, tpErr: d.error || null }); if (!d.error) refresh(d); }).catch(() => this.setState({ tpBusy: false, tpErr: 'Network error.' })); };
+      rd.readAsDataURL(f); };
+    const payNow = () => { const m = this.state.tpPay; if (!m) return this.setState({ tpErr: 'Choose how you would like to pay.' });
+      this.setState({ tpBusy: true, tpErr: null });
+      fetch('/api/orders/' + o.id + '/pay-now', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify({ method: m }) })
+        .then(r => r.json()).then(d => { this.setState({ tpBusy: false, tpErr: d.error || null, tpPay: d.error ? m : null }); if (!d.error) refresh(d); }).catch(() => this.setState({ tpBusy: false, tpErr: 'Network error.' })); };
+    const red = { display: 'inline-block', background: TEAL, color: '#fff', fontWeight: 500, fontSize: 14, padding: '10px 20px', cursor: this.state.tpBusy ? 'wait' : 'pointer' };
+    return wrap([title,
+      pay.proof
+        ? h('div', { key: 's', style: { fontSize: 14, color: INK, lineHeight: 1.6 } }, 'Payment slip received (', h('b', null, pay.proof), '). We will confirm it shortly. ',
+            h('label', { style: { color: '#2f7fd1', textDecoration: 'underline', cursor: 'pointer' } }, h('input', { type: 'file', accept: '.pdf,.png,.jpg,.jpeg,.webp,.heic', style: { display: 'none' }, onChange: upload }), 'Upload another slip'))
+        : h('div', { key: 's', style: { display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' } },
+            h('span', { style: { fontSize: 14, color: INK } }, 'Upload your payment slip here.'),
+            h('label', { style: red }, h('input', { type: 'file', accept: '.pdf,.png,.jpg,.jpeg,.webp,.heic', style: { display: 'none' }, onChange: upload }), this.state.tpBusy ? 'Uploading…' : 'Upload payment slip')),
+      h('div', { key: 'o', style: { fontSize: 13, color: MUT, marginTop: 4 } }, 'Or pay now'),
+      h('div', { key: 'l', style: { background: '#fff' } }, this.payList({ value: this.state.tpPay || null, total: o.total, only: ['ipay88', 'card_test', 'wallet'], onChange: k => this.setState({ tpPay: k, tpErr: null }) })),
+      this.state.tpErr ? h('div', { key: 'e', role: 'alert', style: { fontSize: 12.5, color: '#c0392b' } }, this.state.tpErr) : null,
+      h('div', { key: 'b' }, h('span', { role: 'button', tabIndex: 0, onClick: payNow, style: Object.assign({}, red, { opacity: this.state.tpPay ? 1 : .5 }) }, 'Pay ' + this.money(o.total)))]);
   };
 })();

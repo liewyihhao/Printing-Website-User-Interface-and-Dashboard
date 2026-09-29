@@ -254,14 +254,23 @@ async function api(req, res, pathname, query) {
     }
     if (seg[1] === 'addresses' && seg[2] && req.method === 'DELETE') return send(res, 200, store.deleteAddress(me.id, seg[2]));
     if (seg[1] === 'addresses' && seg[2] === 'default' && seg[3] && req.method === 'POST') return send(res, 200, store.setDefaultAddress(me.id, seg[3]));
+    // the bank transfer slip for a pending wallet top-up (approved in the admin console)
+    if (seg[1] === 'topups' && seg[2] && seg[3] === 'slip' && req.method === 'POST') {
+      const tu = (store.load().topups || []).find(x => x.id === seg[2] && x.userId === me.id); if (!tu || tu.status !== 'pending') return send(res, 400, { error: 'Top-up not found.' });
+      const b = await readBody(req); const nm = String(b.name || 'slip').replace(/[\\/:*?"<>|]+/g, '-').slice(0, 100); const mm = String(b.data || '').match(/^data:[^;]*;base64,(.+)$/);
+      if (!mm || !/\.(pdf|png|jpe?g|webp|heic)$/i.test(nm)) return send(res, 400, { error: 'The slip must be a PDF or an image.' });
+      const dir = path.join(__dirname, '..', '..', 'private-files', 'topups'); fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, tu.id + '-' + nm), Buffer.from(mm[1], 'base64'));
+      tu.slip = tu.id + '-' + nm; tu.slipAt = store.now(); store.notify({ type: 'role', role: 'admin' }, { kind: 'topup_slip', title: 'Wallet top-up slip received', body: (me.name || me.email) + ' uploaded a bank transfer slip for top-up ' + tu.id + ' (RM ' + tu.amount.toFixed(2) + ').' }); store.save();
+      return send(res, 200, { ok: true, topup: tu });
+    }
     if (seg[1] === 'credit' && !seg[2]) {
       if (req.method === 'GET') return send(res, 200, store.getCredit(me.id));
       if (req.method === 'POST') {
         const b = await readBody(req); const amt = Math.round(Number(b.amount) * 100) / 100;
         if (!(amt > 0) || amt > 20000) return send(res, 400, { error: 'Enter a top-up between RM 1 and RM 20,000.' });
-        if (admin.commerce().payments.testMode) return send(res, 200, store.creditEntry(me.id, { reason: 'TOPUP', amount: amt, actor: 'customer (test payment)' }));
+        if (b.method !== 'bank_transfer' && admin.commerce().payments.testMode) return send(res, 200, store.creditEntry(me.id, { reason: 'TOPUP', amount: amt, actor: 'customer (' + (b.method === 'ipay88' ? 'iPay88' : 'Stripe') + ' test payment)' }));
         const db0 = store.load(); db0.topups = db0.topups || [];
-        const tu = { id: 'TU-' + Date.now().toString(36).toUpperCase(), userId: me.id, name: me.name, email: me.email, amount: amt, status: 'pending', createdAt: store.now() };
+        const tu = { id: 'TU-' + Date.now().toString(36).toUpperCase(), userId: me.id, name: me.name, email: me.email, amount: amt, method: b.method === 'bank_transfer' ? 'bank_transfer' : (b.method || 'gateway'), status: 'pending', createdAt: store.now() };
         db0.topups.unshift(tu); store.logEvent({ actor: me.email, role: 'customer', action: 'topup_request', jobId: null, from: null, to: null, note: tu.id + ' RM ' + amt }); store.save();
         return send(res, 200, Object.assign(store.getCredit(me.id), { pending: tu, message: 'Top-up of RM ' + amt.toFixed(2) + ' recorded — it is added once your payment is confirmed.' }));
       }
@@ -281,6 +290,8 @@ async function api(req, res, pathname, query) {
     const me = store.sessionCustomer(token);
     if (!me) return send(res, 401, { error: 'Please log in or sign up to place your order.' });
     body.userId = me.id;
+    // (user, 2026-09-29) no order without its artwork: every job carries at least one file from Artwork Storage
+    if (me.type === 'customer' && body.items.some(it => !Array.isArray(it.artworkRefs) || !it.artworkRefs.length)) return send(res, 400, { error: 'Please upload the artwork for every job in your cart.' });
     // member promo code / store coupon: re-verify server-side (owner, minimum spend, limits) and use the server's discount
     if (body.coupon) {
       const r = admin.checkAnyCoupon(body.userId, body.coupon, body.subtotal);
@@ -291,12 +302,17 @@ async function api(req, res, pathname, query) {
     } else { body.couponDiscount = 0; }
     const vt = admin.verifyTotals(body, me && me.type === 'customer' ? me : null);
     if (vt.error) return send(res, 400, vt);
+    const walletPay = body.payment && body.payment.method === 'wallet';
+    if (walletPay && store.getCredit(me.id).balance + 0.001 < vt.total) return send(res, 400, { error: 'Your wallet balance is not enough for this order. Top up your wallet or choose another payment method.' });
+    if (walletPay) body.creditApplied = 0;
     // store the server's own figures (rounded), never the browser's
     body.memberDiscount = vt.memberDiscount; body.shipping = vt.shipping; body.total = vt.total;
     body.tax = Math.round((Number(body.tax) || 0) * 100) / 100; body.subtotal = Math.round((Number(body.subtotal) || 0) * 100) / 100;
     const o = store.createOrder(body);
     // the artworks the customer picked from their Artwork Storage go onto each job
     artworks.attachToOrder(o.id, (body.items || []).map(it => Array.isArray(it.artworkRefs) ? it.artworkRefs.slice(0, 10) : []), me);
+    // paid from the Printoka Wallet: the wallet is debited "Order #…"
+    if (walletPay) store.creditEntry(me.id, { reason: 'ORDER_PAYMENT', amount: -o.total, actor: 'customer', orderId: o.id });
     if (body._storeCoupon) admin.recordCouponUse(body._storeCoupon, body.userId);
     ops.onOrderCreated(o);
     return send(res, 200, { ok: true, order: store.order(o.id) });
@@ -402,6 +418,23 @@ async function api(req, res, pathname, query) {
     const me = store.sessionCustomer(token);
     if (me && me.type === 'customer' && o.userId && o.userId !== me.id) return send(res, 403, { error: 'not your order' });
     return send(res, 200, { order: o });
+  }
+  // POST /api/orders/:id/pay-now { method } — the customer pays their pending order from My Orders (user, 2026-09-29)
+  if (seg[0] === 'orders' && seg[2] === 'pay-now' && req.method === 'POST') {
+    const cme = store.sessionCustomer(token); const po = store.order(seg[1]);
+    if (!cme || !po || po.userId !== cme.id) return send(res, 403, { error: 'Not your order.' });
+    if (po.payment && po.payment.status === 'validated') return send(res, 400, { error: 'This order is already paid.' });
+    const b = await readBody(req); const m = ['ipay88', 'card_test', 'wallet'].indexOf(b.method) >= 0 ? b.method : null;
+    if (!m) return send(res, 400, { error: 'Choose Stripe, iPay88 or your wallet.' });
+    if (m === 'wallet') { if (store.getCredit(cme.id).balance + 0.001 < po.total) return send(res, 400, { error: 'Your wallet balance is not enough. Top up your wallet first.' }); }
+    else if (!admin.commerce().payments.testMode) return send(res, 400, { error: 'Online payment is not connected yet. Please pay by bank transfer.' });
+    const GW = { ipay88: 'iPay88', card_test: 'Stripe', wallet: 'Printoka Wallet' };
+    po.payment = Object.assign({}, po.payment, { method: m, gateway: GW[m], reference: m === 'ipay88' ? 'T' + Date.now() : m === 'card_test' ? 'ch_' + Math.random().toString(36).slice(2, 12) : 'WALLET' });
+    if (m === 'wallet') store.creditEntry(cme.id, { reason: 'ORDER_PAYMENT', amount: -po.total, actor: 'customer', orderId: po.id });
+    const r = store.validateOrderPayment(po.id, cme.name || cme.email); if (r.error) return send(res, 400, r);
+    po.payment.validatedBy = GW[m]; po.payment.validatedAt = store.now(); outlet.onPaid(po);
+    (po.jobIds || []).forEach(jid => { const jj = store.job(jid); if (jj) { ops.normalizeJob(jj); jj.statusAt = Object.assign(jj.statusAt || {}, { [jj.status]: store.now() }); } }); ops.syncOrder(po.id); store.save();
+    return send(res, 200, { ok: true, order: store.orderView(po.id) });
   }
   // POST /api/orders/:id/pay  — validate a pending (bank-transfer/test) payment
   if (seg[0] === 'orders' && seg[2] === 'pay' && req.method === 'POST') {
@@ -677,6 +710,8 @@ async function api(req, res, pathname, query) {
     return send(res, 200, { post: p });
   }
   if (seg[0] === 'content' && seg[1] === 'faq') return send(res, 200, { faq: content.faqList() });
+  // Terms & Conditions — the original printoka.com wording (web/content/terms.json)
+  if (seg[0] === 'content' && seg[1] === 'terms') { try { return send(res, 200, { terms: JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'content', 'terms.json'), 'utf8')) }); } catch (e) { return send(res, 500, { error: 'terms unavailable' }); } }
   if (seg[0] === 'content' && seg[1] === 'downloads') return send(res, 200, { downloads: content.downloadsList() });
   if (seg[0] === 'content' && seg[1] === 'media') return send(res, 200, { media: content.mediaList() });
   if (seg[0] === 'content' && seg[1] === 'seo' && !seg[2]) return send(res, 200, { pages: content.seoList(query.locale) });

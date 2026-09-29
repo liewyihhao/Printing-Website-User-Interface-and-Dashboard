@@ -181,6 +181,7 @@ const EMAIL_TEMPLATES = [
   { id: 'wallet-transaction', name: 'Wallet transaction', trigger: 'Wallet credit/debit', type: 'Single Email', delay: 'Single Email', to: 'customer' },
   { id: 'artwork-approval', name: 'Artwork approval request', trigger: 'Prepress amended the artwork (Pending Approval)', type: 'Single Email', delay: 'Single Email', to: 'customer' },
   { id: 'order-confirmation', name: 'Order confirmation', trigger: 'Order placed', type: 'Purchase Email', delay: 'Immediately after order', to: 'customer' },
+  { id: 'order-pending-payment', name: 'Pending payment — upload your bank transfer slip', trigger: 'Order placed by Direct bank transfer', type: 'Purchase Email', delay: 'Immediately after order', to: 'customer' },
   { id: 'order-feedback', name: 'New order feedback received', trigger: 'Customer submits feedback', type: 'Single Email', delay: 'Single Email', to: 'admin' },
   { id: 'printer-draft', name: 'Printer uploaded draft', trigger: 'Vendor uploads a draft', type: 'Single Email', delay: 'Single Email', to: 'customer' },
   { id: 'all-quotes-received', name: 'All custom quotes received', trigger: 'All vendor quotes are in', type: 'Single Email', delay: 'Single Email', to: 'scheduler' },
@@ -293,7 +294,7 @@ function createOrder(body) {
   }));
   // payment: real gateways (stripe/ipay88/fpx/tng) are stubbed to test-mode; bank_transfer stays pending admin validation
   const method = (body.payment && body.payment.method) || 'bank_transfer';
-  const GATEWAY = { card_test: 'Stripe', stripe: 'Stripe', ipay88: 'iPay88', fpx: 'iPay88 · FPX', tng: "Touch 'n Go eWallet", bank_transfer: 'Manual bank-in', credit_term: 'Credit terms' };
+  const GATEWAY = { card_test: 'Stripe', stripe: 'Stripe', ipay88: 'iPay88', fpx: 'iPay88 · FPX', tng: "Touch 'n Go eWallet", bank_transfer: 'Direct bank transfer', credit_term: 'Credit terms', wallet: 'Printoka Wallet' };
   const paid = method !== 'bank_transfer' && method !== 'credit_term';
   const jobIds = [];
   // Every order (website, or converted from an outlet quote) lands in prepress as a New Order: prepress checks the
@@ -333,7 +334,8 @@ function createOrder(body) {
   // web order successfully placed & paid → prepress is notified an order is in their queue
   if (paid) notify({ type: 'role', role: 'prepress' }, { kind: 'order_placed', title: 'A fresh order just landed for artwork check', body: 'Order ' + oid + ' has come in for ' + (cust.name || 'a customer') + ' (' + items.length + ' item' + (items.length === 1 ? '' : 's') + ')' + (body.fromQuote ? ', from quote ' + body.fromQuote : '') + '. Have a look at the files whenever you’re ready.', cta: 'Open the order →', orderId: oid });
   logEvent({ actor: cust.email || 'online', role: 'customer', action: 'place_order', jobId: null, from: null, to: o.status, note: oid + ' — ' + items.length + ' item(s) · ' + (cust.name || '') + ' · ' + method });
-  if (cust.email) sendEmail('order-confirmation', { to: cust.email, name: cust.name, subject: 'Order ' + oid + ' confirmed', body: 'Hi ' + (cust.name || 'there') + ',\n\nThank you — we’ve received order ' + oid + ' (' + items.length + ' item' + (items.length === 1 ? '' : 's') + '), total RM ' + o.total.toFixed(2) + '.\n' + (paid ? 'Payment confirmed — it’s moving into prepress now.' : 'We’ll begin production once payment is confirmed.') + bankLines(method, o.total) + '\n\nTrack it anytime from your dashboard.' });
+  if (cust.email && method === 'bank_transfer') sendEmail('order-pending-payment', { to: cust.email, name: cust.name, subject: 'Order ' + oid + ' — pending payment', body: 'Hi ' + (cust.name || 'there') + ',\n\nThank you for your order at Printoka.com. Order ' + oid + ' (' + items.length + ' item' + (items.length === 1 ? '' : 's') + ') is pending payment of RM ' + o.total.toFixed(2) + '.' + bankLines(method, o.total) + '\n\nYou can also pay by Stripe or iPay88: open My Orders, select order ' + oid + ' and choose how to pay.\n\nWe start production once your payment is received.' });
+  else if (cust.email) sendEmail('order-confirmation', { to: cust.email, name: cust.name, subject: 'Order ' + oid + ' confirmed', body: 'Hi ' + (cust.name || 'there') + ',\n\nThank you — we’ve received order ' + oid + ' (' + items.length + ' item' + (items.length === 1 ? '' : 's') + '), total RM ' + o.total.toFixed(2) + '.\n' + (paid ? 'Payment confirmed — it’s moving into prepress now.' : 'We’ll begin production once payment is confirmed.') + bankLines(method, o.total) + '\n\nTrack it anytime from your dashboard.' });
   save();
   return o;
 }
@@ -341,8 +343,8 @@ function createOrder(body) {
 function bankLines(method, total) {
   if (method !== 'bank_transfer') return '';
   const bt = ((settings().payments || {}).methods || {}).bank_transfer || {};
-  if (!bt.accountNo) return '\n\nOur team will email you our bank account details shortly.';
-  return '\n\nPlease transfer RM ' + Number(total || 0).toFixed(2) + ' to:\n' + (bt.bankName || '') + '\nAcc no. ' + bt.accountNo + '\nName ' + (bt.accountName || '') + '\n\nThen upload your bank-in slip from your dashboard.';
+  if (!bt.accountNo) return '';
+  return '\n\nPlease transfer RM ' + Number(total || 0).toFixed(2) + ' to:\n' + (bt.bankName || '') + '\nAcc no. ' + bt.accountNo + '\nName ' + (bt.accountName || '') + '\n\nUse your Order ID as the payment reference, then upload your bank transfer slip: My Orders → your order → Upload payment slip.';
 }
 // mark a pending order paid (bank-transfer validated by admin, or a test payment)
 function validateOrderPayment(oid, actor) {
