@@ -265,14 +265,14 @@
     const red = { display: 'inline-block', background: TEAL, color: '#fff', fontWeight: 500, fontSize: 14, padding: '10px 20px', cursor: this.state.tpBusy ? 'wait' : 'pointer' };
     return wrap([title,
       pay.proof
-        ? h('div', { key: 's', style: { fontSize: 14, color: INK, lineHeight: 1.6 } }, 'Payment slip received (', h('b', null, pay.proof), '). We will confirm it shortly. ',
-            h('label', { style: { color: '#2f7fd1', textDecoration: 'underline', cursor: 'pointer' } }, h('input', { type: 'file', accept: '.pdf,.png,.jpg,.jpeg,.webp,.heic', style: { display: 'none' }, onChange: upload }), 'Upload another slip'))
+        ? h('div', { key: 's', style: { fontSize: 14, color: INK, lineHeight: 1.6 } }, 'Payment slip received (', h('b', null, pay.proof), '). We will confirm it shortly.')
         : h('div', { key: 's', style: { display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' } },
             h('span', { style: { fontSize: 14, color: INK } }, 'Upload your payment slip here.'),
             h('label', { style: red }, h('input', { type: 'file', accept: '.pdf,.png,.jpg,.jpeg,.webp,.heic', style: { display: 'none' }, onChange: upload }), this.state.tpBusy ? 'Uploading…' : 'Upload payment slip')),
-      h('div', { key: 'o', style: { fontSize: 13, color: MUT, marginTop: 4 } }, 'Or pay now'),
-      h('div', { key: 'l', style: { background: '#fff' } }, this.payList({ value: this.state.tpPay || null, total: o.total, only: ['ipay88', 'card_test', 'wallet'], onChange: k => this.setState({ tpPay: k, tpErr: null }) })),
+      // a slip is in: prepress confirms it — no second payment offered
+      pay.proof ? null : h('div', { key: 'o', style: { fontSize: 13, color: MUT, marginTop: 4 } }, 'Or pay now'),
+      pay.proof ? null : h('div', { key: 'l', style: { background: '#fff' } }, this.payList({ value: this.state.tpPay || null, total: o.total, only: ['ipay88', 'card_test', 'wallet'], onChange: k => this.setState({ tpPay: k, tpErr: null }) })),
       this.state.tpErr ? h('div', { key: 'e', role: 'alert', style: { fontSize: 12.5, color: '#c0392b' } }, this.state.tpErr) : null,
-      h('div', { key: 'b' }, h('span', { role: 'button', tabIndex: 0, onClick: payNow, style: Object.assign({}, red, { opacity: this.state.tpPay ? 1 : .5 }) }, 'Pay ' + this.money(o.total)))]);
+      pay.proof ? null : h('div', { key: 'b' }, h('span', { role: 'button', tabIndex: 0, onClick: payNow, style: Object.assign({}, red, { opacity: this.state.tpPay ? 1 : .5 }) }, 'Pay ' + this.money(o.total)))]);
   };
 })();

@@ -73,7 +73,9 @@ function destOf(type, id, j, ord) {
   const fd = j.finalDestination && j.finalDestination.type === 'customer' ? j.finalDestination : null;
   if (fd) return Object.assign({}, fd);
   const addr = ord && (typeof ord.shipTo === 'string' ? ord.shipTo : ord.shipTo ? [ord.shipTo.line1, ord.shipTo.line2, ord.shipTo.postcode, ord.shipTo.city, ord.shipTo.state].filter(Boolean).join(', ') : '');
-  return { type: 'customer', id: null, name: j.customer, address: addr || '', phone: (ord && ord.customer && ord.customer.phone) || '' };
+  // Direct to Customer: the parcel goes to the receiver the customer entered (name + contact), not to the buyer
+  const to = ord && ord.shipTo && typeof ord.shipTo === 'object' ? ord.shipTo : {};
+  return { type: 'customer', id: null, name: to.name || j.customer, address: addr || '', phone: to.phone || (ord && ord.customer && ord.customer.phone) || '' };
 }
 function origin(j) {
   if (j.route === 'outsource' && j.outsource && j.outsource.awardedTo) { const v = j.outsource.vendors.find(x => x.vendorId === j.outsource.awardedTo); return (v && v.vendorName) || 'Partner printer'; }
