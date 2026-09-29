@@ -533,6 +533,9 @@ async function api(req, res, pathname, query) {
     if (seg[1] === 'quotes' && seg[3] === 'spec') return out(outlet.saveSpec(seg[2], b, me));
     if (seg[1] === 'quotes' && seg[3] === 'price') return out(outlet.outletPrice(seg[2], b, me));
     if (seg[1] === 'quotes' && seg[3] === 'follow-up') return out(outlet.followUp(seg[2], me));
+    // Quote to Follow Up: Accepted (→ an order) / Amend (details, quantity, price, remarks) / Rejected
+    if (seg[1] === 'quotes' && seg[3] === 'accept' && req.method === 'POST') return out(outlet.acceptByOutlet(seg[2], me));
+    if (seg[1] === 'quotes' && seg[3] === 'amend' && req.method === 'POST') return out(outlet.amendQuote(seg[2], b, me));
     if (seg[1] === 'quotes' && seg[3] === 'reject') return out(outlet.rejectQuote(seg[2], b.reasons, me));
     if (seg[1] === 'quotes' && seg[3] === 'artwork') { const r = outlet.quoteArtwork(seg[2], me); if (r.error) return out(r); res.writeHead(200, { 'Content-Type': 'application/octet-stream', 'Content-Disposition': 'attachment; filename="' + r.name.replace(/"/g, '') + '"', 'Cache-Control': 'private, no-store' }); return res.end(r.data); }
     if (seg[1] === 'orders' && !seg[2]) return out({ orders: outlet.outletOrders(me).map(outlet.orderListView).sort((x, y) => String(y.date).localeCompare(String(x.date))) });

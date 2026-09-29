@@ -3477,12 +3477,13 @@ class Component extends DCLogic {
   // Clean, single-product configurator (no cross-product picker) with word-only
   // dropdowns in the aesthetic of the original site. Product detail / SEO content
   // lives in a full-width section below the configurator (see productDetails()).
-  s_product() {
-    const s = this.state, p = this.price();
-    const prod = this.pkProduct(), cfg = this.pkV(), fields = this.pkFields(), q = this.pkQuote();
-    const quoteOnly = q && q.quoteOnly;
-    const ready = this.pkReady();
-    const NAME = prod ? this.catName(prod.id) : 'Business Card';
+  // the configurator's questions exactly as on the product page ("Craft your specification"): section headers, a
+  // collapsible pop-out per question with the option images, "Not available" options greyed, and the follow-up inputs a
+  // "custom" answer opens (custom size H × W with Confirm, numbering start, foil colours…). Reused by the outlet quote
+  // form and the customer's custom quote form, where quantity is typed in (opts.manualQty).
+  cfgQuestionGroups(opts) {
+    opts = opts || {};
+    const s = this.state, prod = this.pkProduct(), cfg = this.pkV(), fields = this.pkFields();
     const selStyle = { font: '400 14px Montserrat,sans-serif', color: INK, padding: '10px 12px', border: '1px solid ' + HAIR, borderRadius: 8, background: '#fff', width: '100%', appearance: 'auto' };
     // each option is a full-width ROW: label (left) + native <select> (right), divided by a
     // hairline — the aesthetic of the original order form's "Craft your specification".
@@ -3714,6 +3715,16 @@ class Component extends DCLogic {
     const sectionHeader = (sec) => h('div', { key: 'h_' + sec, style: { display: 'flex', alignItems: 'center', gap: 10, margin: '22px 0 4px' } },
       h('span', { style: { width: 4, height: 18, background: TEAL, borderRadius: 2, flex: 'none' } }),
       h('span', { style: { fontSize: 15, fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: INK } }, sec));
+    if (opts.manualQty) groups[groups.length - 1].nodes[groups[groups.length - 1].nodes.length - 1] = opts.manualQty;
+    return { groups, sectionHeader, qtyChosen, ov };
+  }
+  s_product() {
+    const s = this.state, p = this.price();
+    const prod = this.pkProduct(), cfg = this.pkV(), fields = this.pkFields(), q = this.pkQuote();
+    const quoteOnly = q && q.quoteOnly;
+    const ready = this.pkReady();
+    const NAME = prod ? this.catName(prod.id) : 'Business Card';
+    const { groups, sectionHeader, qtyChosen, ov } = this.cfgQuestionGroups();
     return h('div', null,
       this.cfgBanner(prod, NAME),
       h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '14px 20px 0' } },
@@ -4823,8 +4834,9 @@ class Component extends DCLogic {
     const custLabel = j => {
       const s = j.status, toOutlet = (j.finalDestination || {}).type === 'outlet';
       if (s === 'intake') return 'Order received';
-      if (s === 'rejected') return 'Action needed: artwork';
-      if (['prepress', 'prepress_issue', 'escalated', 'artwork_ready'].indexOf(s) >= 0) return 'Artwork check';
+      if (s === 'rejected') return 'Action needed: new artwork';
+      if (s === 'prepress_issue') return 'Awaiting your approval';
+      if (['prepress', 'escalated', 'artwork_ready'].indexOf(s) >= 0) return 'Artwork check';
       if (s === 'dispatched') return toOutlet ? 'On the way to the outlet' : 'Shipped';
       if (s === 'ready_collect') return 'Ready to collect';
       if (s === 'completed') return toOutlet ? 'Collected' : 'Delivered';
@@ -4859,8 +4871,40 @@ class Component extends DCLogic {
               h('span', { style: { fontSize: 14.5, fontWeight: 600 } }, j.product),
               h('span', { style: { marginLeft: 'auto' } }, this.chip(custLabel(j), j.status === 'completed' ? 'ok' : (j.status === 'rejected' ? 'bad' : 'teal')))),
             h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.6 } }, j.spec || '—'),
-            h('div', { style: { fontSize: 12, color: FAINT } }, 'Qty ' + (j.qty || 0).toLocaleString() + ' · ' + this.money(j.price || 0) + ' · artwork: ' + ((j.artwork && j.artwork.file) || '—'))))),
+            h('div', { style: { fontSize: 12, color: FAINT } }, 'Qty ' + (j.qty || 0).toLocaleString() + ' · ' + this.money(j.price || 0) + ' · artwork: ' + ((j.artwork && j.artwork.file) || '—')),
+            this.artworkAction(o, j, i)))),
         jobs.length === 0 ? h('div', { style: { color: FAINT, fontSize: 13 } }, 'No jobs on this order.') : null));
+  }
+
+  // the artwork step the customer can act on from My Orders (user, 2026-09-28):
+  //  · Pending Approval — prepress's message and the amended file, and Approve (prepress can also approve for them)
+  //  · Pending Amendment — what needs fixing, and Upload new artwork (it goes straight back to the preflight check)
+  // the outlet does the same for an order it placed (its customer approves at the counter / by phone)
+  artworkAction(o, j, i, onDone) {
+    const u = this.state.user || {};
+    const mine = (this.userType() === 'customer' && o.userId === u.id) || (u.type === 'outlet' && !!o.outlet && o.outlet === u.outlet); if (!mine || !j) return null;
+    const refresh = d => { if (onDone) return onDone(d); if (d && d.order) this.setState({ trackOrder: d.order }); else this.trackLookup(o.id); };
+    const btn = (label, onClick) => h('span', { onClick, style: { alignSelf: 'flex-start', background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13.5, padding: '10px 18px', borderRadius: 8, cursor: 'pointer' } }, label);
+    const panel = kids => h('div', { style: { marginTop: 6, border: '1px solid ' + HAIR, borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10, background: '#fffaf5' } }, kids);
+    if (j.status === 'prepress_issue' && j.approvalRequest) {
+      const ar = j.approvalRequest, f = ar.file;
+      const open = () => fetch('/api/orders/' + o.id + '/amended/' + j.id + '/' + f.id, { headers: this.authHeaders() }).then(r => r.ok ? r.blob() : null).then(b => { if (b && typeof window !== 'undefined') window.open(URL.createObjectURL(b), '_blank'); });
+      return panel([h('b', { key: 't', style: { fontSize: 13.5 } }, 'Please check and approve your artwork'),
+        h('div', { key: 'm', style: { fontSize: 13, lineHeight: 1.65, whiteSpace: 'pre-wrap' } }, ar.note || 'We have amended your artwork for your approval.'),
+        f ? h('span', { key: 'f', onClick: open, style: { color: TEAL, fontWeight: 600, fontSize: 13, cursor: 'pointer' } }, '📄 ' + f.name) : null,
+        h('div', { key: 'b' }, btn('Approve artwork', () => fetch('/api/orders/' + o.id + '/approve-artwork', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify({ jobId: j.id }) }).then(r => r.json()).then(refresh).catch(() => {}))),
+        h('div', { key: 'n', style: { fontSize: 12, color: MUT } }, 'Would you rather change it? Reply to our email at print@printoka.com with your updated file.')]);
+    }
+    if (j.status === 'rejected') {
+      const line = (o.jobIds || []).indexOf(j.id) + 1 || i + 1;
+      const up = e => { const f0 = e.target.files[0]; e.target.value = ''; if (!f0) return; const rd = new FileReader();
+        rd.onload = () => fetch('/api/orders/' + o.id + '/files', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify({ kind: 'artwork', line, name: f0.name, data: rd.result }) }).then(r => r.json()).then(d => { if (d && d.error) alert(d.error); refresh(null); }).catch(() => {});
+        rd.readAsDataURL(f0); };
+      return panel([h('b', { key: 't', style: { fontSize: 13.5 } }, 'We need a new artwork file'),
+        h('div', { key: 'm', style: { fontSize: 13, lineHeight: 1.65 } }, (j.reason || 'Our prepress team found an issue with this file.') + (j.suggestion ? ' Suggested correction: ' + j.suggestion : '')),
+        h('label', { key: 'u', style: { alignSelf: 'flex-start', background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13.5, padding: '10px 18px', borderRadius: 8, cursor: 'pointer' } }, 'Upload new artwork', h('input', { type: 'file', style: { display: 'none' }, onChange: up }))]);
+    }
+    return null;
   }
 
   // ===== OUTLET QUOTE BOARD =====

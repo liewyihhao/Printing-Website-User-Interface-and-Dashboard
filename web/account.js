@@ -233,13 +233,21 @@
     const months = Number(this.state.outRange || 6);
     const keys = perf ? perf.months.map(m => m.key) : [], labels = {}; if (perf) perf.months.forEach(m => { labels[m.key] = m.label; });
     const m = perf ? this.acMetric(perf.sales, keys, months) : { value: null, text: 'N/A', up: null };
-    return [this.acCard([
-      this.acQuick([
-        { label: 'Quote to follow up', value: d.followUp || 0, icon: 'edit-3', color: 'teal', onClick: () => this.setState({ sTab: 'Custom quotes', oq_s: 'Not followed up' }) },
-        { label: 'Orders', value: d.orders || 0, icon: 'file', color: 'red', onClick: () => this.setState({ sTab: 'Orders' }) },
+    // two rows (user, 2026-09-28): Quote — Quotation Requested (+ Generate a Quotation Request) · Quote Pending · Quote to
+    // Follow Up; Orders — Orders (this outlet's own, until logistics ships them) · Incoming (shipped to the outlet) · Delivery
+    const row = (title, items, action) => this.acCard([h('div', { key: 't', style: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '14px 20px', borderBottom: '1px solid ' + HAIR } },
+      h('p', { style: { fontWeight: 700, fontSize: 15, margin: 0, flex: 1 } }, title), action || null), h('div', { key: 'q' }, this.acQuick(items))]);
+    return [row('Quote', [
+        { label: 'Quotation Requested', value: d.quoteRequested || 0, icon: 'file', color: 'red', onClick: () => this.setState({ sTab: 'Custom quotes', oq_s: 'All status' }) },
+        { label: 'Quote Pending', value: d.quotePending || 0, icon: 'clock', color: 'orange', onClick: () => this.setState({ sTab: 'Custom quotes', oq_s: 'Quote Pending' }) },
+        { label: 'Quote to Follow Up', value: d.followUp || 0, icon: 'edit-3', color: 'teal', onClick: () => this.setState({ sTab: 'Custom quotes', oq_s: 'Quote to Follow Up' }) }],
+        Btn('Generate a Quotation Request', () => this.outNewQuote(), 'primary')),
+      row('Orders', [
+        { label: 'Orders', value: d.orders || 0, icon: 'printer', color: 'red', onClick: () => this.setState({ sTab: 'Orders', oo_s: 'All status' }) },
         { label: 'Incoming', value: d.incoming || 0, icon: 'check', color: 'teal', onClick: () => this.setState({ sTab: 'Orders', oo_s: 'Shipped to Outlet' }) },
-        { label: 'Delivery', value: d.delivery || 0, icon: 'truck', color: 'orange', onClick: () => this.setState({ sTab: 'Orders', oo_s: 'Ready for Collect' }) }]),
-      h('div', { key: 'ch', style: { padding: 20, borderTop: '1px solid ' + HAIR } },
+        { label: 'Delivery', value: d.delivery || 0, icon: 'truck', color: 'orange', onClick: () => this.setState({ sTab: 'Orders', oo_s: 'Out for Delivery' }) }]),
+      this.acCard([
+      h('div', { key: 'ch', style: { padding: 20 } },
         h('div', { style: { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 14, alignItems: 'flex-start' } }, this.acMetricHead('Sales amount', m, 'currency'),
           h('span', { style: { display: 'flex', gap: 10, alignItems: 'center' } }, this.acRange('outRange'), h('span', { onClick: () => this.setState({ sTab: 'Sales performance' }), style: { fontWeight: 700, color: TEAL, cursor: 'pointer', fontSize: 13.5 } }, 'Sales performance ›'))),
         h('div', { style: { marginTop: 24 } }, perf ? this.acChart(perf.sales, keys, labels, months) : h('div', { style: { color: FAINT } }, 'Loading…'))),
@@ -263,13 +271,14 @@
   P.outOrders = function () {
     const list = (this.acGet('out_orders', '/api/outlet/orders') || {}).orders;
     if (!list) return [h('div', { key: 'l', style: { color: FAINT } }, 'Loading…')];
+    // the status follows production (prepress → scheduler → logistics) until it ships
     return this.acList({ key: 'oo', title: 'Orders', cols: ['Date', 'Order', 'Status', 'Customer', { label: 'Amount', right: true }],
-      rows: list.map(o => ({ date: o.date, status: o.status, search: [o.id, o.customer, o.fromQuote], cells: [dmy(o.date), h('span', { onClick: () => this.acOpen({ kind: 'order', id: o.id }), style: { color: TEAL, fontWeight: 600, cursor: 'pointer' } }, '#' + o.id.replace(/^PO-/, '')), this.pillDot(o.status, BADGE(o.status)), o.customer, this.rm(o.total)] })) });
+      rows: list.map(o => ({ date: o.date, status: o.stage || o.status, search: [o.id, o.customer, o.fromQuote], cells: [dmy(o.date), h('span', { onClick: () => this.acOpen({ kind: 'order', id: o.id }), style: { color: TEAL, fontWeight: 600, cursor: 'pointer' } }, '#' + o.id.replace(/^PO-/, '')), this.pillDot(o.stage || o.status, BADGE(o.status)), o.customer, this.rm(o.total)] })) });
   };
   P.outQuotes = function () {
     const list = (this.acGet('out_quotes', '/api/outlet/quotes') || {}).quotes;
     if (!list) return [h('div', { key: 'l', style: { color: FAINT } }, 'Loading…')];
-    return this.acList({ key: 'oq', title: 'Custom quotes', cols: ['Date', 'Quote', 'Status', 'Product', { label: 'Amount', right: true }], action: Btn('＋ New Quote', () => this.acOpen({ kind: 'newquote' }), 'primary'),
+    return this.acList({ key: 'oq', title: 'Custom quotes', cols: ['Date', 'Quote', 'Status', 'Product', { label: 'Amount', right: true }], action: Btn('Generate a Quotation Request', () => this.outNewQuote(), 'primary'),
       rows: list.map(q => ({ date: q.date, status: q.status, search: [q.id, q.product, q.customerName], cells: [dmy(q.date), h('span', { onClick: () => this.acOpen({ kind: 'quote', id: q.id }), style: { color: TEAL, fontWeight: 600, cursor: 'pointer' } }, q.id), this.pillDot(q.status, BADGE(q.status)), q.product, q.price != null ? this.rm(q.price) : ''] })) });
   };
   // ---- order single (orders-single.pug)
@@ -289,6 +298,7 @@
         this.acSpec(it.spec),
         h('hr', { style: { border: 0, borderTop: '1px solid ' + HAIR, margin: 0 } }),
         this.acDL([['Quantity', (it.qty || 0).toLocaleString()], ['Price', this.rm(it.unitPrice)], ['Total', h('b', null, this.rm(it.lineTotal))]]),
+        (o.jobs || [])[i] && this.artworkAction ? this.artworkAction(o, o.jobs[i], i, () => { this.acDrop('ord_' + id); this.acDrop('out_'); this.forceUpdate(); }) : null,
         (files.filter(f => f.kind === 'artwork' && f.line === i + 1).length || (it.artworks || []).length) ? h('div', { style: { background: ALT, borderRadius: 6, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 } },
           files.filter(f => f.kind === 'artwork' && f.line === i + 1).map(f => h('span', { key: f.id, onClick: () => this.openOrderFile(id, f), style: { color: TEAL, fontWeight: 700, cursor: 'pointer' } }, '📄 ' + f.name)),
           (it.artworks || []).filter(a => !files.some(f => f.name === a)).map((a, k) => h('span', { key: 'n' + k, style: { color: MUT } }, '📄 ' + a + ' (not uploaded)'))) : null))),
@@ -327,18 +337,25 @@
     const done = (r, msg, reopen) => { if (!this.acDone(r, msg)) return; this.setState({ acEdit: null, acModal: null }); this.acDrop('out_'); if (r.quote) { this._ac['q_' + r.quote.id] = { data: { quote: r.quote } }; if (reopen) this.acOpen({ kind: 'quote', id: r.quote.id }); else this.forceUpdate(); } };
     const main = [];
     if (q && q.state === 'rejected') main.push(this.acC('Rejected reason', h('p', { style: { margin: 0, whiteSpace: 'pre-wrap' } }, q.rejectReason)));
-    if (q && (q.lastFollowUp || q.state === 'follow-up')) main.push(this.acC('Follow-Up', [
-      q.state === 'follow-up' ? h('div', { key: 'b', style: { display: 'flex', gap: 8 } }, Btn('Followed up', () => this.aFetchJ('/api/outlet/quotes/' + q.id + '/follow-up', {}).then(r => done(r, 'Quote followed up successfully')), 'primary'), Btn('Rejected', () => this.outRejectQuote(q, done))) : null,
-      h('p', { key: 't', style: { margin: 0 } }, q.lastFollowUp ? ['Last follow up at ', h('b', { key: 'a', title: when(q.lastFollowUp.at) }, ago(q.lastFollowUp.at)), ' ago by ', h('b', { key: 'b' }, q.lastFollowUp.by)] : 'Not follow up yet.')]));
-    if (q && mode === 'waiting-quote') main.push(this.acC('Quote', h('div', null, this.pillDot('Awaiting HQ quote', 'bad'))));
-    if (q && mode === 'edit-quote') {
+    // Quote to Follow Up (user, 2026-09-28): Accepted → an order · Rejected → no longer valid (kept in the customer's account)
+    // · Amend → edit the details, quantity, price and remarks; it stays here and every amendment is tracked
+    if (q && mode === 'follow-up') main.push(this.acC('Quote to Follow Up', [
+      this.acDL([['Price', h('b', null, this.rm(q.price))], q.leadDays ? ['Lead time', q.leadDays + ' days'] : null]),
+      h('div', { key: 'b', style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
+        Btn('Accepted', () => this.aFetchJ('/api/outlet/quotes/' + q.id + '/accept', {}).then(r => { if (this.acDone(r, 'Accepted — order ' + (r.orderId || '') + ' created.')) { this.acDrop('out_'); this.acOpen({ kind: 'order', id: r.orderId }); } }), 'primary'),
+        Btn('Amend', () => this.outEditSpec(q, true)),
+        Btn('Rejected', () => this.outRejectQuote(q, done), 'danger'))]));
+    if (q && mode === 'waiting-quote') main.push(this.acC('Quote Pending', h('div', null, this.pillDot('Waiting for the scheduler to respond', 'warn'))));
+    if (q && q.state === 'accepted' && q.orderId) main.push(this.acC('Accepted', [h('span', { key: 'o', onClick: () => this.acOpen({ kind: 'order', id: q.orderId }), style: { color: TEAL, fontWeight: 700, cursor: 'pointer' } }, 'Order #' + String(q.orderId).replace(/^PO-/, ''))]));
+    if (q && mode === 'edit-quote-legacy') {
       const F = k => this.acF(k) !== '' ? this.acF(k) : (k === 'price' ? (q.price || '') : k === 'weight' ? (q.weight || '') : k === 'currency' ? (q.currency || 'MYR') : '');
       main.push(this.acC('Quote', [
         FG('Weight', h('input', { value: F('weight'), onChange: e => this.acSetF('weight', e.target.value), style: inp }), 1),
         FG('Price', h('div', { style: { display: 'flex' } }, h('select', { value: F('currency'), onChange: e => this.acSetF('currency', e.target.value), style: Object.assign({}, inp, { width: 100, borderRadius: '8px 0 0 8px', borderRight: 0 }) }, ['MYR', 'SGD', 'BND'].map(c => h('option', { key: c }, c))), h('input', { value: F('price'), onChange: e => this.acSetF('price', e.target.value), style: Object.assign({}, inp, { borderRadius: '0 8px 8px 0' }) })), 1),
         h('div', { key: 'b', style: { display: 'flex', gap: 8 } }, Btn('Submit', () => this.aFetchJ('/api/outlet/quotes/' + q.id + '/price', { weight: F('weight'), price: F('price'), currency: F('currency') }).then(r => done(r, 'Quote submited successfully')), 'primary'), Btn('Cancel', () => this.setState({ acEdit: null })))]));
     }
-    if (mode === 'edit-spec') {
+    if (mode === 'edit-spec' || mode === 'amend') {
+      const amend = mode === 'amend';
       const F = k => this.acF(k) !== '' ? this.acF(k) : (q ? ({ product: q.product, specifications: q.spec, requesterId: q.requester && q.requester.id })[k] || '' : '');
       // the requester list only appears once the staff member starts typing a name or email
       const custQ = (this.state.acCustQ || '').trim();
@@ -352,14 +369,11 @@
       const qs = prod ? this.cfgQuestions() : [];
       const qobj = prod ? this.pkQtyObj(prod.id) : null;
       const qty = this.acF('qty'), notes = this.acF('notes');
-      const setCfg = (k, val) => this.setState(st => Object.assign({ cfg: Object.assign({}, st.cfg, { [k]: val }) }, k === 'size' ? { sizeConfirmed: false } : {}));
-      const question = x => {
-        if (x.type === 'widget') return h('div', { key: x.key }, this.foilColourPicker(x.def, this.pkV()));
-        const ctl = x.type === 'select'
-          ? h('select', { value: x.value, onChange: e => setCfg(x.key, e.target.value), style: inp }, [x.value === '' ? h('option', { key: '', value: '' }, 'Please Select') : null].concat(x.options.map(o => h('option', { key: o.value, value: o.value, disabled: !o.avail }, o.label + (o.avail ? '' : ' (not available)')))))
-          : h('input', { type: x.type, min: x.min, max: x.max, value: x.value, onChange: e => setCfg(x.key, e.target.value), style: inp });
-        return FG(x.label, x.hint ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } }, ctl, h('span', { style: { fontSize: 12, color: FAINT } }, x.hint)) : ctl, x.required ? 1 : 0);
-      };
+      const qtyRow = h('div', { key: 'qty', style: { padding: '16px 0', borderTop: '1px solid ' + LINE, display: 'flex', flexDirection: 'column', gap: 8 } },
+        h('div', { style: { fontSize: 13.5, fontWeight: 600 } }, 'Quantity ', h('span', { style: { color: TEAL } }, '*')),
+        h('input', { type: 'number', min: 1, value: qty, placeholder: 'Enter the quantity', onChange: e => this.acSetF('qty', e.target.value), style: Object.assign({}, inp, { maxWidth: 260 }) }),
+        qobj ? h('span', { style: { fontSize: 11.5, color: FAINT } }, 'Minimum order ' + qobj.moq.toLocaleString() + ' pcs') : null);
+      const cq = prod ? this.cfgQuestionGroups({ manualQty: qtyRow }) : null;
       const specDone = prod && qs.every(x => !x.required || x.type === 'widget' || String(x.value) !== '') && Number(qty) > 0;
       const payload = () => {
         const sp = this.pkOrderSpec(); const lines = sp.lines;
@@ -369,19 +383,20 @@
       main.push(this.acC('Specifications', [
         FG('Product', h('select', { value: pid, onChange: e => { const v = e.target.value; this.acSetF('productId', v); this.setState({ prodId: v === '' ? null : Number(v), cfg: {}, sizeConfirmed: false }); }, style: inp },
           [h('option', { key: '', value: '' }, prods.length ? 'Please Select' : 'Loading products…')].concat(prods.map(p => h('option', { key: p.id, value: String(p.id) }, p.name)))), 1),
-        prod ? h('div', { key: 'qs', style: { display: 'flex', flexDirection: 'column', gap: 14 } }, qs.map(question),
-          FG('Quantity', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } }, h('input', { type: 'number', min: 1, value: qty, onChange: e => this.acSetF('qty', e.target.value), style: inp }), qobj ? h('span', { style: { fontSize: 12, color: FAINT } }, 'Minimum order ' + qobj.moq.toLocaleString() + ' pcs') : null), 1),
-          FG('Remarks', h('textarea', { rows: 3, className: 'ac-hint', placeholder: 'Add-on remarks and the customer’s target price, if any.', value: notes, onChange: e => this.acSetF('notes', e.target.value), style: Object.assign({}, inp, { resize: 'vertical' }) }))) : null,
-        FG('Requester', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
+        cq ? h('div', { key: 'qs', style: { display: 'flex', flexDirection: 'column' } }, cq.groups.map(g => h('div', { key: g.sec, style: { display: 'flex', flexDirection: 'column' } }, cq.sectionHeader(g.sec), g.nodes))) : null,
+        prod ? FG('Remarks', h('textarea', { rows: 3, className: 'ac-hint', placeholder: 'Add-on remarks and the customer’s target price, if any.', value: notes, onChange: e => this.acSetF('notes', e.target.value), style: Object.assign({}, inp, { resize: 'vertical' }) })) : null,
+        amend ? FG('Price (RM)', h('input', { type: 'number', min: 0, step: '0.01', value: this.acF('price') !== '' ? this.acF('price') : (q.price != null ? String(q.price) : ''), onChange: e => this.acSetF('price', e.target.value), style: Object.assign({}, inp, { maxWidth: 260 }) }), 1) : null,
+        amend ? null : FG('Requester', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
           reqLabel ? h('div', { style: { fontSize: 13, background: ALT, borderRadius: 8, padding: '8px 12px' } }, reqLabel) : null,
           h('input', { placeholder: 'Search customer name or email…', value: this.state.acCustQ || '', onChange: e => this.setState({ acCustQ: e.target.value }), style: inp }),
           custQ && custRes && !cust.length ? h('div', { style: { fontSize: 13, color: FAINT, padding: '4px 2px' } }, 'No customer found. Create the account first.') : null,
           custQ && cust.length ? h('div', { style: { maxHeight: 160, overflow: 'auto', border: '1px solid ' + LINE, borderRadius: 8 } }, cust.map(c => h('div', { key: c.value, onClick: () => { this.acSetF('requesterId', c.value); this.acSetF('requesterLabel', c.label); this.setState({ acCustQ: '' }); }, style: { padding: '8px 12px', fontSize: 13, cursor: 'pointer', background: F('requesterId') === c.value ? '#fdf2f2' : '#fff', borderTop: '1px solid ' + LINE } }, c.label))) : null), 1),
-        h('div', { key: 'aw', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12 } },
+        amend ? null : h('div', { key: 'aw', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12 } },
           FG('Artwork name', h('input', { value: this.acF('artworkName'), onChange: e => this.acSetF('artworkName', e.target.value), style: inp })),
           FG('Artwork file', h('label', { style: { color: TEAL, fontWeight: 600, fontSize: 14, cursor: 'pointer', padding: '8px 0', alignSelf: 'flex-start' } }, this.acF('artworkFileName') ? '📄 ' + this.acF('artworkFileName') : 'Upload',
             h('input', { type: 'file', style: { display: 'none' }, onChange: e => { const f0 = e.target.files[0]; e.target.value = ''; this.acReadFile(f0).then(f => { if (f) { this.acSetF('artworkData', f.data); this.acSetF('artworkFileName', f.name); } }); } })))),
-        h('div', { key: 'b', style: { display: 'flex', gap: 8 } }, Btn(isNew ? 'Next' : 'Save', () => this.aFetchJ(isNew ? '/api/outlet/quotes' : '/api/outlet/quotes/' + q.id + '/spec', Object.assign(payload(), { requesterId: F('requesterId'), artworkName: this.acF('artworkName'), artworkData: this.acF('artworkData'), artworkFileName: this.acF('artworkFileName') })).then(r => done(r, 'Specifications updated successfully', isNew)), 'primary', !specDone || !F('requesterId')), !isNew ? Btn('Cancel', () => this.setState({ acEdit: null })) : null)]));
+        amend ? h('div', { key: 'b', style: { display: 'flex', gap: 8 } }, Btn('Save amendment', () => this.aFetchJ('/api/outlet/quotes/' + q.id + '/amend', Object.assign(payload(), { price: this.acF('price') !== '' ? this.acF('price') : q.price })).then(r => done(r, 'Quote amended.')), 'primary', !specDone), Btn('Cancel', () => this.setState({ acEdit: null })))
+          : h('div', { key: 'b', style: { display: 'flex', gap: 8 } }, Btn(isNew ? 'Submit Quotation Request' : 'Save', () => this.aFetchJ(isNew ? '/api/outlet/quotes' : '/api/outlet/quotes/' + q.id + '/spec', Object.assign(payload(), { requesterId: F('requesterId'), artworkName: this.acF('artworkName'), artworkData: this.acF('artworkData'), artworkFileName: this.acF('artworkFileName') })).then(r => done(r, isNew ? 'Quotation request sent to the scheduler.' : 'Specifications updated successfully', isNew)), 'primary', !specDone || !F('requesterId')), !isNew ? Btn('Cancel', () => this.setState({ acEdit: null })) : null)]));
     } else if (q) {
       main.push(this.acC('Specifications', [q.specLines && this.pSummary ? h('div', { key: 's', style: { display: 'flex', flexDirection: 'column', gap: 10 } }, this.pSummary({ product: q.product, specLines: q.specLines, qty: q.qty, rows: [], artworks: [] })) : [h('b', { key: 'p' }, q.product), h('div', { key: 's', style: { whiteSpace: 'pre-wrap', lineHeight: 1.7 } }, q.spec)],
         q.specLines && q.notes ? h('p', { key: 'n', style: { margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.6 } }, q.notes) : null,
@@ -389,14 +404,17 @@
         q.canEdit ? { icon: 'edit', label: 'Edit specifications', onClick: () => this.outEditSpec(q) } : null));
     }
     const aside = q ? [
-      mode !== 'edit-quote' && q.price != null ? this.acC('Quote', this.acDL([['Weight', q.weight], ['Price', this.rm(q.price)], ['Issued by', q.issuedBy]]), q.canEdit ? { icon: 'edit', label: 'Edit quote', onClick: () => this.setState({ acEdit: 'edit-quote', acForm: {} }) } : null) : null,
+      q.price != null ? this.acC('Quote', this.acDL([['Price', this.rm(q.price)], q.leadDays ? ['Lead time', q.leadDays + ' days'] : null, ['Requested by', q.issuedBy]])) : null,
+      (q.amendments || []).length ? this.acC('Amendments', this.acStatusList(q.amendments.map(a => ({ title: 'Amended', at: a.at, by: a.by, text: a.changes.join(' · ') })))) : null,
       q.statuses && q.statuses.length ? this.acC('Statuses', this.acStatusList(q.statuses.map(s => ({ title: s.status, at: s.at, by: s.by, text: s.note })))) : null,
       q.requester && mode !== 'edit-spec' ? this.acC('Requester', [h('b', { key: 'n' }, q.requester.name), q.requester.phone ? h('a', { key: 'p', href: 'https://wa.me/' + String(q.requester.phone).replace(/\D/g, '').replace(/^0/, '60'), target: '_blank', rel: 'noopener', style: { color: TEAL, fontWeight: 600 } }, q.requester.phone) : null, q.requester.address ? h('p', { key: 'a', style: { margin: 0, color: MUT } }, q.requester.address) : null, h('a', { key: 'e', href: 'mailto:' + q.requester.email, style: { color: TEAL, fontWeight: 600 } }, q.requester.email)], q.canEdit ? { icon: 'edit', label: 'Change requester', onClick: () => this.outEditSpec(q) } : null) : null] : [];
     return this.acSingle({ home: 'Dashboard', type: 'Custom quotes', title: isNew ? 'New quote' : q.id, status: q ? q.status : null }, main, aside);
   };
   // edit the specifications: reopen the configurator answers saved with the quote
-  P.outEditSpec = function (q) {
-    this.setState({ acEdit: 'edit-spec', acForm: { productId: q.productId != null ? String(q.productId) : '', qty: q.qty ? String(q.qty) : '', notes: q.notes || '' }, prodId: q.productId != null ? q.productId : this.state.prodId, cfg: q.config || {}, sizeConfirmed: false });
+  // a new quotation request: a clean configurator (no answers left over from the storefront)
+  P.outNewQuote = function () { this.setState({ cfg: {}, sizeConfirmed: false, ddOpen: null }); this.acOpen({ kind: 'newquote' }); };
+  P.outEditSpec = function (q, amend) {
+    this.setState({ acEdit: amend ? 'amend' : 'edit-spec', ddOpen: null, acForm: { productId: q.productId != null ? String(q.productId) : '', qty: q.qty ? String(q.qty) : '', notes: q.notes || '' }, prodId: q.productId != null ? q.productId : this.state.prodId, cfg: q.config || {}, sizeConfirmed: false });
   };
   P.outRejectQuote = function (q, done) {
     this.setState({ acForm: {}, acModal: { title: 'Reject reasons', body: () => [FG('Reject reasons', h('textarea', { rows: 8, value: this.acF('reasons'), onChange: e => this.acSetF('reasons', e.target.value), style: Object.assign({}, inp, { resize: 'vertical' }) }), 1),

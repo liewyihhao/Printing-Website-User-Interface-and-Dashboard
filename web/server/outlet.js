@@ -46,19 +46,19 @@ function statusOf(q) {
   if (q.status === 'accepted') return 'Accepted';
   if (q.status === 'rejected' || q.status === 'declined') return 'Rejected';
   if (q.status === 'unable') return 'Unable to quote';
-  if (q.status === 'issued' || q.status === 'reviewed' || q.status === 'quoted') return q.remarks === 'Not followed up' ? 'Not followed up' : 'Quoted';
-  return 'Pending Quote';
+  if (q.status === 'issued' || q.status === 'reviewed' || q.status === 'quoted') return 'Quote to Follow Up';
+  return 'Quote Pending';
 }
-function stateOf(status) { return ({ 'Pending Quote': 'waiting-quote', Quoted: 'pending-response', 'Not followed up': 'follow-up', Accepted: 'accepted', Rejected: 'rejected', 'Unable to quote': 'unable-to-quote' })[status] || 'waiting-quote'; }
+function stateOf(status) { return ({ 'Quote Pending': 'waiting-quote', 'Quote to Follow Up': 'follow-up', Accepted: 'accepted', Rejected: 'rejected', 'Unable to quote': 'unable-to-quote' })[status] || 'waiting-quote'; }
 function progressOf(state) {
-  return ({ 'pending-response': ['Awaiting Response - Step 2 of 4', 50], 'follow-up': ['Follow-Up - Step 3 of 4', 75], accepted: ['Accepted - Step 4 of 4', 100], rejected: ['Rejected - Step 4 of 4', 100], 'unable-to-quote': ['Unable to quote - Step 4 of 4', 100] })[state] || ['Quote Details - Step 1 of 4', 25];
+  return ({ 'waiting-quote': ['Quote Pending - Step 2 of 4', 50], 'follow-up': ['Quote to Follow Up - Step 3 of 4', 75], accepted: ['Accepted - Step 4 of 4', 100], rejected: ['Rejected - Step 4 of 4', 100], 'unable-to-quote': ['Unable to quote - Step 4 of 4', 100] })[state] || ['Quote Details - Step 1 of 4', 25];
 }
 function quoteView(q, full) {
   refreshFollowUp(q);
   const status = statusOf(q), state = stateOf(status), pg = progressOf(state);
   const v = { id: q.id, date: q.createdAt, product: (q.requirement && q.requirement.product) || '', status, state, progress: { text: pg[0], width: pg[1] },
     price: q.price, currency: q.currency || 'MYR', weight: q.weight || '', remarks: q.remarks || '', orderId: q.orderId || null, canEdit: ['accepted', 'rejected', 'declined', 'unable'].indexOf(q.status) < 0,
-    issuedBy: q.issuedBy ? q.issuedBy.name : (q.requestedByStaff || ''), customerName: (q.customer && q.customer.name) || '' };
+    issuedBy: q.issuedBy ? q.issuedBy.name : (q.requestedByStaff || ''), customerName: (q.customer && q.customer.name) || '', notFollowedUp: q.remarks === 'Not followed up' };
   if (!full) return v;
   const cust = q.userId ? store.findCustomer(q.userId) : null;
   const addr = cust && ((cust.addresses || []).find(a => a.isDefault) || (cust.addresses || [])[0]);
@@ -69,6 +69,7 @@ function quoteView(q, full) {
     qty: (q.requirement && q.requirement.qty) || null, config: (q.requirement && q.requirement.config) || null, notes: (q.requirement && q.requirement.notes) || '',
     requester: cust ? { id: cust.id, name: cust.name, email: cust.email, phone: cust.phone || (addr && addr.phone) || '', address: addr ? [addr.line1, addr.line2, [addr.postcode, addr.city].filter(Boolean).join(' '), addr.state, addr.country].filter(Boolean).join(', ') : '' } : (q.customer ? { name: q.customer.name, email: q.customer.email, phone: q.customer.phone } : null),
     rejectReason: q.rejectReason || '', lastFollowUp: q.lastFollowUpAt ? { at: q.lastFollowUpAt, by: q.lastFollowUpBy } : null,
+    amendments: (q.amendments || []).slice().reverse(), leadDays: q.leadDays || null,
     // HQ's raw 'issued' entry is shown once, as the outlet's "Quoted"
     statuses: (q.history || []).filter(h => h.action !== 'issued').slice().reverse().map(h => ({ status: String(h.action).charAt(0).toUpperCase() + String(h.action).slice(1), by: h.actor, at: h.ts, note: h.note || '' })),
   });
@@ -152,6 +153,35 @@ function rejectQuote(qid, reasons, me) {
   q.status = 'rejected'; q.remarks = 'Rejected'; q.rejectReason = String(reasons); q.history.push({ ts: now(), actor: me.name, action: 'Rejected', note: String(reasons).slice(0, 200) });
   store.save(); return { quote: quoteView(q, true) };
 }
+function acceptByOutlet(qid, me) {
+  const q = store.quote(qid); if (!canQuote(q, me)) return { error: 'Access denied: You are not authorized to view this.' };
+  const r = store.acceptQuote(qid, me.name || 'outlet'); if (r.error) return r;
+  onAccepted(q, store.order(r.order.id)); ops().onOrderCreated(store.order(r.order.id));
+  store.logEvent({ actor: me.name, role: 'outlet', action: 'quote_accepted', jobId: null, from: null, to: 'accepted', note: qid + ' → order ' + r.order.id });
+  return { quote: quoteView(q, true), orderId: r.order.id };
+}
+function amendQuote(qid, b, me) {
+  const q = store.quote(qid); if (!canQuote(q, me)) return { error: 'Access denied: You are not authorized to view this.' };
+  if (['issued', 'reviewed'].indexOf(q.status) < 0) return { error: 'Only a quote waiting for follow-up can be amended.' };
+  const price = r2(b.price); if (!(price > 0)) return { error: 'Enter the price.' };
+  if (!String(b.specifications || '').trim()) return { error: 'Please fill in the required field.' };
+  const req = q.requirement || {}; const qty = Math.max(1, Math.floor(Number(b.qty)) || Number(req.qty) || 1);
+  const changes = [];
+  if (String(b.product || req.product) !== String(req.product || '')) changes.push('Product: ' + (req.product || '—') + ' → ' + b.product);
+  if (qty !== (Number(req.qty) || 1)) changes.push('Quantity: ' + (Number(req.qty) || 1).toLocaleString() + ' → ' + qty.toLocaleString());
+  if (price !== r2(q.price)) changes.push('Price: RM ' + r2(q.price).toFixed(2) + ' → RM ' + price.toFixed(2));
+  if (String(b.specifications) !== String(req.quoteData || '') && String(b.specifications).replace(/\n?(Quantity|Remarks):.*$/gm, '') !== String(req.quoteData || '').replace(/\n?(Quantity|Remarks):.*$/gm, '')) changes.push('Specifications updated');
+  if (String(b.notes || '') !== String(req.notes || '')) changes.push('Remarks: ' + (String(b.notes || '').slice(0, 80) || '—'));
+  if (!changes.length) return { error: 'No changes required.' };
+  const lines = Array.isArray(b.specLines) ? b.specLines.filter(l => Array.isArray(l) && l.length === 2).slice(0, 60).map(l => [String(l[0]).slice(0, 80), String(l[1]).slice(0, 200)]) : req.specLines || null;
+  q.requirement = Object.assign({}, req, { product: String(b.product || req.product), quoteData: String(b.specifications), qty, specLines: lines,
+    productId: b.productId != null ? Number(b.productId) : req.productId, config: b.config && typeof b.config === 'object' ? b.config : req.config, notes: String(b.notes || '').slice(0, 2000) });
+  q.price = price; q.lastFollowUpAt = null; q.remarks = 'Amended'; q.followUpDueAt = new Date(Date.now() + FOLLOW_UP_DAYS * DAY).toISOString();
+  q.amendments = q.amendments || []; q.amendments.push({ at: now(), by: me.name, changes });
+  q.history.push({ ts: now(), actor: me.name, action: 'Amended', note: changes.join(' · ') });
+  if (q.userId) store.notify({ type: 'customer', id: q.userId }, { kind: 'quote_issued', title: 'Your quote was updated', body: 'Quote ' + q.id + ' for ' + q.requirement.product + ': RM ' + price.toFixed(2) + '.', cta: 'View your quote →', quoteId: q.id });
+  store.save(); return { quote: quoteView(q, true) };
+}
 function quoteArtwork(qid, me) {
   const q = store.quote(qid); if (!q || !(canQuote(q, me) || (me && me.type !== 'customer') || (me && q.userId === me.id))) return { error: 'Not allowed.' };
   if (!q.artwork || !q.artwork.stored) return { error: 'No artwork file.' };
@@ -189,6 +219,17 @@ function outletOrders(me) {
   return store.orders().filter(o => fromQuotes[o.id] || (o.outlet && o.outlet === oid) || (o.fulfillment && o.fulfillment.method === 'pickup' && o.fulfillment.outlet === oid) || (oid && headedTo(o, oid)) || (me.type === 'admin' && (o.outlet || fromQuotes[o.id])))
     .map(o => { if (fromQuotes[o.id] && !o.fromQuote) { o.fromQuote = fromQuotes[o.id].id; o.outlet = fromQuotes[o.id].outlet; o.issuedBy = fromQuotes[o.id].issuedBy || null; } return o; });
 }
+const ownOrder = (o, oid, me) => me.type === 'admin' ? !!(o.outlet || o.fromQuote) : !!oid && o.outlet === oid;
+// where the order is in production, in the words the outlet uses (prepress → scheduler → logistics)
+const STAGE_LABEL = { intake: 'New Order', prepress: 'Preflight Check', escalated: 'Preflight Check', prepress_issue: 'Pending Approval', rejected: 'Pending Amendment', artwork_ready: 'Artwork Approved', scheduling: 'Artwork Approved',
+  to_outsource: 'Scheduling', to_inhouse: 'Scheduling', printing: 'Printing in Progress', outsourcing: 'Printing in Progress', printed: 'Ready to Ship', inbound: 'Ready to Ship', logistics: 'Ready to Ship', ready_collect: 'Ready for Collect', completed: 'Completed', cancelled: 'Cancelled' };
+const STAGE_ORDER = ['intake', 'prepress', 'escalated', 'rejected', 'prepress_issue', 'artwork_ready', 'scheduling', 'to_outsource', 'to_inhouse', 'printing', 'outsourcing', 'printed', 'inbound', 'logistics', 'dispatched', 'at_hub', 'ready_collect', 'completed', 'cancelled'];
+function stageOf(o) {
+  const js = (o.jobIds || []).map(store.job).filter(Boolean); if (!js.length) return 'New Order';
+  const j = js.slice().sort((a, b) => STAGE_ORDER.indexOf(a.status) - STAGE_ORDER.indexOf(b.status))[0];
+  if (j.status === 'dispatched') return (j.destination || {}).type === 'outlet' ? 'Shipped to Outlet' : 'Out for Delivery';
+  return STAGE_LABEL[j.status] || 'In Production';
+}
 // the order status the outlet sees (WooCommerce-style label), from the live jobs
 function orderStatus(o) {
   const js = (o.jobIds || []).map(store.job).filter(Boolean); const st = js.map(j => j.status); const any = a => st.some(s => a.indexOf(s) >= 0); const all = a => st.length && st.every(s => a.indexOf(s) >= 0);
@@ -217,7 +258,7 @@ function nextActions(o, key) {
   return [];
 }
 const ACTION_LABEL = { 'payment-received': 'Payment Received', 'bank-slip-receive': 'Bank Slip Received', 'ready-for-collect': 'Ready for Collect', collected: 'Collected' };
-function orderListView(o) { const s = orderStatus(o); return { id: o.id, date: o.createdAt, status: s[1], statusKey: s[0], customer: (o.customer && o.customer.name) || '', total: o.total, fromQuote: o.fromQuote || null, pickup: !!(o.fulfillment && o.fulfillment.method === 'pickup') }; }
+function orderListView(o) { const s = orderStatus(o); return { id: o.id, date: o.createdAt, status: s[1], statusKey: s[0], stage: s[0] === 'pending' ? s[1] : stageOf(o), customer: (o.customer && o.customer.name) || '', total: o.total, fromQuote: o.fromQuote || null, outlet: o.outlet || null, pickup: !!(o.fulfillment && o.fulfillment.method === 'pickup') }; }
 function canOrder(o, me) { return !!o && (me.type === 'admin' || outletOrders(me).some(x => x.id === o.id)); }
 function orderDetail(oid, me) {
   const o = store.order(oid); if (!canOrder(o, me)) return { error: 'Access denied: You are not authorized to view this.' };
@@ -271,11 +312,19 @@ function orderAddress(oid, b, me) {
 
 // ---------------------------------------------------------------- dashboard + performance
 function dashboard(me) {
-  const qs = listQuotes(me), os = outletOrders(me).map(orderListView);
-  return { followUp: qs.filter(q => q.status === 'Not followed up').length,
-    orders: os.filter(o => ['pending', 'pending-artwork', 'issues-found'].indexOf(o.statusKey) >= 0).length,
-    incoming: os.filter(o => o.statusKey === 'shipped-to-outlet').length,
-    delivery: os.filter(o => o.statusKey === 'ready-for-collect').length };
+  const oid = outletOf(me); const qs = listQuotes(me), all = outletOrders(me);
+  const month = new Date(); month.setDate(1); month.setHours(0, 0, 0, 0);
+  const jobsOf = o => (o.jobIds || []).map(store.job).filter(Boolean);
+  const own = all.filter(o => ownOrder(o, oid, me));
+  const shippedTo = (o, t) => jobsOf(o).some(j => j.status === 'dispatched' && (j.destination || {}).type === t && (t !== 'outlet' || me.type === 'admin' || j.destination.id === oid));
+  return {
+    quoteRequested: qs.filter(q => Date.parse(q.date) >= month.getTime()).length,
+    quotePending: qs.filter(q => q.status === 'Quote Pending').length,
+    followUp: qs.filter(q => q.status === 'Quote to Follow Up').length,
+    notFollowedUp: qs.filter(q => q.notFollowedUp).length,
+    orders: own.filter(o => o.status !== 'cancelled' && jobsOf(o).some(j => ['dispatched', 'at_hub', 'ready_collect', 'completed', 'cancelled'].indexOf(j.status) < 0)).length,
+    incoming: all.filter(o => shippedTo(o, 'outlet')).length,
+    delivery: own.filter(o => shippedTo(o, 'customer')).length };
 }
 function months24() { const out = []; const d = new Date(); d.setDate(1); d.setHours(0, 0, 0, 0); for (let i = 23; i >= 0; i--) { const m = new Date(d.getFullYear(), d.getMonth() - i, 1); out.push({ key: m.getFullYear() + '-' + String(m.getMonth() + 1).padStart(2, '0'), label: m.toLocaleString('en', { month: 'short' }) + ' ' + m.getFullYear() }); } return out; }
 const ym = ts => { const d = new Date(ts); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
@@ -313,4 +362,4 @@ function searchCustomers(q) {
   return store.customers().filter(c => c.type === 'customer' && (!s || [c.name, c.email, c.phone].join(' ').toLowerCase().indexOf(s) >= 0)).slice(0, 20).map(c => ({ value: c.id, label: c.name + ' (' + c.email + ')' }));
 }
 
-module.exports = { listQuotes, getQuote, saveSpec, onIssued, outletPrice, followUp, rejectQuote, quoteArtwork, onAccepted, onPaid, outletOrders, orderListView, orderDetail, orderAction, orderNote, orderAddress, dashboard, performance, staffList, searchCustomers, refreshFollowUp };
+module.exports = { acceptByOutlet, amendQuote, stageOf, listQuotes, getQuote, saveSpec, onIssued, outletPrice, followUp, rejectQuote, quoteArtwork, onAccepted, onPaid, outletOrders, orderListView, orderDetail, orderAction, orderNote, orderAddress, dashboard, performance, staffList, searchCustomers, refreshFollowUp };

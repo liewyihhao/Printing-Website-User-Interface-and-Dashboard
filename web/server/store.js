@@ -624,7 +624,10 @@ function acceptQuote(qid, actor) {
   const qty = Number(q.requirement.qty) || 1;
   const o = createOrder({
     userId: q.userId, customer: q.customer,
-    items: [{ productId: null, product: q.requirement.product || 'Custom quote', spec: q.requirement.quoteData || [q.requirement.size, q.requirement.material, q.requirement.finishing].filter(Boolean).join(' · '), qty, unitPrice: q.price / qty, lineTotal: q.price, artworks: q.artworkFile ? [q.artworkFile] : [] }],
+    // the quote's configurator answers travel with the order (the order details = the configurator summary)
+    items: [{ productId: q.requirement.productId != null ? q.requirement.productId : null, product: q.requirement.product || 'Custom quote', spec: q.requirement.quoteData || [q.requirement.size, q.requirement.material, q.requirement.finishing].filter(Boolean).join(' · '),
+      specLines: q.requirement.specLines ? q.requirement.specLines.concat(q.requirement.notes ? [['Remarks', q.requirement.notes]] : []) : null, productionTime: q.leadDays ? q.leadDays + (q.leadDays === 1 ? ' working day' : ' working days') : null,
+      qty, unitPrice: q.price / qty, lineTotal: q.price, artworks: q.artworkFile ? [q.artworkFile] : [] }],
     subtotal: q.price, memberDiscount: 0, tax: 0, shipping: 0, total: q.price, payment: { method: 'card_test' }, fromQuote: qid,
   });
   q.status = 'accepted'; q.orderId = o.id; q.decision = 'proceed'; q.history.push({ ts: now(), actor: actor || 'customer', action: 'accepted', note: 'Order ' + o.id });
