@@ -78,8 +78,16 @@
     // "Handled by": who took the job in the department it is in now
     const handler = j => { const dq = j.queue || ({ intake: 'prepress', prepress: 'prepress', prepress_issue: 'prepress', escalated: 'prepress', rejected: 'prepress', artwork_ready: 'prepress', scheduling: 'scheduler', to_outsource: 'scheduler', to_inhouse: 'scheduler', printing: 'scheduler', outsourcing: 'scheduler' })[j.status] || 'logistics'; return (j.owner || {})[dq] || '—'; };
     return this.acList({ key, title, action: extra, cols: ['Date', 'Job', 'Product', 'Customer', 'Days', 'Handled by', 'Status'],
-      rows: list.map(j => ({ date: j.createdAt, status: j.statusLabel || j.status, search: [j.id, j.orderId, j.customer, j.product, handler(j)],
-        cells: [h('span', { style: { whiteSpace: 'nowrap' } }, dmy(j.createdAt)), link('#' + j.id, () => openJob(this, j)), j.product, j.customer, daysBadge(j), handler(j), this.pillDot(j.statusLabel || j.status, tone(j))] })) });
+      rows: list.map(j => {
+        // a New Order shows the customer's payment status (Pending payment / Paid + gateway reference / Payment received)
+        const ps = j.status === 'intake' && j.payStatus ? j.payStatus : null;
+        const status = ps ? h('span', { style: { display: 'inline-flex', flexDirection: 'column', gap: 3 } },
+          this.pillDot(ps.label + (ps.slip ? ' · slip uploaded' : ''), ps.label === 'Pending payment' ? 'warn' : 'ok'),
+          ps.ref ? h('span', { style: { fontSize: 11.5, color: MUT, paddingLeft: 4 } }, (ps.gateway ? ps.gateway + ' · ' : '') + 'Ref ' + ps.ref) : null)
+          : this.pillDot(j.statusLabel || j.status, tone(j));
+        return { date: j.createdAt, status: ps ? ps.label : (j.statusLabel || j.status), search: [j.id, j.orderId, j.customer, j.product, handler(j), ps && ps.ref],
+          cells: [h('span', { style: { whiteSpace: 'nowrap' } }, dmy(j.createdAt)), link('#' + j.id, () => openJob(this, j)), j.product, j.customer, daysBadge(j), handler(j), status] };
+      }) });
   };
   P.pTiles = function (items, title) { return this.acCard(title ? [h('p', { key: 't', style: { fontWeight: 700, fontSize: 15, margin: 0, padding: '16px 20px', borderBottom: '1px solid ' + HAIR } }, title), h('div', { key: 'q' }, this.acQuick(items))] : this.acQuick(items)); };
   const jobsIn = (c, statuses) => c.opsJobs().filter(j => statuses.indexOf(j.status) >= 0);
@@ -353,7 +361,7 @@
             ['Placed', o.createdAt ? when(o.createdAt) : '—'], ['Total', o.total != null ? this.rm(o.total) : '—']]),
           h('b', { key: 'ph' }, 'Payment'),
           // prepress checks the payment and validates it (bank transfer: against the bank-in slip / the bank account)
-          this.acDL([['Method', pay.gateway || pay.method || '—'], ['Status', this.pillDot(paid ? (j.creditTerms && pay.status !== 'validated' ? 'Credit Terms' : 'Payment received') : 'Pending payment', paid ? 'ok' : 'bad')], pay.reference ? ['Reference', pay.reference] : null,
+          this.acDL([['Method', pay.gateway || pay.method || '—'], ['Status', this.pillDot((j.payStatus && j.payStatus.label) || (paid ? (j.creditTerms && pay.status !== 'validated' ? 'Credit Terms' : 'Payment received') : 'Pending payment'), paid ? 'ok' : 'bad')], pay.reference ? ['Reference', pay.reference] : null,
             pay.proof ? ['Payment proof', pay.proofFileId ? link('📄 ' + pay.proof, () => this.openOrderFile(o.id, { id: pay.proofFileId, name: pay.proof })) : pay.proof] : null,
             jp ? ['Payment proof', link('📄 ' + jp.name, () => this.jDownload('/api/jobs/' + id + '/files/' + jp.id, jp.name))] : null,
             (pay.validatedBy || j.paymentValidatedBy) ? ['Validated by', (pay.validatedBy || j.paymentValidatedBy) + ((pay.validatedAt || j.paymentValidatedAt) ? ' · ' + when(pay.validatedAt || j.paymentValidatedAt) : '')] : null]),

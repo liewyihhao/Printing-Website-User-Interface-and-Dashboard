@@ -43,7 +43,18 @@ function jobView(j, role) {
     actions: role ? D.availableActions(j, role) : [],
     requestedBy: ops.requestedBy(j),
     orderedBy: ops.ordererOf(j),
+    payStatus: payStatus(j),
   });
+}
+// the order's payment as the customer sees it (user, 2026-09-29): Pending payment → Paid (iPay88 / Stripe / wallet,
+// with the gateway's reference) or Payment received (a bank transfer prepress confirmed)
+function payStatus(j) {
+  const o = j.orderId && store.order(j.orderId), p = (o && o.payment) || null;
+  const ONLINE = { ipay88: 1, card_test: 1, stripe: 1, fpx: 1, tng: 1, wallet: 1 };
+  if (p && p.status === 'validated') return { label: ONLINE[p.method] ? 'Paid' : 'Payment received', ref: p.reference || null, gateway: p.gateway || null };
+  if (j.creditTerms) return { label: 'Credit Terms', ref: null };
+  if (j.paymentValidated) return { label: 'Payment received', ref: null };
+  return { label: 'Pending payment', ref: null, gateway: (p && p.gateway) || null, slip: !!(p && p.proof) };
 }
 
 async function api(req, res, pathname, query) {
