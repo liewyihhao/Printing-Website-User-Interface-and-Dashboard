@@ -25,7 +25,7 @@ function mediaList() {
 
 // Learning Hub list — no body, adds a bodyReady flag so the UI can show which are live.
 function blogList() {
-  return blog().map(p => ({ slug: p.slug, title: p.title, date: p.date, tag: p.tag, excerpt: p.excerpt, url: p.url, bodyReady: !!p.body }));
+  return blog().filter(p => p.status !== 'draft').map(p => ({ slug: p.slug, title: p.title, date: p.date, tag: p.tag, categories: p.categories || [p.tag], excerpt: p.excerpt, hero: p.hero || null, url: p.url, bodyReady: !!(p.html || p.body) }));
 }
 function blogPost(slug) { return blog().find(p => p.slug === slug) || null; }
 

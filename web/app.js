@@ -1701,8 +1701,9 @@ class Component extends DCLogic {
 
   // ---------- content: blog / Learning Hub (migrated from printoka.com) ----------
   blogLoad() {
-    if (typeof fetch !== 'function' || (this.state.blog && this.state.blog.length)) return;
-    fetch('/api/content/blog').then(r => r.json()).then(d => this.setState({ blog: d.posts || [] })).catch(() => {});
+    if (typeof fetch !== 'function' || (this.state.blog && this.state.blog.length) || this._blogLoading) return;
+    this._blogLoading = true;
+    fetch('/api/content/blog').then(r => r.json()).then(d => { this._blogLoading = false; this.setState({ blog: d.posts || [] }); }).catch(() => { this._blogLoading = false; });
   }
   blogOpen(slug) {
     if (typeof window !== 'undefined') window.scrollTo(0, 0);
@@ -4286,28 +4287,27 @@ class Component extends DCLogic {
 
   // ===== LEARNING HUB =====
   s_learn() {
+    if (!this.state.blog) setTimeout(() => this.blogLoad(), 0); // opened straight from a /learn or /blog URL
     const posts = this.state.blog || [];
     const active = this.state.blogTag || 'All';
     const tags = ['All'].concat(Array.from(new Set(posts.map(p => p.tag))));
     const list = active === 'All' ? posts : posts.filter(p => p.tag === active);
     return h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px 0' } },
-      this.head('Learning Hub', 'Artwork guides, paper & finishing explainers and printing tips — migrated from printoka.com. The same help content the artwork checker links to, and the SEO content behind the catalogue.',
-        [this.btn('Browse products', 'ghost', 'category')]),
+      this.head('Blog', 'Artwork guides, finishing explainers and printing tips from the Printoka team.', [this.btn('Browse products', 'ghost', 'category')]),
       h('div', { style: { display: 'flex', gap: 7, margin: '20px 0', flexWrap: 'wrap' } },
         tags.map(t => { const on = t === active; const n = t === 'All' ? posts.length : posts.filter(p => p.tag === t).length;
           return h('span', { key: t, 'data-go': 'set:blogTag:' + t, style: { fontSize: 12.5, borderRadius: 999, padding: '6px 13px', border: '1px solid ' + (on ? TEAL : HAIR), background: on ? TEAL : '#fff', color: on ? '#fff' : MUT, fontWeight: 500, cursor: 'pointer' } }, t + ' · ' + n); })),
       posts.length === 0 ? h('div', { style: { padding: 40, textAlign: 'center', color: FAINT, fontSize: 14 } }, 'Loading articles…') :
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 18 } },
         list.map(p => h('div', { key: p.slug, 'data-go': 'blog:' + p.slug, style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', background: '#fff', display: 'flex', flexDirection: 'column', cursor: 'pointer' } },
-          h('div', { style: { height: 120, background: 'linear-gradient(120deg,#fdf2f2,#FAFAFA)', display: 'grid', placeItems: 'center' } },
-            h('div', { style: { width: '54%', border: '1px dashed #e3b7b4', borderRadius: 4, paddingTop: '32%', position: 'relative', background: '#fff' } },
-              h('div', { style: { position: 'absolute', inset: '10%', border: '1px solid ' + TEAL } }))),
+          p.hero ? h('div', { style: { aspectRatio: '16 / 9', background: '#f4f5f6', overflow: 'hidden' } }, h('img', { src: window.__asset(p.hero.replace(/^\//, '')), alt: p.title, loading: 'lazy', style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } }))
+            : h('div', { style: { aspectRatio: '16 / 9', background: 'linear-gradient(120deg,#fdf2f2,#FAFAFA)' } }),
           h('div', { style: { padding: 16, display: 'flex', flexDirection: 'column', gap: 7, flex: 1 } },
             h('div', { style: { fontSize: 11, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', color: TEAL } }, p.tag),
             h('div', { style: { fontSize: 15.5, fontWeight: 600, lineHeight: 1.35 } }, p.title),
             h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.6 } }, p.excerpt),
             h('div', { style: { marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 10 } },
-              h('span', { style: { fontSize: 11.5, color: FAINT } }, p.date),
+              h('span', { style: { fontSize: 11.5, color: FAINT } }, p.date ? new Date(p.date + 'T12:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : ''),
               h('span', { style: { fontSize: 12.5, fontWeight: 600, color: TEAL } }, 'Read →')))))));
   }
 
@@ -4323,8 +4323,10 @@ class Component extends DCLogic {
         h('span', { 'data-go': 'learn', style: { color: TEAL, cursor: 'pointer' } }, 'Learning Hub'), ' › ', a.tag),
       h('div', { style: { fontSize: 11, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', color: TEAL, marginBottom: 8 } }, a.tag),
       h('h1', { style: { fontSize: 34, fontWeight: 600, lineHeight: 1.15, letterSpacing: '-.02em', margin: '0 0 10px' } }, a.title),
-      h('div', { style: { fontSize: 12.5, color: FAINT, marginBottom: 22, borderBottom: '1px solid ' + HAIR, paddingBottom: 18 } }, a.date + ' · Printoka'),
-      a.body ? h('div', null, this.mdToNodes(a.body))
+      h('div', { style: { fontSize: 12.5, color: FAINT, marginBottom: 22, borderBottom: '1px solid ' + HAIR, paddingBottom: 18 } }, 'By Printoka · ' + (a.date ? new Date(a.date + 'T12:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '') + ((a.categories || []).length > 1 ? ' · ' + a.categories.join(', ') : '')),
+      a.hero ? h('img', { src: window.__asset(a.hero.replace(/^\//, '')), alt: a.title, style: { width: '100%', height: 'auto', display: 'block', borderRadius: 10, margin: '0 0 26px' } }) : null,
+      a.html ? h('div', { className: 'pk-prose', dangerouslySetInnerHTML: { __html: a.html } })
+      : a.body ? h('div', { className: 'pk-prose' }, this.mdToNodes(a.body))
         : h('div', { style: { border: '1px dashed ' + HAIR, borderRadius: 10, padding: 20, background: ALT, color: MUT, fontSize: 14, lineHeight: 1.7 } },
             h('p', { style: { margin: '0 0 8px' } }, a.excerpt),
             h('p', { style: { margin: 0, fontSize: 12.5, color: FAINT } }, 'The full text of this article is being migrated from printoka.com — run ', h('code', { style: { background: '#fff', padding: '1px 5px', borderRadius: 4 } }, 'node web/content/migrate-blog.mjs'), ' to import it.')),
