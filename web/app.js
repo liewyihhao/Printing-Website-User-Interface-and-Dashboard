@@ -5162,7 +5162,12 @@ class Component extends DCLogic {
               h('span', { style: { height: 14, width: 14, borderRadius: '50%', flex: 'none', background: i > cur ? '#eaeaea' : (i === cur ? AMBER : TEAL) } }),
               i < STAGES.length - 1 && h('span', { style: { flex: 1, height: 2, background: i < cur ? TEAL : '#eaeaea' } })),
             h('div', { style: { fontSize: 12.5, fontWeight: i === cur ? 600 : 500, color: i > cur ? FAINT : INK } }, s)))),
-        dest ? h('div', { style: { marginTop: 16, fontSize: 13, color: INK, lineHeight: 1.6 } }, h('b', null, atOutlet ? 'Collect at: ' : 'Delivering to: '), (dest.name || '') + (dest.address ? ', ' + dest.address : '')) : null,
+        // (user, 2026-09-29) "Collect at:" / "Delivering to:" on its own line, then the name, then the address
+        dest ? h('div', { style: { marginTop: 16, fontSize: 14, color: INK, lineHeight: 1.6 } },
+          h('div', { style: { fontWeight: 600 } }, atOutlet ? 'Collect at:' : 'Delivering to:'),
+          h('div', null, String(dest.name || '').replace(/\s*\((own facility|partner)\)\s*$/i, '')),
+          dest.address ? h('div', { style: { color: MUT } }, dest.address + (/\.$/.test(dest.address) ? '' : '.')) : null,
+          !atOutlet && dest.phone ? h('div', { style: { color: MUT } }, dest.phone) : null) : null,
         !paid ? this.orderPayPanel(o) : null,
         // shipped to the customer: they confirm it arrived (completes the delivery)
         this.userType() === 'customer' && o.userId === (this.state.user || {}).id && jobs.some(j => j.status === 'dispatched' && (j.destination || {}).type === 'customer')
