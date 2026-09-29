@@ -3006,7 +3006,7 @@ class Component extends DCLogic {
     const orders = this.state.userOrders || [];
     const cinvs = this.state.custInvoices || [];
     // real invoices: one per storefront order + every custom invoice prepared for this customer
-    const orderInv = orders.map(o => ({ kind: 'order', id: 'INV-' + o.id.replace('PO-', ''), order: o.id, date: (o.createdAt || '').slice(0, 10), amount: o.total, status: o.payment && o.payment.status === 'validated' ? 'Paid' : 'Unpaid', open: () => this.openDoc(o.id, 'invoice') }));
+    const orderInv = orders.filter(o => (o.payment && o.payment.status === 'validated')).map(o => ({ kind: 'order', id: 'INV-' + o.id.replace('PO-', ''), order: o.id, date: (o.createdAt || '').slice(0, 10), amount: o.total, status: o.payment && o.payment.status === 'validated' ? 'Paid' : 'Unpaid', open: () => this.openDoc(o.id, 'invoice') }));
     const custInv = cinvs.map(inv => ({ kind: 'custom', id: inv.number || inv.id, order: inv.orderId || '—', date: (inv.date || '').slice(0, 10), amount: inv.price, status: inv.status === 'paid' ? 'Paid' : inv.status === 'cancelled' ? 'Cancelled' : 'Unpaid', open: () => this.openDoc(inv.id, 'custominvoice') }));
     const INV = orderInv.concat(custInv);
     const SLIPS = orders.map(o => ({ id: 'OS-' + o.id.replace('PO-', ''), order: o.id, items: (o.items || []).map(it => it.product + ' · ' + (it.qty || 0).toLocaleString()).join(', '), files: (o.items || []).reduce((a, it) => a.concat(it.artworks || []), []).join(', ') || '—', date: (o.createdAt || '').slice(0, 10), open: () => this.openDoc(o.id, 'slip') }));
@@ -4954,7 +4954,7 @@ class Component extends DCLogic {
             h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 1, background: HAIR } },
               this.statCard('Orders', String(orders.filter(o => o.status !== 'completed').length), { icon: 'file', accent: 'red', dot: orders.length > 0, go: 'set:cTab:Orders' }),
               this.statCard('Quotes', String(quotes.filter(q => q.status === 'issued' || q.status === 'reviewed').length), { icon: 'edit-3', accent: 'teal', go: 'set:cTab:Quotations' }),
-              this.statCard('Invoices', String(cinvs.length + orders.length), { icon: 'file', accent: 'orange', dot: cinvs.length > 0, go: 'set:cTab:Invoices' })),
+              this.statCard('Invoices', String(cinvs.length + orders.filter(o => (o.payment && o.payment.status === 'validated')).length), { icon: 'file', accent: 'orange', dot: cinvs.length > 0, go: 'set:cTab:Invoices' })),
             h('div', { style: { padding: 20, borderTop: '1px solid ' + HAIR } },
               h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } }, h('span', { style: { fontSize: 13, fontWeight: 600, color: MUT } }, 'Current Month Sales')),
               h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0 2px' } }, h('span', { style: { fontSize: 26, fontWeight: 700 } }, this.money(thisMonth)), this.metricBadge('+17%'), h('span', { style: { fontSize: 12, color: FAINT } }, 'vs last month')),
@@ -4974,7 +4974,7 @@ class Component extends DCLogic {
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } }, (o.items || []).map((it, i) => h('span', { key: i, style: { fontSize: 12.5 } }, it.product))),
         this.money(o.total),
         h('span', { style: { display: 'flex', gap: 12 } },
-          h('span', { onClick: () => this.openDoc(o.id, 'invoice'), title: 'Download invoice', style: { cursor: 'pointer', color: MUT } }, '⭳'),
+          (o.payment && o.payment.status === 'validated') ? h('span', { onClick: () => this.openDoc(o.id, 'invoice'), title: 'Download invoice', style: { cursor: 'pointer', color: MUT } }, '⭳') : null,
           h('span', { 'data-go': 'trackorder:' + o.id, title: 'Track', style: { cursor: 'pointer', color: MUT } }, '⤳'),
           h('span', { role: 'button', tabIndex: 0, onClick: () => this.reorder(o), title: 'Order the same again', style: { cursor: 'pointer', color: TEAL, fontWeight: 600, fontSize: 12.5 } }, 'Reorder')),
       ]);
@@ -4982,7 +4982,8 @@ class Component extends DCLogic {
         this.filterRow({ searchKey: 'coSearch', dateKey: 'coDate', statusKey: 'coStatus', statuses: ['Payment received', 'Completed', 'Pending payment'] }),
         this.dataCard([{ label: 'Date' }, { label: 'Order' }, { label: 'Status' }, { label: 'Items' }, { label: 'Amount', right: true }, { label: '', right: true }], rows, { empty: 'No orders yet.', minWidth: 760 })];
     } else if (tab === 'Invoices') {
-      const orderInv = orders.map(o => ({ date: (o.createdAt || '').slice(0, 10), inv: 'INV-' + o.id.replace('PO-', ''), order: o.id, job: (o.items || []).map(it => it.product).join(', '), amount: o.total, open: () => this.openDoc(o.id, 'invoice') }));
+      // (user, 2026-09-29) an invoice exists only once the order is paid (online, or confirmed by prepress)
+      const orderInv = orders.filter(o => (o.payment && o.payment.status === 'validated')).map(o => ({ date: (o.createdAt || '').slice(0, 10), inv: 'INV-' + o.id.replace('PO-', ''), order: o.id, job: (o.items || []).map(it => it.product).join(', '), amount: o.total, open: () => this.openDoc(o.id, 'invoice') }));
       const custInv = cinvs.map(iv => ({ date: (iv.date || '').slice(0, 10), inv: iv.number || iv.id, order: iv.orderId || '—', job: (iv.description || '').split('\n')[0], amount: iv.price, open: () => this.openDoc(iv.id, 'custominvoice') }));
       const all = orderInv.concat(custInv);
       const iq = (this.state.ciSearch || '').toLowerCase();
@@ -5135,7 +5136,7 @@ class Component extends DCLogic {
     return h('div', { style: { background: '#f5f6f8', margin: '-10px 0 0', padding: '36px 20px 60px' } }, h('div', { style: { maxWidth: 1080, margin: '0 auto' } },
       h('div', { style: { display: 'flex', alignItems: 'flex-end', gap: 14, flexWrap: 'wrap', marginBottom: 20 } },
         h('div', { style: { flex: '1 1 300px' } }, h('div', { style: { width: 24, height: 3, background: TEAL, marginBottom: 12 } }), h('h1', { style: { margin: 0, fontSize: 30, fontWeight: 500, letterSpacing: '-.01em' } }, 'Order ' + o.id)),
-        h('div', { style: { display: 'flex', gap: 9, flexWrap: 'wrap' } }, this.btn('Invoice', 'ghost', 'doc:invoice:' + o.id), this.btn('Order slip', 'ghost', 'doc:slip:' + o.id), this.btn('Contact support', 'teal', 'crm'))),
+        h('div', { style: { display: 'flex', gap: 9, flexWrap: 'wrap' } }, paid ? this.btn('Invoice', 'ghost', 'doc:invoice:' + o.id) : null, this.btn('Order slip', 'ghost', 'doc:slip:' + o.id), this.btn('Contact support', 'teal', 'crm'))),
       own ? null : lookup,
       h('div', { key: 't', style: { border: '1px solid #e6e8eb', background: '#fff', padding: '22px 24px', marginBottom: 16 } },
         h('div', { style: { fontSize: 12.5, fontWeight: 600, marginBottom: 16 } }, 'Status timeline'),
