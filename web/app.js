@@ -1272,7 +1272,7 @@ class Component extends DCLogic {
   }
   // reorder a past order: the same jobs (spec, quantity, price) and the same artworks from Artwork Storage
   reorder(o) {
-    if (!o) return;
+    if (!o || !(o.payment && o.payment.status === 'validated')) return; // only a paid order can be reordered
     const lib = {}; (this.state.agList || []).forEach(a => { lib[a.id] = a; });
     const items = (o.items || []).map((it, i) => {
       const refs = (o.files || []).filter(f => f.kind === 'artwork' && (f.line || 1) === i + 1 && f.libraryId).map(f => ({ id: f.libraryId, name: f.name }));
@@ -4976,7 +4976,8 @@ class Component extends DCLogic {
         h('span', { style: { display: 'flex', gap: 12 } },
           (o.payment && o.payment.status === 'validated') ? h('span', { onClick: () => this.openDoc(o.id, 'invoice'), title: 'Download invoice', style: { cursor: 'pointer', color: MUT } }, '⭳') : null,
           h('span', { 'data-go': 'trackorder:' + o.id, title: 'Track', style: { cursor: 'pointer', color: MUT } }, '⤳'),
-          h('span', { role: 'button', tabIndex: 0, onClick: () => this.reorder(o), title: 'Order the same again', style: { cursor: 'pointer', color: TEAL, fontWeight: 600, fontSize: 12.5 } }, 'Reorder')),
+          // (user, 2026-09-29) pending payment orders cannot be reordered
+          (o.payment && o.payment.status === 'validated') ? h('span', { role: 'button', tabIndex: 0, onClick: () => this.reorder(o), title: 'Order the same again', style: { cursor: 'pointer', color: TEAL, fontWeight: 600, fontSize: 12.5 } }, 'Reorder') : null),
       ]);
       content = [stitle('Orders'),
         this.filterRow({ searchKey: 'coSearch', dateKey: 'coDate', statusKey: 'coStatus', statuses: ['Payment received', 'Completed', 'Pending payment'] }),
@@ -5014,20 +5015,35 @@ class Component extends DCLogic {
     } else if (tab === 'Sales Missions') {
       const TIERS = [['Bronze', 1000, 5], ['Silver', 3000, 8], ['Gold', 5000, 10], ['Platinum', 10000, 15]];
       const spend = u.spend12mo || 0; const maxT = 10000;
-      const medal = c => h('span', { style: { height: 46, width: 46, borderRadius: '50%', border: '3px solid ' + c, display: 'grid', placeItems: 'center', flex: 'none', color: c, fontWeight: 700, fontSize: 12 } }, 'P');
-      const bar = pct => h('div', { style: { flex: 1, height: 8, borderRadius: 999, background: '#eaeaea', overflow: 'hidden' } }, h('div', { style: { width: Math.min(100, pct) + '%', height: '100%', background: 'linear-gradient(90deg,#12B3A6,#2f7fd1)' } }));
+      // (user, 2026-09-29) the Printoka membership medals (as on the homepage membership band)
+      const MEDAL = { Standard: 'standard-1.png', Bronze: 'bronze.png', Silver: 'silver.png', Gold: 'gold.png', Platinum: 'platinum.png', Corporate: 'corporate.png' };
+      const medal = (tier, size) => h('img', { src: window.__asset('assets/home/' + (MEDAL[tier] || MEDAL.Standard)), alt: (tier || 'Standard') + ' medal', style: { height: size || 50, width: size || 50, objectFit: 'contain', flex: 'none', display: 'block' } });
+      const bar = pct => h('div', { style: { flex: 1, height: 7, borderRadius: 999, background: '#ececec', overflow: 'hidden' } }, h('div', { style: { width: Math.min(100, pct) + '%', height: '100%', background: 'linear-gradient(90deg,#12B3A6,#2f7fd1)' } }));
+      const label = t => h('div', { style: { fontSize: 12.5, color: MUT } }, t);
+      const big = v => h('div', { style: { fontSize: 22, fontWeight: 400, color: INK, marginTop: 2 } }, v);
+      const sep = { borderLeft: '1px solid ' + HAIR, paddingLeft: 24 };
+      const tierName = u.tier === 'Standard' ? 'Member' : u.tier;
+      // the original's target track: the medals sit on the bar at each tier's target
+      const track = h('div', { style: { position: 'relative', paddingTop: 40 } },
+        TIERS.map(t => h('span', { key: t[0], title: t[0] + ' · ' + this.currency() + ' ' + t[1].toLocaleString(), style: { position: 'absolute', top: 0, left: 'calc(' + Math.min(100, t[1] / maxT * 100) + '% - 14px)', display: 'flex', flexDirection: 'column', alignItems: 'center' } },
+          medal(t[0], 28), h('span', { style: { width: 0, height: 0, borderLeft: '5px solid transparent', borderRight: '5px solid transparent', borderTop: '6px solid #333', marginTop: -2 } }))),
+        bar(Math.round(spend / maxT * 100)),
+        h('div', { style: { fontSize: 12.5, color: INK, marginTop: 10 } }, 'Target ' + TIERS.filter(t => spend >= t[1]).length + ' / ' + TIERS.length));
       content = [stitle('Sales Missions'),
-        h('div', { key: 'ov', style: { background: '#fff', borderRadius: 12, border: '1px solid ' + HAIR, padding: '20px 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 22, alignItems: 'center' } },
-          h('div', { style: { display: 'flex', gap: 14, alignItems: 'center' } }, medal('#9aa4ad'), h('div', null, h('div', { style: { fontSize: 12.5, color: MUT } }, 'Current Tier'), h('div', { style: { fontSize: 22, fontWeight: 600 } }, u.tier))),
-          h('div', null, h('div', { style: { fontSize: 12.5, color: MUT } }, 'Current Sales (' + this.currency() + ')'), h('div', { style: { fontSize: 22, fontWeight: 600 } }, spend.toLocaleString())),
-          h('div', null, h('div', { style: { fontSize: 12.5, color: MUT } }, 'Current discount'), h('div', { style: { fontSize: 22, fontWeight: 600 } }, this.tierPct() + '%')),
-          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } }, bar(Math.round(spend / maxT * 100)), h('span', { style: { fontSize: 12.5, color: INK } }, 'Target ' + TIERS.filter(t => spend >= t[1]).length + ' / ' + TIERS.length))),
-        h('div', { key: 'tiers', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 16 } },
-          TIERS.map(t => { const pct = Math.min(100, Math.round(spend / t[1] * 100)); return h('div', { key: t[0], style: { background: '#fff', borderRadius: 12, border: '1px solid ' + HAIR, padding: 20, display: 'flex', gap: 16 } },
-            medal(t[0] === 'Bronze' ? '#c07b3a' : t[0] === 'Silver' ? '#9aa4ad' : t[0] === 'Gold' ? '#d4a017' : '#7a8391'),
-            h('div', { style: { flex: 1 } }, h('div', { style: { fontWeight: 700, marginBottom: 8 } }, t[0]),
-              h('div', { style: { display: 'flex', gap: 16, marginBottom: 10 } }, h('div', null, h('div', { style: { fontSize: 12, color: MUT } }, 'Target Sales'), h('div', { style: { fontSize: 18, fontWeight: 600 } }, t[1].toLocaleString())), h('div', null, h('div', { style: { fontSize: 12, color: MUT } }, 'Discounts'), h('div', { style: { fontSize: 18, fontWeight: 600 } }, t[2] + '%'))),
-              h('div', { style: { display: 'flex', gap: 10, alignItems: 'center' } }, bar(pct), h('span', { style: { fontSize: 12.5 } }, pct + '%')))); })),
+        h('div', { key: 'ov', style: { background: '#fff', borderRadius: 8, padding: '22px 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 24, alignItems: 'center' } },
+          h('div', { style: { display: 'flex', gap: 16, alignItems: 'center' } }, medal(u.tier, 56), h('div', null, label('Current Tier'), big(tierName))),
+          h('div', { style: sep }, label('Current Sales (' + this.currency() + ')'), big(spend.toLocaleString())),
+          h('div', { style: sep }, label('Current discount'), big(this.tierPct() + '%')),
+          h('div', { style: sep }, track)),
+        // the tiers: one card, two columns, divided by hairlines
+        h('div', { key: 'tiers', style: { background: '#fff', borderRadius: 8, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', overflow: 'hidden' } },
+          TIERS.map(t => { const pct = Math.min(100, Math.round(spend / t[1] * 100)); return h('div', { key: t[0], style: { padding: '22px 24px', display: 'flex', gap: 22, boxShadow: '1px 1px 0 ' + HAIR } },
+            medal(t[0]),
+            h('div', { style: { flex: 1, minWidth: 0 } }, h('div', { style: { fontWeight: 600, fontSize: 14, marginBottom: 8 } }, t[0]),
+              h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', marginBottom: 12 } },
+                h('div', null, label('Target Sales'), big(t[1].toLocaleString())),
+                h('div', { style: sep }, label('Discounts'), big(t[2] + '%'))),
+              h('div', { style: { display: 'flex', gap: 14, alignItems: 'center' } }, bar(pct), h('span', { style: { fontSize: 12, color: INK } }, pct + '%')))); })),
       ];
     } else if (tab === 'Quotations') {
       const rows = quotes.map(q => [
