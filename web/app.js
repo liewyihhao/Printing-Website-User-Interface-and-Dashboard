@@ -5041,7 +5041,7 @@ class Component extends DCLogic {
         (q.status === 'issued' || q.status === 'reviewed') ? h('span', { onClick: () => this.quoteAccept(q.id), style: { color: '#E52220', fontWeight: 600, cursor: 'pointer', fontSize: 13 } }, 'Accept & pay') : (q.orderId ? h('span', { 'data-go': 'trackorder:' + q.orderId, style: { color: '#E52220', fontWeight: 600, cursor: 'pointer', fontSize: 13 } }, 'Track') : ''),
       ]);
       content = [stitle('My Quotations'),
-        this.dataCard([{ label: 'Date' }, { label: 'Quote' }, { label: 'Status' }, { label: 'Product' }, { label: 'Handled by' }, { label: 'Amount', right: true }, { label: '', right: true }], rows, { empty: 'No quotations yet — request one from the Contact page.', minWidth: 880 })];
+        this.dataCard([{ label: 'Date' }, { label: 'Quote' }, { label: 'Status' }, { label: 'Product' }, { label: 'Handled by' }, { label: 'Amount', right: true }, { label: '', right: true }], rows, { empty: 'No active quotations.', minWidth: 880 })];
     } else if (tab === 'Artwork') {
       // (user, 2026-09-29) the original printoka.com Artwork Storage: every artwork uploaded with us, ready to reorder
       content = [stitle('Artwork Storage'),
