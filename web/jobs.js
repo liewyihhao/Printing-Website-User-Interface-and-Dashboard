@@ -306,7 +306,7 @@
     const jobCard = this.acC('Job details', this.pSummary({ product: J.product || j.product, specLines: J.specLines, spec: J.spec || j.spec, qty: J.qty || j.qty, productionTime: J.productionTime,
       rows: [],
       // before the award: only the approved artwork watermarked "PRINTOKA"; the original files once the job is awarded to this printer
-      artworks: p.awardedToMe ? (J.artworks || []) : p.artworkPreview ? [{ name: p.artworkPreview.name, open: () => this.jDownload('/api/jobs/' + id + '/files/' + p.artworkPreview.id, p.artworkPreview.name) }] : [] }));
+      artworks: p.awardedToMe ? (J.artworks || []) : p.artworkPreview ? [{ name: p.artworkPreview.name, open: () => this.jDownload('/api/jobs/' + id + '/files/' + p.artworkPreview.id, p.artworkPreview.name) }] : (J.artworks || []).filter(a => a.missing) }));
     const deliverCard = p.deliverTo ? this.acC('Deliver to', this.pDeliver(p.deliverTo, p.deliverTo.phone)) : null;
     const docCard = p.awardedToMe && (p.documents || []).length ? this.acC('Documents (PDF)', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } }, p.documents.map(x => Btn('View ' + x.label, () => this.openJobDoc(id, x.id))))) : null;
     // layout (user, 2026-09-26): Job details top-left, Deliver to bottom-left; the step to fill in (quote, order, invoice, shipping) on the right

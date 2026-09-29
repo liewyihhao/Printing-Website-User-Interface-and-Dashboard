@@ -267,7 +267,9 @@
     const summary = { product: j.product, specLines: j.specLines || (item && item.specLines), spec: (pr.job && pr.job.spec) || j.spec, qty: j.qty, productionTime: j.productionTime || (item && item.productionTime), artworks: pr.job && pr.job.artworks,
       rows: [['Customer', j.customer || '—'], j.instructions ? ['Instructions', j.instructions] : null, j.machine ? ['Machine', j.machine + (j.slot ? ' · ' + when(j.slot) : '')] : null],
       // only prepress may change the artwork (the scheduler has no authority to change the order details)
-      onUpload: d.order && inDept(this, 'prepress') && Q.prepress.indexOf(j.status) >= 0 ? x => this.aFetchJ('/api/orders/' + encodeURIComponent(d.order.id) + '/files', { kind: 'artwork', line: (Number(String(id).split('-').pop()) || 1), name: x.name, data: x.data })
+      onUpload: !d.order && inDept(this, 'prepress') && !(pr.approvedArtwork) ? x => this.aFetchJ('/api/jobs/' + encodeURIComponent(id) + '/artwork', { name: x.name, data: x.data })
+        .then(r => { if (this.acDone(r, 'Artwork uploaded.')) { this.acDrop('job_'); this.forceUpdate(); } })
+      : d.order && inDept(this, 'prepress') && (Q.prepress.indexOf(j.status) >= 0 || !(pr.approvedArtwork)) ? x => this.aFetchJ('/api/orders/' + encodeURIComponent(d.order.id) + '/files', { kind: 'artwork', line: (Number(String(id).split('-').pop()) || 1), name: x.name, data: x.data })
         .then(r => { if (this.acDone(r, 'Artwork uploaded.')) { this.acDrop('job_'); this.forceUpdate(); } }) : null };
     const orderCard = this.acC('Order details', this.pSummary(summary));
     // delivery address in its own card, straight under the order details
@@ -316,7 +318,8 @@
       h('div', { key: 'q', style: { display: 'flex', flexDirection: 'column', gap: 8, borderTop: '1px solid ' + LINE, paddingTop: 12 } },
         row('Order Quantity', (s.qty || 0).toLocaleString() + ' pcs', 'q'), s.productionTime ? row('Production time', s.productionTime, 'pt') : null, (s.rows || []).filter(Boolean).map((r, i) => row(r[0], r[1], 'x' + i))),
       arts.length ? h('div', { key: 'a', style: { background: ALT, borderRadius: 6, padding: 12, display: 'flex', flexDirection: 'column', gap: 6 } }, h('b', { style: { fontSize: 12.5 } }, 'Artwork'),
-        arts.map((a, i) => a.open ? h('span', { key: i }, link('📄 ' + a.name, a.open)) : a.id ? h('span', { key: i }, link('📄 ' + a.name, () => this.openOrderFile(a.orderId, a))) : h('span', { key: i, style: { color: MUT } }, '📄 ' + a.name + (s.onUpload ? ' — file not uploaded' : '')))) : null,
+        arts.map((a, i) => a.open ? h('span', { key: i }, link('📄 ' + a.name, a.open)) : a.id && a.src === 'job' ? h('span', { key: i }, link('📄 ' + a.name, () => this.jDownload('/api/jobs/' + encodeURIComponent(a.jobId) + '/files/' + a.id, a.name)))
+          : a.id ? h('span', { key: i }, link('📄 ' + a.name, () => this.openOrderFile(a.orderId, a))) : h('span', { key: i, style: { color: MUT } }, '📄 ' + a.name + ' — file not uploaded yet'))) : null,
       upload];
   };
   // where it goes: collection or delivery, name, full address, phone
@@ -537,6 +540,7 @@
       h('div', { key: 'o', style: { display: 'flex', flexDirection: 'column', gap: 10, border: '1px solid ' + HAIR, borderRadius: 10, padding: 14 } }, this.pSummary(s)),
       h('div', { key: 'd', style: { display: 'flex', flexDirection: 'column', gap: 6, border: '1px solid ' + HAIR, borderRadius: 10, padding: 14 } }, h('b', { style: { fontSize: 13 } }, 'Deliver to'), this.pDeliver(pr.deliverTo || { type: 'production', name: 'Printoka Production' }, (pr.deliverTo || {}).phone)),
       this.acDL([['Printers', picked.map(v => v.name).join(', ')]]),
+      art ? null : box('This job has no artwork file yet, so the printers will quote without seeing it. Ask prepress to upload it first.', 'bad'),
       FG('Remarks', ta(this.acF('qRemarks'), v => this.acSetF('qRemarks', v), 3), 1),
       h('div', { key: 'b' }, Btn(this.state.qSending ? 'Sending…' : 'Send', send, 'primary', this.state.qSending || !String(this.acF('qRemarks') || '').trim()))] } });
   };

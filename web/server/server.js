@@ -111,7 +111,7 @@ async function api(req, res, pathname, query) {
       fromQuote: o.fromQuote || null, outlet: o.outlet || null, channel: o.channel || 'online', account: acct ? { name: acct.name, email: acct.email, phone: acct.phone || '', tier: acct.tier || 'Standard', since: acct.createdAt || null, disabled: !!acct.disabled } : null } : null });
   }
   // ---- printers & hubs (original printoka-3rd-party-supplier flow) ----
-  if (seg[0] === 'jobs' && seg[1] && ['vendor-quote', 'ship-to-hub', 'delivery', 'vendor-paid', 'doc', 'files', 'proof', 'payment-proof', 'vendor-processed', 'vendor-invoice', 'vendor-quote-doc'].indexOf(seg[2]) >= 0) {
+  if (seg[0] === 'jobs' && seg[1] && ['artwork', 'vendor-quote', 'ship-to-hub', 'delivery', 'vendor-paid', 'doc', 'files', 'proof', 'payment-proof', 'vendor-processed', 'vendor-invoice', 'vendor-quote-doc'].indexOf(seg[2]) >= 0) {
     const j0 = store.job(seg[1]); if (!j0) return send(res, 404, { error: 'not found' });
     if (!supplier.canSee(j0, me0)) return send(res, 403, { error: 'Access denied: You are not authorized to view this.' });
     const out = r => send(res, r && r.error ? (r.code || 400) : 200, r);
@@ -122,6 +122,7 @@ async function api(req, res, pathname, query) {
     const b = await readBody(req);
     if (me0.type !== 'vendor' && me0.type !== 'hub') {
       if (seg[2] === 'proof') return ['prepress_staff', 'prepress_manager', 'production_director'].indexOf(role) >= 0 ? out(supplier.saveProof(seg[1], me0, b)) : send(res, 403, { error: 'prepress only' });
+      if (seg[2] === 'artwork') return ['prepress_staff', 'prepress_manager', 'production_director'].indexOf(role) >= 0 ? out(supplier.saveJobArtwork(seg[1], me0, b)) : send(res, 403, { error: 'Only prepress can change the artwork.' });
       // New Order: prepress uploads the payment proof → the payment is validated (on the order, or on the job when it has none)
       if (seg[2] === 'payment-proof') {
         if (['prepress_staff', 'prepress_manager', 'production_director'].indexOf(role) < 0) return send(res, 403, { error: 'prepress only' });

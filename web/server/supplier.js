@@ -110,6 +110,7 @@ function jobFiles(j) { const out = []; const o = j.outsource || {};
   if (j.paymentProof) out.push(Object.assign({ kind: 'payment-proof' }, j.paymentProof));
   if (o.printerInvoice) out.push(Object.assign({ kind: 'printer-invoice', vendorId: o.awardedTo }, o.printerInvoice));
   if (o.artworkPreview) out.push(Object.assign({ kind: 'artwork-preview' }, o.artworkPreview));
+  if (j.artworkFile) out.push(Object.assign({ kind: 'artwork' }, j.artworkFile));
   return out; }
 // payment proof kept on the job itself when there is no web order behind it (counter / legacy jobs)
 function savePaymentProofOnJob(jid, me, b) {
@@ -166,7 +167,19 @@ function approvedArtwork(j) {
   const o = j.orderId && store.order(j.orderId); const idx = o ? (o.jobIds || []).indexOf(j.id) : -1;
   const arts = o ? (o.files || []).filter(x => x.kind === 'artwork') : [];
   const f = arts.filter(x => x.line === idx + 1).slice(-1)[0] || arts.find(x => x.id === (j.artwork || {}).fileId) || ((o && (o.jobIds || []).length === 1) ? arts.slice(-1)[0] : null);
-  return f ? { src: 'order', id: f.id, name: f.name, orderId: o.id } : null;
+  if (f) return { src: 'order', id: f.id, name: f.name, orderId: o.id };
+  // a job with no order file (older / counter jobs): the artwork prepress uploaded onto the job itself
+  return j.artworkFile ? { src: 'job', id: j.artworkFile.id, name: j.artworkFile.name } : null;
+}
+// prepress (or the director) uploads the artwork file onto a job that has none, at any stage (user, 2026-09-29)
+function saveJobArtwork(jid, me, b) {
+  const j = store.job(jid); if (!j) return { error: 'Job not found.' };
+  if (!b || !b.data) return { error: 'No file received.' };
+  if (!/\.(pdf|ai|eps|psd|tiff?|jpe?g|png|svg|cdr|indd|zip)$/i.test(String(b.name || ''))) return { error: 'Artwork must be PDF, AI, EPS, PSD, TIFF, JPG, PNG, SVG, CDR, INDD or ZIP.' };
+  const f = saveBlob(path.join(ROOT, jid), b, 'A'); if (f.error) return f;
+  f.by = me.name; j.artworkFile = f; j.artwork = Object.assign({}, j.artwork, { file: f.name, fileId: f.id, checkStatus: j.artwork && j.artwork.checkStatus || 'pending', uploadedAt: now() });
+  store.logEvent({ actor: me.name, role: me.role || me.type, action: 'artwork_upload', jobId: jid, from: null, to: null, note: 'Artwork file ' + f.name + ' uploaded onto the job' });
+  store.save(); return { ok: true, file: { id: f.id, name: f.name } };
 }
 // the watermarked copy of that artwork, made when the scheduler requests quotes (PDF only)
 function saveArtworkPreview(jid, b) {
@@ -205,7 +218,9 @@ function orderDetails(j) {
 function jobDetails(j) {
   const o = j.orderId && store.order(j.orderId); const idx = o ? (o.jobIds || []).indexOf(j.id) : -1; const it = o && idx >= 0 ? o.items[idx] : null;
   const arts = o ? (o.files || []).filter(f => f.kind === 'artwork' && f.line === idx + 1).map(f => ({ id: f.id, name: f.name, orderId: o.id })) : [];
-  return { product: j.product, spec: (it && it.spec) || j.spec || '', specLines: j.specLines || (it && it.specLines) || null, productionTime: j.productionTime || (it && it.productionTime) || null, qty: j.qty, artworks: arts.length ? arts : ((j.artwork && j.artwork.file && !/^pending-upload/.test(j.artwork.file)) ? [{ name: j.artwork.file }] : []), deadline: j.deadline, instructions: j.instructions || '' };
+  const jobArt = j.artworkFile ? [{ id: j.artworkFile.id, name: j.artworkFile.name, src: 'job', jobId: j.id }] : [];
+  return { product: j.product, spec: (it && it.spec) || j.spec || '', specLines: j.specLines || (it && it.specLines) || null, productionTime: j.productionTime || (it && it.productionTime) || null, qty: j.qty,
+    artworks: arts.length ? arts : jobArt.length ? jobArt : ((j.artwork && j.artwork.file && !/^pending-upload/.test(j.artwork.file)) ? [{ name: j.artwork.file, missing: true }] : []), deadline: j.deadline, instructions: j.instructions || '' };
 }
 // the printing-job view every account shares (printer: only its own quote, no customer contact)
 function view(j, me) {
@@ -447,5 +462,5 @@ function readCustomQuoteDoc(qid, vendorId, me) {
   return { file: p.document, data: fs.readFileSync(f), type: MIME[(p.document.name.split('.').pop() || '').toLowerCase()] || 'application/octet-stream' };
 }
 
-module.exports = { uploadQuoteDoc, markProcessed, uploadInvoice, approvedArtwork, saveArtworkPreview, FINISH_NAMES, requiredFinishes, printerCan, vendorsForJob, cleanCapabilities, STATUSES, printingStatus, statusInfo, view, vendorJob, listRow, canSee, vendorCanSee, hubCanSee, submitQuote, shipToHub, deliveryDetails, markPaid, saveProof, savePaymentProofOnJob, deliverTo, documentData, readJobFile,
+module.exports = { saveJobArtwork, uploadQuoteDoc, markProcessed, uploadInvoice, approvedArtwork, saveArtworkPreview, FINISH_NAMES, requiredFinishes, printerCan, vendorsForJob, cleanCapabilities, STATUSES, printingStatus, statusInfo, view, vendorJob, listRow, canSee, vendorCanSee, hubCanSee, submitQuote, shipToHub, deliveryDetails, markPaid, saveProof, savePaymentProofOnJob, deliverTo, documentData, readJobFile,
   requestPrinterQuotes, vendorCustomQuotes, vendorCustomQuote, submitCustomQuote, readCustomQuoteDoc };
