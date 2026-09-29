@@ -122,6 +122,50 @@ function flyerPriceBase(cfg, qty) {
   const row = rows.find(r => r[0] === qty); return row ? row[1] : null;
 }
 
+// Digital Loose Sheet hot stamping, as on Excard (do-loose-sheet): each colour has its own block size
+// and foil colour. Excard cash added for ONE colour, A4 / Gloss Art Card 230gsm / 4C Both
+// (captured live 2026-09-29; the 3,000 row for the middle sizes is scaled from 2,000):
+const DLS_HS_QTY = [100, 200, 500, 1000, 2000, 3000];
+const DLS_HS_COST = {
+  '90mm x 30mm':   [48.5, 48.5, 43.0, 52.9, 80.85, 108.55],
+  '90mm x 70mm':   [60.6, 60.65, 75.0, 162.65, 187.1, 261.05],
+  '95mm x 206mm':  [111.35, 113.55, 168.7, 323.2, 470.05, 658.05],
+  '101mm x 144mm': [95.9, 95.9, 127.9, 253.9, 347.65, 486.7],
+  '144mm x 206mm': [138.9, 151.05, 221.6, 407.5, 610.95, 855.35],
+  '194mm x 206mm': [166.45, 194.05, 290.0, 517.25, 803.85, 1125.4],
+  '206mm x 294mm': [229.3, 276.75, 414.55, 725.15, 1161.9, 1647.05],
+};
+const DLS_HS_SIZES = Object.keys(DLS_HS_COST);
+const DLS_HS_COLOURS = ['Gold', 'Silver', 'Green', 'Blue', 'Black', 'Red'];
+// one colour's cost at any quantity: flat below 100, straight lines between the captured quantities,
+// the last step's rate carried on above 3,000
+function dlsHsOne(size, qty) {
+  const row = DLS_HS_COST[size]; if (!row) return 0;
+  const Q = DLS_HS_QTY, n = Q.length;
+  if (qty <= Q[0]) return row[0];
+  for (let i = 1; i < n; i++) if (qty <= Q[i]) return row[i - 1] + (row[i] - row[i - 1]) * (qty - Q[i - 1]) / (Q[i] - Q[i - 1]);
+  return row[n - 1] + (row[n - 1] - row[n - 2]) * (qty - Q[n - 1]) / (Q[n - 1] - Q[n - 2]);
+}
+// the chosen option's colours (1C / 2C on the Front or the Back). Excard charges the second colour a
+// little less (2 × 90×70 at 100 = +115.75 vs 2 × 60.60): the smaller block is taken at 90%.
+function dlsHotStampCost(cfg, qty) {
+  const m = String(cfg.hot_stamping || '').match(/^(\d)C \((Front|Back)\)$/); if (!m) return 0;
+  const side = m[2].toLowerCase(), costs = [];
+  for (let i = 1; i <= +m[1]; i++) { const s = cfg['hs_size_' + side + '_' + i]; if (s) costs.push(dlsHsOne(s, qty)); }
+  costs.sort((a, b) => b - a);
+  return Math.round(costs.reduce((t, c, i) => t + (i ? c * 0.9 : c), 0) * 100) / 100;
+}
+const dlsHsFields = () => {
+  const out = [];
+  ['Front', 'Back'].forEach(side => [1, 2].forEach(i => {
+    const when = { field: 'hot_stamping', values: i === 1 ? ['1C (' + side + ')', '2C (' + side + ')'] : ['2C (' + side + ')'] };
+    const tag = side + ' ' + i;
+    out.push({ key: 'hs_size_' + side.toLowerCase() + '_' + i, label: 'Hot Stamping Size (' + tag + ')', options: DLS_HS_SIZES, section: 'Optional Finishing', after: 'hot_stamping', showWhen: when });
+    out.push({ key: 'hs_colour_' + side.toLowerCase() + '_' + i, label: 'Foil Colour (' + tag + ')', options: DLS_HS_COLOURS, section: 'Optional Finishing', neutral: true, after: 'hot_stamping', showWhen: when });
+  }));
+  return out;
+};
+
 const CFG_OVERRIDES = {
   'Business Card': {
     priceBase: bcPriceBase,
@@ -220,6 +264,12 @@ const CFG_OVERRIDES = {
   // optional" boxes are not a choice on this product (no "Other" size), so they are not shown (user, 2026-09-29).
   'Loose Sheet — Digital': {
     hide: ['custom_w', 'custom_h'],
+    // (user, 2026-09-29) hot stamping as on Excard: each colour asks its block size and foil colour,
+    // and is priced by block size × quantity (the engine's flat ~RM4 hot-stamping charge is replaced)
+    addFields: dlsHsFields(),
+    priceSub: { hot_stamping: { '1C (Front)': 'Not Required', '1C (Back)': 'Not Required', '2C (Front)': 'Not Required', '2C (Back)': 'Not Required' } },
+    priceAddon: { hot_stamping: dlsHotStampCost },
+    remark: { hot_stamping: '1 side only (Front or Back). Max 2 colours.' },
   },
   // Flyer / Brochure (Litho Offset Loose Sheet) — Excard "lo-loose-sheet".
   // Base pricing verified: A4 / Gloss Art Paper 128gsm / 4C Both / 1,000 = RM168.55 (=Excard cash).
