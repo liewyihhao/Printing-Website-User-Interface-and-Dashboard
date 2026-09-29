@@ -97,7 +97,9 @@ function verifyTotals(body, user) {
   const taxOk = rates.some(rt => Math.abs(r2(after * rt / 100) - (Number(body.tax) || 0)) <= 0.05);
   if (!taxOk) return { error: 'Tax on your order has changed. Please refresh your cart and try again.' };
   const ship = Number(s.shipping.flat) || 0; const free = Number(s.shipping.freeOver) || 0;
-  const expShip = (body.items || []).length ? (free && sub >= free ? 0 : ship) : 0;
+  // collecting at an outlet has no delivery fee
+  const pickup = body.fulfillment && body.fulfillment.method === 'pickup';
+  const expShip = (body.items || []).length && !pickup ? (free && sub >= free ? 0 : ship) : 0;
   if (Math.abs((Number(body.shipping) || 0) - expShip) > 0.05) return { error: 'The delivery fee has changed. Please refresh your cart and try again.', shipping: expShip };
   const total = r2(after + (Number(body.tax) || 0) + expShip);
   if (Math.abs(total - (Number(body.total) || 0)) > 0.1) return { error: 'Your order total has changed. Please refresh your cart and try again.' };

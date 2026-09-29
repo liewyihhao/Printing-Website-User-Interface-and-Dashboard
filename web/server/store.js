@@ -333,9 +333,16 @@ function createOrder(body) {
   // web order successfully placed & paid → prepress is notified an order is in their queue
   if (paid) notify({ type: 'role', role: 'prepress' }, { kind: 'order_placed', title: 'A fresh order just landed for artwork check', body: 'Order ' + oid + ' has come in for ' + (cust.name || 'a customer') + ' (' + items.length + ' item' + (items.length === 1 ? '' : 's') + ')' + (body.fromQuote ? ', from quote ' + body.fromQuote : '') + '. Have a look at the files whenever you’re ready.', cta: 'Open the order →', orderId: oid });
   logEvent({ actor: cust.email || 'online', role: 'customer', action: 'place_order', jobId: null, from: null, to: o.status, note: oid + ' — ' + items.length + ' item(s) · ' + (cust.name || '') + ' · ' + method });
-  if (cust.email) sendEmail('order-confirmation', { to: cust.email, name: cust.name, subject: 'Order ' + oid + ' confirmed', body: 'Hi ' + (cust.name || 'there') + ',\n\nThank you — we’ve received order ' + oid + ' (' + items.length + ' item' + (items.length === 1 ? '' : 's') + '), total RM ' + o.total.toFixed(2) + '.\n' + (paid ? 'Payment confirmed — it’s moving into prepress now.' : 'We’ll begin production once payment is confirmed.') + '\n\nTrack it anytime from your dashboard.' });
+  if (cust.email) sendEmail('order-confirmation', { to: cust.email, name: cust.name, subject: 'Order ' + oid + ' confirmed', body: 'Hi ' + (cust.name || 'there') + ',\n\nThank you — we’ve received order ' + oid + ' (' + items.length + ' item' + (items.length === 1 ? '' : 's') + '), total RM ' + o.total.toFixed(2) + '.\n' + (paid ? 'Payment confirmed — it’s moving into prepress now.' : 'We’ll begin production once payment is confirmed.') + bankLines(method, o.total) + '\n\nTrack it anytime from your dashboard.' });
   save();
   return o;
+}
+// Manual Bank Transfer: the confirmation email carries the bank account (Admin → Settings → Payments)
+function bankLines(method, total) {
+  if (method !== 'bank_transfer') return '';
+  const bt = ((settings().payments || {}).methods || {}).bank_transfer || {};
+  if (!bt.accountNo) return '\n\nOur team will email you our bank account details shortly.';
+  return '\n\nPlease transfer RM ' + Number(total || 0).toFixed(2) + ' to:\n' + (bt.bankName || '') + '\nAcc no. ' + bt.accountNo + '\nName ' + (bt.accountName || '') + '\n\nThen upload your bank-in slip from your dashboard.';
 }
 // mark a pending order paid (bank-transfer validated by admin, or a test payment)
 function validateOrderPayment(oid, actor) {

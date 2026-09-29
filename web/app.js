@@ -1225,7 +1225,7 @@ class Component extends DCLogic {
     const afterDisc = subtotal - memberDiscount - couponDiscount;
     const taxRate = this.taxRate();
     const tax = Math.round(afterDisc * taxRate * 100) / 100;
-    const shipping = cart.length ? this.shipFee(subtotal) : 0;
+    const shipping = cart.length && this.state.coFulfil !== 'pickup' ? this.shipFee(subtotal) : 0;
     return { subtotal, memberDiscount, couponCode: couponOn ? cp.code : null, couponPct: couponOn ? cp.pct : 0, couponOffLabel: couponOn ? this.couponOff(cp) : '', couponDiscount, couponShort: !!(cp && !couponOn), tax, shipping, total: afterDisc + tax + shipping, count: cart.length };
   }
   setField(k, v) { this.setState({ [k]: v }); }
@@ -1233,24 +1233,46 @@ class Component extends DCLogic {
     const cart = this.state.cart || []; if (!cart.length) return;
     const t = this.cartTotals();
     const u = this.state.user || {};
-    const picked = (this.state.addresses || []).find(a => a.id === this.state.coAddrId);
-    const addrText = picked ? [picked.line1, picked.line2, picked.postcode + ' ' + picked.city, picked.state, picked.country].filter(Boolean).join(', ') : (this.state.coAddress || '');
+    const v = (k, d) => this.state[k] != null ? this.state[k] : (d == null ? '' : d);
+    const who = { name: v('coName', u.name), email: u.email || '', phone: v('coPhone', u.phone), company: v('coCompany', u.company) };
+    const method = this.state.coFulfil || 'delivery';
+    const addrs = this.state.addresses || [];
+    const picked = addrs.find(a => a.id === (this.state.coAddrId || (addrs.find(x => x.isDefault) || addrs[0] || {}).id));
+    const rcv = { line1: v('coRcvLine1'), line2: v('coRcvLine2'), postcode: v('coRcvPostcode'), city: v('coRcvCity'), state: v('coRcvState'), country: this.cc() };
+    // where the parcel goes: the customer's chosen address, or the receiver for Direct to Customer; pickup has none
+    const shipTo = method === 'delivery' && picked ? { name: who.name, phone: who.phone, line1: picked.line1, line2: picked.line2 || '', postcode: picked.postcode, city: picked.city, state: picked.state || '', country: picked.country || this.cc() }
+      : method === 'direct' ? Object.assign({ name: v('coRcvName'), phone: v('coRcvPhone') }, rcv) : null;
+    const addrText = shipTo ? [shipTo.line1, shipTo.line2, [shipTo.postcode, shipTo.city].filter(Boolean).join(' '), shipTo.state].filter(Boolean).join(', ') : '';
+    const outlet = method === 'pickup' ? (this.state.pickupOutlets || []).find(o => o.id === this.state.coOutlet) : null;
     const creditAvail = (this.state.credit && this.state.credit.balance) || 0;
     const creditApplied = this.state.coCredit ? Math.min(creditAvail, t.total) : 0;
     const body = {
-      customer: { name: this.state.coName || u.name || 'Guest customer', email: this.state.coEmail || u.email || '', phone: this.state.coPhone || u.phone || '', company: this.state.coCompany || u.company || '' },
-      fulfillment: { method: this.state.coFulfil || 'delivery', address: addrText, addressId: this.state.coAddrId || null, outlet: this.state.coOutlet || '' },
-      payment: { method: this.state.coPay || 'card_test' },
-      items: cart.map(it => ({ productId: it.productId, product: it.name, spec: it.spec, specLines: it.specLines || null, productionTime: it.productionTime || null, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal })),
+      customer: who,
+      fulfillment: { method, address: addrText, addressId: method === 'delivery' && picked ? picked.id : null, outlet: outlet ? outlet.id : '', outletName: outlet ? outlet.name : '', receiver: method === 'direct' ? { name: shipTo.name, phone: shipTo.phone } : null },
+      shipTo,
+      payment: { method: this.state.coPay },
+      items: cart.map(it => ({ productId: it.productId, product: it.name, spec: it.spec, specLines: it.specLines || null, productionTime: it.productionTime || null, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal,
+        artworkRefs: (it.artworks || []).filter(Boolean).map(a => ({ id: a.id })) })),
       subtotal: t.subtotal, memberDiscount: t.memberDiscount, coupon: t.couponCode, couponDiscount: t.couponDiscount, tax: t.tax, shipping: t.shipping, total: t.total, creditApplied, tier: this.tier(),
     };
     this.setState({ placing: true, orderErr: null });
     fetch('/api/orders', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify(body) })
       .then(r => r.json()).then(d => {
-        if (d && d.order) { this.setState({ order: d.order, placing: false, cart: [], coupon: null, cartCoupon: '', couponMsg: null }); this.saveCart([]); this.go('confirm');
+        if (d && d.order) { this.setState({ order: d.order, placing: false, cart: [], coupon: null, cartCoupon: '', couponMsg: null, coStep: 1, coTerms: false, coPay: null }); this.saveCart([]); this.go('confirm'); this.loadUserOrders();
           fetch('/api/auth/me', { headers: this.authHeaders() }).then(r => r.ok ? r.json() : null).then(m => { if (m && m.customer) this.setState({ user: m.customer }); }).catch(() => {}); }
         else this.setState({ placing: false, orderErr: (d && d.error) || 'Could not place the order.' });
-      }).catch(() => this.setState({ placing: false }));
+      }).catch(() => this.setState({ placing: false, orderErr: 'Network error — please try again.' }));
+  }
+  // reorder a past order: the same jobs (spec, quantity, price) and the same artworks from Artwork Storage
+  reorder(o) {
+    if (!o) return;
+    const lib = {}; (this.state.agList || []).forEach(a => { lib[a.id] = a; });
+    const items = (o.items || []).map((it, i) => {
+      const refs = (o.files || []).filter(f => f.kind === 'artwork' && (f.line || 1) === i + 1 && f.libraryId).map(f => ({ id: f.libraryId, name: f.name }));
+      return { productId: it.productId, name: it.product, spec: it.spec, specLines: it.specLines || null, productionTime: it.productionTime || null, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal, artworks: refs };
+    });
+    const cart = (this.state.cart || []).concat(items);
+    this.setState({ cart }); this.saveCart(cart); this.agLoad(true); this.go('cart');
   }
   trackLookup(oid) {
     if (!oid) return;
@@ -1264,6 +1286,7 @@ class Component extends DCLogic {
   authLoad() {
     if (typeof fetch !== 'function' || !this.authToken()) return;
     fetch('/api/auth/me', { headers: this.authHeaders() }).then(r => r.ok ? r.json() : null).then(d => {
+      this.setState({ authChecked: true });
       if (!d || !d.customer) return;
       const c = d.customer; this.setState({ user: c }); this.loadAccount(); this.loadNotifications();
       // on a hard refresh the route is still 'home'; load the data the user's real home needs
@@ -1277,7 +1300,7 @@ class Component extends DCLogic {
       const r2 = this.opsRoleFor(home);
       // jobs + ops settings (couriers, machines, outlets) + the 30-second refresh
       if (r2) this.opsLoad();
-    }).catch(() => {});
+    }).catch(() => this.setState({ authChecked: true }));
   }
   // ---------- notifications ----------
   loadNotifications() { if (typeof fetch !== 'function' || !this.authToken()) return; fetch('/api/notifications', { headers: this.authHeaders() }).then(r => r.ok ? r.json() : null).then(d => { if (d) this.setState({ notifs: d.notifications || [] }); }).catch(() => {}); }
@@ -2519,7 +2542,7 @@ class Component extends DCLogic {
     const f = this['s_' + route];
     const screen = f ? f.call(this) : h('div', { style: { padding: 60, textAlign: 'center', color: MUT } }, 'Screen coming next.');
     const bar = this.staffBar(route);
-    return h('div', null, bar, screen, this.orderDialog(), this.docDialog(), this.newUserModal(), this.announcementPopup());
+    return h('div', null, bar, screen, this.orderDialog(), this.docDialog(), this.newUserModal(), this.announcementPopup(), this.artStorageModal ? this.artStorageModal() : null);
   }
 
   // ===== HOME =====
@@ -2900,8 +2923,7 @@ class Component extends DCLogic {
             this.chip(paid ? 'Paid' : 'Payment pending', paid ? 'ok' : 'warn'),
             (o.customer && o.customer.email) ? h('span', null, ' · confirmation sent to ' + o.customer.email) : '')),
         h('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap' } },
-          this.btn('Upload your artwork', 'amber', 'artwork'),
-          this.btn('Track this order', 'teal', 'track'),
+          h('span', { role: 'button', tabIndex: 0, onClick: () => { this.setState({ cTab: 'Orders' }); this.loadUserOrders(); this.go('dash'); }, style: { display: 'inline-flex', alignItems: 'center', background: TEAL, color: '#fff', fontWeight: 600, fontSize: 14, borderRadius: 8, padding: '11px 20px', cursor: 'pointer' } }, 'Track in my dashboard'),
           this.btn('Download invoice', 'ghost', 'doc:invoice:' + o.id),
           this.btn('Order slip', 'ghost', 'doc:slip:' + o.id))),
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 22, marginTop: 22, alignItems: 'start' } },
@@ -3834,6 +3856,12 @@ class Component extends DCLogic {
     return { groups, sectionHeader, qtyChosen, ov };
   }
   s_product() {
+    // (user, 2026-09-29) the configurator is for members only: log in or sign up first, then it opens
+    if (!this.state.user) {
+      if (this.authToken() && !this.state.authChecked) return h('div', { style: { padding: 60, textAlign: 'center', color: FAINT } }, 'Loading…');
+      if (this.state.afterAuth !== 'product') setTimeout(() => this.setState({ afterAuth: 'product' }), 0);
+      return this.s_auth();
+    }
     const s = this.state, p = this.price();
     const prod = this.pkProduct(), cfg = this.pkV(), fields = this.pkFields(), q = this.pkQuote();
     const quoteOnly = q && q.quoteOnly;
@@ -4194,19 +4222,6 @@ class Component extends DCLogic {
       h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 340px', gap: 24, marginTop: 6, alignItems: 'start' } },
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
           h('h1', { style: { margin: '0 0 2px', fontSize: 28, fontWeight: 600, letterSpacing: '-.02em' } }, 'Cart'),
-          // Shipped To block
-          this.card([
-            h('div', { key: 's', style: { fontSize: 11, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', color: FAINT, marginBottom: 8 } }, 'Shipped to'),
-            addr
-              ? h('div', { key: 'a', style: { fontSize: 13.5, color: INK, lineHeight: 1.7 } },
-                  h('div', { style: { fontWeight: 600 } }, addr.label || u.name || 'Delivery address'),
-                  u.phone ? h('div', { style: { color: MUT } }, u.phone) : null,
-                  h('div', { style: { color: MUT } }, [addr.line1, addr.line2, addr.postcode + ' ' + addr.city, addr.state, addr.country].filter(Boolean).join(', ')))
-              : h('div', { key: 'a', style: { fontSize: 13.5, color: MUT } }, 'No delivery address yet — add one at checkout, or in your Address Book.'),
-            h('div', { key: 'l', style: { display: 'flex', gap: 18, marginTop: 10 } },
-              h('span', { 'data-go': this.state.user ? 'dash' : 'checkout', style: { fontSize: 12.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'Add new address'),
-              (this.state.addresses && this.state.addresses.length > 1) ? h('span', { 'data-go': 'checkout', style: { fontSize: 12.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'Choose another address') : null),
-          ]),
           // line items
           cart.map((it, i) => this.card([
             h('div', { key: 'top', style: { display: 'flex', gap: 16 } },
@@ -4223,12 +4238,8 @@ class Component extends DCLogic {
             h('div', { key: 'act', style: { display: 'flex', gap: 18, marginTop: 12 } },
               h('span', { 'data-go': 'open:' + it.productId, style: { fontSize: 12.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'Edit'),
               h('span', { onClick: () => this.dupCart(i), style: { fontSize: 12.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'Duplicate')),
-            // artwork upload block (same flow used after quote-conversion)
-            h('div', { key: 'art', style: { marginTop: 14, background: ALT, borderRadius: 10, padding: '13px 15px' } },
-              h('div', { style: { fontSize: 12.5, fontWeight: 600, marginBottom: 10 } }, 'Artwork upload'),
-              h('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap' } },
-                this.btn('Upload artwork', 'teal', 'artwork', { padding: '8px 16px', fontSize: 13 }),
-                h('span', { 'data-go': 'artwork', style: { alignSelf: 'center', fontSize: 12.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'Upload files later'))),
+            // artwork: picked from the customer's Artwork Storage (Preview · Change · Remove)
+            this.cartArtworkBlock(it, i),
           ])),
           h('div', { style: { display: 'flex', gap: 10, marginTop: 2 } }, this.btn('+ Add another product', 'ghost', 'category'))),
         // summary
@@ -4266,81 +4277,171 @@ class Component extends DCLogic {
   }
 
   // ===== CHECKOUT =====
+  // (user, 2026-09-29) three steps, one at a time — finish a step and the next one opens:
+  //   1 Account: log in or sign up; the details are then filled in from the account
+  //   2 Delivery: Delivery (address book or a new address) · Pickup (an outlet) · Direct to Customer (receiver + address)
+  //   3 Payment: iPay88 · Manual Bank Transfer · Stripe, the Terms & Conditions, and a red Place order button
   s_checkout() {
     const cart = this.state.cart || [], t = this.cartTotals();
     if (!cart.length) return h('div', { style: { maxWidth: 700, margin: '0 auto', padding: '10px 20px 0' } },
-      this.head('Checkout', 'Your cart is empty — add a product first.'), this.btn('Browse products →', 'teal', 'category'));
-    const inp = { font: '400 14px Montserrat,sans-serif', padding: '11px 13px', border: '1px solid #eaeaea', borderRadius: 8, width: '100%', color: INK };
-    const field = (label, key, ph, type) => h('label', { key: label, style: { display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, fontWeight: 600, color: MUT } }, label,
-      h('input', { type: type || 'text', placeholder: ph || '', value: this.state[key] || '', onChange: e => this.setField(key, e.target.value), style: inp }));
-    const fulfil = this.state.coFulfil || 'delivery';
-    const pay = this.state.coPay || 'card_test';
-    const PAYS = [['card_test', 'Card (test mode)', 'Validates immediately'], ['fpx', 'FPX online banking', 'Validates immediately'], ['tng', "Touch 'n Go eWallet", 'Validates immediately'], ['ipay88', 'iPay88', 'Validates immediately'], ['bank_transfer', 'Bank transfer', 'Pending until verified'], ['credit_term', 'Credit terms', 'Approved accounts']];
+      this.head('Checkout', 'Your cart is empty.'), this.btn('Browse products →', 'teal', 'category'));
+    const u = this.state.user;
+    if (u && !this.state.addresses && !this._coAddrLoad) { this._coAddrLoad = true; this.loadAccount(); }
+    const step = !u ? 1 : Math.max(1, Math.min(3, this.state.coStep || 1));
+    const inp = { font: '400 14px Montserrat,sans-serif', padding: '11px 13px', border: '1px solid #eaeaea', borderRadius: 8, width: '100%', color: INK, background: '#fff' };
+    const val = (k, d) => this.state[k] != null ? this.state[k] : (d == null ? '' : d);
+    const field = (label, key, def, ph, extra) => h('label', { key, style: Object.assign({ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, fontWeight: 600, color: MUT }, extra || {}) }, label,
+      h('input', { value: val(key, def), placeholder: ph || '', readOnly: key === 'coEmail', onChange: e => this.setState({ [key]: e.target.value, coErr: null }), style: Object.assign({}, inp, key === 'coEmail' ? { background: ALT, color: MUT } : {}) }));
+    const redBtn = (label, onClick, extra) => h('button', { type: 'button', onClick, style: Object.assign({ font: '600 14px Montserrat,sans-serif', background: TEAL, color: '#fff', border: 'none', borderRadius: 8, padding: '12px 26px', cursor: 'pointer' }, extra || {}) }, label);
+    const choice = (on, title, sub, onClick) => h('div', { role: 'button', tabIndex: 0, onClick, onKeyDown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } },
+      style: { border: '1px solid ' + (on ? TEAL : HAIR), background: on ? '#fdf2f2' : '#fff', borderRadius: 10, padding: '13px 14px', cursor: 'pointer', height: '100%' } },
+      h('div', { style: { fontSize: 13.5, fontWeight: 600, display: 'flex', gap: 8, alignItems: 'center', color: on ? TEAL : INK } },
+        h('span', { style: { height: 14, width: 14, borderRadius: '50%', border: '1px solid ' + (on ? TEAL : '#cfd3d8'), background: on ? TEAL : '#fff', boxShadow: on ? 'inset 0 0 0 3px #fff' : 'none', flex: 'none' } }), title),
+      sub ? h('div', { style: { fontSize: 12, color: MUT, marginTop: 5, lineHeight: 1.5 } }, sub) : null);
+    const err = this.state.coErr ? h('div', { role: 'alert', style: { fontSize: 12.5, color: '#c0392b', marginTop: 10 } }, this.state.coErr) : null;
+    const addrText = a => [a.line1, a.line2, [a.postcode, a.city].filter(Boolean).join(' '), a.state].filter(Boolean).join(', ');
+    const goStep = n => { this.setState({ coStep: n, coErr: null }); setTimeout(() => { const el = typeof document !== 'undefined' && document.getElementById('co-step-' + n); if (el) window.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top + window.scrollY - 130), behavior: 'smooth' }); }, 40); };
+    const section = (n, title, body, summary) => {
+      const active = step === n, done = step > n;
+      return h('div', { key: 's' + n, id: 'co-step-' + n, style: { border: '1px solid ' + HAIR, borderRadius: 12, padding: '18px 20px', background: '#fff', opacity: step < n ? .55 : 1 } },
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 12 } },
+          h('span', { style: { height: 26, width: 26, borderRadius: '50%', flex: 'none', display: 'grid', placeItems: 'center', fontSize: 12.5, fontWeight: 700, background: done || active ? TEAL : '#fff', color: done || active ? '#fff' : FAINT, border: '1px solid ' + (done || active ? TEAL : HAIR) } }, done ? '✓' : n),
+          h('div', { style: { fontSize: 15, fontWeight: 600 } }, 'Step ' + n + ' · ' + title),
+          done ? h('span', { role: 'button', tabIndex: 0, onClick: () => this.setState({ coStep: n, coErr: null }), style: { marginLeft: 'auto', fontSize: 12.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'Edit') : null),
+        done && summary ? h('div', { style: { fontSize: 13, color: MUT, marginTop: 8, paddingLeft: 38, lineHeight: 1.6 } }, summary) : null,
+        active ? h('div', { style: { marginTop: 16 } }, body) : null);
+    };
+
+    // ---- step 1 · account
+    const who = u ? { name: val('coName', u.name), phone: val('coPhone', u.phone), company: val('coCompany', u.company) } : {};
+    const toAuth = tab => { this.setState({ afterAuth: 'checkout', authTab: tab, authRole: 'member' }); this.go('auth'); };
+    const s1 = !u
+      ? h('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap' } },
+          redBtn('Log in', () => toAuth('login')),
+          h('button', { type: 'button', onClick: () => toAuth('register'), style: { font: '600 14px Montserrat,sans-serif', background: '#fff', color: TEAL, border: '1px solid ' + HAIR, borderRadius: 8, padding: '12px 26px', cursor: 'pointer' } }, 'Sign up'))
+      : h('div', null,
+          h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 12 } },
+            field('Full name *', 'coName', u.name, 'Your name'), field('Email', 'coEmail', u.email),
+            field('Phone *', 'coPhone', u.phone, '+60…'), field('Company (optional)', 'coCompany', u.company, 'Company Sdn Bhd')),
+          err, h('div', { style: { marginTop: 16 } }, redBtn('Continue', () => {
+            if (!String(who.name || '').trim() || !String(who.phone || '').trim()) return this.setState({ coErr: 'Please enter your name and phone number.' });
+            goStep(2);
+          })));
+
+    // ---- step 2 · delivery
+    const ful = this.state.coFulfil || 'delivery';
+    const addrs = this.state.addresses || [];
+    const selId = this.state.coAddrId || ((addrs.find(a => a.isDefault) || addrs[0] || {}).id);
+    const newAddr = this.state.coNewAddr || !addrs.length;
+    const addrForm = pre => h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12, marginTop: 12 } },
+      field('Address *', pre + 'Line1', '', 'Street, building, unit', { gridColumn: '1 / -1' }), field('Address line 2', pre + 'Line2', '', 'Optional', { gridColumn: '1 / -1' }),
+      field('Postcode *', pre + 'Postcode', '', ''), field('City *', pre + 'City', '', ''), field('State', pre + 'State', '', ''));
+    const outs = this.state.pickupOutlets;
+    if (ful === 'pickup' && !outs && typeof fetch === 'function' && !this._poLoading) { this._poLoading = true; fetch('/api/ops/outlets').then(r => r.json()).then(d => this.setState({ pickupOutlets: d.outlets || [] })).catch(() => {}); }
+    const readAddr = pre => ({ line1: String(val(pre + 'Line1')).trim(), line2: String(val(pre + 'Line2')).trim(), postcode: String(val(pre + 'Postcode')).trim(), city: String(val(pre + 'City')).trim(), state: String(val(pre + 'State')).trim(), country: this.cc() });
+    const s2next = () => {
+      if (ful === 'pickup') { if (!this.state.coOutlet) return this.setState({ coErr: 'Choose the outlet you will collect from.' }); return goStep(3); }
+      if (ful === 'direct') {
+        const a = readAddr('coRcv');
+        if (!String(val('coRcvName')).trim() || !String(val('coRcvPhone')).trim() || !a.line1 || !a.postcode || !a.city) return this.setState({ coErr: 'Please fill in the receiver’s name, contact number and address.' });
+        return goStep(3);
+      }
+      if (!newAddr) { if (!selId) return this.setState({ coErr: 'Choose a delivery address.' }); this.setState({ coAddrId: selId }); return goStep(3); }
+      const a = readAddr('coAd');
+      if (!a.line1 || !a.postcode || !a.city) return this.setState({ coErr: 'Please fill in the address, postcode and city.' });
+      // a new address is saved to the customer's address book, then used for this order
+      this.setState({ coErr: null, coSaving: true });
+      fetch('/api/account/addresses', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify(Object.assign({ label: 'Address ' + (addrs.length + 1) }, a)) })
+        .then(r => r.json()).then(d => {
+          const list = d.addresses || [];
+          const added = list.slice().reverse().find(x => x.line1 === a.line1 && String(x.postcode) === a.postcode) || list[list.length - 1];
+          this.setState({ addresses: list, coAddrId: added ? added.id : null, coNewAddr: false, coSaving: false, coAdLine1: '', coAdLine2: '', coAdPostcode: '', coAdCity: '', coAdState: '' }); goStep(3);
+        }).catch(() => this.setState({ coSaving: false, coErr: 'Could not save the address — check your connection.' }));
+    };
+    const s2 = h('div', null,
+      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 10 } },
+        [['delivery', 'Delivery', 'To your address'], ['pickup', 'Pickup', 'Collect at an outlet'], ['direct', 'Direct to Customer', 'To your customer, unbranded']]
+          .map(o => h('div', { key: o[0] }, choice(ful === o[0], o[1], o[2], () => this.setState({ coFulfil: o[0], coErr: null }))))),
+      ful === 'delivery' ? h('div', { style: { marginTop: 14 } },
+        addrs.length ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 8 } },
+          addrs.map(a => h('div', { key: a.id }, choice(!newAddr && selId === a.id, a.label || 'Address', addrText(a), () => this.setState({ coAddrId: a.id, coNewAddr: false, coErr: null })))),
+          h('div', { key: 'new' }, choice(newAddr, '+ New address', 'Saved to your address book', () => this.setState({ coNewAddr: true, coErr: null })))) : null,
+        newAddr ? addrForm('coAd') : null) : null,
+      ful === 'pickup' ? h('div', { style: { marginTop: 14, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 8 } },
+        outs == null ? h('div', { style: { fontSize: 13, color: FAINT } }, 'Loading outlets…')
+          : !outs.length ? h('div', { style: { fontSize: 13, color: FAINT } }, 'No outlet is open for pickup right now.')
+            : outs.map(o => h('div', { key: o.id }, choice(this.state.coOutlet === o.id, o.name, o.address || '', () => this.setState({ coOutlet: o.id, coErr: null }))))) : null,
+      ful === 'direct' ? h('div', { style: { marginTop: 14 } },
+        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12 } },
+          field('Receiver name *', 'coRcvName', '', 'Who receives the parcel'), field('Contact number *', 'coRcvPhone', '', '+60…')),
+        addrForm('coRcv')) : null,
+      err, h('div', { style: { marginTop: 16 } }, redBtn(this.state.coSaving ? 'Saving…' : 'Continue', s2next)));
+    const pickedAddr = addrs.find(a => a.id === (this.state.coAddrId || selId));
+    const outletName = ((outs || []).find(o => o.id === this.state.coOutlet) || {}).name;
+    const s2sum = ful === 'pickup' ? 'Pickup · ' + (outletName || 'outlet')
+      : ful === 'direct' ? 'Direct to Customer · ' + [val('coRcvName'), val('coRcvPhone'), addrText(readAddr('coRcv'))].filter(Boolean).join(' · ')
+        : 'Delivery · ' + (pickedAddr ? addrText(pickedAddr) : '');
+
+    // ---- step 3 · payment
+    const methods = ((this.state.settings && this.state.settings.payments) || {}).methods || {};
+    const PAYS = [['ipay88', 'iPay88', 'FPX online banking, cards & e-wallets'], ['bank_transfer', 'Manual Bank Transfer', 'Pay by bank-in'], ['card_test', 'Stripe', 'Credit or debit card']]
+      .filter(m => !methods[m[0]] || methods[m[0]].enabled !== false);
+    const pay = PAYS.some(m => m[0] === this.state.coPay) ? this.state.coPay : null;
+    const bank = methods.bank_transfer || {};
+    const s3 = h('div', null,
+      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 10 } },
+        PAYS.map(m => h('div', { key: m[0] }, choice(pay === m[0], m[1], m[2], () => this.setState({ coPay: m[0], orderErr: null }))))),
+      pay === 'bank_transfer' ? h('div', { style: { marginTop: 12, border: '1px solid ' + HAIR, background: ALT, borderRadius: 10, padding: '14px 16px', fontSize: 13, lineHeight: 1.8 } },
+        bank.accountNo
+          ? [h('div', { key: 'b', style: { fontWeight: 600 } }, bank.bankName || 'Bank'),
+             h('div', { key: 'n' }, h('span', { style: { color: MUT } }, 'Acc no. '), h('b', null, bank.accountNo)),
+             h('div', { key: 'a' }, h('span', { style: { color: MUT } }, 'Name '), h('b', null, bank.accountName || '')),
+             h('div', { key: 'x', style: { fontSize: 12, color: MUT, marginTop: 4 } }, 'Upload your bank-in slip from your dashboard after you place the order.')]
+          : h('div', { style: { color: MUT } }, 'We’ll email you our bank account details with your order confirmation.')) : null,
+      h('label', { style: { display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13, color: INK, marginTop: 16, cursor: 'pointer', lineHeight: 1.5 } },
+        h('input', { type: 'checkbox', checked: !!this.state.coTerms, onChange: e => this.setState({ coTerms: e.target.checked, orderErr: null }), style: { marginTop: 3, accentColor: TEAL } }),
+        h('span', null, 'I confirm that I have read and understood all the ', h('a', { href: '/terms/', target: '_blank', rel: 'noopener', style: { color: '#2f7fd1' } }, 'Terms and Conditions'), '.')));
+
+    // ---- order summary + place order
+    const avail = (this.state.credit && this.state.credit.balance) || 0;
+    const applied = this.state.coCredit ? Math.min(avail, t.total) : 0;
+    const due = t.total - applied;
+    const missingArt = cart.filter(it => !it.artLater && !(it.artworks || []).some(Boolean)).length;
+    const canPlace = step === 3 && !!pay && !!this.state.coTerms && !this.state.placing;
+    const place = () => {
+      if (this.state.placing) return;
+      if (step !== 3) return this.setState({ orderErr: 'Finish the steps on the left first.' });
+      if (!pay) return this.setState({ orderErr: 'Choose how you would like to pay.' });
+      if (!this.state.coTerms) return this.setState({ orderErr: 'Please confirm the Terms and Conditions.' });
+      this.placeOrder();
+    };
     return h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px 0' } },
-      this.head('Checkout', 'Enter your details and place the order — it enters the production pipeline the moment payment is confirmed.'),
-      h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 340px', gap: 24, alignItems: 'start', marginTop: 8 } },
-        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
-          this.card([
-            h('div', { key: 'h', style: { fontSize: 14, fontWeight: 600, marginBottom: 14 } }, '1 · Customer information'),
-            h('div', { key: 'g', style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 } },
-              field('Full name *', 'coName', 'Your name'), field('Email *', 'coEmail', 'you@email.com', 'email'),
-              field('Phone', 'coPhone', '+60…'), field('Company (optional)', 'coCompany', 'Company Sdn Bhd')),
-          ]),
-          this.card([
-            h('div', { key: 'h', style: { fontSize: 14, fontWeight: 600, marginBottom: 12 } }, '2 · Fulfilment'),
-            h('div', { key: 'o', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 10 } },
-              [['delivery', 'Courier delivery', 'To your address'], ['pickup', 'Self-pickup at outlet', 'Klang Valley · 5% off'], ['direct', 'Direct to customer', 'Unbranded packaging']]
-                .map(o => h('div', { key: o[0], 'data-go': 'set:coFulfil:' + o[0], style: { border: '1px solid ' + (fulfil === o[0] ? TEAL : HAIR), background: fulfil === o[0] ? '#fdf2f2' : '#fff', borderRadius: 10, padding: 14, cursor: 'pointer' } },
-                  h('div', { style: { fontSize: 13, fontWeight: 600, display: 'flex', gap: 8, alignItems: 'center' } },
-                    h('span', { style: { height: 14, width: 14, borderRadius: '50%', border: '1px solid ' + (fulfil === o[0] ? TEAL : '#eaeaea'), background: fulfil === o[0] ? TEAL : '#fff', flex: 'none' } }), o[1]),
-                  h('div', { style: { fontSize: 12, color: MUT, marginTop: 6 } }, o[2])))),
-            fulfil === 'pickup' && h('div', { key: 'po', style: { marginTop: 12 } },
-              h('div', { style: { fontSize: 12.5, fontWeight: 600, marginBottom: 6 } }, 'Pick up at'),
-              (() => { const outs = this.state.pickupOutlets; if (!outs && typeof fetch === 'function' && !this._poLoading) { this._poLoading = true; fetch('/api/ops/outlets').then(r => r.json()).then(d => this.setState({ pickupOutlets: d.outlets || [], coOutlet: this.state.coOutlet || ((d.outlets || [])[0] || {}).id || '' })).catch(() => {}); }
-                return h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 8 } }, (outs || []).map(o => { const on = (this.state.coOutlet || '') === o.id;
-                  return h('div', { key: o.id, 'data-go': 'set:coOutlet:' + o.id, style: { border: '1px solid ' + (on ? TEAL : HAIR), background: on ? '#fdf2f2' : '#fff', borderRadius: 8, padding: '10px 12px', fontSize: 12, color: MUT, cursor: 'pointer', lineHeight: 1.5 } },
-                    h('div', { style: { fontWeight: 600, color: on ? TEAL : INK } }, o.name), o.address || ''); })); })()),
-            fulfil === 'delivery' && h('div', { key: 'a', style: { marginTop: 12, display: 'flex', flexDirection: 'column', gap: 10 } },
-              (this.state.addresses && this.state.addresses.length) ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 8 } },
-                this.state.addresses.map(a => { const on = (this.state.coAddrId || (this.state.addresses.find(x => x.isDefault) || {}).id) === a.id;
-                  return h('div', { key: a.id, 'data-go': 'set:coAddrId:' + a.id, style: { border: '1px solid ' + (on ? TEAL : HAIR), background: on ? '#fdf2f2' : '#fff', borderRadius: 8, padding: '10px 12px', fontSize: 12, color: MUT, cursor: 'pointer', lineHeight: 1.5 } },
-                    h('div', { style: { fontWeight: 600, color: on ? TEAL : INK } }, a.label), [a.line1, a.postcode + ' ' + a.city].filter(Boolean).join(', ')); })) : null,
-              h('input', { placeholder: this.state.addresses && this.state.addresses.length ? 'Or type a new delivery address' : 'Delivery address', value: this.state.coAddress || '', onChange: e => this.setField('coAddress', e.target.value), style: inp }),
-              !this.state.user ? h('div', { style: { fontSize: 11.5, color: FAINT } }, h('span', { 'data-go': 'auth', style: { color: TEAL, fontWeight: 600, cursor: 'pointer' } }, 'Sign in'), ' to use your saved address book.') : null),
-          ]),
-          this.card([
-            h('div', { key: 'h', style: { fontSize: 14, fontWeight: 600, marginBottom: 12 } }, '3 · Payment'),
-            h('div', { key: 'g', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(155px,1fr))', gap: 10 } },
-              PAYS.map(m => h('div', { key: m[0], 'data-go': 'set:coPay:' + m[0], style: { border: '1px solid ' + (pay === m[0] ? TEAL : HAIR), background: pay === m[0] ? '#fdf2f2' : '#fff', borderRadius: 10, padding: '12px 14px', cursor: 'pointer' } },
-                h('div', { style: { fontSize: 12.5, fontWeight: pay === m[0] ? 600 : 500, color: pay === m[0] ? TEAL : INK } }, m[1]),
-                h('div', { style: { fontSize: 11, color: FAINT, marginTop: 3 } }, m[2])))),
-            h('div', { key: 'n', style: { fontSize: 11.5, color: FAINT, marginTop: 12, lineHeight: 1.6 } }, 'Real Stripe / iPay88 keys plug in here — card data is tokenized by the gateway and never stored on Printoka systems. Test mode simulates a confirmed payment; bank transfer stays pending until an admin validates it.'),
-          ])),
+      h('h1', { style: { margin: '2px 0 16px', fontSize: 28, fontWeight: 600, letterSpacing: '-.02em' } }, 'Checkout'),
+      h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 340px', gap: 24, alignItems: 'start' } },
+        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
+          section(1, 'Your details', s1, u ? [who.name, u.email, who.phone, who.company].filter(Boolean).join(' · ') : null),
+          section(2, 'Delivery', s2, s2sum),
+          section(3, 'Payment', s3, null)),
         h('div', { style: { position: 'sticky', top: 122 } },
           this.card([
             h('div', { key: 'a', style: { fontSize: 12.5, fontWeight: 600, marginBottom: 12 } }, cart.length + ' job' + (cart.length > 1 ? 's' : '') + ' in this order'),
             h('div', { key: 'b', style: { display: 'flex', flexDirection: 'column', gap: 9, fontSize: 13 } },
-              [['Subtotal', this.money(t.subtotal)], [this.tier() + ' member −' + this.tierPct() + '%', '−' + this.money(t.memberDiscount), TEAL], t.couponCode ? ['Code ' + t.couponCode + ' −' + t.couponOffLabel, '−' + this.money(t.couponDiscount), TEAL] : null, [this.taxLabel(), this.money(t.tax)], ['Shipping', this.money(t.shipping)]].filter(Boolean)
+              [['Subtotal', this.money(t.subtotal)], [this.tier() + ' member −' + this.tierPct() + '%', '−' + this.money(t.memberDiscount), TEAL], t.couponCode ? ['Code ' + t.couponCode + ' −' + t.couponOffLabel, '−' + this.money(t.couponDiscount), TEAL] : null, [this.taxLabel(), this.money(t.tax)], ['Shipping', ful === 'pickup' ? 'Free' : this.money(t.shipping)]].filter(Boolean)
                 .map((r, i) => h('div', { key: i, style: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, lineHeight: 1.5, color: r[2] || MUT } }, h('span', { style: { flex: '1 1 auto', minWidth: 0 } }, r[0]), h('span', { style: { flex: 'none', fontWeight: 500, whiteSpace: 'nowrap', color: r[2] || INK } }, r[1])))),
-            (function () {
-              const avail = (this.state.credit && this.state.credit.balance) || 0;
-              const applied = this.state.coCredit ? Math.min(avail, t.total) : 0;
-              const due = t.total - applied;
-              return [
-                avail > 0 ? h('label', { key: 'cr', 'data-go': 'set:coCredit:' + (!this.state.coCredit), style: { display: 'flex', alignItems: 'center', gap: 9, fontSize: 12.5, color: MUT, marginTop: 12, cursor: 'pointer' } },
-                  h('span', { style: { height: 16, width: 28, borderRadius: 9, background: this.state.coCredit ? TEAL : '#eaeaea', position: 'relative', flex: 'none' } },
-                    h('span', { style: { position: 'absolute', top: 2, left: this.state.coCredit ? 14 : 2, height: 12, width: 12, borderRadius: '50%', background: '#fff' } })),
-                  'Use credit balance (' + this.money(avail) + ' available)') : null,
-                applied > 0 ? h('div', { key: 'ca', style: { display: 'flex', justifyContent: 'space-between', fontSize: 13, color: TEAL, marginTop: 8 } }, h('span', null, 'Credit applied'), h('span', null, '−' + this.money(applied))) : null,
-                h('div', { key: 'c', style: { borderTop: '1px solid ' + HAIR, marginTop: 13, paddingTop: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' } },
-                  h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'Total'),
-                  h('span', { style: { fontSize: 25, fontWeight: 600, color: TEAL } }, this.money(due))),
-                h('div', { key: 'd', style: { marginTop: 14, display: 'flex', flexDirection: 'column', gap: 9 } },
-                  this.btn(this.state.placing ? 'Placing…' : 'Place order · ' + this.money(due), 'amber', 'placeorder', { justifyContent: 'center' }),
-                  this.state.orderErr ? h('div', { role: 'alert', style: { fontSize: 12.5, color: '#c0392b', lineHeight: 1.5 } }, this.state.orderErr) : null,
-                  this.btn('Back to cart', 'ghost', 'cart', { justifyContent: 'center' })),
-              ];
-            }).call(this),
+            avail > 0 ? h('label', { key: 'cr', 'data-go': 'set:coCredit:' + (!this.state.coCredit), style: { display: 'flex', alignItems: 'center', gap: 9, fontSize: 12.5, color: MUT, marginTop: 12, cursor: 'pointer' } },
+              h('span', { style: { height: 16, width: 28, borderRadius: 9, background: this.state.coCredit ? TEAL : '#eaeaea', position: 'relative', flex: 'none' } },
+                h('span', { style: { position: 'absolute', top: 2, left: this.state.coCredit ? 14 : 2, height: 12, width: 12, borderRadius: '50%', background: '#fff' } })),
+              'Use credit balance (' + this.money(avail) + ' available)') : null,
+            applied > 0 ? h('div', { key: 'ca', style: { display: 'flex', justifyContent: 'space-between', fontSize: 13, color: TEAL, marginTop: 8 } }, h('span', null, 'Credit applied'), h('span', null, '−' + this.money(applied))) : null,
+            h('div', { key: 'c', style: { borderTop: '1px solid ' + HAIR, marginTop: 13, paddingTop: 13, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' } },
+              h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'Total'),
+              h('span', { style: { fontSize: 25, fontWeight: 600, color: TEAL } }, this.money(due))),
+            missingArt ? h('div', { key: 'm', style: { fontSize: 12, color: '#a1660a', marginTop: 10 } }, missingArt + ' job' + (missingArt > 1 ? 's have' : ' has') + ' no artwork yet. ', h('span', { 'data-go': 'cart', style: { color: TEAL, fontWeight: 600, cursor: 'pointer' } }, 'Add it in your cart')) : null,
+            h('div', { key: 'd', style: { marginTop: 14, display: 'flex', flexDirection: 'column', gap: 9 } },
+              h('button', { type: 'button', onClick: place, 'aria-disabled': !canPlace, style: { font: '600 14.5px Montserrat,sans-serif', background: TEAL, color: '#fff', border: 'none', borderRadius: 8, padding: '13px 16px', cursor: canPlace ? 'pointer' : 'not-allowed', opacity: canPlace || this.state.placing ? 1 : .55 } },
+                this.state.placing ? 'Placing…' : 'Place order · ' + this.money(due)),
+              this.state.orderErr ? h('div', { role: 'alert', style: { fontSize: 12.5, color: '#c0392b', lineHeight: 1.5 } }, this.state.orderErr) : null,
+              this.btn('Back to cart', 'ghost', 'cart', { justifyContent: 'center' })),
           ]))));
   }
 
@@ -4811,7 +4912,8 @@ class Component extends DCLogic {
         this.money(o.total),
         h('span', { style: { display: 'flex', gap: 12 } },
           h('span', { onClick: () => this.openDoc(o.id, 'invoice'), title: 'Download invoice', style: { cursor: 'pointer', color: MUT } }, '⭳'),
-          h('span', { 'data-go': 'trackorder:' + o.id, title: 'Track', style: { cursor: 'pointer', color: MUT } }, '⤳')),
+          h('span', { 'data-go': 'trackorder:' + o.id, title: 'Track', style: { cursor: 'pointer', color: MUT } }, '⤳'),
+          h('span', { role: 'button', tabIndex: 0, onClick: () => this.reorder(o), title: 'Order the same again', style: { cursor: 'pointer', color: TEAL, fontWeight: 600, fontSize: 12.5 } }, 'Reorder')),
       ]);
       content = [stitle('Orders'),
         this.filterRow({ searchKey: 'coSearch', dateKey: 'coDate', statusKey: 'coStatus', statuses: ['Paid', 'Completed', 'Pending payment'] }),
@@ -4878,14 +4980,9 @@ class Component extends DCLogic {
       content = [stitle('My Quotations'),
         this.dataCard([{ label: 'Date' }, { label: 'Quote' }, { label: 'Status' }, { label: 'Product' }, { label: 'Handled by' }, { label: 'Amount', right: true }, { label: '', right: true }], rows, { empty: 'No quotations yet — request one from the Contact page.', minWidth: 880 })];
     } else if (tab === 'Artwork') {
-      const arts = []; orders.forEach(o => (o.items || []).forEach(it => (it.artworks || []).forEach(a => arts.push({ name: a, order: o.id }))));
-      content = [stitle('Artwork Gallery'),
-        h('p', { key: 'p', style: { margin: '-4px 0 6px', color: MUT, fontSize: 13.5 } }, 'All artworks uploaded by me'),
-        arts.length ? h('div', { key: 'g', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 16 } },
-          arts.map((a, i) => h('div', { key: i, style: { background: '#fff', border: '1px solid ' + HAIR, borderRadius: 10, padding: 16, display: 'flex', gap: 12, alignItems: 'flex-start' } },
-            h('span', { style: { fontSize: 10, fontWeight: 700, color: '#fff', background: /\.pdf$/i.test(a.name) ? '#E52220' : '#2f7fd1', borderRadius: 4, padding: '3px 5px', flex: 'none' } }, /\.pdf$/i.test(a.name) ? 'PDF' : 'IMG'),
-            h('div', { style: { minWidth: 0 } }, h('div', { style: { fontSize: 13.5, fontWeight: 600, wordBreak: 'break-word' } }, a.name), h('div', { style: { fontSize: 11.5, color: FAINT, marginTop: 3 } }, 'Order ' + a.order))))) :
-          h('div', { key: 'e', style: { background: '#fff', border: '1px dashed ' + HAIR, borderRadius: 12, padding: 34, textAlign: 'center', color: FAINT } }, 'No artworks yet — they appear here once you place an order with uploaded files.')];
+      // (user, 2026-09-29) the original printoka.com Artwork Storage: every artwork uploaded with us, ready to reorder
+      content = [stitle('Artwork Storage'),
+        h('div', { key: 'g', style: { background: '#fff', border: '1px solid ' + HAIR, borderRadius: 12, padding: 18 } }, this.agPanel('manage'))];
     } else if (tab === 'Coupons') {
       const cps = u.coupons || [];
       content = [stitle('My Coupons'), cps.length

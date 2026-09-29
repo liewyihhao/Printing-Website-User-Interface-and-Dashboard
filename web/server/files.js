@@ -38,7 +38,9 @@ function saveFile(oid, b, me) {
   const id = 'F' + crypto.randomBytes(5).toString('hex').toUpperCase();
   const dir = path.join(ROOT, oid); fs.mkdirSync(dir, { recursive: true });
   const stored = id + '-' + name; fs.writeFileSync(path.join(dir, stored), buf);
-  const rec = { id, name, stored, size: buf.length, kind, line: kind === 'artwork' ? line : null, at: now(), by: me.name || me.email };
+  const rec = { id, name, stored, size: buf.length, kind, line: kind === 'artwork' ? line : null, at: now(), by: me.name || me.email, libraryId: b.fromLibrary || null };
+  // a customer's artwork uploaded straight onto an order is kept in their Artwork Storage too
+  if (kind === 'artwork' && !b.fromLibrary) require('./artworks').keepCopy(me, name, buf);
   o.files = o.files || []; o.files.push(rec);
   if (kind === 'artwork') {
     it.artworks = (it.artworks || []).filter(a => !/^pending-upload/.test(a)).concat([name]);

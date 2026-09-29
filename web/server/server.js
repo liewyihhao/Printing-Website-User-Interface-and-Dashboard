@@ -13,6 +13,7 @@ const store = require('./store');
 const ops = require('./ops');
 const admin = require('./admin');
 const files = require('./files');
+const artworks = require('./artworks');
 const outlet = require('./outlet');
 const supplier = require('./supplier');
 const payables = require('./payables');
@@ -277,7 +278,9 @@ async function api(req, res, pathname, query) {
   if (seg[0] === 'orders' && !seg[1] && req.method === 'POST') {
     const body = await readBody(req);
     if (!body.items || !body.items.length) return send(res, 400, { error: 'cart is empty' });
-    const me = store.sessionCustomer(token); if (me) body.userId = me.id;
+    const me = store.sessionCustomer(token);
+    if (!me) return send(res, 401, { error: 'Please log in or sign up to place your order.' });
+    body.userId = me.id;
     // member promo code / store coupon: re-verify server-side (owner, minimum spend, limits) and use the server's discount
     if (body.coupon) {
       const r = admin.checkAnyCoupon(body.userId, body.coupon, body.subtotal);
@@ -292,6 +295,8 @@ async function api(req, res, pathname, query) {
     body.memberDiscount = vt.memberDiscount; body.shipping = vt.shipping; body.total = vt.total;
     body.tax = Math.round((Number(body.tax) || 0) * 100) / 100; body.subtotal = Math.round((Number(body.subtotal) || 0) * 100) / 100;
     const o = store.createOrder(body);
+    // the artworks the customer picked from their Artwork Storage go onto each job
+    artworks.attachToOrder(o.id, (body.items || []).map(it => Array.isArray(it.artworkRefs) ? it.artworkRefs.slice(0, 10) : []), me);
     if (body._storeCoupon) admin.recordCouponUse(body._storeCoupon, body.userId);
     ops.onOrderCreated(o);
     return send(res, 200, { ok: true, order: store.order(o.id) });
@@ -365,6 +370,19 @@ async function api(req, res, pathname, query) {
   }
   if (seg[0] === 'custom-invoices' && seg[1]) { const inv = store.customInvoice(seg[1]); return inv ? send(res, 200, { invoice: inv }) : send(res, 404, { error: 'not found' }); }
 
+  // ---- Artwork Storage: the signed-in customer's artwork library (private files) ----
+  if (seg[0] === 'artworks') {
+    const ame = store.sessionCustomer(token); if (!ame) return send(res, 401, { error: 'Please sign in.' });
+    if (!seg[1] && req.method === 'GET') return send(res, 200, artworks.list(ame));
+    if (!seg[1] && req.method === 'POST') { const r = artworks.save(ame, await readBody(req)); return send(res, r.error ? 400 : 200, r); }
+    if (seg[1] === 'delete' && req.method === 'POST') { const b = await readBody(req); return send(res, 200, artworks.remove(ame, b.ids || [])); }
+    if (seg[1] && seg[2] === 'file') {
+      const r = artworks.read(ame, seg[1]); if (r.error) return send(res, r.code || 400, { error: r.error });
+      res.writeHead(200, { 'Content-Type': r.type, 'Content-Length': r.data.length, 'Content-Disposition': (query.download ? 'attachment' : 'inline') + '; filename="' + r.file.name.replace(/"/g, '') + '"', 'Cache-Control': 'private, no-store' });
+      return res.end(r.data);
+    }
+    return send(res, 404, { error: 'unknown artwork route' });
+  }
   // order files: artworks per line + payment proof — private, owner or staff only
   if (seg[0] === 'orders' && seg[1] && seg[2] === 'files' && !seg[3] && req.method === 'POST') {
     const fme = store.sessionCustomer(token); if (!fme) return send(res, 401, { error: 'Please sign in to upload files.' });
