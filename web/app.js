@@ -4225,10 +4225,9 @@ class Component extends DCLogic {
               h('span', { onClick: () => this.dupCart(i), style: { fontSize: 12.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'Duplicate')),
             // artwork upload block (same flow used after quote-conversion)
             h('div', { key: 'art', style: { marginTop: 14, background: ALT, borderRadius: 10, padding: '13px 15px' } },
-              h('div', { style: { fontSize: 12.5, fontWeight: 600, marginBottom: 3 } }, 'Artwork upload'),
-              h('div', { style: { fontSize: 12, color: MUT, marginBottom: 10, lineHeight: 1.6 } }, 'Upload your print-ready file for this job. You can also upload later — we’ll email you a link.'),
+              h('div', { style: { fontSize: 12.5, fontWeight: 600, marginBottom: 10 } }, 'Artwork upload'),
               h('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap' } },
-                this.btn('Upload artwork', 'ghost', 'artwork', { padding: '8px 16px', fontSize: 13 }),
+                this.btn('Upload artwork', 'teal', 'artwork', { padding: '8px 16px', fontSize: 13 }),
                 h('span', { 'data-go': 'artwork', style: { alignSelf: 'center', fontSize: 12.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'Upload files later'))),
           ])),
           h('div', { style: { display: 'flex', gap: 10, marginTop: 2 } }, this.btn('+ Add another product', 'ghost', 'category'))),
@@ -4260,7 +4259,7 @@ class Component extends DCLogic {
             h('div', { key: 'e', style: { borderTop: '1px solid ' + HAIR, marginTop: 14, paddingTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' } },
               h('span', { style: { fontSize: 13, fontWeight: 600 } }, 'Total'),
               h('span', { style: { fontSize: 26, fontWeight: 600, color: TEAL, letterSpacing: '-.02em' } }, this.money(t.total))),
-            h('div', { key: 'f', style: { marginTop: 14 } }, this.btn('Checkout', 'amber', 'checkout', { justifyContent: 'center', width: '100%' })),
+            h('div', { key: 'f', style: { marginTop: 14 } }, this.btn('Checkout', 'teal', 'checkout', { justifyContent: 'center', width: '100%' })),
             h('div', { key: 'g', style: { marginTop: 10, textAlign: 'center' } },
               h('span', { onClick: () => this.downloadQuotation(), style: { fontSize: 12.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'Download Quotation')),
           ]))));
