@@ -61,25 +61,68 @@
     try { return [this.aToast()].concat(f.call(this) || []); } catch (e) { return [h('div', { key: 'err', style: { color: '#c0392b' } }, 'This section failed to render: ' + e.message)]; }
   };
 
-  // ---------------------------------------------------------------- Analytics (WooCommerce Reports)
+  // ---------------------------------------------------------------- the admin console page (user, 2026-09-29):
+  // the same Printoka look as the outlet / production dashboards — white header with the logo and four tabs
+  // (Dashboard · Store · Content · Settings), the other consoles in the user menu, a short section list per tab
+  const ADMIN_TABS = ['Dashboard', 'Store', 'Content', 'Settings'];
+  P.adminPage = function (nav, tab, body) {
+    const groups = {}; let g = null;
+    nav.forEach(n => { if (n[2] === '__group') { g = n[0]; groups[g] = []; } else if (g) groups[g].push(n); });
+    const groupOf = t => Object.keys(groups).find(k => groups[k].some(n => n[2] === t)) || 'Store';
+    let active = tab === 'analytics' ? 'Dashboard' : groupOf(tab);
+    // a header tab click: open that tab's first section
+    if (ADMIN_TABS.indexOf(this.state.sTab) >= 0 && this.state.sTab !== active) {
+      const first = this.state.sTab === 'Dashboard' ? 'analytics' : (groups[this.state.sTab].find(n => n[2] !== 'analytics') || [])[2];
+      if (first && first !== tab) { setTimeout(() => this.setState({ atab: first }), 0); tab = first; active = this.state.sTab; }
+    }
+    const open = t => this.setState({ atab: t, sTab: t === 'analytics' ? 'Dashboard' : groupOf(t), aMsg: null });
+    const go = r => () => this.go(r);
+    const shell = { tabs: ADMIN_TABS, active, icon: 'layers', accent: 'linear-gradient(180deg,#F0662E,#E52220)', sub: 'Administrator',
+      menu: [['Dashboard', () => open('analytics')], ['Outlet', go('outlet')], ['Prepress', go('prepress')], ['Scheduler', go('scheduler')], ['Logistics', go('logistics')], ['Director dashboard', go('production')],
+        ['Printer portal', go('vendor')], ['Chat inbox', go('crm')], ['View site', go('home')]] };
+    const label = ((nav.find(n => n[2] === tab)) || ['Dashboard'])[0];
+    const title = h('h1', { key: 't', style: { fontSize: 34, fontWeight: 600, margin: '6px 0 0', letterSpacing: '-.02em' } }, tab === 'analytics' ? 'Dashboard' : label);
+    if (active === 'Dashboard') return this.acPage(shell, [title].concat(body));
+    const side = h('div', { key: 'side', className: 'pk-admin-side', style: { flex: '0 0 220px', background: '#fff', border: '1px solid ' + HAIR, borderRadius: 12, padding: 8, position: 'sticky', top: 16 } },
+      groups[active].filter(n => n[2] !== 'analytics').map(n => { const on = n[2] === tab;
+        return h('div', { key: n[2], onClick: () => open(n[2]), style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '10px 12px', borderRadius: 8, fontSize: 13.5, fontWeight: on ? 700 : 500, color: on ? TEAL : INK, background: on ? '#fdf2f2' : 'transparent', cursor: 'pointer' } },
+          h('span', null, n[0]), n[1] ? h('span', { style: { fontSize: 11.5, fontWeight: 700, color: TEAL } }, n[1]) : null); }));
+    return this.acPage(shell, [h('div', { key: 'wrap', style: { display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap' } }, side,
+      h('div', { style: { flex: '1 1 560px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 18 } }, title, body))]);
+  };
+  // a dashboard tile in the outlet style: label, big figure, a small note, the icon circle
+  P.aTile = function (label, value, note, icon, color, onClick) {
+    const A = this.accent(color || 'teal');
+    return h('div', { key: label, onClick, style: { background: '#fff', padding: 20, position: 'relative', minHeight: 118, boxShadow: '1px 1px 0 ' + HAIR, cursor: onClick ? 'pointer' : 'default' } },
+      h('div', { style: { fontWeight: 700, fontSize: 14, paddingRight: 52, minHeight: 40 } }, label),
+      h('div', { style: { fontSize: 26, fontWeight: 600, marginTop: 6, letterSpacing: '-.01em', whiteSpace: 'nowrap' } }, value),
+      note ? h('div', { style: { fontSize: 12.5, color: FAINT, marginTop: 4 } }, note) : null,
+      h('span', { style: { position: 'absolute', right: 18, top: 16, height: 42, width: 42, borderRadius: '50%', background: A[1], display: 'grid', placeItems: 'center' } }, this.dashIcon(icon, A[0], 22)));
+  };
+
+  // ---------------------------------------------------------------- Analytics = the admin Dashboard
   P.aAnalytics = function () {
     const days = Number(this.state.anDays || 30);
     const a = (this.aGet('an_' + days, '/api/admin/analytics?days=' + days) || {}).analytics;
-    if (!a) return [para('Loading live figures…')];
-    const delta = (c, p) => p ? ((c - p) / p * 100 >= 0 ? '+' : '') + Math.round((c - p) / p * 100) + '% vs previous ' + days + ' days' : 'no previous data';
+    if (!a) return [para('Loading…')];
+    // vs the previous period, only when there is a meaningful base to compare with
+    const delta = (c, p) => { if (!p) return 'vs previous ' + days + ' days: —'; const d = Math.round((c - p) / p * 100); return Math.abs(d) > 999 ? 'vs previous ' + days + ' days: —' : (d >= 0 ? '+' : '') + d + '% vs previous ' + days + ' days'; };
     const maxT = Math.max(1, Math.max.apply(null, a.tiers.map(t => t.count)));
+    const open = t => () => this.setState({ atab: t, sTab: t === 'quotes' || t === 'orders' || t === 'customers' ? 'Store' : 'Settings' });
+    const row = (title, tiles, action) => this.acCard([h('div', { key: 'h', style: { display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: '1px solid ' + HAIR } }, h('p', { style: { fontWeight: 700, fontSize: 15, margin: 0, flex: 1 } }, title), action || null),
+      h('div', { key: 'g', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))' } }, tiles)]);
+    const range = h('select', { value: String(days), onChange: e => this.setField('anDays', e.target.value), style: { font: '500 13px Montserrat,sans-serif', padding: '7px 12px', border: '1px solid ' + HAIR, borderRadius: 999, background: '#fff' } }, [7, 30, 90, 365].map(d => h('option', { key: d, value: String(d) }, 'Last ' + d + ' days')));
+    const list = (rows, empty) => rows.length ? h('div', { style: { display: 'flex', flexDirection: 'column' } }, rows.map((r, i) => h('div', { key: i, style: { display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13.5, padding: '9px 0', borderTop: i ? '1px solid ' + LINE : 'none' } }, h('span', { style: { color: MUT } }, r[0]), h('b', null, r[1])))) : h('div', { style: { fontSize: 13, color: FAINT } }, empty);
     return [
-      h('div', { key: 'r', style: { display: 'flex', justifyContent: 'flex-end' } }, h('select', { value: String(days), onChange: e => this.setField('anDays', e.target.value), style: Object.assign({}, inp, { maxWidth: 170 }) }, [7, 30, 90, 365].map(d => h('option', { key: d, value: String(d) }, 'Last ' + d + ' days')))),
-      h('div', { key: 'k', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 14 } },
-        this.kpi('Revenue', this.rm(a.revenue), delta(a.revenue, a.revenuePrev), TEAL), this.kpi('Paid orders', String(a.orders), delta(a.orders, a.ordersPrev)),
-        this.kpi('Avg. order value', this.rm(a.aov), 'paid orders only'), this.kpi('New customers', String(a.newCustomers), a.customers + ' in total'),
-        this.kpi('Awaiting payment', this.rm(a.pendingPayments.value), a.pendingPayments.count + ' orders to validate'), this.kpi('Wallet credit owed', this.rm(a.walletLiability), 'outstanding customer credit'),
-        this.kpi('Open custom quotes', String(a.quotes.open), a.quotes.accepted + ' accepted in period'), this.kpi('Refunds', this.rm(a.refunds), 'in period')),
-      h('div', { key: 'g', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 16 } },
-        box([h('div', { key: 't', style: { fontSize: 13.5, fontWeight: 600 } }, 'Customers by membership tier')].concat(a.tiers.map(t => h('div', { key: t.name, style: { display: 'flex', alignItems: 'center', gap: 10 } },
-          h('span', { style: { width: 72, fontSize: 12.5, color: MUT } }, t.name), h('span', { style: { flex: 1, height: 8, background: LINE, borderRadius: 999, overflow: 'hidden' } }, h('span', { style: { display: 'block', height: '100%', width: (t.count / maxT * 100) + '%', background: TEAL } })), h('span', { style: { width: 30, textAlign: 'right', fontSize: 12, fontWeight: 600 } }, String(t.count)))))),
-        box([h('div', { key: 't', style: { fontSize: 13.5, fontWeight: 600 } }, 'Top products')].concat(a.topProducts.length ? a.topProducts.map((p, i) => h('div', { key: i, style: { display: 'flex', justifyContent: 'space-between', fontSize: 13, borderTop: i ? '1px solid ' + LINE : 'none', paddingTop: i ? 8 : 0 } }, h('span', null, p.product), h('b', null, this.rm(p.revenue)))) : [h('div', { key: 'e', style: { fontSize: 13, color: FAINT } }, 'No paid orders in this period.')])),
-        box([h('div', { key: 't', style: { fontSize: 13.5, fontWeight: 600 } }, 'By channel')].concat(a.channels.length ? a.channels.map((c, i) => h('div', { key: i, style: { display: 'flex', justifyContent: 'space-between', fontSize: 13 } }, h('span', null, c.channel + ' · ' + c.orders + ' orders'), h('b', null, this.rm(c.revenue)))) : [h('div', { key: 'e', style: { fontSize: 13, color: FAINT } }, 'No orders.')]))),
+      row('Sales', [this.aTile('Revenue', this.rm(a.revenue), delta(a.revenue, a.revenuePrev), 'dollar-sign', 'red'), this.aTile('Paid orders', String(a.orders), delta(a.orders, a.ordersPrev), 'file', 'teal', open('orders')),
+        this.aTile('Avg. order value', this.rm(a.aov), 'Paid orders only', 'box', 'orange'), this.aTile('New customers', String(a.newCustomers), a.customers + ' customers in total', 'user-plus', 'teal', open('customers'))], range),
+      row('To follow up', [this.aTile('Awaiting payment', this.rm(a.pendingPayments.value), a.pendingPayments.count + ' order' + (a.pendingPayments.count === 1 ? '' : 's') + ' to validate', 'clock', 'orange', open('orders')), this.aTile('Open custom quotes', String(a.quotes.open), a.quotes.accepted + ' accepted in this period', 'edit-3', 'teal', open('quotes')),
+        this.aTile('Wallet credit owed', this.rm(a.walletLiability), 'Customer credit balance', 'check', 'blue', open('wallet')), this.aTile('Refunds', this.rm(a.refunds), 'In this period', 'truck', 'red')]),
+      h('div', { key: 'cards', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 20, alignItems: 'start' } },
+        this.acC('Top products', list(a.topProducts.map(p => [p.product, this.rm(p.revenue)]), 'No paid orders in this period.')),
+        this.acC('Customers by membership', a.tiers.map(t => h('div', { key: t.name, style: { display: 'flex', alignItems: 'center', gap: 12 } },
+          h('span', { style: { width: 78, fontSize: 13.5, color: MUT } }, t.name), h('span', { style: { flex: 1, height: 8, background: '#eee', borderRadius: 999, overflow: 'hidden' } }, h('span', { style: { display: 'block', height: '100%', width: (t.count / maxT * 100) + '%', background: TEAL, borderRadius: 999 } })), h('b', { style: { width: 32, textAlign: 'right', fontSize: 13.5 } }, String(t.count))))),
+        this.acC('Sales by channel', list(a.channels.map(c => [c.channel.charAt(0).toUpperCase() + c.channel.slice(1) + ' · ' + c.orders + ' order' + (c.orders === 1 ? '' : 's'), this.rm(c.revenue)]), 'No orders in this period.'))),
     ];
   };
 

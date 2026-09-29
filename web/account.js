@@ -381,16 +381,16 @@
         return { product: prod.name, productId: prod.id, specLines: lines, qty: Number(qty), notes, config: this.state.cfg || {}, specifications: text };
       };
       main.push(this.acC('Specifications', [
-        FG('Product', h('select', { value: pid, onChange: e => { const v = e.target.value; this.acSetF('productId', v); this.setState({ prodId: v === '' ? null : Number(v), cfg: {}, sizeConfirmed: false }); }, style: inp },
-          [h('option', { key: '', value: '' }, prods.length ? 'Please Select' : 'Loading products…')].concat(prods.map(p => h('option', { key: p.id, value: String(p.id) }, p.name)))), 1),
-        cq ? h('div', { key: 'qs', style: { display: 'flex', flexDirection: 'column' } }, cq.groups.map(g => h('div', { key: g.sec, style: { display: 'flex', flexDirection: 'column' } }, cq.sectionHeader(g.sec), g.nodes))) : null,
-        prod ? FG('Remarks', h('textarea', { rows: 3, className: 'ac-hint', placeholder: 'Add-on remarks and the customer’s target price, if any.', value: notes, onChange: e => this.acSetF('notes', e.target.value), style: Object.assign({}, inp, { resize: 'vertical' }) })) : null,
-        amend ? FG('Price (RM)', h('input', { type: 'number', min: 0, step: '0.01', value: this.acF('price') !== '' ? this.acF('price') : (q.price != null ? String(q.price) : ''), onChange: e => this.acSetF('price', e.target.value), style: Object.assign({}, inp, { maxWidth: 260 }) }), 1) : null,
         amend ? null : FG('Requester', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
           reqLabel ? h('div', { style: { fontSize: 13, background: ALT, borderRadius: 8, padding: '8px 12px' } }, reqLabel) : null,
           h('input', { placeholder: 'Search customer name or email…', value: this.state.acCustQ || '', onChange: e => this.setState({ acCustQ: e.target.value }), style: inp }),
           custQ && custRes && !cust.length ? h('div', { style: { fontSize: 13, color: FAINT, padding: '4px 2px' } }, 'No customer found. Create the account first.') : null,
           custQ && cust.length ? h('div', { style: { maxHeight: 160, overflow: 'auto', border: '1px solid ' + LINE, borderRadius: 8 } }, cust.map(c => h('div', { key: c.value, onClick: () => { this.acSetF('requesterId', c.value); this.acSetF('requesterLabel', c.label); this.setState({ acCustQ: '' }); }, style: { padding: '8px 12px', fontSize: 13, cursor: 'pointer', background: F('requesterId') === c.value ? '#fdf2f2' : '#fff', borderTop: '1px solid ' + LINE } }, c.label))) : null), 1),
+        FG('Product', h('select', { value: pid, onChange: e => { const v = e.target.value; this.acSetF('productId', v); this.setState({ prodId: v === '' ? null : Number(v), cfg: {}, sizeConfirmed: false }); }, style: inp },
+          [h('option', { key: '', value: '' }, prods.length ? 'Please Select' : 'Loading products…')].concat(prods.map(p => h('option', { key: p.id, value: String(p.id) }, p.name)))), 1),
+        cq ? h('div', { key: 'qs', style: { display: 'flex', flexDirection: 'column' } }, cq.groups.map(g => h('div', { key: g.sec, style: { display: 'flex', flexDirection: 'column' } }, cq.sectionHeader(g.sec), g.nodes))) : null,
+        prod ? FG('Remarks', h('textarea', { rows: 3, className: 'ac-hint', placeholder: 'Add-on remarks and the customer’s target price, if any.', value: notes, onChange: e => this.acSetF('notes', e.target.value), style: Object.assign({}, inp, { resize: 'vertical' }) })) : null,
+        amend ? FG('Price (RM)', h('input', { type: 'number', min: 0, step: '0.01', value: this.acF('price') !== '' ? this.acF('price') : (q.price != null ? String(q.price) : ''), onChange: e => this.acSetF('price', e.target.value), style: Object.assign({}, inp, { maxWidth: 260 }) }), 1) : null,
         amend ? null : h('div', { key: 'aw', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12 } },
           FG('Artwork name', h('input', { value: this.acF('artworkName'), onChange: e => this.acSetF('artworkName', e.target.value), style: inp })),
           FG('Artwork file', h('label', { style: { color: TEAL, fontWeight: 600, fontSize: 14, cursor: 'pointer', padding: '8px 0', alignSelf: 'flex-start' } }, this.acF('artworkFileName') ? '📄 ' + this.acF('artworkFileName') : 'Upload',

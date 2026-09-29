@@ -314,7 +314,14 @@ function niceLabel(raw, key) {
   return s.replace(/\([^)]*\)|[^()]+/g, seg => seg.charAt(0) === '(' ? seg : seg.replace(/[A-Za-z][A-Za-z0-9'’.-]*|\d+[A-Za-z]+/g, word));
 }
 // option text as shown: "- Not Required -" reads as "Not Required" like every other question
-const cleanOpt = v => String(v == null ? '' : v).replace(/^-\s*(.*?)\s*-$/, '$1').trim();
+// (user, 2026-09-29) the N-in-1 package reads as artworks: "2 In 1 (2 Designs)" / "2in1" → "2 artworks",
+// "2 IN 1 (5% Off)" → "2 artworks (5% Off)", "Normal (1 Design)" → "Normal". Display only — the priced value is unchanged.
+const cleanOpt = v => {
+  const s = String(v == null ? '' : v).replace(/^-\s*(.*?)\s*-$/, '$1').trim();
+  const m = s.match(/^(\d+)\s*in\s*1\b\s*(?:\(\d+\s*designs?\))?\s*(.*)$/i);
+  if (m) return m[1] + ' artworks' + (m[2] ? ' ' + m[2] : '');
+  return /^normal \(1 design\)$/i.test(s) ? 'Normal' : s;
+};
 // an option that means "this finishing / add-on is not applied" (Excard's optional questions)
 const OPT_NONE_RE = /^(-\s*)?(not required|no required|none|n\/a|not applicable|no [a-z ]+|without [a-z ]+|no|0)(\s*-)?$/i;
 const isNoneOpt = o => OPT_NONE_RE.test(String(Array.isArray(o) ? o[0] : o).trim());
@@ -693,6 +700,9 @@ class Component extends DCLogic {
       try { options = E.localOptions(prod, f.key, cfg) || []; } catch (e) { options = f.options || []; }
       // conditional validity: when a field's gate fails, offer only its first (safe) option
       if (gates[f.key] && options.length) { try { if (!gates[f.key](cfg, this.state.qty)) options = [options[0]]; } catch (e) {} }
+      // (user, 2026-09-29) the N-in-1 "Package" question is "Duplicate with Same Configuration" (2 … 10 artworks)
+      if (f.key === 'package' && options.some(o => /^\d+\s*in\s*1\b/i.test(String(Array.isArray(o) ? o[0] : o))))
+        return { def: Object.assign({}, f, { label: 'Duplicate with Same Configuration', note: f.note ? 'Normal is priced exactly; 2 or more artworks are quoted on request.' : f.note }), options };
       return { def: f, options };
     });
     // synthetic override fields (e.g. custom-size Height/Width shown when Size = "Other"),
@@ -1039,7 +1049,7 @@ class Component extends DCLogic {
     let fields = []; try { fields = this.pkFields(); } catch (e) { fields = []; }
     const NONE_RE = /^(no|not required|no required|none|not applicable|no hot stamping|no hole punching|no round corner|no fold(ing)?)$/i;
     const dispLabel = def => niceLabel((ov.label && ov.label[def.key]) || def.label, def.key);
-    const dispVal = (def, val) => { const m = (ov.optLabel && ov.optLabel[def.key]) || {}; return m[val] || val; };
+    const dispVal = (def, val) => { const m = (ov.optLabel && ov.optLabel[def.key]) || {}; return cleanOpt(m[val] || val); };
     // combine the custom H/W input pairs into one dimension line instead of two rows
     const PAIRS = { custom_w: ['custom_h', 'Custom Size'], fold_w_thin: ['fold_h_thin', 'Open Size'], fold_w_fat: ['fold_h_fat', 'Open Size'], diecut_w: ['diecut_h', 'Die-cut Size'] };
     const SKIP_H = { custom_h: 1, fold_h_thin: 1, fold_h_fat: 1, diecut_h: 1 };
@@ -2346,7 +2356,7 @@ class Component extends DCLogic {
       staff: this.userType() !== 'guest' && this.userType() !== 'customer',
       // the 5 role dashboards render their own white top-nav (staffPage) — hide the storefront header.
       // use the EFFECTIVE route (same redirect renderScreen applies) so a not-yet-synced route still counts.
-      bareStaff: ['outlet', 'prepress', 'production', 'scheduler', 'logistics', 'hub', 'vendor'].indexOf(this.canAccess(this.state.route) ? this.state.route : this.homeFor()) >= 0,
+      bareStaff: ['outlet', 'prepress', 'production', 'scheduler', 'logistics', 'hub', 'vendor', 'admin'].indexOf(this.canAccess(this.state.route) ? this.state.route : this.homeFor()) >= 0,
       signedIn: !!this.state.user,
       userName: this.state.user ? this.state.user.name : '',
       tierLabel: this.tier().toUpperCase(),
@@ -2419,9 +2429,13 @@ class Component extends DCLogic {
   // scoped top nav for staff, replacing the removed dev "Pages" row
   staffBar(active) {
     const type = this.userType();
-    // only the admin keeps the dark cross-console bar; outlet/production/vendor use the white
-    // top-nav in staffPage() (matching the original outlet dashboard aesthetic).
-    if (type !== 'admin') return null;
+    // (user, 2026-09-29) no dark cross-console bar any more: the admin reaches the other consoles from the user menu
+    // of the Printoka header; on the chat inbox a slim white link back is enough
+    if (type !== 'admin' || active === 'admin') return null;
+    if (active !== 'crm' && ['outlet', 'prepress', 'production', 'scheduler', 'logistics', 'hub', 'vendor'].indexOf(active) >= 0) return null;
+    return h('div', { style: { background: '#fff', borderBottom: '1px solid ' + HAIR } }, h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px', display: 'flex', gap: 16, alignItems: 'center', fontSize: 13 } },
+      h('span', { 'data-go': 'admin', style: { color: TEAL, fontWeight: 600, cursor: 'pointer' } }, '‹ Admin dashboard'), h('span', { style: { marginLeft: 'auto', color: MUT } }, (this.state.user || {}).name || ''),
+      h('span', { 'data-go': 'dologout', style: { color: TEAL, fontWeight: 600, cursor: 'pointer' } }, 'Log out')));
     const role = this.userRole();
     const LABEL = { scheduler: 'Scheduler', hub: 'Hub', admin: 'Admin', outlet: 'Outlet', prepress: 'Prepress', production: 'Production', logistics: 'Logistics', vendor: 'Vendor / Hub', crm: 'Chat CRM', home: 'View site' };
     const links = type === 'admin' ? ['admin', 'outlet', 'prepress', 'scheduler', 'production', 'logistics', 'hub', 'vendor', 'crm', 'home']
@@ -5817,10 +5831,10 @@ class Component extends DCLogic {
          ['With credit balance', 'Wallet balance > 0', String(custs.filter(c => (c.creditBalance || 0) > 0).length)],
          ['Newsletter opt-in', 'Agreed to marketing', String(custs.filter(c => c.newsletter || c.promoOptIn).length)]],
         [null, null, '130px'])];
-    return this.shell('Admin', navItems, activeLabel, [
-      this.head(activeLabel, 'Role-scoped backoffice. Every destructive or financial change writes actor, timestamp and before/after values to the audit log.'),
-      h('div', { key: 'p', style: { marginTop: 18 } }, (this.adminSection && this.adminSection(tab)) || P[tab] || P.analytics),
-    ]);
+    // the Printoka dashboard look (user, 2026-09-29): same header, tiles and cards as the outlet / production dashboards
+    const body = (this.adminSection && this.adminSection(tab)) || P[tab] || P.analytics;
+    if (this.adminPage) return this.adminPage(nav, tab, [h('div', { key: 'p', style: { display: 'flex', flexDirection: 'column', gap: 18 } }, body)]);
+    return this.shell('Admin', navItems, activeLabel, [this.head(activeLabel), h('div', { key: 'p', style: { marginTop: 18 } }, body)]);
   }
 
   // ===== VENDOR / HUB PORTAL =====
