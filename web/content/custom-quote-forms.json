@@ -1,0 +1,127 @@
+[
+  {
+    "id": "book", "card": "Book Printing", "title": "Request Custom Quote", "sub": "For Book Printing", "img": "Perfect-Binding-Booklets-Cropped.png",
+    "sections": [
+      { "t": "About the Book", "f": [
+        { "l": "Book Orientation", "type": "select", "req": true, "o": ["Portrait", "Landscape"] },
+        { "l": "Book Size (Closed Size)", "type": "select", "req": true, "o": ["A4 Size", "A5 Size", "Custom Size"] },
+        { "l": "If Custom Size", "type": "dims", "d": ["Height", "Width"] },
+        { "l": "Printing Pages (Including Cover)", "type": "text", "req": true },
+        { "l": "Binding", "type": "select", "req": true, "o": ["Perfect Binding", "Saddle Stitch (Staple Middle Binding)"] }
+      ] },
+      { "t": "About the Book Cover", "f": [
+        { "l": "Cover Material", "type": "select", "req": true, "o": ["Simili 80gsm", "Simili 100gsm", "Gloss Art Paper 100gsm", "Gloss Art Paper 128gsm", "Gloss Art Paper 157gsm", "Gloss Art Card 230gsm (2 Side Coated)", "Gloss Art Card 250gsm (2 Side Coated)", "Gloss Art Card 300gsm (2 Side Coated)"] },
+        { "l": "Cover Printing", "type": "select", "req": true, "o": ["4C Outer Only", "4C Outer + Inner"] },
+        { "l": "Cover Finishing (For Art Card Cover Only)", "type": "select", "o": ["Gloss Laminating", "Matte Laminating", "Matte Laminating + 1 Side Spot UV", "Gloss Waterbase Varnish Front", "Gloss Waterbase Varnish Both", "UV Varnish Front", "UV Varnish Both"] }
+      ] },
+      { "t": "About the Book Content", "f": [
+        { "l": "Content Material", "type": "select", "req": true, "o": ["Simili 80gsm", "Simili 100gsm", "Gloss Art Paper 100gsm", "Gloss Art Paper 128gsm", "Gloss Art Paper 157gsm"] },
+        { "l": "Content Printing", "type": "select", "req": true, "o": ["1C Both", "4C Both"] }
+      ] },
+      { "t": "Delivery Location", "f": [
+        { "l": "Delivery to", "type": "select", "req": true, "o": ["West Malaysia", "East Malaysia", "Singapore", "Brunei (Pickup in Miri Only)"] }
+      ] },
+      { "t": "Contact and Quantity Required", "f": [
+        { "l": "Price Expectation (RM)", "type": "text", "req": true },
+        { "l": "Phone Number", "type": "phone", "req": true, "key": "phone" },
+        { "l": "Quantity", "type": "number", "req": true, "key": "quantity" }
+      ] }
+    ]
+  },
+  {
+    "id": "loose-sheet", "card": "Loose Sheet Printing", "title": "Request Custom Quote", "sub": "For Loose Sheet Printing", "img": "Digital-Printing-Flyers-Cropped.png",
+    "sections": [
+      { "t": "About the Item", "f": [
+        { "l": "What are you Printing?", "type": "select", "req": true, "o": ["Book Jacket", "Bookmark", "Brochure", "Business Card", "Calendar", "Certificate", "Company Profile", "Coupon", "Direct Mailer", "Flyer", "Form", "Join Ups", "Label", "Letterhead", "Manual", "Menu", "Thank You Card", "Greeting Card", "Wedding Card", "Invitation Card", "Contact Card", "Discount Card", "Appointment Card", "Postcard", "Punch Card", "Photo Card", "Member Card", "Privilege Card", "Portfolio", "Voucher", "Wrapping Paper", "Others"] }
+      ] },
+      { "t": "Product Size", "f": [
+        { "l": "Open Size (mm x mm)", "type": "select", "req": true, "o": ["594mm x 840mm (A1)", "420mm x 594mm (A2)", "297mm x 420mm (A3)", "210mm x 297mm (A4)", "148mm x 210mm (A5)", "210mm x 594mm", "297mm x 630mm (3 x A4)", "297mm x 840mm (4 x A4)", "210mm x 594mm (4 x A5)", "Custom Size"] },
+        { "l": "If its a Custom Size", "type": "dims", "d": ["Height", "Width"] }
+      ] },
+      { "t": "Product Material", "f": [
+        { "l": "Paper Material", "type": "select", "o": ["Simili 80gsm", "Simili 100gsm", "Simili 140gsm", "Gloss Art Paper 100gsm", "Gloss Art Paper 128gsm", "Gloss Art Paper 157gsm", "Matte Art Paper 130gsm", "Gloss Art Card 230gsm (2 Side Coated)", "Gloss Art Card 250gsm (2 Side Coated)", "Gloss Art Card 310gsm (2 Side Coated)", "Gloss Art Card 360gsm (2 Side Coated)"] }
+      ] },
+      { "t": "Product Printing and Finishing", "f": [
+        { "l": "Printing", "type": "select", "o": ["4C Front", "4C Both"] },
+        { "l": "Laminating (For Art Card Only)", "type": "select", "o": ["Matte Lamination Front", "Matte Lamination Both", "Gloss Lamination Front", "Gloss Lamination Both", "UV Varnish Front", "UV Varnish Both", "Gloss Waterbase Varnish (Both)", "Matte Laminating + Spot UV Front", "Matte Laminating Both + Spot UV Both"] },
+        { "l": "Folding", "type": "select", "o": ["Not Required", "Required"] }
+      ] },
+      { "t": "Artwork References", "f": [
+        { "l": "Artwork Link (WeTransfer Link)", "type": "text" }
+      ] },
+      { "t": "Delivery Location", "f": [
+        { "l": "Delivery to", "type": "select", "o": ["West Malaysia", "East Malaysia", "Singapore", "Brunei (Pickup in Miri Only)"] }
+      ] },
+      { "t": "Contact and Quantity Required", "f": [
+        { "l": "Price Expectation (RM)", "type": "text", "req": true },
+        { "l": "Phone Number", "type": "phone", "req": true, "key": "phone" },
+        { "l": "Quantity", "type": "number", "req": true, "key": "quantity" }
+      ] }
+    ]
+  },
+  {
+    "id": "box", "card": "Box Packaging", "title": "Request Custom Quote", "sub": "For Box Packaging", "img": "A001.png",
+    "sections": [
+      { "t": "About the Box", "f": [
+        { "l": "Packaging Type", "type": "select", "req": true, "o": ["Basic Packaging", "Creative Packaging"] }
+      ] },
+      { "t": "Box Size", "f": [
+        { "l": "Box Open Size (mm x mm)", "type": "dims", "req": true, "d": ["Height", "Width"] },
+        { "l": "Box Size When Assembled (mm x mm)", "type": "dims", "req": true, "d": ["Length", "Width", "Depth"] }
+      ] },
+      { "t": "Box Material", "f": [
+        { "l": "Paper Material", "type": "select", "req": true, "o": ["Art Card 250gsm (1 Side Coated)", "Art Card 300gsm (1 Side Coated)", "Art Card 350gsm (1 Side Coated)", "Art Card 400gsm (1 Side Coated)", "Art Card 260gsm (1 Side Coated)", "Art Card 310gsm (1 Side Coated)", "Art Card 360gsm (1 Side Coated)", "Box Board Grey Back 300gsm", "Box Board Grey Back 350gsm", "Box Board Grey Back 400gsm", "Box Board Grey Back 450gsm", "Silver Foil Board 250gsm", "Silver Foil Board 300gsm", "Art Card (1 Side Coated) 230gsm + E-Flute Brown 290gsm", "Box Board Grey Back (1 Side Coated) 280gsm + E-Flute Brown 290gsm"] }
+      ] },
+      { "t": "Box Printing", "f": [
+        { "l": "Printing Colour", "type": "select", "req": true, "o": ["No Printing", "4C Front", "4C Both"] }
+      ] },
+      { "t": "Box Finishing", "f": [
+        { "l": "Lamination", "type": "select", "req": true, "o": ["Not Required", "Gloss Lamination (Front)", "Matte Lamination (Front)", "Gloss Waterbase Varnish (Front)", "UV Varnish (Front)", "Gloss Lamination (Both)", "Matte Lamination (Both)", "Gloss Waterbase Varnish (Both)", "UV Varnish (Both)"] },
+        { "l": "Spot UV", "type": "select", "req": true, "o": ["Not Required", "Spot UV (Front)"] },
+        { "l": "Embossing", "type": "select", "req": true, "o": ["Not Required", "Required"] },
+        { "l": "Hot Stamping", "type": "select", "req": true, "o": ["Not Required", "Required"] },
+        { "l": "Window", "type": "select", "req": true, "o": ["Not Required", "1 Window", "2 Window", "3 Window", "4 Window", "5 Window"] },
+        { "l": "Glueing", "type": "select", "req": true, "o": ["Not Required", "Required"] },
+        { "l": "Die-Cutting", "type": "select", "req": true, "o": ["Compulsory"] }
+      ] },
+      { "t": "Artwork References", "f": [
+        { "l": "Artwork Link (WeTransfer Link)", "type": "text", "req": true },
+        { "l": "Dieline Link (WeTransfer Link)", "type": "text", "req": true }
+      ] },
+      { "t": "Delivery Location", "f": [
+        { "l": "Delivery to", "type": "select", "o": ["West Malaysia", "East Malaysia", "Singapore", "Brunei (Pick Up in Miri Only)"] }
+      ] },
+      { "t": "Contact and Quantity", "f": [
+        { "l": "Price Expectation (RM)", "type": "text", "req": true },
+        { "l": "Phone Number", "type": "phone", "req": true, "key": "phone" },
+        { "l": "Quantity", "type": "number", "req": true, "key": "quantity" }
+      ] }
+    ]
+  },
+  {
+    "id": "sticker", "card": "Sticker Label Printing", "title": "Request Custom Quote", "sub": "For Sticker Label Printing", "img": "Round-Sticker-Cover.png",
+    "sections": [
+      { "t": "About the Stickers", "f": [
+        { "l": "How is your Sticker to be Printed", "type": "select", "req": true, "o": ["Sticker Sheets (Placed on A3 / A4 Sheets)", "Kiss Cut Stickers"] }
+      ] },
+      { "t": "Sticker Size", "f": [
+        { "l": "Sticker Size in mm x mm (Small Sticker Size)", "type": "dims", "req": true, "d": ["Height", "Width"] }
+      ] },
+      { "t": "Sticker Material", "f": [
+        { "l": "Sticker Material", "type": "select", "req": true, "o": ["Mirrorkorte Stickers (Best Seller)", "White PP (Gloss) - Waterproof", "White PP (Matte) - Waterproof", "Woodfree Matte"] }
+      ] },
+      { "t": "Sticker Finishing", "f": [
+        { "l": "Print Colour", "type": "select", "req": true, "o": ["1C", "4C"] },
+        { "l": "Sticker Lamination", "type": "select", "req": true, "o": ["Gloss Laminate", "Matte Laminate", "Not Required"] }
+      ] },
+      { "t": "Delivery Location", "f": [
+        { "l": "Delivery to", "type": "select", "req": true, "o": ["West Malaysia", "East Malaysia", "Singapore", "Brunei (Pickup in Miri Only)"] }
+      ] },
+      { "t": "Contact and Quantity", "f": [
+        { "l": "Price Expectation (RM)", "type": "text", "req": true },
+        { "l": "Phone Number", "type": "phone", "req": true, "key": "phone" },
+        { "l": "Quantity", "type": "number", "req": true, "key": "quantity" }
+      ] }
+    ]
+  }
+]
