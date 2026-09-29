@@ -1553,7 +1553,7 @@ class Component extends DCLogic {
   }
   quoteAccept(qid) {
     fetch('/api/quotes/' + qid + '/accept', { method: 'POST', headers: this.authHeaders() })
-      .then(r => r.json()).then(d => { if (d.order) { this.setState({ order: d.order }); this.loadUserOrders(); this.loadQuotes(); this.go('confirm'); } }).catch(() => {});
+      .then(r => r.json()).then(d => { if (d.order) { this.setState({ order: d.order, route: 'track', trackInput: d.order.id, trackOrder: null }); this.trackLookup(d.order.id); this.loadUserOrders(); this.loadQuotes(); if (typeof window !== 'undefined') window.scrollTo(0, 0); } }).catch(() => {});
   }
   quoteReject(qid) { fetch('/api/quotes/' + qid + '/reject', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify({ reason: 'Customer requested changes' }) }).then(r => r.json()).then(() => this.loadQuotes()).catch(() => {}); }
   // ---------- printable documents: invoice / order slip / custom invoice / custom quote ----------
@@ -2951,6 +2951,11 @@ class Component extends DCLogic {
   // ===== ORDER CONFIRMATION =====
   s_confirm() {
     const o = this.state.order;
+    // (user, 2026-09-29) the order's own page replaces the thank-you page: it shows the order and lets the customer pay a pending one
+    if (o) {
+      if ((!this.state.trackOrder || this.state.trackOrder.id !== o.id) && this._confLook !== o.id) { this._confLook = o.id; setTimeout(() => { this.setState({ trackInput: o.id }); this.trackLookup(o.id); }, 0); }
+      return this.s_track();
+    }
     if (!o) return h('div', { style: { maxWidth: 700, margin: '0 auto', padding: '10px 20px 0' } },
       this.head('Order confirmation', 'No recent order in this session.'),
       h('div', { style: { display: 'flex', gap: 10 } }, this.btn('Track an order →', 'teal', 'track'), this.btn('Browse products', 'ghost', 'category')));
@@ -4258,7 +4263,7 @@ class Component extends DCLogic {
     // each title, label / value rows, Edit · Duplicate links, Select All + Delete, and the Summary card on the right
     const cart = this.state.cart || [];
     const t = this.cartTotals();
-    const page = kids => h('div', { style: { background: '#f5f6f8', margin: '-10px -20px 0', padding: '36px 20px 60px' } }, h('div', { style: { maxWidth: 1180, margin: '0 auto' } }, kids));
+    const page = kids => h('div', { style: { background: '#f5f6f8', margin: '-10px 0 0', padding: '36px 20px 60px' } }, h('div', { style: { maxWidth: 1180, margin: '0 auto' } }, kids));
     const box = (kids, extra) => h('div', { style: Object.assign({ background: '#fff', border: '1px solid #e6e8eb', padding: '26px 24px' }, extra || {}) }, kids);
     const title = text => [h('div', { key: 'bar', style: { width: 24, height: 3, background: TEAL, marginBottom: 12 } }), h('h1', { key: 'h', style: { margin: '0 0 18px', fontSize: 30, fontWeight: 500, letterSpacing: '-.01em' } }, text)];
     const link = (label, on, color) => h('span', { role: 'button', tabIndex: 0, onClick: on, onKeyDown: e => { if (e.key === 'Enter') on(); }, style: { fontSize: 14, color: color || '#2f7fd1', textDecoration: 'underline', cursor: 'pointer' } }, label);
@@ -4472,7 +4477,7 @@ class Component extends DCLogic {
         h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
           h('button', { type: 'button', onClick: () => this.setState({ coTermsOpen: false }), style: { font: '600 13.5px Montserrat,sans-serif', background: '#fff', color: INK, border: '1px solid ' + HAIR, borderRadius: 8, padding: '10px 18px', cursor: 'pointer' } }, 'Cancel'),
           h('button', { type: 'button', onClick: () => { this.setState({ coTermsOpen: false }); this.placeOrder(); }, style: { font: '600 13.5px Montserrat,sans-serif', background: TEAL, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', cursor: 'pointer' } }, 'I agree · Place order')))) : null;
-    return h('div', { style: { background: '#f5f6f8', margin: '-10px -20px 0', padding: '36px 20px 60px' } }, h('div', { style: { maxWidth: 1180, margin: '0 auto' } },
+    return h('div', { style: { background: '#f5f6f8', margin: '-10px 0 0', padding: '36px 20px 60px' } }, h('div', { style: { maxWidth: 1180, margin: '0 auto' } },
       h('div', { style: { width: 24, height: 3, background: TEAL, marginBottom: 12 } }),
       h('h1', { style: { margin: '0 0 20px', fontSize: 30, fontWeight: 500, letterSpacing: '-.01em' } }, 'Checkout'),
       h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 340px', gap: 24, alignItems: 'start' } },
@@ -4837,7 +4842,7 @@ class Component extends DCLogic {
   s_terms() {
     const T = this.state.terms;
     if (T === undefined && typeof fetch === 'function' && !this._termsLoading) { this._termsLoading = true; fetch('/api/content/terms').then(r => r.json()).then(d => this.setState({ terms: d.terms || null })).catch(() => this.setState({ terms: null })); }
-    return h('div', { style: { background: '#f5f6f8', margin: '-10px -20px 0', padding: '36px 20px 60px' } },
+    return h('div', { style: { background: '#f5f6f8', margin: '-10px 0 0', padding: '36px 20px 60px' } },
       h('div', { style: { maxWidth: 980, margin: '0 auto', background: '#fff', border: '1px solid #e6e8eb', padding: '32px 36px 40px' } },
         h('div', { style: { width: 24, height: 3, background: TEAL, marginBottom: 12 } }),
         h('h1', { style: { margin: '0 0 20px', fontSize: 32, fontWeight: 500, letterSpacing: '-.01em' } }, 'Terms & Conditions'),
@@ -5127,7 +5132,7 @@ class Component extends DCLogic {
       return 'In production';
     };
     const own = this.userType() === 'customer' && o.userId === (this.state.user || {}).id;
-    return h('div', { style: { background: '#f5f6f8', margin: '-10px -20px 0', padding: '36px 20px 60px' } }, h('div', { style: { maxWidth: 1080, margin: '0 auto' } },
+    return h('div', { style: { background: '#f5f6f8', margin: '-10px 0 0', padding: '36px 20px 60px' } }, h('div', { style: { maxWidth: 1080, margin: '0 auto' } },
       h('div', { style: { display: 'flex', alignItems: 'flex-end', gap: 14, flexWrap: 'wrap', marginBottom: 20 } },
         h('div', { style: { flex: '1 1 300px' } }, h('div', { style: { width: 24, height: 3, background: TEAL, marginBottom: 12 } }), h('h1', { style: { margin: 0, fontSize: 30, fontWeight: 500, letterSpacing: '-.01em' } }, 'Order ' + o.id)),
         h('div', { style: { display: 'flex', gap: 9, flexWrap: 'wrap' } }, this.btn('Invoice', 'ghost', 'doc:invoice:' + o.id), this.btn('Order slip', 'ghost', 'doc:slip:' + o.id), this.btn('Contact support', 'teal', 'crm'))),
