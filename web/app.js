@@ -216,10 +216,15 @@ const CFG_OVERRIDES = {
     noteOverride: { category: null },
     processDays: 1, // Excard base process day for a plain Business Card (finishing may extend it)
   },
+  // Digital Loose Sheet: fixed sizes only (A3–A7, DL, 2DL, 310 × 445 mm). The imported "Custom width / height —
+  // optional" boxes are not a choice on this product (no "Other" size), so they are not shown (user, 2026-09-29).
+  'Loose Sheet — Digital': {
+    hide: ['custom_w', 'custom_h'],
+  },
   // Flyer / Brochure (Litho Offset Loose Sheet) — Excard "lo-loose-sheet".
   // Base pricing verified: A4 / Gloss Art Paper 128gsm / 4C Both / 1,000 = RM168.55 (=Excard cash).
   'Flyer (= Loose Sheet Litho)': {
-    label: { colour: 'Print Colour', package: 'Package', hole_punch_position: 'Hole Punching Side' },
+    label: { colour: 'Print Colour', package: 'Duplicate with Same Configuration', hole_punch_position: 'Hole Punching Side' },
     hide: ['hs_size', 'hs_colour'], // Excard's flyer hot stamping is a plain select (no size/foil sub-fields)
     placeholder: ['size', 'paper', 'colour', 'quantity'],
     optLabel: {
@@ -741,7 +746,7 @@ class Component extends DCLogic {
   pkHasCustomSize() {
     const prod = this.pkProduct(); if (!prod) return false;
     const ov = this.cfgOv(); if ((ov.addFields || []).some(a => /^(custom_|fold_)/.test(a.key || ''))) return true;
-    return (prod.fields || []).some(f => (/size/i.test(f.key || '') && (f.options || []).some(o => /\b(other|custom)/i.test(String(Array.isArray(o) ? o[0] : o))))
+    return (prod.fields || []).filter(f => !this.pkHidden(f.key)).some(f => (/size/i.test(f.key || '') && (f.options || []).some(o => /\b(other|custom)/i.test(String(Array.isArray(o) ? o[0] : o))))
       || (f.type === 'number' && /\(mm\)|width|height/i.test((f.label || '') + ' ' + (f.key || ''))));
   }
   // the configurator's questions as plain data: the same fields, labels, options and validity as the
@@ -764,10 +769,11 @@ class Component extends DCLogic {
         return { key: def.key, label, type: 'select', required: isPh, value: isPh ? (sc[def.key] != null ? sc[def.key] : '') : (cfg[def.key] != null ? cfg[def.key] : ''),
           options: disp.map(o => ({ value: val(o), label: cleanOpt(optLabel[val(o)] || val(o)), avail: reliable ? !!valid[val(o)] : true })) };
       }
+      if (!def.type && !def.widget && !def.__added) return null; // a choice waiting on an earlier answer
       const unit = /\(mm\)/i.test(def.label || '') ? ' mm' : '';
       const hint = def.min != null && def.max != null ? 'Between ' + def.min + unit + ' and ' + def.max + unit : def.min != null ? 'Minimum ' + def.min + unit : def.max != null ? 'Maximum ' + def.max + unit : '';
       return { key: def.key, label: niceLabel(def.label, def.key), type: def.type === 'number' ? 'number' : 'text', required: true, value: cfg[def.key] != null ? cfg[def.key] : '', hint, min: def.min, max: def.max };
-    });
+    }).filter(Boolean);
   }
   // option-value map the engine expects. Fields can be listed out of dependency order
   // (e.g. booklet 'ordertype' depends on 'orientation'+'size'), so resolve defaults with a
@@ -3724,6 +3730,8 @@ class Component extends DCLogic {
       const imgBase = ov.optImages && ov.optImages[def.key];
       if (imgBase && options && options.length) return imgPicker(def, options, (this.state.cfg || {})[def.key], imgBase);  // nothing highlighted until picked
       if (options && options.length) return optCards(def, options, cfg[def.key]);
+      // a choice question whose options depend on an earlier answer (e.g. Paper waits for the Size): hidden until then
+      if (!def.type && !def.widget && !def.__added) return null;
       // custom-size dimension inputs collapse once the size is confirmed
       if (DIM_KEYS[def.key] && this.state.sizeConfirmed) return null;
       const isNum = def.type === 'number';
