@@ -21,7 +21,7 @@ const before = { orders: (db.orders || []).length, jobs: (db.jobs || []).length,
 ['jobs', 'orders', 'quotes', 'customInvoices', 'notifications', 'emails', 'printerPayments', 'chats', 'topups', 'dailyReports', 'machineIncidents', 'audit'].forEach(k => { db[k] = []; });
 db.sessions = {};
 // test customer accounts made by the automated tests; the demo customer is reset to her own details
-const isTest = c => c.type === 'customer' && /@example\.(test|com)$/i.test(c.email || '');
+const isTest = c => (c.type === 'customer' && /@example\.(test|com)$/i.test(c.email || '')) || /^(newprep|dir)\d{10,}@printoka\.com$/i.test(c.email || ''); // + staff logins the automated tests created
 const gone = new Set((db.customers || []).filter(isTest).map(c => c.id));
 db.customers = (db.customers || []).filter(c => !gone.has(c.id));
 db.customers.forEach(c => {
@@ -34,5 +34,5 @@ db.coupons = (db.coupons || []).filter(cp => !cp.userId || !gone.has(cp.userId))
 db.settings = db.settings || {}; db.settings.purchaseOrderNumber = 1001;
 fs.writeFileSync(DATA, JSON.stringify(db, null, 2));
 console.log('backup →', path.relative(ROOT, BK));
-console.log('removed', before.orders, 'orders,', before.jobs, 'jobs,', before.quotes, 'quotes,', gone.size, 'test customer accounts');
+console.log('removed', before.orders, 'orders,', before.jobs, 'jobs,', before.quotes, 'quotes,', gone.size, 'test accounts');
 console.log('kept', db.customers.length, 'accounts:', JSON.stringify(db.customers.reduce((m, c) => (m[c.type] = (m[c.type] || 0) + 1, m), {})));
