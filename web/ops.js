@@ -78,9 +78,19 @@
   };
 
   // ---------------------------------------------------------------- live data
+  // the server no longer knows this login (logged out elsewhere, or the session was cleared): say so and go to the
+  // right login page, instead of a dashboard that quietly shows 0 everywhere
+  P.sessionEnded = function () {
+    const u = this.state.user || {}, t = u.type;
+    const portal = t === 'vendor' ? 'printer' : t === 'hub' ? 'hub' : t === 'outlet' ? 'outlet' : t === 'admin' ? 'admin' : (t && t !== 'customer') ? 'production' : 'member';
+    try { localStorage.removeItem('pk_token'); } catch (e) {}
+    this.setState({ user: null, ops: null });
+    this.openPortal(portal);
+    this.setState({ authErr: 'Your login has ended. Please log in again.' });
+  };
   P.opsLoad = function () {
     if (typeof fetch !== 'function' || !this.authToken()) return;
-    fetch('/api/jobs', { headers: this.authHeaders() }).then(r => r.ok ? r.json() : null)
+    fetch('/api/jobs', { headers: this.authHeaders() }).then(r => { if (r.status === 401) { this.sessionEnded(); return null; } return r.ok ? r.json() : null; })
       .then(d => { if (d) this.setState({ ops: { jobs: d.jobs || [], role: d.role, loaded: true } }); }).catch(() => {});
     this._od = {}; // invalidate cached KPI / sales / perf so the next render refetches
     if (!this._opsTimer && typeof window !== 'undefined') {

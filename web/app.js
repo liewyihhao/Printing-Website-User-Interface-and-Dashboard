@@ -1292,7 +1292,8 @@ class Component extends DCLogic {
   authHeaders() { const t = this.authToken(); return t ? { 'x-token': t } : {}; }
   authLoad() {
     if (typeof fetch !== 'function' || !this.authToken()) return;
-    fetch('/api/auth/me', { headers: this.authHeaders() }).then(r => r.ok ? r.json() : null).then(d => {
+    // a login the server no longer knows is cleared, so the page shows the login instead of empty dashboards
+    fetch('/api/auth/me', { headers: this.authHeaders() }).then(r => { if (r.status === 401) { try { localStorage.removeItem('pk_token'); } catch (e) {} } return r.ok ? r.json() : null; }).then(d => {
       this.setState({ authChecked: true });
       if (!d || !d.customer) return;
       const c = d.customer; this.setState({ user: c }); this.loadAccount(); this.loadNotifications();
