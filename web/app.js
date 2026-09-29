@@ -5036,7 +5036,7 @@ class Component extends DCLogic {
           h('div', { style: sep }, label('Current discount'), big(this.tierPct() + '%')),
           h('div', { style: sep }, track)),
         // the tiers: one card, two columns, divided by hairlines
-        h('div', { key: 'tiers', style: { background: '#fff', borderRadius: 8, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', overflow: 'hidden' } },
+        h('div', { key: 'tiers', style: { background: '#fff', borderRadius: 8, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(max(320px,40%),1fr))', overflow: 'hidden' } },
           TIERS.map(t => { const pct = Math.min(100, Math.round(spend / t[1] * 100)); return h('div', { key: t[0], style: { padding: '22px 24px', display: 'flex', gap: 22, boxShadow: '1px 1px 0 ' + HAIR } },
             medal(t[0]),
             h('div', { style: { flex: 1, minWidth: 0 } }, h('div', { style: { fontWeight: 600, fontSize: 14, marginBottom: 8 } }, t[0]),
