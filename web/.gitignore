@@ -8,5 +8,5 @@ server/data.json
 .env.local
 .env
 
-# Generated pricing engine (built from ../crawler/output via pricing/build.sh — 21MB, not committed)
-pricing/engine.js
+# The generated pricing engine (pricing/engine.js, built by pricing/build.sh) IS committed: this one repo holds the whole
+# Printoka project (calculator, data, prices, website, brand assets) and a fresh clone must run as-is.
