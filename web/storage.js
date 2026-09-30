@@ -175,7 +175,8 @@
     if (this.state.user) this.agLoad();
     const n = this.artSlots(it), lib = this.state.agList || [];
     const link = (label, on) => h('span', { role: 'button', tabIndex: 0, onClick: on, onKeyDown: e => { if (e.key === 'Enter') on(); }, style: { fontSize: 13.5, color: '#2f7fd1', cursor: 'pointer' } }, label);
-    const open = k => this.setState({ ag: { line: i, slot: k, label: it.name + (n > 1 ? ' · Artwork ' + (k + 1) : '') }, agErr: null, agPick: null });
+    // (user, 2026-09-30) uploading goes through the Upload & check artwork page for this job (size + print preview + checks)
+    const open = k => { this.setState({ awJob: { line: i, slot: k }, aw: null, awAgree: false }); this.go('artwork'); };
     const out = [];
     for (let k = 0; k < n; k++) {
       const a = (it.artworks || [])[k], full = a && (lib.find(x => x.id === a.id) || a);

@@ -1203,7 +1203,7 @@ class Component extends DCLogic {
     const { short, lines } = this.pkOrderSpec();
     // the configurator summary travels with the order: every option, quantity and production time
     const pd = this.procDays(), productionTime = pd != null ? pd + (pd === 1 ? ' working day' : ' working days') : '3 working days';
-    const item = { jobCode: this.newJobCode(), productId: prod.id, name: this.catName(prod.id), spec: short, specLines: lines, productionTime, qty: this.state.qty || 1, unitPrice: q.gross / (this.state.qty || 1), lineTotal: q.gross };
+    const item = { jobCode: this.newJobCode(), productId: prod.id, name: this.catName(prod.id), spec: short, specLines: lines, size: this.artworkTarget(), productionTime, qty: this.state.qty || 1, unitPrice: q.gross / (this.state.qty || 1), lineTotal: q.gross };
     const cart = (this.state.cart || []).concat([item]);
     this.setState({ cart }); this.saveCart(cart); this.go('cart');
   }
@@ -3815,6 +3815,9 @@ class Component extends DCLogic {
     // highlighted, and options that are invalid for the current spec are greyed and disabled.
     const cardGroup = (key, fieldLabel, curText, isPh0, note, remark, items, selected, optionalQ) => {
       if (custView) { note = null; remark = null; }
+      // (user, 2026-09-30) a finishing the current spec can't have (only its 'not required' answer is left) is skipped for
+      // customers; it appears as soon as a combination allows it (e.g. Spot UV with Matte lamination on Gloss 250/310)
+      if (custView && items.some(it => it.na) && items.every(it => it.na || it.avail === false)) return null;
       // collapsible: the field shows only its current value until clicked; clicking reveals the
       // option cards, and picking one collapses it again (the original site's dropdown behaviour).
       // `selected` = the customer has actively chosen this field; when false the value reads in a
@@ -4240,8 +4243,7 @@ class Component extends DCLogic {
                     this.btn('Download quotation (PDF)', 'ghost', 'product', { justifyContent: 'center' }))
                 : h('span', { style: { textAlign: 'center', background: '#f1f3f5', color: MUT, fontWeight: 600, fontSize: 13.5, padding: '12px', borderRadius: 8 } }, 'Select your options to continue')),
           ]),
-          // (user, 2026-09-30) the size preview & bleed card moved into the Upload artwork page
-          h('div', { key: 'awb', style: { marginTop: 12 } }, this.btn('Upload & check artwork', 'ghost', 'artwork', { justifyContent: 'center', width: '100%' })),
+          // (user, 2026-09-30) artwork is uploaded from the cart (per job), not from the configurator
           null)),
       this.customizedBanner(),
       this.productDetails(prod, NAME)));
@@ -4459,7 +4461,41 @@ class Component extends DCLogic {
       });
     })).catch(() => { checks.push({ t: 'Readable', s: 'fail', d: 'This PDF could not be opened' }); this.awFinish(checks, null); });
   }
+  // a cart job's print size (mm): stored on new items; read from the spec lines for older ones
+  jobTarget(it) {
+    if (!it) return null;
+    if (it.size && it.size.w && it.size.h) return it.size;
+    const L = it.specLines || [], num = v => parseFloat(String(v || '').replace(/[^\d.]/g, ''));
+    const sz = L.find(l => /size/i.test(l[0]) && /\d\s*(mm)?\s*[x×]\s*\d/i.test(String(l[1])));
+    if (sz) { const m = String(sz[1]).match(/(\d+(?:\.\d+)?)\s*(?:mm)?\s*[x×]\s*(\d+(?:\.\d+)?)/i); if (m) return { w: +m[1], h: +m[2] }; }
+    const hl = L.find(l => /^height/i.test(l[0])), wl = L.find(l => /^width/i.test(l[0]));
+    if (hl && wl && num(hl[1]) && num(wl[1])) return { w: num(wl[1]), h: num(hl[1]) };
+    return null;
+  }
+  awJobItem() { const j = this.state.awJob; return j ? (this.state.cart || [])[j.line] || null : null; }
+  awTarget() { return this.state.awJob ? this.jobTarget(this.awJobItem()) : this.artworkTarget(); }
+  // the chosen size before a file is in: trim (white) inside the 3 mm bleed (dashed), to scale
+  awSizeBox(t) {
+    if (!t) return null;
+    const k = Math.min(300 / (t.w + 6), 300 / (t.h + 6)), b = 3 * k;
+    return h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 } },
+      h('div', { style: { position: 'relative', width: (t.w + 6) * k, height: (t.h + 6) * k, outline: '1px dashed #c9ccd1' } },
+        h('div', { style: { position: 'absolute', left: b, top: b, right: b, bottom: b, background: '#fff', boxShadow: '0 6px 22px rgba(33,33,33,.18)' } },
+          h('div', { style: { position: 'absolute', inset: b, border: '1px dashed rgba(229,34,32,.7)' } }))),
+      h('div', { style: { fontSize: 12.5, color: MUT } }, h('b', { style: { color: TEAL } }, Math.round(t.w) + ' × ' + Math.round(t.h) + ' mm'), ' · 3 mm bleed all round'));
+  }
+  // the customer agrees, the file goes into their Artwork Storage and onto the cart job, back to the cart
+  awUseForJob() {
+    const j = this.state.awJob, f = this._awFile; if (!j || !f) return;
+    this.setState({ awSaving: true, awAgree: false });
+    this.agUpload([f]).then(done => {
+      if (!done.length) return this.setState({ awSaving: false });
+      this.cartSetArtwork(j.line, j.slot, done[0]);
+      this._awFile = null; this.setState({ awSaving: false, aw: null, awJob: null }); this.go('cart');
+    });
+  }
   analyzeArtwork(file) {
+    this._awFile = file;
     if (!file) return;
     const ext = (file.name.split('.').pop() || '').toLowerCase();
     const okExt = ['pdf', 'jpg', 'jpeg', 'png', 'ai', 'eps', 'tif', 'tiff', 'zip', 'gif', 'webp'];
@@ -4469,7 +4505,7 @@ class Component extends DCLogic {
     checks.push({ t: 'File size', s: mb <= 1024 ? 'pass' : 'fail', d: (mb < 10 ? mb.toFixed(1) : Math.round(mb)) + ' MB' + (mb > 1024 ? ' — over the 1 GB limit' : '') });
     this.setState({ aw: { name: file.name, sizeMB: mb, ext, status: 'analyzing', checks: checks.slice(), preview: null } });
     if (okExt.indexOf(ext) < 0) return this.awFinish(checks, null);
-    const target = this.artworkTarget();
+    const target = this.awTarget();
     if (ext === 'pdf') this.awCheckPdf(file, target, checks);
     else if (['jpg', 'jpeg', 'png', 'gif', 'webp'].indexOf(ext) >= 0) this.awCheckRaster(file, target, checks);
     else { checks.push({ t: 'Preview', s: 'info', d: 'Vector and archive files are reviewed by our prepress team after upload' }); this.awFinish(checks, null); }
@@ -4483,7 +4519,7 @@ class Component extends DCLogic {
     let tw = target.w, th = target.h;
     if ((pw > ph) !== (tw > th) && pw !== ph) { const x = tw; tw = th; th = x; }
     const ar = pw / ph, onBleed = Math.abs(ar - (tw + 6) / (th + 6)) <= Math.abs(ar - tw / th);
-    const k = Math.min(380 / (tw + 6), 380 / (th + 6)), b = 3 * k;
+    const k = Math.min(300 / (tw + 6), 300 / (th + 6)), b = 3 * k;
     const Bw = (tw + 6) * k, Bh = (th + 6) * k, Tw = tw * k, Th = th * k;
     const bg = (w, hh, x, y) => ({ backgroundImage: 'url("' + src + '")', backgroundSize: w + 'px ' + hh + 'px', backgroundPosition: x + 'px ' + y + 'px', backgroundRepeat: 'no-repeat' });
     const img = onBleed ? [Bw, Bh, 0, 0] : [Tw, Th, b, b];
@@ -4503,11 +4539,12 @@ class Component extends DCLogic {
     const COL = { pass: '#2e9e5b', warn: '#E8A317', fail: '#E52220', info: '#9aa0a6' };
     const dot = s => h('span', { style: { flex: 'none', height: 11, width: 11, borderRadius: '50%', background: COL[s] || COL.info, marginTop: 4 } });
     const onFiles = fl => { if (fl && fl[0]) this.analyzeArtwork(fl[0]); };
-    const target = prod ? this.artworkTarget() : null;
+    const job = this.state.awJob, jobIt = this.awJobItem();
+    const target = job ? this.awTarget() : (prod ? this.artworkTarget() : null);
     const panel = kids => h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', background: '#fff' } }, kids);
-    const title = h('h1', { style: { margin: '2px 0 18px', fontSize: 28, fontWeight: 600, letterSpacing: '-.02em' } }, 'Upload artwork' + (NAME ? ' — ' + NAME : ''));
+    const title = h('h1', { style: { margin: '2px 0 18px', fontSize: 28, fontWeight: 600, letterSpacing: '-.02em' } }, 'Upload artwork' + (job && jobIt ? ' — ' + jobIt.name + (job.slot ? ' (artwork ' + (job.slot + 1) + ')' : '') : NAME ? ' — ' + NAME : ''));
     if (!aw) {
-      const sim = prod ? (() => { try { return this.sizeSim(); } catch (e) { return null; } })() : null;
+      const sim = job ? (target ? { svg: this.awSizeBox(target), label: '' } : null) : prod ? (() => { try { return this.sizeSim(); } catch (e) { return null; } })() : null;
       const drop = h('label', { key: 'd', htmlFor: 'aw-input',
         onDragOver: e => { e.preventDefault(); }, onDrop: e => { e.preventDefault(); onFiles(e.dataTransfer.files); },
         style: { display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 300, border: '2px dashed ' + HAIR, borderRadius: 12, background: ALT, padding: '40px 24px', textAlign: 'center', cursor: 'pointer' } },
@@ -4517,7 +4554,7 @@ class Component extends DCLogic {
         h('div', { style: { fontSize: 13, color: MUT } }, 'or click to browse — PDF, JPG, PNG, AI, EPS'));
       const size = sim && sim.svg ? panel([
         h('div', { key: 's', style: { display: 'grid', placeItems: 'center', minHeight: 300, padding: 20, background: '#f3f4f6' } }, h('div', { style: { width: '100%', maxWidth: 340 } }, sim.svg)),
-        h('div', { key: 'l', style: { padding: '11px 14px', borderTop: '1px solid ' + HAIR, fontSize: 12.5, color: MUT, textAlign: 'center' } }, h('b', { style: { color: TEAL } }, sim.label), ' · 3 mm bleed all round · keep text 3–5 mm inside the trim')]) : null;
+        h('div', { key: 'l', style: { padding: '11px 14px', borderTop: '1px solid ' + HAIR, fontSize: 12.5, color: MUT, textAlign: 'center' } }, job ? 'Keep text inside the dashed line' : [h('b', { key: 'b', style: { color: TEAL } }, sim.label), ' · 3 mm bleed all round · keep text 3–5 mm inside the trim'])]) : null;
       return h('div', { style: { maxWidth: size ? 1180 : 720, margin: '0 auto', padding: '10px 20px 0' } }, title,
         size ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 22, alignItems: 'stretch' } }, size, drop) : drop);
     }
@@ -4546,9 +4583,18 @@ class Component extends DCLogic {
                 h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.6, marginTop: 3 } }, c.d)))),
             analyzing ? h('div', { style: { padding: '13px 16px', borderTop: '1px solid ' + LINE, fontSize: 12.5, color: FAINT } }, 'Running remaining checks…') : null),
           !analyzing ? h('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap' } },
-            this.btn(fails ? 'Continue anyway →' : 'Continue to cart →', 'teal', 'cart', { justifyContent: 'center' }),
+            job ? h('button', { type: 'button', disabled: !!this.state.awSaving, onClick: () => this.setState({ awAgree: true }), style: { font: '600 14px Montserrat,sans-serif', color: '#fff', background: TEAL, border: 'none', borderRadius: 8, padding: '12px 24px', cursor: 'pointer', opacity: this.state.awSaving ? .6 : 1 } }, this.state.awSaving ? 'Saving…' : 'Use this artwork')
+              : this.btn(fails ? 'Continue anyway →' : 'Continue to cart →', 'teal', 'cart', { justifyContent: 'center' }),
             h('label', { htmlFor: 'aw-reinput', style: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, border: '1px solid ' + HAIR, borderRadius: 8, padding: '11px 20px', fontSize: 13.5, fontWeight: 600, color: INK, cursor: 'pointer' } },
-              h('input', { id: 'aw-reinput', type: 'file', accept: '.pdf,.jpg,.jpeg,.png,.ai,.eps,.tif,.tiff,.zip', style: { display: 'none' }, onChange: e => onFiles(e.target.files) }), 'Replace file')) : null)));
+              h('input', { id: 'aw-reinput', type: 'file', accept: '.pdf,.jpg,.jpeg,.png,.ai,.eps,.tif,.tiff,.zip', style: { display: 'none' }, onChange: e => onFiles(e.target.files) }), 'Replace file')) : null)),
+      this.state.awAgree ? h('div', { onClick: () => this.setState({ awAgree: false }), style: { position: 'fixed', inset: 0, zIndex: 98, background: 'rgba(15,20,25,.5)', display: 'grid', placeItems: 'center', padding: 16 } },
+        h('div', { onClick: e => e.stopPropagation(), role: 'alertdialog', 'aria-modal': 'true', 'aria-label': 'Confirm artwork', style: { background: '#fff', borderRadius: 12, maxWidth: 440, width: '100%', padding: '22px 24px', boxShadow: '0 18px 50px rgba(0,0,0,.25)' } },
+          h('div', { style: { fontSize: 17, fontWeight: 700, marginBottom: 8 } }, 'Confirm your artwork'),
+          h('div', { style: { fontSize: 13.5, color: INK, lineHeight: 1.6, marginBottom: 6 } }, 'I confirm this artwork is finalised. I understand it cannot be changed after my order is submitted.'),
+          h('div', { style: { fontSize: 12.5, color: MUT, marginBottom: 18, wordBreak: 'break-word' } }, aw.name),
+          h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
+            h('button', { type: 'button', onClick: () => this.setState({ awAgree: false }), style: { font: '600 13.5px Montserrat,sans-serif', background: '#fff', color: INK, border: '1px solid ' + HAIR, borderRadius: 8, padding: '10px 18px', cursor: 'pointer' } }, 'Cancel'),
+            h('button', { type: 'button', onClick: () => this.awUseForJob(), style: { font: '600 13.5px Montserrat,sans-serif', background: TEAL, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', cursor: 'pointer' } }, 'I agree')))) : null);
   }
 
   // ===== CART =====
