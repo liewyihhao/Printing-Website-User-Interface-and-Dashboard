@@ -63,9 +63,9 @@ let EXCARD_PRICES = {};
 const BC_PKG_N = { 'Normal': 1, '2in1': 2, '3in1': 3, '4in1': 4, '5in1': 5, '6in1': 6, '7in1': 7, '8in1': 8, '9in1': 9, '10in1': 10 };
 // Business Card price from the captured Excard table, for every card category. Price is
 // size-independent (standard sizes, custom size, fold open size and die-cut size all price
-// the same within a category); folds ignore creasing type. Lamination, embossing, round corner
-// and silkscreen spot UV are price-neutral on Excard. Priced add-ons: hole punching (standard
-// cards only) and hot stamping (per foil colour, standard vs fold curve). Package (N designs) = ×N.
+// the same within a category); folds ignore creasing type. Lamination and silkscreen spot UV change the
+// base (see bcLamRatio / bcSpotUv). Priced add-ons: hole punching and round corner (standard cards only),
+// embossing (standard + folds) and hot stamping (per foil colour, standard vs fold curve). Package (N designs) = ×N.
 function bcSegTable(T, cat) {
   if (cat === 'Standard') return T.standard;
   if (cat === 'Thin Fold') return T.fold && T.fold.thin_fold;
@@ -78,17 +78,91 @@ function bcSegTable(T, cat) {
 function bcFoilColours(v) {
   let n = 0; String(v || '').replace(/(\d)\s*C\b/g, (m, d) => { n += Number(d); return m; }); return n;
 }
+// (2026-10-01, Excard live CASH, clean sequential samples) the captured table above is the free Gloss Water Based
+// Varnish price. Lamination changes the price of fold and die-cut cards: price = varnish price × (lamination ÷ varnish),
+// the ratio sampled at 300 / 1,000 / 5,000 (4C Both, per category × paper) and interpolated in log(qty); 4C (Front)
+// applies the Gloss Art Card 250gsm Front/Both ratio difference; 50 / 100 / 200 pcs use the sampled small-run ratios.
+// Standard cards use the engine's exact per-lamination curves. Checked against held-out quotes: within ~2%.
+const BC_LAM_Q = [300, 1000, 5000];
+const BC_LAM = {"Thin Fold":{"Gloss Art Card 250gsm":{"wbv":[67,198.65,914.75],"gl":[76.45,233.3,1088],"ml":[54.4,116.65,545.15],"st":[82.75,255.25,1193.1]},"Gloss Art Card 310gsm":{"wbv":[70.15,210.2,972.5],"gl":[79.6,246,1146.9],"ml":[60.7,131.65,617.95],"st":[85.9,266.8,1250.85]},"Gloss Art Card 360gsm":{"wbv":[75.4,227.55,1059.15],"gl":[84.85,263.35,1233.55],"ml":[84.85,263.35,1233.55],"st":[91.15,284.15,1337.5]},"Matte Art Card 250gsm":{"wbv":[67,198.65,914.75],"gl":[76.45,233.3,1088],"ml":[76.45,233.3,1088],"st":[82.75,255.25,1193.1]}},"Fat Fold":{"Gloss Art Card 250gsm":{"wbv":[60.7,176.7,799.25],"gl":[69.1,205.6,944.8],"ml":[54.4,116.65,545.15],"st":[74.35,224.05,1031.4]},"Gloss Art Card 310gsm":{"wbv":[62.8,185.95,847.75],"gl":[71.2,216,993.3],"ml":[60.7,131.65,617.95],"st":[76.45,234.45,1079.95]},"Gloss Art Card 360gsm":{"wbv":[67,200.95,920.55],"gl":[75.4,231,1066.05],"ml":[75.4,231,1066.05],"st":[80.65,248.35,1152.7]},"Matte Art Card 250gsm":{"wbv":[60.7,176.7,799.25],"gl":[69.1,205.6,944.8],"ml":[69.1,205.6,944.8],"st":[74.35,224.05,1031.4]}},"Custom Die Cut":{"Gloss Art Card 250gsm":{"wbv":[67,162.85,699.95],"gl":[80.65,213.7,929.8],"ml":[69.1,172.1,735.75],"st":[82.75,221.75,971.35]},"Gloss Art Card 310gsm":{"wbv":[77.5,204.45,883.6],"gl":[81.7,218.3,952.9],"ml":[71.2,175.55,749.6],"st":[83.8,226.4,994.45]},"Matte Art Card 250gsm":{"wbv":[76.45,199.8,860.5],"gl":[80.65,213.7,929.8],"ml":[80.65,213.7,929.8],"st":[82.75,221.75,971.35]}}};
+const BC_LAM4F = {"fold":{"wbv":[53.35,151.3,682.6],"gl":[62.8,187.1,857],"ml":[50.2,114.35,533.6],"st":[69.1,207.9,960.95]},"die":{"wbv":[63.85,153.6,657.2],"gl":[74.35,195.2,837.4],"ml":[64.9,161.7,693],"st":[77.5,203.3,878.95]}};
+const BC_LAMSMALL = {"fold":{"gl":[1.0791,1.092,1.1245],"ml":[1.0791,1.092,1.1245],"st":[1.1582,1.1839,1.2075]},"die":{"gl":[1,1.1813,1.2192],"ml":[1,1.1813,0.8131],"st":[1.0268,1.2072,1.2391]}};
+const BC_SUV_STD = {"Gloss Art Card 250gsm|4C (Both)|Front":{"300":30.25,"500":37.8,"1000":61.2,"2000":116.65,"3000":172.1,"5000":283,"10000":559},"Gloss Art Card 250gsm|4C (Both)|Both":{"300":37.6,"500":47.25,"1000":76.25,"2000":146.7,"3000":218.3,"5000":359.2,"10000":711.5},"Gloss Art Card 310gsm|4C (Both)|Front":{"300":32.35,"500":40.95,"1000":67,"2000":125.9,"3000":185.95,"5000":304.9,"10000":604.05},"Gloss Art Card 310gsm|4C (Both)|Both":{"300":34.25,"500":57.55,"1000":101.5,"2000":199.95,"3000":298.2,"5000":450.9,"10000":986.7},"Gloss Art Card 250gsm|4C (Front)|Front":{"300":27.1,"500":34.65,"1000":56.6,"2000":107.4,"3000":159.4,"4000":210.2,"5000":261.05,"7000":365,"10000":517.45},"Gloss Art Card 310gsm|4C (Front)|Front":{"300":29.2,"500":36.75,"1000":62.35,"2000":116.65,"3000":172.1,"5000":281.8,"10000":559}};
+const BC_SUV_FOLD = {"Gloss Art Card 250gsm|4C (Both)|Front":{"300":69.1,"1000":147.85,"5000":697.6},"Gloss Art Card 250gsm|4C (Both)|Both":{"300":83.8,"1000":177.85,"5000":850.1},"Gloss Art Card 310gsm|4C (Both)|Front":{"300":75.4,"1000":162.85,"5000":770.4},"Gloss Art Card 310gsm|4C (Both)|Both":{"300":66.55,"500":111.95,"1000":196.25,"5000":867.15},"Gloss Art Card 250gsm|4C (Front)|Front":{"300":63.85,"1000":145.55,"5000":686.05}};
+function bcLamKey(l) { l = String(l || ''); return /water based/i.test(l) ? 'wbv' : /^gloss lam/i.test(l) ? 'gl' : /^matte lam/i.test(l) ? 'ml' : /soft touch/i.test(l) ? 'st' : null; }
+// value of a 3-point series [at 300, 1000, 5000] at qty, interpolated in log(qty), clamped at the ends
+function bcLogInterp(r, qty) {
+  if (qty <= BC_LAM_Q[0]) return r[0];
+  if (qty >= BC_LAM_Q[BC_LAM_Q.length - 1]) return r[r.length - 1];
+  for (let i = 0; i < BC_LAM_Q.length - 1; i++) if (qty <= BC_LAM_Q[i + 1]) { const t = Math.log(qty / BC_LAM_Q[i]) / Math.log(BC_LAM_Q[i + 1] / BC_LAM_Q[i]); return r[i] + (r[i + 1] - r[i]) * t; }
+  return r[r.length - 1];
+}
+function bcLamRatio(cat, paper, lam, qty, pc) {
+  const k = bcLamKey(lam); if (!k || k === 'wbv') return 1;
+  const row = (BC_LAM[cat] || {})[paper]; if (!row || !row[k] || !row.wbv) return 1;
+  const grp = cat === 'Custom Die Cut' ? 'die' : 'fold';
+  const cheapMl = k === 'ml' && row.ml[0] < row.gl[0];           // the cheaper matte route (Gloss Art Card 250/310)
+  const kk = k === 'ml' && !cheapMl ? 'gl' : k;
+  if (qty < 300) { const i = [50, 100, 200].indexOf(qty); const sm = BC_LAMSMALL[grp][kk]; return i >= 0 && sm ? sm[i] : bcLogInterp(row[k].map((v, j) => v / row.wbv[j]), qty); }
+  let r = bcLogInterp(row[k].map((v, j) => v / row.wbv[j]), qty);
+  if (pc === '4C (Front)') {
+    const ref = (BC_LAM[cat === 'Fat Fold' ? 'Thin Fold' : cat] || {})['Gloss Art Card 250gsm'], f4 = BC_LAM4F[grp];
+    if (ref && f4 && f4[kk]) r *= bcLogInterp(f4[kk].map((v, j) => (v / f4.wbv[j]) / (ref[kk][j] / ref.wbv[j])), qty);
+  }
+  return r;
+}
+// Standard cards: Excard's exact price per lamination from the engine's captured curves (all but the free varnish)
+function bcStdLamBase(cfg, qty) {
+  const k = bcLamKey(cfg.lamination); if (!k || k === 'wbv') return null;
+  const E = typeof window !== 'undefined' && window.PricingEngine; if (!E) return null;
+  const p = E.DATA.products.find(x => x.id === 1); if (!p) return null;
+  const std = ['54mm x 89mm', '52mm x 86mm', '50mm x 89mm', '54mm x 86mm'];
+  const size = std.indexOf(cfg.size) >= 0 ? cfg.size : '54mm x 89mm';
+  try { const r = E.localQuote(p, { size, paper: cfg.paper, printcolour: cfg.printcolour, lamination: cfg.lamination, package: 'Normal' }, qty); return r && r.printoka_cash ? r.printoka_cash : null; } catch (e) { return null; }
+}
+// Silkscreen Spot UV: sampled full price at this quantity, else (sampled ÷ no-spot-UV) at the neighbouring sampled
+// quantities, interpolated in log(qty), × the no-spot-UV price. baseAt(q) = the card's price without spot UV at q.
+function bcSpotUv(cfg, qty, baseAt) {
+  const v = String(cfg.silkscreen_spot_uv || ''); if (!/spot uv/i.test(v)) return null;
+  const side = /both/i.test(v) ? 'Both' : 'Front';
+  const fold = cfg.category === 'Thin Fold' || cfg.category === 'Fat Fold';
+  const T = fold ? BC_SUV_FOLD : cfg.category === 'Standard' ? BC_SUV_STD : null; if (!T) return null;
+  let tbl = T[cfg.paper + '|' + cfg.printcolour + '|' + side], scale = 1;
+  if (!tbl && cfg.printcolour === '4C (Front)') {                  // no sample: 4C (Both) price × the 250gsm Front/Both ratio
+    tbl = T[cfg.paper + '|4C (Both)|' + side];
+    const a = T['Gloss Art Card 250gsm|4C (Front)|Front'], b = T['Gloss Art Card 250gsm|4C (Both)|Front'];
+    if (tbl && a && b) scale = bcLogInterp([a[300] / b[300], a[1000] / b[1000], a[5000] / b[5000]], qty);
+  }
+  if (!tbl) return null;
+  if (tbl[qty] != null) return tbl[qty] * scale;
+  const qs = Object.keys(tbl).map(Number).sort((x, y) => x - y);
+  const lo = qs.filter(q => q <= qty).pop(), hi = qs.find(q => q >= qty);
+  const rat = q => { const b = baseAt(q); return b ? tbl[q] / b : null; };
+  const b0 = baseAt(qty); if (!b0) return null;
+  let r;
+  if (lo == null) r = rat(hi); else if (hi == null) r = rat(lo);
+  else { const r0 = rat(lo), r1 = rat(hi); if (r0 == null || r1 == null) return null; r = r0 + (r1 - r0) * Math.log(qty / lo) / Math.log(hi / lo); }
+  return r == null ? null : b0 * r * scale;
+}
 function bcPriceBase(cfg, qty) {
   const T = EXCARD_PRICES['Business Card']; if (!T) return null;
   const table = bcSegTable(T, cfg.category); if (!table) return null;
   const branch = table[cfg.paper]; if (!branch) return null;
   const arr = branch[cfg.printcolour]; if (!arr) return null;
   const qi = T.qtys.indexOf(qty); if (qi < 0) return null;
-  let base = arr[qi]; if (base == null) return null;
+  const baseAt = q => { const i = T.qtys.indexOf(q); if (i < 0 || arr[i] == null) return null;
+    if (cfg.category === 'Standard') { const lb = bcStdLamBase(cfg, q); return lb != null ? lb : arr[i]; }
+    return Math.round(arr[i] * bcLamRatio(cfg.category, cfg.paper, cfg.lamination, q, cfg.printcolour) * 100) / 100; };
+  let base = baseAt(qty); if (base == null) return null;
+  const suv = bcSpotUv(cfg, qty, baseAt); if (suv != null) base = Math.round(suv * 100) / 100;
   const A = T.addons || {};
-  // hole punching is a Standard-card-only add-on on Excard (qty curve, paper/diameter-independent)
+  // hole punching is a Standard-card-only add-on on Excard (qty curve, paper/diameter-independent);
+  // round corner (Standard) costs the same curve (live 2026-10-01: +6.30 at 300, +15.00 at 1,000)
   let hp = 0;
   if (cfg.category === 'Standard' && cfg.holepunching && !/^no/i.test(cfg.holepunching) && Array.isArray(A.holepunch) && A.holepunch[qi] != null) hp = A.holepunch[qi];
+  if (cfg.category === 'Standard' && /^(yes|required)/i.test(String(cfg.round_corner || '')) && Array.isArray(A.holepunch) && A.holepunch[qi] != null) hp += A.holepunch[qi];
+  // embossing (Standard + folds): one qty curve, front or back (live 2026-10-01: +63.00 at 300, +127.05 at 1,000, +462 at 5,000)
+  if (/^embossing/i.test(String(cfg.embossing || '')) && ['Standard', 'Thin Fold', 'Fat Fold'].indexOf(cfg.category) >= 0 && Array.isArray(A.embossing) && A.embossing[qi] != null) hp += A.embossing[qi];
   // hot stamping: per-colour charge × total foil colours (front + back, e.g. "1C (Front) + 2C (Back)" = 3);
   // standard cards and fold cards have their own qty curves. Paper / block / foil colour don't matter.
   let hs = 0;
@@ -235,9 +309,8 @@ const CFG_OVERRIDES = {
     optImages: { round_corner_position: 'assets/options/businesscard-roundcorner/' },
     // custom size prices exactly as the standard 54x89 card (dimension-independent, verified on Excard)
     priceSub: { size: { 'Other (Custom Size)': '54mm x 89mm' } },
-    // NOTE: Silkscreen Spot UV, embossing & round corner are price-neutral on Excard (re-confirmed
-    // live 2026-09-24) — no priceAddon. Hole punching and hot stamping are priced inside
-    // bcPriceBase. Base pricing comes entirely from the captured Excard table via priceBase.
+    // NOTE: lamination, Silkscreen Spot UV, embossing, round corner, hole punching and hot stamping are all
+    // priced inside bcPriceBase (live Excard CASH, re-sampled 2026-10-01). No priceAddon.
     // Custom Size inputs appear only when Size = "Other (Custom Size)"; the ranges depend on the
     // card category (Standard / Thin Fold / Fat Fold). Creasing shows for fold cards.
     addFields: [
@@ -257,13 +330,15 @@ const CFG_OVERRIDES = {
     ],
     optLabel: {
       category: { 'Standard': 'Standard Card', 'Custom Die Cut': 'Custom Die-Cut' },
-      paper: { 'Gloss Art Card 250gsm': 'Gloss Art Card 250gsm (2 side coated)', 'Gloss Art Card 310gsm': 'Gloss Art Card 310gsm (2 side coated)', 'Gloss Art Card 360gsm': 'Gloss Art Card 360gsm (2 side coated)', 'Synthetic Paper 180micron': 'Synthetic Paper 180micron (0.18mm)' },
+      paper: { 'Gloss Art Card 250gsm': 'Gloss Art Card 250gsm (2 side coated)', 'Gloss Art Card 310gsm': 'Gloss Art Card 310gsm (2 side coated)', 'Gloss Art Card 360gsm': 'Gloss Art Card 360gsm (2 side coated)', 'Synthetic Paper 180micron': 'Synthetic Paper 180micron (0.18mm)', 'Frosted Plastic 0.4mm': 'Frosted Plastic Card 0.4mm (400 micron)' },
       lamination: { 'Gloss Water Based Varnish (Both)': 'Gloss Water Based Varnish (Both) (Free)' },
       package: { 'Normal': 'Normal (1 Design)', '2in1': '2 In 1 (2 Designs)', '3in1': '3 In 1 (3 Designs)', '4in1': '4 In 1 (4 Designs)', '5in1': '5 In 1 (5 Designs)', '6in1': '6 In 1 (6 Designs)', '7in1': '7 In 1 (7 Designs)', '8in1': '8 In 1 (8 Designs)', '9in1': '9 In 1 (9 Designs)', '10in1': '10 In 1 (10 Designs)' },
       round_corner: { 'No': 'No Round Corner', 'Required': 'Required Round Corner' },
       holepunching: { '3mm': 'Hole Punching - Diameter 3mm', '5mm': 'Hole Punching - Diameter 5mm' },
     },
-    placeholder: ['size', 'paper', 'lamination', 'quantity'],
+    // Excard asks only these with "Please Select"; Category / Orientation / Print Colour / Creasing come preset
+    placeholderExact: ['size', 'paper', 'lamination', 'quantity'],
+    placeholderWhen: { printcolour: cfg => cfg.category === 'Plastic Card' },   // Plastic Card: 4C / 4C & White, Please Select
     bestSellerQty: [300, 500, 1000],
     // Silkscreen Spot UV is only offered with Matte Lamination (Both) on Gloss Art Card
     // 250/310gsm at qty 300, 500 or 1,000–10,000 (Excard's customRangeSpotUV); otherwise only "No Required".
@@ -278,12 +353,16 @@ const CFG_OVERRIDES = {
       embossing: cfg => !optOn(cfg.silkscreen_spot_uv),
     },
     validOpt: {
-      hot_stamping: (cfg, v) => !/Back/.test(String(v)) || /^Gloss Art Card/.test(String(cfg.paper || '')),
+      // Excard (live, every paper x print colour, 2026-09-30): Front or Back on every paper; the combined
+      // Front + Back options only on the coated cards (Gloss Art Card 250/310/360, Matte Art Card 250)
+      hot_stamping: (cfg, v) => !/\+/.test(String(v)) || /^(Gloss Art Card|Matte Art Card)/.test(String(cfg.paper || '')),
+      // Excard: Customised Creasing (fold cards) only on Gloss Art Card 250/310, Matte Art Card 250 and Super White 250
+      paper: (cfg, v) => cfg.creasing !== 'Customised Creasing' || ['Gloss Art Card 250gsm', 'Gloss Art Card 310gsm', 'Matte Art Card 250gsm', 'Super White 250gsm'].indexOf(String(v)) >= 0,
       // Excard (checked live 2026-09-30): a custom fold size allows Standard Creasing only; preset sizes allow both
       creasing: (cfg, v) => !/custom/i.test(String(cfg.size || '')) || v === 'Standard Creasing',
     },
     qtyFilter: (cfg, q) => !optOn(cfg.silkscreen_spot_uv) || q === 300 || q === 500 || (q >= 1000 && q <= 10000),
-    // suppress the engine's stale notes (every card type is now priced online; embossing is free on Excard)
+    // suppress the engine's stale notes (every card type is now priced online)
     noteOverride: { category: null, embossing: null },
     processDays: cfg => 1 + (optOn(cfg.embossing) ? 1 : 0), // Excard: 1 working day, +1 with embossing
   },
@@ -714,8 +793,9 @@ class Component extends DCLogic {
       const vo = (ov.validOpt || {})[def.key];
       if (vo) { const k = opts.filter(v => { try { return vo(cfg, v); } catch (e) { return true; } }); if (k.length) opts = k; }
       const hideW = ov.hideWhen && ov.hideWhen[def.key];
+      const ol = (ov.optLabel && ov.optLabel[def.key]) || {};
       return { key: def.key, label: niceLabel((ov.label && ov.label[def.key]) || def.label, def.key), type: def.type || (def.widget ? 'widget' : 'select'),
-        options: opts, compulsory: opts.length > 1 && ph.indexOf(def.key) >= 0, fixed: opts.length === 1 ? opts[0] : null, value: cfg[def.key], min: def.min, max: def.max,
+        options: opts, labels: opts.map(v => ol[v] || v), compulsory: opts.length > 1 && ph.indexOf(def.key) >= 0, fixed: opts.length === 1 ? opts[0] : null, value: cfg[def.key], min: def.min, max: def.max,
         hidden: hideW ? (() => { try { return !!hideW(cfg); } catch (e) { return false; } })() : false };
     }).filter(f => !f.hidden);
     const q = o.pkQtyObj(pid); let qty2 = (q && q.options ? q.options.slice() : []);
@@ -756,14 +836,14 @@ class Component extends DCLogic {
       const keys = (p.fields || []).filter(f => f.key && !optional(f)).map(f => f.key)
         .concat((ov.addFields || []).filter(a => a.type !== 'number' && !a.widget && !optional(a)).map(a => a.key))
         .concat(['quantity']);
-      this._ovCache = { p, ov: Object.assign({}, ov, { placeholder: keys }) };
+      this._ovCache = { p, ov: Object.assign({}, ov, { placeholder: ov.placeholderExact ? ov.placeholderExact.slice() : keys }) };
     }
     if (!this.plInfo(p) && !p.validity) return this._ovCache.ov;
     const sig = p.id + '|' + JSON.stringify(this.state.cfg || {});
     if (!this._ovDyn || this._ovDyn.sig !== sig) {
       const base = this._ovCache.ov, ownQf = base.qtyFilter;
       const qf = this.plInfo(p) ? (cfg, q) => { const qs = this.plQty(p, cfg); return (!qs || qs.indexOf(Number(q)) >= 0) && (!ownQf || ownQf(cfg, q)); } : ownQf;
-      this._ovDyn = { sig, ov: Object.assign({}, base, { placeholder: this.plPlaceholder(p, base.placeholder), qtyFilter: qf }) };
+      this._ovDyn = { sig, ov: Object.assign({}, base, { placeholder: (base.placeholderExact ? base.placeholder : this.plPlaceholder(p, base.placeholder)).concat(Object.keys(base.placeholderWhen || {}).filter(k => { try { return base.placeholderWhen[k](this.state.cfg || {}); } catch (e) { return false; } })), qtyFilter: qf }) };
     }
     return this._ovDyn.ov;
   }
