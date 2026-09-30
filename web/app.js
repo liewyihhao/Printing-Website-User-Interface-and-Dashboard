@@ -166,6 +166,7 @@ const dlsHsFields = () => {
   return out;
 };
 
+const PL_EXCLUDE = { 1: true };
 const STICKER_KISS_SHEETS = ['148mm x 148mm', '111mm x 148mm', '89mm x 148mm', '112mm x 98mm', '74mm x 98mm'];
 const optOn = v => v != null && v !== '' && !/^(-\s*)?(not required|no required|none|n\/a|not applicable|no\b.*|without\b.*|0)(\s*-)?$/i.test(String(v).trim());
 const CFG_OVERRIDES = {
@@ -271,6 +272,8 @@ const CFG_OVERRIDES = {
     },
     validOpt: {
       hot_stamping: (cfg, v) => !/Back/.test(String(v)) || /^Gloss Art Card/.test(String(cfg.paper || '')),
+      // Excard (checked live 2026-09-30): a custom fold size allows Standard Creasing only; preset sizes allow both
+      creasing: (cfg, v) => !/custom/i.test(String(cfg.size || '')) || v === 'Standard Creasing',
     },
     qtyFilter: (cfg, q) => !optOn(cfg.silkscreen_spot_uv) || q === 300 || q === 500 || (q >= 1000 && q <= 10000),
     // suppress the engine's stale notes (every card type is now priced online; embossing is free on Excard)
@@ -597,11 +600,105 @@ class Component extends DCLogic {
   // push a route's URL into the address bar so it is shareable/back-navigable (SPA history)
   pushUrl(path) { try { if (typeof history !== 'undefined' && path && location.pathname !== path) history.pushState({ pk: 1 }, '', path); } catch (e) {} }
   // per-product quantity model straight from the pricing engine (moq / options / chips)
+  // ===== Excard parity layer for price-list products (2026-09-30) =====
+  // A price-list product's curves ARE Excard's valid combinations: each curve key is the axis values joined
+  // by "|", and each curve's own keys are Excard's quantity dropdown. From them, per product:
+  //  · an axis question offers only the values some curve has with the customer's earlier answers
+  //  · a question whose only value is "-" / "N/A" is not asked (the engine gets that value)
+  //  · one allowed value = a fixed value (answered, not a choice); no none value left = compulsory
+  //  · the quantity list is the curve's quantities for the answers so far
+  // Values the curves never mention (e.g. "Other (Custom Size)") pass through untouched.
+  // The product's own validity rules (primary field → allowed values of other fields) apply as well.
+  plInfo(prod) {
+    if (!prod || prod.engine !== 'pricelist' || PL_EXCLUDE[prod.id]) return null;
+    this._plCache = this._plCache || {};
+    if (this._plCache[prod.id] !== undefined) return this._plCache[prod.id];
+    const E = this.pkEngine(), P = E && E.DATA.params[prod.paramKey], cv = P && P.curves, af = prod.axisFields || [];
+    let info = null;
+    if (cv && af.length && Object.keys(cv).length) {
+      const keys = Object.keys(cv).map(k => k.split('|')).filter(p => p.length === af.length);
+      if (keys.length) info = { af, keys, cv, known: af.map((_, i) => new Set(keys.map(p => p[i]))) };
+    }
+    this._plCache[prod.id] = info;
+    return info;
+  }
+  // the curve keys that agree with the answers given so far (unknown values don't narrow anything)
+  plMatch(info, cfg, upto) {
+    return info.keys.filter(p => { for (let j = 0; j < upto; j++) { const v = cfg[info.af[j]]; if (v == null || v === '' || !info.known[j].has(v)) continue; if (p[j] !== v) return false; } return true; });
+  }
+  plAllowed(prod, key, cfg) {
+    const info = this.plInfo(prod); if (!info) return null;
+    const i = info.af.indexOf(key); if (i < 0) return null;
+    const seen = []; this.plMatch(info, cfg, i).forEach(p => { if (seen.indexOf(p[i]) < 0) seen.push(p[i]); });
+    return seen;
+  }
+  plHidden(prod, key, cfg) {
+    const a = this.plAllowed(prod, key, cfg);
+    return !!(a && a.length && a.every(v => v === '-' || v === 'N/A'));
+  }
+  plValidity(prod, key, cfg, vals) {
+    const V = prod && prod.validity; if (!V || !V.rules || (V.fields || []).indexOf(key) < 0) return vals;
+    const r = V.rules[cfg[V.primary]]; if (!r || !r[key]) return vals;
+    const keep = vals.filter(o => r[key].indexOf(Array.isArray(o) ? o[0] : o) >= 0);
+    return keep.length ? keep : vals;
+  }
+  // the options an axis question offers now (field order kept)
+  plOptions(prod, key, cfg, opts) {
+    let out = this.plValidity(prod, key, cfg, opts || []);
+    const info = this.plInfo(prod), a = this.plAllowed(prod, key, cfg);
+    if (info && a && a.length) {
+      const known = info.known[info.af.indexOf(key)];
+      const keep = out.filter(o => { const v = Array.isArray(o) ? o[0] : o; return known.has(v) ? a.indexOf(v) >= 0 : (v !== '-' && v !== 'N/A'); });
+      if (keep.length) out = keep;
+    }
+    return out;
+  }
+  // Excard's quantity dropdown for the answers so far
+  plQty(prod, cfg) {
+    const info = this.plInfo(prod); if (!info) return null;
+    const qs = {}; this.plMatch(info, cfg, info.af.length).forEach(p => { Object.keys(info.cv[p.join('|')] || {}).forEach(q => { qs[q] = 1; }); });
+    const out = Object.keys(qs).map(Number).filter(n => n > 0).sort((x, y) => x - y);
+    return out.length ? out : null;
+  }
+  // after every other rule: each axis value must be one a curve allows (in axis order, so earlier answers win)
+  plEnforce(prod, cfg) {
+    const info = this.plInfo(prod), E = this.pkEngine();
+    for (const f of (prod.fields || [])) {
+      const vals = (f.options || []).map(o => Array.isArray(o) ? o[0] : o);
+      if (!vals.length) continue;
+      const ok = this.plValidity(prod, f.key, cfg, vals);
+      if (ok.length < vals.length && cfg[f.key] != null && ok.indexOf(cfg[f.key]) < 0) cfg[f.key] = ok.find(isNoneOpt) || ok[0];
+    }
+    if (!info) return cfg;
+    info.af.forEach((k, i) => {
+      const a = this.plAllowed(prod, k, cfg); if (!a || !a.length) return;
+      const v = cfg[k];
+      if (v != null && v !== '' && !info.known[i].has(v)) return;                // pass-through value (e.g. custom size)
+      if (a.indexOf(v) < 0) cfg[k] = a.find(isNoneOpt) || (a.every(x => x === '-' || x === 'N/A') ? a[0] : a.find(x => x !== '-' && x !== 'N/A') || a[0]);
+    });
+    return cfg;
+  }
+  // compulsory / fixed from the customer's explicit answers: an axis question with more than one value
+  // left and no none value among them starts at "Please Select"; a question with one value is fixed
+  plPlaceholder(prod, base) {
+    const info = this.plInfo(prod); if (!info && !(prod && prod.validity)) return base;
+    const sc = this.state.cfg || {}, add = [], fixed = [];
+    (prod.fields || []).forEach(f => {
+      const opts = (f.options || []); if (!opts.length) return;
+      const now = this.plOptions(prod, f.key, sc, opts).map(o => Array.isArray(o) ? o[0] : o).filter(v => v !== '-' && v !== 'N/A');
+      if (now.length === 1) fixed.push(f.key);
+      else if (now.length > 1 && !now.some(isNoneOpt)) add.push(f.key);
+    });
+    return base.filter(k => fixed.indexOf(k) < 0).concat(add.filter(k => base.indexOf(k) < 0));
+  }
   pkQtyObj(id) {
     const E = this.pkEngine(); if (!E) return null;
     const pid = id != null ? id : (this.state.prodId != null ? this.state.prodId : 1);
     const p = E.DATA.products.find(x => x.id === pid);
-    return (p && p.quantity) ? p.quantity : null;
+    if (!p || !p.quantity) return null;
+    const cur = this.state.prodId != null && this.state.prodId === pid;
+    const qs = this.plInfo(p) ? this.plQty(p, cur ? this.pkV() : {}) : null;
+    return qs ? Object.assign({}, p.quantity, { options: qs, moq: qs[0], maxq: qs[qs.length - 1] }) : p.quantity;
   }
   pkShown(f, cfg) {
     if (!f.showWhen) return true;
@@ -629,7 +726,14 @@ class Component extends DCLogic {
         .concat(['quantity']);
       this._ovCache = { p, ov: Object.assign({}, ov, { placeholder: keys }) };
     }
-    return this._ovCache.ov;
+    if (!this.plInfo(p) && !p.validity) return this._ovCache.ov;
+    const sig = p.id + '|' + JSON.stringify(this.state.cfg || {});
+    if (!this._ovDyn || this._ovDyn.sig !== sig) {
+      const base = this._ovCache.ov, ownQf = base.qtyFilter;
+      const qf = this.plInfo(p) ? (cfg, q) => { const qs = this.plQty(p, cfg); return (!qs || qs.indexOf(Number(q)) >= 0) && (!ownQf || ownQf(cfg, q)); } : ownQf;
+      this._ovDyn = { sig, ov: Object.assign({}, base, { placeholder: this.plPlaceholder(p, base.placeholder), qtyFilter: qf }) };
+    }
+    return this._ovDyn.ov;
   }
   pkHidden(key) { const ov = this.cfgOv(); return !!(ov.hide && ov.hide.indexOf(key) >= 0); }
   // has the customer chosen every option field currently on screen, plus quantity? (gates the
@@ -645,6 +749,8 @@ class Component extends DCLogic {
       if (d.widget === 'foilColours') return this.foilSlots(sc).every(k => !!sc[k]);
       if (d.type === 'number' || d.widget || !(f.options && f.options.length)) return true;
       if (ph.indexOf(d.key) < 0) return true; // optional question: its "Not Required" default is a valid answer
+      // a question with one valid option left is a fixed value, not a choice
+      { const vo = (this.cfgOv().validOpt || {})[d.key], cv = this.pkV(); if ((f.options || []).filter(o => { try { return !vo || vo(cv, Array.isArray(o) ? o[0] : o); } catch (e) { return true; } }).length === 1) return true; }
       return sc[d.key] != null && sc[d.key] !== ''; });
     const qf = this.cfgOv().qtyFilter;
     if (qf) { try { if (!qf(this.pkV(), this.state.qty)) return false; } catch (e) {} }
@@ -794,10 +900,11 @@ class Component extends DCLogic {
     const ov = this.cfgOv(), ph = ov.placeholder || [], sc = this.state.cfg || {};
     ph.forEach(k => { if (sc[k] == null || sc[k] === '') delete cfg[k]; });
     const gates = ov.optGate || {}, hideWhen = ov.hideWhen || {};
-    const hidden = f => { if (this.pkHidden(f.key)) return true; if (hideWhen[f.key]) { try { return !!hideWhen[f.key](cfg); } catch (e) {} } return false; };
+    const hidden = f => { if (this.pkHidden(f.key)) return true; if (this.plHidden(prod, f.key, cfg)) return true; if (hideWhen[f.key]) { try { return !!hideWhen[f.key](cfg); } catch (e) {} } return false; };
     const list = (prod.fields || []).filter(f => f.key && !hidden(f) && this.pkShown(f, cfg)).map(f => {
       let options = [];
       try { options = E.localOptions(prod, f.key, cfg) || []; } catch (e) { options = f.options || []; }
+      if (options.length) options = this.plOptions(prod, f.key, cfg, options);
       // conditional validity: when a field's gate fails, offer only its first (safe) option
       if (gates[f.key] && options.length) { try { if (!gates[f.key](cfg, this.state.qty)) options = [options[0]]; } catch (e) {} }
       // per-option validity (e.g. Back-side hot stamping needs Gloss Art Card): invalid answers are not offered
@@ -887,6 +994,7 @@ class Component extends DCLogic {
       for (const f of fields) {
         if (!this.pkShown(f, cfg)) continue;
         let opts = []; try { opts = E.localOptions(prod, f.key, cfg) || []; } catch (e) { opts = f.options || []; }
+        if (opts.length) opts = this.plOptions(prod, f.key, cfg, opts);
         // validate against the display option-override list where one exists, so an overridden
         // value (e.g. a fold-card preset size not in the engine's list) isn't reset.
         if (ovOpts[f.key]) { try { const a = typeof ovOpts[f.key] === 'function' ? ovOpts[f.key](cfg, opts) : ovOpts[f.key]; if (a && a.length) opts = a; } catch (e) {} }
@@ -913,8 +1021,11 @@ class Component extends DCLogic {
       try { if (!ov.optGate[k](cfg, this.state.qty)) { const o = E.localOptions(prod, k, cfg) || []; if (o.length) cfg[k] = o[0]; } } catch (e) {}
     }
     if (ov.validOpt) for (const k in ov.validOpt) {
-      try { if (cfg[k] != null && cfg[k] !== '' && !ov.validOpt[k](cfg, cfg[k])) { const o = (E.localOptions(prod, k, cfg) || []).map(x => Array.isArray(x) ? x[0] : x).filter(v => ov.validOpt[k](cfg, v)); if (o.length) cfg[k] = o.find(v => !optOn(v)) || o[0]; } } catch (e) {}
+      try { if (cfg[k] != null && cfg[k] !== '' && !ov.validOpt[k](cfg, cfg[k])) { const src = E.localOptions(prod, k, cfg) || [], af0 = (ov.addFields || []).find(a => a.key === k); const o = (src.length ? src : ((af0 && af0.options) || [])).map(x => Array.isArray(x) ? x[0] : x).filter(v => ov.validOpt[k](cfg, v)); if (o.length) cfg[k] = o.find(v => !optOn(v)) || o[0]; } } catch (e) {}
     }
+    // an added question with one valid option left (e.g. Creasing on a custom fold size) takes that value
+    (ov.addFields || []).forEach(a => { if (!a.options || !a.options.length || (a.showWhen && !this.pkShown(a, cfg))) return; const vo = (ov.validOpt || {})[a.key]; const l = a.options.filter(v => { try { return !vo || vo(cfg, v); } catch (e) { return true; } }); if (l.length === 1) cfg[a.key] = l[0]; });
+    this.plEnforce(prod, cfg);
     return cfg;
   }
   pkQuote(qtyOverride) {
@@ -1181,7 +1292,8 @@ class Component extends DCLogic {
       let val = cfg[k]; if (val == null || val === '') continue;
       // not chosen yet ("Please Select"): leave it out rather than listing a default
       const ph = ov.placeholder || [], sc = this.state.cfg || {};
-      if (ph.indexOf(k) >= 0 && (sc[k] == null || sc[k] === '') && (f.options || []).length) continue;
+      const vo1 = (ov.validOpt || {})[k], nValid = (f.options || []).filter(o => { try { return !vo1 || vo1(cfg, Array.isArray(o) ? o[0] : o); } catch (e) { return true; } }).length;
+      if (ph.indexOf(k) >= 0 && (sc[k] == null || sc[k] === '') && nValid > 1) continue;   // a fixed value (one option) is listed
       if (NONE_RE.test(String(val))) continue;   // drop "No/Not Required" selections (geometry fields are never none-like)
       // the size field's "Other (Custom Size)" is already covered by the combined Custom/Open Size line
       if (k === 'size' && /other|custom/i.test(String(val)) && (cfg.custom_w || cfg.fold_w_thin || cfg.fold_w_fat)) continue;
@@ -3859,6 +3971,7 @@ class Component extends DCLogic {
       // (user, 2026-09-30) a finishing the current spec can't have (only its 'not required' answer is left) is skipped for
       // customers; it appears as soon as a combination allows it (e.g. Spot UV with Matte lamination on Gloss 250/310)
       if (custView && items.some(it => it.na) && items.every(it => it.na || it.avail === false)) return null;
+      if (custView && opts.book && key !== 'quantity' && items.filter(it => it.avail !== false).length === 1) return null;
       // collapsible: the field shows only its current value until clicked; clicking reveals the
       // option cards, and picking one collapses it again (the original site's dropdown behaviour).
       // `selected` = the customer has actively chosen this field; when false the value reads in a
@@ -4206,7 +4319,13 @@ class Component extends DCLogic {
                 h('span', { style: { flex: 1, fontWeight: 500, color: answered(e) ? INK : TEAL } }, answered(e) ? String(v) : 'Please select'),
                 h('span', { role: 'button', tabIndex: 0, 'aria-label': 'Change ' + labelOf(e.key), title: 'Change', onClick: () => goTo(i, -1), onKeyDown: ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); goTo(i, -1); } }, style: { flex: 'none', display: 'inline-grid', placeItems: 'center', width: 30, height: 30, borderRadius: 0, color: MUT, cursor: 'pointer' } },
                   h('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true },
-                    h('path', { d: 'M12 20h9' }), h('path', { d: 'M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z' })))); })))]);
+                    h('path', { d: 'M12 20h9' }), h('path', { d: 'M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z' })))); }),
+            // fixed values (one option for this combination, e.g. Printing "1440 dpi solvent") — shown, not editable
+            (() => { let lines = []; try { lines = this.pkOrderSpec().lines || []; } catch (e) {}
+              const asked = {}; flat.forEach(e => { asked[String(labelOf(e.key)).toLowerCase()] = 1; });
+              return lines.filter(l => l[0] && !asked[String(l[0]).toLowerCase()] && !/quantity|size$/i.test(l[0]) && !/^(height|width)/i.test(l[0]))
+                .map(l => h('div', { key: 'fx-' + l[0], style: { display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderTop: '1px solid ' + LINE, fontSize: 13.5 } },
+                  h('span', { style: { flex: '0 0 40%', color: MUT } }, l[0]), h('span', { style: { flex: 1, fontWeight: 500, color: INK } }, l[1]), h('span', { style: { flex: 'none', width: 30 } }))); })()))]);
     }
     const curDef = (fields.find(x => x.def.key === cur.key) || {}).def || {};
     const [qText, qDesc] = curDef.widget === 'foilColours' ? ['Which foil colour would you like?', 'Choose a colour for each stamped area.'] : this.bookQuestion(cur.key, labelOf(cur.key), NAME);
