@@ -10,3 +10,7 @@ server/data.json
 
 # The generated pricing engine (pricing/engine.js, built by pricing/build.sh) IS committed: this one repo holds the whole
 # Printoka project (calculator, data, prices, website, brand assets) and a fresh clone must run as-is.
+
+# always-on dev server (web/server/keep-running.js)
+server/server.log
+server/keep-running.pid
