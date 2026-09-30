@@ -166,7 +166,24 @@ const dlsHsFields = () => {
   return out;
 };
 
+const STICKER_KISS_SHEETS = ['148mm x 148mm', '111mm x 148mm', '89mm x 148mm', '112mm x 98mm', '74mm x 98mm'];
+const optOn = v => v != null && v !== '' && !/^(-\s*)?(not required|no required|none|n\/a|not applicable|no\b.*|without\b.*|0)(\s*-)?$/i.test(String(v).trim());
 const CFG_OVERRIDES = {
+  // (user, 2026-09-30) Label Sticker: stickers only (no CD), no sample-proof or print-method questions; Kiss Cut
+  // has its own sheet sizes (Excard's list) and no separate height / width; Multiple Dieline keeps A3+ / A4 / A5.
+  'Label Sticker — Digital': {
+    hide: ['sample_proof', 'inc_printmethod', 'type'],
+    optionsOverride: { sheet_size: cfg => cfg.category === 'Kiss Cut' ? STICKER_KISS_SHEETS : ['A3+', 'A4', 'A5'] },
+    hideWhen: {
+      sheet_size: cfg => ['Multiple Dieline', 'Kiss Cut'].indexOf(cfg.category) < 0,
+      height: cfg => cfg.category === 'Kiss Cut',
+      width: cfg => cfg.category === 'Kiss Cut',
+    },
+    placeholder: ['sheet_size'],
+    // Kiss Cut is priced by quantity only; its sheet sizes are passed to the engine as its default sheet
+    priceSub: { sheet_size: STICKER_KISS_SHEETS.reduce((m, v) => (m[v] = 'A3+', m), {}) },
+  },
+  'Label Sticker — Letterpress (Hot Stamping)': { hide: ['sample_proof', 'inc_printmethod'] },
   'Business Card': {
     priceBase: bcPriceBase,
     // Excard's Business Card has no area inputs; the foil colour is a swatch picker (hs_colours widget)
@@ -239,26 +256,26 @@ const CFG_OVERRIDES = {
       holepunching: { '3mm': 'Hole Punching - Diameter 3mm', '5mm': 'Hole Punching - Diameter 5mm' },
     },
     placeholder: ['size', 'paper', 'lamination', 'quantity'],
-    // the crawl engine's note says embossing is priced; on Excard it's free (confirmed live 2026-09-24)
-    noteOverride: { embossing: null },
     bestSellerQty: [300, 500, 1000],
     // Silkscreen Spot UV is only offered with Matte Lamination (Both) on Gloss Art Card
     // 250/310gsm at qty 300, 500 or 1,000–10,000 (Excard's customRangeSpotUV); otherwise only "No Required".
+    // (user, 2026-09-30) Excard's rules are applied as logic, never shown as text to the customer:
+    //  · Silkscreen Spot UV only with Matte Lamination (Both) on Gloss Art Card 250/310gsm (else "Not available")
+    //  · Spot UV → quantity list shows only 300, 500 and 1,000 – 10,000
+    //  · Embossing is not possible with Spot UV (Spot UV is asked first, so it wins)
+    //  · hot stamping on the Back needs Gloss Art Card
+    //  · embossing adds 1 production day
     optGate: {
-      silkscreen_spot_uv: (cfg, qty) => cfg.lamination === 'Matte Lamination (Both)' && ['Gloss Art Card 250gsm', 'Gloss Art Card 310gsm'].indexOf(cfg.paper) >= 0 && [300, 500].concat([1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000]).indexOf(Number(qty)) >= 0,
+      silkscreen_spot_uv: cfg => cfg.lamination === 'Matte Lamination (Both)' && ['Gloss Art Card 250gsm', 'Gloss Art Card 310gsm'].indexOf(cfg.paper) >= 0,
+      embossing: cfg => !optOn(cfg.silkscreen_spot_uv),
     },
-    remark: {
-      silkscreen_spot_uv: 'Available with Matte Lamination (Both Sides) only. Gloss Art Card 250gsm & 310gsm only. Qty: 300, 500, 1,000 – 10,000.',
-      quantity: 'For Silkscreen Spot UV: available qty 300, 500, 1,000 – 10,000 only.',
-      package: 'This is an easy-order function for you to order multiple business card sets which are the same spec. (same size, paper, quantity and spot UV finishing for all) but contain different designs.',
-      hot_stamping: '6 colours: Gold, Silver, Green, Blue, Black & Red. Options with Back side require Gloss Art Card.',
-      holepunching: '1 hole at fixed position on the shorter side.',
-      embossing: 'Embossing adds 1 production day. Not compatible with Silkscreen Spot UV.',
-      round_corner: 'This is the actual round corner position (Front), for either portrait or landscape. No rotation required.',
+    validOpt: {
+      hot_stamping: (cfg, v) => !/Back/.test(String(v)) || /^Gloss Art Card/.test(String(cfg.paper || '')),
     },
-    // suppress the engine's stale category note (every card type is now priced online)
-    noteOverride: { category: null },
-    processDays: 1, // Excard base process day for a plain Business Card (finishing may extend it)
+    qtyFilter: (cfg, q) => !optOn(cfg.silkscreen_spot_uv) || q === 300 || q === 500 || (q >= 1000 && q <= 10000),
+    // suppress the engine's stale notes (every card type is now priced online; embossing is free on Excard)
+    noteOverride: { category: null, embossing: null },
+    processDays: cfg => 1 + (optOn(cfg.embossing) ? 1 : 0), // Excard: 1 working day, +1 with embossing
   },
   // Digital Loose Sheet: fixed sizes only (A3–A7, DL, 2DL, 310 × 445 mm). The imported "Custom width / height —
   // optional" boxes are not a choice on this product (no "Other" size), so they are not shown (user, 2026-09-29).
@@ -269,7 +286,6 @@ const CFG_OVERRIDES = {
     addFields: dlsHsFields(),
     priceSub: { hot_stamping: { '1C (Front)': 'Not Required', '1C (Back)': 'Not Required', '2C (Front)': 'Not Required', '2C (Back)': 'Not Required' } },
     priceAddon: { hot_stamping: dlsHotStampCost },
-    remark: { hot_stamping: '1 side only (Front or Back). Max 2 colours.' },
   },
   // Flyer / Brochure (Litho Offset Loose Sheet) — Excard "lo-loose-sheet".
   // Base pricing verified: A4 / Gloss Art Paper 128gsm / 4C Both / 1,000 = RM168.55 (=Excard cash).
@@ -282,14 +298,20 @@ const CFG_OVERRIDES = {
       package: { 'Normal': 'Normal', '2in1': '2 in 1', '3in1': '3 in 1', '4in1': '4 in 1', '5in1': '5 in 1', '6in1': '6 in 1', '7in1': '7 in 1', '8in1': '8 in 1', '9in1': '9 in 1', '10in1': '10 in 1' },
       hot_stamping: { 'Not Required': 'Not Required', '1C (Front)': '1C (Front)', '1C (Back)': '1C (Back)', '2C (Front)': '2C (Front)', '2C (Back)': '2C (Back)' },
     },
-    remark: {
-      colour: '1C only for Simili 80gsm / 100gsm. 3 × A4, 4 × A4 and 4 × A5 are 2-sides printing only.',
-      hot_stamping: '1 side only (front or back). Max 2 colours.',
-      hole_punching: '1 hole at centre of selected edge. Size: H 70–420mm × W 40–800mm. Not available for A1 / 4 × A4, and not with Folding / Creasing / Perforation.',
-      perforation: '1–6 lines, minimum 45mm gap. A3 perforation is landscape only. A6 available in Standard spec only. Not with Folding / Creasing / Hole Punching.',
-      fold: 'Open Size — Height 90–420mm, Width 120–630mm. After fold, width ≥ 25mm.',
-      creasing: 'Min 4mm gap between 2 creasing lines. Available area: H 148–325mm × W 210–695mm.',
-      envelope: 'Envelope quantity follows order quantity.',
+    // (user, 2026-09-30) Excard's rules as logic (not text):
+    //  · 1C printing only on Simili 80 / 100gsm · 3 × A4, 4 × A4, 4 × A5 print both sides only
+    //  · hole punching: not for A1 / 4 × A4, not with folding, creasing or perforation
+    //  · perforation: not with folding, creasing or hole punching · A3 perforation is landscape only
+    validOpt: {
+      colour: (cfg, v) => { v = String(v);
+        if (/^1C/.test(v) && !/^Simili (80|100)gsm/.test(String(cfg.paper || ''))) return false;
+        if (/\(Front\)$/.test(v) && /^(3xA4|4xA4|4xA5)/.test(String(cfg.size || ''))) return false;
+        return true; },
+      perforation_side: (cfg, v) => !/^A3/.test(String(cfg.size || '')) || /landscape/i.test(String(v)),
+    },
+    optGate: {
+      hole_punching: cfg => !/^(A1|4xA4)/.test(String(cfg.size || '')) && !optOn(cfg.fold) && !optOn(cfg.creasing) && !optOn(cfg.perforation),
+      perforation: cfg => !optOn(cfg.fold) && !optOn(cfg.creasing) && !optOn(cfg.hole_punching),
     },
   },
 };
@@ -354,6 +376,10 @@ const LABEL_SMALL = { of: 1, and: 1, or: 1, per: 1, to: 1, a: 1, an: 1, the: 1, 
 function niceLabel(raw, key) {
   const k = String(key || '').toLowerCase();
   let s = String(raw == null || raw === '' ? key || '' : raw).trim();
+  // (user, 2026-09-30) internal qualifiers stay internal: "(block quoted separately)", "— Rectangle/Standard/Custom",
+  // "— Multiple Dieline only", "(no price effect)", "(Sticker only)", "— Round only"
+  s = s.replace(/\s*\([^)]*quoted separately\)/ig, '').replace(/\s*\((no price effect|sticker only)\)/ig, '')
+    .replace(/\s*[—–-]\s*(rectangle\/standard\/custom|standard shape|round only|multiple dieline( only)?)\b.*$/i, '').trim();
   if (LABEL_NAMES[k] && (!raw || String(raw).toLowerCase() === k || String(raw) === String(raw).toLowerCase() || String(raw) === String(raw).toUpperCase())) return LABEL_NAMES[k];
   if (/_/.test(s)) s = s.replace(/_/g, ' ');
   let i = 0;
@@ -606,6 +632,8 @@ class Component extends DCLogic {
   pkHidden(key) { const ov = this.cfgOv(); return !!(ov.hide && ov.hide.indexOf(key) >= 0); }
   // has the customer chosen every option field currently on screen, plus quantity? (gates the
   // live price, like the source form). Fields hidden for the current spec don't block.
+  // production days for the current spec (a number, or a rule of the spec — e.g. embossing adds a day)
+  procDays() { const pd = this.cfgOv().processDays; if (typeof pd === 'function') { try { return pd(this.pkV()); } catch (e) { return null; } } return pd != null ? pd : null; }
   pkReady() {
     const sc = this.state.cfg || {}; let fields = [];
     try { fields = this.pkFields(); } catch (e) { return false; }
@@ -616,6 +644,8 @@ class Component extends DCLogic {
       if (d.type === 'number' || d.widget || !(f.options && f.options.length)) return true;
       if (ph.indexOf(d.key) < 0) return true; // optional question: its "Not Required" default is a valid answer
       return sc[d.key] != null && sc[d.key] !== ''; });
+    const qf = this.cfgOv().qtyFilter;
+    if (qf) { try { if (!qf(this.pkV(), this.state.qty)) return false; } catch (e) {} }
     return ok && !!this.state.qtyChosen;
   }
   // live size simulator: a proportional diagram of the selected size (standard or custom),
@@ -768,6 +798,9 @@ class Component extends DCLogic {
       try { options = E.localOptions(prod, f.key, cfg) || []; } catch (e) { options = f.options || []; }
       // conditional validity: when a field's gate fails, offer only its first (safe) option
       if (gates[f.key] && options.length) { try { if (!gates[f.key](cfg, this.state.qty)) options = [options[0]]; } catch (e) {} }
+      // per-option validity (e.g. Back-side hot stamping needs Gloss Art Card): invalid answers are not offered
+      const vo = (ov.validOpt || {})[f.key];
+      if (vo && options.length) { try { const keep = options.filter(o => vo(cfg, Array.isArray(o) ? o[0] : o)); if (keep.length) options = keep; } catch (e) {} }
       // (user, 2026-09-29) Silkscreen Spot UV is a finishing: always under Optional Finishing, on every product
       if (/spot_?uv|silkscreen/i.test(f.key) && f.section !== 'Optional Finishing') f = Object.assign({}, f, { section: 'Optional Finishing' });
       // (user, 2026-09-29) the N-in-1 "Package" question is "Duplicate with Same Configuration" (2 … 10 artworks)
@@ -876,6 +909,9 @@ class Component extends DCLogic {
     const ov = this.cfgOv();
     if (ov.optGate) for (const k in ov.optGate) {
       try { if (!ov.optGate[k](cfg, this.state.qty)) { const o = E.localOptions(prod, k, cfg) || []; if (o.length) cfg[k] = o[0]; } } catch (e) {}
+    }
+    if (ov.validOpt) for (const k in ov.validOpt) {
+      try { if (cfg[k] != null && cfg[k] !== '' && !ov.validOpt[k](cfg, cfg[k])) { const o = (E.localOptions(prod, k, cfg) || []).map(x => Array.isArray(x) ? x[0] : x).filter(v => ov.validOpt[k](cfg, v)); if (o.length) cfg[k] = o.find(v => !optOn(v)) || o[0]; } } catch (e) {}
     }
     return cfg;
   }
@@ -1164,7 +1200,7 @@ class Component extends DCLogic {
     const prod = this.pkProduct(), q = this.pkQuote(); if (!prod || !q || !q.ok) return;
     const { short, lines } = this.pkOrderSpec();
     // the configurator summary travels with the order: every option, quantity and production time
-    const pd = this.cfgOv().processDays, productionTime = pd != null ? pd + (pd === 1 ? ' working day' : ' working days') : '3 working days';
+    const pd = this.procDays(), productionTime = pd != null ? pd + (pd === 1 ? ' working day' : ' working days') : '3 working days';
     const item = { jobCode: this.newJobCode(), productId: prod.id, name: this.catName(prod.id), spec: short, specLines: lines, productionTime, qty: this.state.qty || 1, unitPrice: q.gross / (this.state.qty || 1), lineTotal: q.gross };
     const cart = (this.state.cart || []).concat([item]);
     this.setState({ cart }); this.saveCart(cart); this.go('cart');
@@ -3738,6 +3774,8 @@ class Component extends DCLogic {
     const ov = this.cfgOv();
     const ddOpen = this.state.ddOpen;
     const adv = k => { if (!opts.book) this.cfgAdvance(k); };
+    // (user, 2026-09-30) the rules behind a question are applied by the configurator itself; customers don't read them
+    const custView = !!opts.book || ['customer', 'guest'].indexOf(this.userType()) >= 0;
     // Printoka-styled custom dropdown: closed shows the value / "Please Select"; opening reveals a
     // panel with the helper note above the options — both visible only when clicked.
     const pkDropdown = (key, curText, isPlaceholder, remark, items, fieldLabel) => {
@@ -3774,6 +3812,7 @@ class Component extends DCLogic {
     // radio dot, the option label and a Select / Not available subtext; the chosen card is
     // highlighted, and options that are invalid for the current spec are greyed and disabled.
     const cardGroup = (key, fieldLabel, curText, isPh0, note, remark, items, selected, optionalQ) => {
+      if (custView) { note = null; remark = null; }
       // collapsible: the field shows only its current value until clicked; clicking reveals the
       // option cards, and picking one collapses it again (the original site's dropdown behaviour).
       // `selected` = the customer has actively chosen this field; when false the value reads in a
@@ -3823,7 +3862,7 @@ class Component extends DCLogic {
         note ? h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.55, marginBottom: 12 } }, String(note).charAt(0).toUpperCase() + String(note).slice(1)) : null,
         remark ? h('div', { style: { fontSize: 12, color: MUT, lineHeight: 1.55, background: ALT, borderRadius: 8, padding: '9px 12px', marginBottom: 14 } }, remark) : null,
         items.some(it => it.na) && items.every(it => it.na || it.avail === false)
-          ? h('div', { style: { display: 'inline-flex', alignItems: 'center', gap: 10, border: '1px dashed ' + HAIR, borderRadius: 12, background: ALT, padding: '13px 16px', fontSize: 13.5, fontWeight: 500, color: FAINT } }, 'Not available for this option')
+          ? h('div', { style: { display: 'inline-flex', alignItems: 'center', gap: 10, border: '1px dashed ' + HAIR, borderRadius: 12, background: ALT, padding: '13px 16px', fontSize: 13.5, fontWeight: 500, color: FAINT } }, 'Not Available')
           : h('div', { role: 'radiogroup', 'aria-label': fieldLabel, style: { display: 'grid', gridTemplateColumns: withImg ? 'repeat(auto-fill,minmax(130px,1fr))' : 'repeat(auto-fill,minmax(200px,1fr))', gap: 12 } }, cards));
       // the open question is lifted out as a raised card; the others dim slightly so it's clear
       // which question is being answered
@@ -3866,6 +3905,8 @@ class Component extends DCLogic {
       const isPh = !!(ov.placeholder && ov.placeholder.indexOf(def.key) >= 0);
       let dispOptions = ov.optionsOverride && ov.optionsOverride[def.key];
       dispOptions = (typeof dispOptions === 'function' ? (dispOptions(this.pkV(), options) || options) : (dispOptions || options));
+      const vo = (ov.validOpt || {})[def.key];
+      if (vo) { const cv = this.pkV(); const keep = dispOptions.filter(o => { try { return vo(cv, Array.isArray(o) ? o[0] : o); } catch (e) { return true; } }); if (keep.length) dispOptions = keep; }
       const chosen = isPh ? (this.state.cfg[def.key] != null ? this.state.cfg[def.key] : '') : (sel != null ? sel : (dispOptions[0] || ''));
       const isPh0 = isPh && (chosen === '' || chosen == null);
       let curText = isPh0 ? 'Please Select' : cleanOpt(optLabel[chosen] || chosen);
@@ -3894,14 +3935,17 @@ class Component extends DCLogic {
       // (user, 2026-09-30) when the only choice left is the 'not required' one, the finishing can't be had with
       // the current spec: say so plainly instead of offering 'No Required' as if it were a choice
       const liveOpts = items.filter(it => it.avail !== false);
-      if (liveOpts.length && liveOpts.every(it => isNoneOpt(it.val))) { liveOpts.forEach(it => { it.na = true; it.label = 'Not available for this option'; }); if (!isPh0) curText = 'Not available for this option'; }
+      if (liveOpts.length && liveOpts.every(it => isNoneOpt(it.val))) { liveOpts.forEach(it => { it.na = true; it.label = 'Not Available'; }); if (!isPh0) curText = 'Not Available'; }
       return cardGroup(def.key, label, curText, isPh0, note, remark, items, selected, !isPh && dispOptions.some(isNoneOpt));
     };
     // quantity, straight from the engine's per-product model (moq / options)
     const qobj = this.pkQtyObj();
     let qopts = (qobj && qobj.options && qobj.options.length) ? qobj.options.slice() : QTYS.slice();
+    const qf = ov.qtyFilter, qcfg = this.pkV();
+    if (qf) { const keep = qopts.filter(q => { try { return qf(qcfg, q); } catch (e) { return true; } }); if (keep.length) qopts = keep; }
+    const qtyOk = !qf || (() => { try { return qf(qcfg, s.qty); } catch (e) { return true; } })();
     const qtyPh = !!(ov.placeholder && ov.placeholder.indexOf('quantity') >= 0);
-    const qtyChosen = !qtyPh || this.state.qtyChosen;
+    const qtyChosen = (!qtyPh || this.state.qtyChosen) && qtyOk;
     if (qtyChosen && qopts.indexOf(s.qty) < 0) qopts = [s.qty].concat(qopts).sort((a, b) => a - b);
     const bestSeller = ov.bestSellerQty || [];
     const qtyRemark = ov.remark && ov.remark.quantity;
@@ -3925,8 +3969,34 @@ class Component extends DCLogic {
               h('div', { style: { textAlign: 'center', fontSize: 11, color: on ? TEAL : MUT, fontWeight: on ? 600 : 400, padding: '3px 0', borderTop: '1px solid ' + LINE } }, optLabel[val] || val)); })));
     };
     // render one field (image picker, dropdown, or value input with range hint)
+    const HW_PAIRS = { height: 'width', custom_h: 'custom_w', fold_h_thin: 'fold_w_thin', fold_h_fat: 'fold_w_fat', diecut_h: 'diecut_w' };
+    const HW_WIDTHS = {}; Object.keys(HW_PAIRS).forEach(k => { HW_WIDTHS[HW_PAIRS[k]] = k; });
+    const fdef = k => { const f = fields.find(x => x.def.key === k); return f ? f.def : null; };
+    // (user, 2026-09-30) Height and Width are asked together as one "Size" question: H × W (mm)
+    const sizePair = (hDef, wDef) => {
+      const hk = hDef.key, wk = wDef.key, hv = cfg[hk], wv = cfg[wk];
+      const set = (k, v) => this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [k]: v }) }));
+      const range = d => d.min != null && d.max != null ? d.min + '–' + d.max + ' mm' : d.min != null ? 'min ' + d.min + ' mm' : d.max != null ? 'max ' + d.max + ' mm' : '';
+      const mustWider = /greater than height/i.test(String(wDef.note || ''));
+      const bad = mustWider && hv !== '' && wv !== '' && hv != null && wv != null && parseFloat(wv) <= parseFloat(hv);
+      const box = (d, lbl) => h('label', { key: d.key, style: { display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 } },
+        h('span', { style: { fontSize: 12.5, fontWeight: 600 } }, lbl),
+        h('input', { type: 'number', min: d.min != null ? d.min : undefined, max: d.max != null ? d.max : undefined, value: cfg[d.key] || '', placeholder: range(d) || 'mm', 'aria-label': lbl,
+          onChange: e => set(d.key, e.target.value), style: Object.assign({}, selStyle, { font: '400 14px Montserrat,sans-serif' }) }),
+        range(d) ? h('span', { style: { fontSize: 11.5, color: FAINT } }, range(d)) : null);
+      const bothFilled = hv != null && hv !== '' && wv != null && wv !== '';
+      const confirmBtn = !opts.book && DIM_KEYS[wk] ? h('button', { type: 'button', disabled: !bothFilled || bad, onClick: e => { e.preventDefault(); if (bothFilled && !bad) this.setState({ sizeConfirmed: true, ddOpen: null }); },
+        style: { marginTop: 8, background: bothFilled && !bad ? TEAL : '#e9ecef', color: bothFilled && !bad ? '#fff' : MUT, border: 'none', borderRadius: 8, padding: '10px 22px', font: '600 13.5px Montserrat,sans-serif', cursor: bothFilled && !bad ? 'pointer' : 'not-allowed' } }, 'Confirm size') : null;
+      const inputs = h('div', null,
+        h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12, maxWidth: 420 } }, box(hDef, 'Height (mm)'), box(wDef, 'Width (mm)')),
+        bad ? h('div', { style: { fontSize: 12, color: TEAL, marginTop: 6 } }, 'Width must be greater than height') : null, confirmBtn);
+      return h('div', { key: 'hw_' + hk, 'data-cfgkey': 'hw_' + hk, 'data-cfgpair': hk + ',' + wk + (mustWider ? ',wider' : ''), 'data-cfgcur': bothFilled ? hv + ' × ' + wv + ' mm' : '', style: opts.book ? {} : rowStyle },
+        opts.book ? null : labelCell('Size', null), inputs);
+    };
     const renderField = ({ def, options }) => {
       if ((this.state.cfgFixed || {})[def.key] != null && (this.state.cfg || {})[def.key] === this.state.cfgFixed[def.key]) return null;
+      if (HW_WIDTHS[def.key] && fdef(HW_WIDTHS[def.key])) return null;           // asked together with its height
+      if (HW_PAIRS[def.key] && fdef(HW_PAIRS[def.key]) && !(DIM_KEYS[def.key] && this.state.sizeConfirmed)) return sizePair(def, fdef(HW_PAIRS[def.key]));
       if (def.widget === 'foilColours') return this.foilColourPicker(def, cfg);
       const imgBase = ov.optImages && ov.optImages[def.key];
       if (imgBase && options && options.length) return imgPicker(def, options, (this.state.cfg || {})[def.key], imgBase);  // nothing highlighted until picked
@@ -3988,7 +4058,13 @@ class Component extends DCLogic {
   bookQuestion(key, label, NAME) {
     const k = (String(key) + ' ' + String(label || '')).toLowerCase(), n = NAME || 'your print';
     const Q = [
+      [/^hw_/, 'What size do you need?', 'Height and width, in millimetres.'],
+      [/cut type/, 'Which cut would you like?', 'How each sticker is cut from the sheet.'],
       [/categor|product type/, 'Which type of ' + n + ' would you like?', 'Each type has its own sizes and finishes.'],
+      [/shape/, 'Which shape would you like?', ''],
+      [/sheet size/, 'Which sheet size would you like?', ''],
+      [/easy peel/, 'Do you need Easy Peel?', 'A backing slit so each sticker peels off easily.'],
+      [/diamet/, 'What diameter do you need?', 'In millimetres.'],
       [/cover.?type/, 'Which cover would you like?', 'A soft cover is flexible. A hard cover is rigid and premium.'],
       [/jawi/, 'Do you need Jawi content?', ''],
       [/duplicat/, 'Would you like to duplicate the job for multiple artworks?', 'Same settings, different designs. For example, one card for each staff member.'],
@@ -4025,7 +4101,7 @@ class Component extends DCLogic {
     const s = this.state, prod = this.pkProduct(), pid = prod ? prod.id : 0, fields = this.pkFields();
     const same = s.bookProd === pid;
     const bookKey = same ? s.bookKey : null;
-    const labelOf = k => { if (k === 'quantity') return 'Quantity'; const f = fields.find(x => x.def.key === k); return f ? niceLabel(f.def.label || k, k) : k; };
+    const labelOf = k => { if (k === 'quantity') return 'Quantity'; if (/^hw_/.test(k)) return 'Size'; const f = fields.find(x => x.def.key === k); return f ? niceLabel(f.def.label || k, k) : k; };
     const onQtyPage = k => k === 'quantity' || /duplicat/i.test(k + ' ' + labelOf(k));
     // chapters: the engine's sections (General, Optional Finishing, …), then Quantity (+ duplicate job) last
     const pages = [];
@@ -4035,7 +4111,9 @@ class Component extends DCLogic {
     if (qn.length) pages.push({ name: 'Quantity', nodes: qn });
     const flat = []; pages.forEach((p, pi) => p.nodes.forEach(n => flat.push({ n, pi, key: String(n.key) })));
     if (!flat.length) return null;
+    const numOk = (k, v) => { const f = fields.find(x => x.def.key === k); if (v == null || v === '') return false; const n = parseFloat(v); if (!(n === n)) return false; if (f && ((f.def.min != null && n < f.def.min) || (f.def.max != null && n > f.def.max))) return false; return true; };
     const answered = e => { const p = e.n.props || {};
+      if (p['data-cfgpair']) { const [hk, wk, wider] = p['data-cfgpair'].split(','), c = s.cfg || {}; return numOk(hk, c[hk]) && numOk(wk, c[wk]) && (!wider || parseFloat(c[wk]) > parseFloat(c[hk])); }
       if (p['data-cfgph'] != null) return p['data-cfgph'] !== '1';
       if (p['data-cfgans'] != null) return p['data-cfgans'] === '1';
       const f = fields.find(x => x.def.key === e.key);
@@ -4129,7 +4207,7 @@ class Component extends DCLogic {
               : null; })(),
             // order quantity + production time
             h('div', { key: 'qp', style: { display: 'flex', flexDirection: 'column', gap: 8, borderTop: '1px solid ' + LINE, paddingTop: 12, marginTop: 12, fontSize: 12.5 } },
-              [['Order Quantity', qtyChosen ? s.qty.toLocaleString() + ' pcs' : 'Please select'], ['Production time', ov.processDays != null ? (ov.processDays + (ov.processDays === 1 ? ' working day' : ' working days')) : '3 working days']]
+              [['Order Quantity', qtyChosen ? s.qty.toLocaleString() + ' pcs' : 'Please select'], ['Production time', this.procDays() != null ? (this.procDays() + (this.procDays() === 1 ? ' working day' : ' working days')) : '3 working days']]
                 .map((r, i) => h('div', { key: i, style: { display: 'flex', justifyContent: 'space-between', gap: 12, lineHeight: 1.5 } }, h('span', { style: { color: FAINT } }, r[0]), h('span', { style: { color: INK, fontWeight: 500 } }, r[1])))),
             // price
             quoteOnly
