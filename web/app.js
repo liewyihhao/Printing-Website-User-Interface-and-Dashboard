@@ -4060,18 +4060,13 @@ class Component extends DCLogic {
     }
     const goTo = (i, dir) => { const e = flat[Math.max(0, Math.min(i, flat.length - 1))]; this.setState({ bookProd: pid, bookSeen: seen, bookKey: e.key, bookDir: dir || 1, ddOpen: null }); };
     const nDone = bookDone ? flat.length : flat.filter(e => seen[e.key]).length, pct = Math.round(nDone / flat.length * 100);
-    const chapters = h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 } },
-      pages.map((p, pi) => { const on = !bookDone && cur.pi === pi, done = bookDone || p.nodes.every(n => seen[String(n.key)]);
-        const first = flat.findIndex(e => e.pi === pi);
-        return h('button', { key: p.name, type: 'button', onClick: () => goTo(first, pi < cur.pi ? -1 : 1),
-          style: { display: 'inline-flex', alignItems: 'center', gap: 8, font: '600 13px Montserrat,sans-serif', color: on ? TEAL : (done ? INK : MUT), background: on ? '#fdf2f2' : '#fff', border: '1px solid ' + (on ? TEAL : HAIR), borderRadius: 999, padding: '7px 14px 7px 8px', cursor: 'pointer' } },
-          h('span', { 'aria-hidden': 'true', style: { width: 22, height: 22, borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: 11.5, color: '#fff', background: on || done ? TEAL : '#c9ccd1' } }, done ? '✓' : String(pi + 1)),
-          p.name); }));
     const bar = h('div', { style: { height: 6, background: '#f1f2f4', borderRadius: 3, overflow: 'hidden', marginBottom: 6 } },
       h('div', { style: { width: pct + '%', height: '100%', background: TEAL, borderRadius: 3, transition: 'width .35s ease' } }));
     const shell = kids => h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 14, padding: '20px 22px 22px', background: '#fff' } }, kids);
     if (bookDone) {
-      return shell([chapters, bar,
+      return shell([
+        h('div', { key: 'nav', style: { display: 'flex', marginBottom: 18 } }, h('button', { type: 'button', onClick: () => goTo(flat.length - 1, -1), style: { font: '600 14px Montserrat,sans-serif', color: INK, background: '#fff', border: '1px solid ' + HAIR, borderRadius: 8, padding: '11px 20px', cursor: 'pointer' } }, '← Back')),
+        bar,
         h('div', { key: 'dn', style: { animation: 'pkFlip .45s cubic-bezier(.2,.8,.2,1) both', transformOrigin: 'left center' } },
           h('div', { style: { fontSize: 22, fontWeight: 600, letterSpacing: '-.01em', margin: '18px 0 6px' } }, 'All set! Ready to order your ' + NAME + '.'),
           h('div', { style: { fontSize: 14, color: MUT, marginBottom: 16 } }, 'Check your answers, then add it to your cart from the Summary.'),
@@ -4087,15 +4082,18 @@ class Component extends DCLogic {
     const [qText, qDesc] = curDef.widget === 'foilColours' ? ['Which foil colour would you like?', 'Choose a colour for each stamped area.'] : this.bookQuestion(cur.key, labelOf(cur.key), NAME);
     const ok = answered(cur), last = !flat.some(e => e !== cur && !seen[e.key]);
     const next = () => { if (!ok) return; this.setState({ bookProd: pid, bookSeen: Object.assign({}, seen, { [cur.key]: 1 }), bookKey: null, bookDir: 1, ddOpen: null }); };
-    return shell([chapters, bar,
+    // (user, 2026-09-30) Back (left) and Confirm (right) sit at the top; no chapter buttons
+    return shell([
+      h('div', { key: 'nav', style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 18 } },
+        idx > 0 ? h('button', { type: 'button', onClick: () => goTo(idx - 1, -1), style: { font: '600 14px Montserrat,sans-serif', color: INK, background: '#fff', border: '1px solid ' + HAIR, borderRadius: 8, padding: '11px 20px', cursor: 'pointer' } }, '← Back') : h('span'),
+        h('button', { type: 'button', disabled: !ok, onClick: next, style: { font: '600 14px Montserrat,sans-serif', color: '#fff', background: ok ? TEAL : '#e3a09f', border: 'none', borderRadius: 8, padding: '12px 28px', cursor: ok ? 'pointer' : 'not-allowed' } }, last ? 'Confirm & finish' : 'Confirm')),
+      bar,
       h('div', { key: 'cnt', style: { fontSize: 12, color: FAINT, marginBottom: 18 } }, 'Question ' + (seen[cur.key] ? idx + 1 : flat.filter(e => seen[e.key]).length + 1) + ' of ' + flat.length),
       h('div', { key: 'pg-' + cur.key, style: { animation: ((s.bookDir || 1) < 0 ? 'pkFlipBack' : 'pkFlip') + ' .45s cubic-bezier(.2,.8,.2,1) both', transformOrigin: (s.bookDir || 1) < 0 ? 'right center' : 'left center' } },
         h('div', { style: { fontSize: 22, fontWeight: 600, letterSpacing: '-.01em', lineHeight: 1.3, marginBottom: 6 } }, qText),
         qDesc ? h('div', { style: { fontSize: 14, color: MUT, lineHeight: 1.6, marginBottom: 18 } }, qDesc) : null,
-        cur.n),
-      h('div', { key: 'nav', style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 24, paddingTop: 18, borderTop: '1px solid ' + LINE } },
-        idx > 0 ? h('button', { type: 'button', onClick: () => goTo(idx - 1, -1), style: { font: '600 14px Montserrat,sans-serif', color: INK, background: '#fff', border: '1px solid ' + HAIR, borderRadius: 8, padding: '11px 20px', cursor: 'pointer' } }, '← Back') : h('span'),
-        h('button', { type: 'button', disabled: !ok, onClick: next, style: { font: '600 14px Montserrat,sans-serif', color: '#fff', background: ok ? TEAL : '#e3a09f', border: 'none', borderRadius: 8, padding: '12px 28px', cursor: ok ? 'pointer' : 'not-allowed' } }, last ? 'Confirm & finish' : 'Confirm'))]);
+        cur.n)
+      ]);
   }
   s_product() {
     // (user, 2026-09-29) the configurator is for members only: log in or sign up first, then it opens
