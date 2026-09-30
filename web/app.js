@@ -398,8 +398,9 @@ function niceLabel(raw, key) {
 // (user, 2026-09-29) the N-in-1 package reads as artworks: "2 In 1 (2 Designs)" / "2in1" → "2 artworks",
 // "2 IN 1 (5% Off)" → "2 artworks (5% Off)", "Normal (1 Design)" → "Normal". Display only — the priced value is unchanged.
 const cleanOpt = v => {
-  // (user, 2026-09-30) "Rectangle/Square" reads "Rectangle / Square" so it can wrap (display only)
-  const s = String(v == null ? '' : v).replace(/^-\s*(.*?)\s*-$/, '$1').trim().replace(/([A-Za-z])\/([A-Za-z])/g, '$1 / $2');
+  // (user, 2026-09-30) "Rectangle/Square" reads "Rectangle / Square" so it can wrap, and the "(2 side coated)"
+  // bracket is dropped everywhere it is shown (display only — the priced value is unchanged)
+  const s = String(v == null ? '' : v).replace(/^-\s*(.*?)\s*-$/, '$1').trim().replace(/([A-Za-z])\/([A-Za-z])/g, '$1 / $2').replace(/\s*\(2 sides? coated\)/i, '');
   const m = s.match(/^(\d+)\s*in\s*1\b\s*(?:\(\d+\s*designs?\))?\s*(.*)$/i);
   if (m) return m[1] + ' artworks' + (m[2] ? ' ' + m[2] : '');
   return /^normal \(1 design\)$/i.test(s) ? 'Normal' : s;
