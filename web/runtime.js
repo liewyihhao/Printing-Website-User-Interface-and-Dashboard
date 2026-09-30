@@ -42,7 +42,7 @@
             h('span', { style: { background: TEAL, padding: '11px 15px', display: 'flex', alignItems: 'center' } },
               img('assets/icons/search.svg', { height: 13, width: 'auto', display: 'block', filter: 'brightness(0) invert(1)' }))),
           // right cluster
-          h('div', { style: { display: 'flex', alignItems: 'center', gap: 14, fontSize: 13, color: '#231f20', whiteSpace: 'nowrap' } },
+          h('div', { style: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px 14px', maxWidth: '100%', fontSize: 13, color: '#231f20', whiteSpace: 'nowrap' } },
             h('span', { 'data-go': '_locale', style: { display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' } },
               v.localeLabel, img('assets/icons/dropdown.svg', { height: 6, width: 'auto', display: 'block', opacity: .55 })),
             h('span', { style: { width: 1, height: 16, background: HAIR } }),

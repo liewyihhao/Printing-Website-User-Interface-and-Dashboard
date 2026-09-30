@@ -377,6 +377,13 @@ const cleanOpt = v => {
   if (m) return m[1] + ' artworks' + (m[2] ? ' ' + m[2] : '');
   return /^normal \(1 design\)$/i.test(s) ? 'Normal' : s;
 };
+// (user, 2026-09-30) book configurator wording: 4C reads "Colourful", 1C "Single Colour" (display only)
+const bookOptLabel = (t, isPrint) => !isPrint ? t : String(t).replace(/\b4\s*C\b/g, 'Colourful').replace(/\b1\s*C\b/g, 'Single Colour').replace(/\b2\s*C\b/g, 'Two Colours');
+// a short plain-English line under each material: finish + how thick it feels
+const matDesc = v => { const t = String(v || ''), g = +((t.match(/(\d{2,3})\s*gsm/i) || [])[1] || 0);
+  const fin = /gloss/i.test(t) ? 'Shiny finish, vivid colours' : /matt/i.test(t) ? 'Smooth, no-glare finish' : /kraft/i.test(t) ? 'Natural brown, eco look' : /synthetic|pvc|plastic|yupo|polyester|vinyl/i.test(t) ? 'Waterproof and tear-resistant' : /linen|texture|felt|canvas/i.test(t) ? 'Textured, premium feel' : /pearl|metallic|shimmer/i.test(t) ? 'Shimmering premium finish' : /simili|woodfree|uncoated|bond/i.test(t) ? 'Natural feel, easy to write on' : '';
+  const wt = !g ? '' : g <= 120 ? 'light, like office paper' : g <= 170 ? 'flyer weight' : g <= 260 ? 'firm card' : g <= 330 ? 'thick card' : 'extra-thick premium card';
+  return [fin, wt].filter(Boolean).join(' · ') || null; };
 // an option that means "this finishing / add-on is not applied" (Excard's optional questions)
 const OPT_NONE_RE = /^(-\s*)?(not required|no required|none|n\/a|not applicable|no [a-z ]+|without [a-z ]+|no|0)(\s*-)?$/i;
 const isNoneOpt = o => OPT_NONE_RE.test(String(Array.isArray(o) ? o[0] : o).trim());
@@ -447,8 +454,8 @@ class Component extends DCLogic {
     if (v === '_closeDialog') return this.setState({ dialog: null });
     if (v.indexOf('dialog:') === 0) return this.setState({ dialog: v.slice(7) });
     // Real pricing engine: product switch + per-field config change (values may contain ':')
-    if (v.indexOf('prod:') === 0) return this.setState({ prodId: Number(v.slice(5)), cfg: {}, qty: 1000, qtyChosen: false });
-    if (v.indexOf('open:') === 0) { const pid = Number(v.slice(5)); if (typeof window !== 'undefined') window.scrollTo(0, 0); this.pushUrl(this.productPath(pid) || '/'); return this.setState({ prodId: pid, cfg: {}, cfgFixed: {}, qty: 1000, qtyChosen: false, route: 'product', megaOpen: false }); }
+    if (v.indexOf('prod:') === 0) return this.setState({ prodId: Number(v.slice(5)), cfg: {}, qty: 1000, qtyChosen: false, bookProd: null, bookSeen: {}, bookKey: null });
+    if (v.indexOf('open:') === 0) { const pid = Number(v.slice(5)); if (typeof window !== 'undefined') window.scrollTo(0, 0); this.pushUrl(this.productPath(pid) || '/'); return this.setState({ prodId: pid, cfg: {}, cfgFixed: {}, qty: 1000, qtyChosen: false, bookProd: null, bookSeen: {}, bookKey: null, route: 'product', megaOpen: false }); }
     if (v.indexOf('catopen:') === 0) { const cf = v.slice(8); if (typeof window !== 'undefined') window.scrollTo(0, 0); this.pushUrl(cf === 'all' ? '/products' : '/products/' + cf); return this.setState({ catFilter: cf, route: 'category', megaOpen: false }); }
     // packaging: library landing + separate sub-pages (configure/quote/dielines) with their own URLs
     if (v === 'packaging') { if (typeof window !== 'undefined') window.scrollTo(0, 0); this.pushUrl('/packaging'); return this.setState({ route: 'packaging', pkTab: 'library', megaOpen: false }); }
@@ -1935,7 +1942,7 @@ class Component extends DCLogic {
           if (hit != null) { cfg[k] = hit; fixed[k] = hit; }
         });
       } catch (e) {}
-      return this.setState({ prodId: pid, cfg, cfgFixed: fixed, qty: 1000, qtyChosen: false, sizeConfirmed: false, route: 'product' });
+      return this.setState({ bookProd: null, bookSeen: {}, bookKey: null, prodId: pid, cfg, cfgFixed: fixed, qty: 1000, qtyChosen: false, sizeConfirmed: false, route: 'product' });
     }
     const LOC = { au: 1, nz: 1, sg: 1, bn: 1 };
     let locale = 'my', rest = segs;
@@ -3733,6 +3740,7 @@ class Component extends DCLogic {
     const ctrlWrap = ch => h('div', { style: { maxWidth: 420 } }, ch);
     const ov = this.cfgOv();
     const ddOpen = this.state.ddOpen;
+    const adv = k => { if (!opts.book) this.cfgAdvance(k); };
     // Printoka-styled custom dropdown: closed shows the value / "Please Select"; opening reveals a
     // panel with the helper note above the options — both visible only when clicked.
     const pkDropdown = (key, curText, isPlaceholder, remark, items, fieldLabel) => {
@@ -3773,7 +3781,7 @@ class Component extends DCLogic {
       // option cards, and picking one collapses it again (the original site's dropdown behaviour).
       // `selected` = the customer has actively chosen this field; when false the value reads in a
       // lighter tone so unselected fields (placeholders and untouched defaults) stand out.
-      const open = this.state.ddOpen === key;
+      const open = !!opts.book || this.state.ddOpen === key;
       const toggle = () => this.setState(st => ({ ddOpen: st.ddOpen === key ? null : key }));
       const close = () => this.setState({ ddOpen: null });
       const withImg = open && items.some(it => it.img);
@@ -3781,10 +3789,10 @@ class Component extends DCLogic {
         const on = it.on, avail = it.avail !== false || on;
         if (withImg) return h(avail ? 'button' : 'div', {
           key: it.val != null ? it.val : i, type: avail ? 'button' : undefined,
-          onClick: avail ? (e => { e.preventDefault(); e.stopPropagation(); it.onPick(); this.cfgAdvance(key); }) : undefined,
+          onClick: avail ? (e => { e.preventDefault(); e.stopPropagation(); it.onPick(); adv(key); }) : undefined,
           role: 'radio', 'aria-checked': on ? 'true' : 'false', 'aria-disabled': avail ? undefined : 'true',
           tabIndex: avail ? 0 : -1, 'aria-label': fieldLabel + ': ' + it.label + (avail ? '' : ' (not available)'),
-          onKeyDown: avail ? (e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); e.stopPropagation(); it.onPick(); this.cfgAdvance(key); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } }) : undefined,
+          onKeyDown: avail ? (e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); e.stopPropagation(); it.onPick(); adv(key); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } }) : undefined,
           style: { display: 'flex', flexDirection: 'column', textAlign: 'left', width: '100%', font: 'inherit', padding: 0, overflow: 'hidden',
             border: '1px solid ' + (on ? TEAL : HAIR), borderRadius: 12, background: on ? '#fdf2f2' : (avail ? '#fff' : ALT),
             boxShadow: on ? '0 0 0 1px ' + TEAL : 'none', cursor: avail ? 'pointer' : 'default', opacity: avail ? 1 : 0.6, outlineOffset: '2px' } },
@@ -3795,13 +3803,14 @@ class Component extends DCLogic {
               on ? h('span', { style: { width: 7, height: 7, borderRadius: '50%', background: TEAL } }) : null),
             h('span', { style: { display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 } },
               h('span', { style: { fontSize: 12.5, fontWeight: 500, lineHeight: 1.3, color: avail ? INK : FAINT, textDecoration: avail ? 'none' : 'line-through' } }, it.label),
+              it.desc ? h('span', { style: { fontSize: 11, color: MUT, lineHeight: 1.4 } }, it.desc) : null,
               avail ? null : h('span', { style: { fontSize: 11, color: '#bdbdbd' } }, 'Not available'))));
         return h(avail ? 'button' : 'div', {
           key: it.val != null ? it.val : i, type: avail ? 'button' : undefined,
-          onClick: avail ? (e => { e.preventDefault(); e.stopPropagation(); it.onPick(); this.cfgAdvance(key); }) : undefined,
+          onClick: avail ? (e => { e.preventDefault(); e.stopPropagation(); it.onPick(); adv(key); }) : undefined,
           role: 'radio', 'aria-checked': on ? 'true' : 'false', 'aria-disabled': avail ? undefined : 'true',
           tabIndex: avail ? 0 : -1, 'aria-label': fieldLabel + ': ' + it.label + (avail ? '' : ' (not available)'),
-          onKeyDown: avail ? (e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); e.stopPropagation(); it.onPick(); this.cfgAdvance(key); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } }) : undefined,
+          onKeyDown: avail ? (e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); e.stopPropagation(); it.onPick(); adv(key); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } }) : undefined,
           style: { display: 'flex', alignItems: 'center', gap: 11, textAlign: 'left', width: '100%', font: 'inherit',
             border: '1px solid ' + (on ? TEAL : HAIR), borderRadius: 12, background: on ? '#fdf2f2' : (avail ? '#fff' : ALT),
             padding: '13px 14px', cursor: avail ? 'pointer' : 'default', opacity: avail ? 1 : 0.75, outlineOffset: '2px' } },
@@ -3809,8 +3818,14 @@ class Component extends DCLogic {
             on ? h('span', { style: { width: 8, height: 8, borderRadius: '50%', background: TEAL } }) : null),
           h('span', { style: { display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 } },
             h('span', { style: { fontSize: 13.5, fontWeight: 500, lineHeight: 1.3, color: avail ? INK : FAINT, textDecoration: avail ? 'none' : 'line-through' } }, it.label),
+            it.desc ? h('span', { style: { fontSize: 11.5, color: MUT, lineHeight: 1.4 } }, it.desc) : null,
             avail ? null : h('span', { style: { fontSize: 11.5, fontWeight: 400, color: '#bdbdbd' } }, 'Not available')));
       }) : [];
+      // book configurator: the question is its own page — the options, always open
+      if (opts.book) return h('div', { key: key, 'data-cfgkey': key, 'data-cfgans': selected ? '1' : '0', 'data-cfgph': isPh0 ? '1' : '0', 'data-cfgcur': typeof curText === 'string' ? curText : '' },
+        note ? h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.55, marginBottom: 12 } }, String(note).charAt(0).toUpperCase() + String(note).slice(1)) : null,
+        remark ? h('div', { style: { fontSize: 12, color: MUT, lineHeight: 1.55, background: ALT, borderRadius: 8, padding: '9px 12px', marginBottom: 14 } }, remark) : null,
+        h('div', { role: 'radiogroup', 'aria-label': fieldLabel, style: { display: 'grid', gridTemplateColumns: withImg ? 'repeat(auto-fill,minmax(130px,1fr))' : 'repeat(auto-fill,minmax(200px,1fr))', gap: 12 } }, cards));
       // the open question is lifted out as a raised card; the others dim slightly so it's clear
       // which question is being answered
       const anyOpen = this.state.ddOpen != null;
@@ -3868,13 +3883,15 @@ class Component extends DCLogic {
       // override and show every option as available (don't falsely grey them).
       const dispSet = {}; dispOptions.forEach(v => { dispSet[Array.isArray(v) ? v[0] : v] = 1; });
       const reliable = validVals.length > 0 && validVals.every(v => dispSet[v]);
+      const fk = def.key + ' ' + (def.label || ''), isPrintQ = /print|colou?r/i.test(fk) && !/stamp|foil|emboss/i.test(fk), isMatQ = /paper|material|stock/i.test(fk);
       const items = dispOptions.map(v => { const val = Array.isArray(v) ? v[0] : v;
-        return { val: val, label: cleanOpt(optLabel[val] || val), on: chosen === val, avail: reliable ? !!availSet[val] : true, img: pkOptImg(def.key, val),
+        return { val: val, label: opts.book ? bookOptLabel(cleanOpt(optLabel[val] || val), isPrintQ) : cleanOpt(optLabel[val] || val), desc: opts.book && isMatQ ? matDesc(val) : null, on: chosen === val, avail: reliable ? !!availSet[val] : true, img: pkOptImg(def.key, val),
           onPick: () => this.setState(st => Object.assign({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) }, isSizeField ? { sizeConfirmed: false } : {})) }; });
       // "selected" = the customer set this field explicitly (placeholder chosen, or a value in
       // state.cfg); an untouched default is NOT selected, so it reads lighter.
       const uv = this.state.cfg[def.key];
       const selected = isPh ? !isPh0 : (uv != null && uv !== '');
+      if (opts.book && !isPh0) curText = bookOptLabel(curText, isPrintQ);
       return cardGroup(def.key, label, curText, isPh0, note, remark, items, selected, !isPh && dispOptions.some(isNoneOpt));
     };
     // quantity, straight from the engine's per-product model (moq / options)
@@ -3897,7 +3914,7 @@ class Component extends DCLogic {
         h('div', { style: { fontSize: 13.5, fontWeight: 600, marginBottom: 10 } }, label),
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(92px,1fr))', gap: 10 } },
           options.map(v => { const val = Array.isArray(v) ? v[0] : v; const on = sel === val;
-            const pick = () => { this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) })); this.cfgAdvance(def.key); };
+            const pick = () => { this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) })); adv(def.key); };
             return h('div', { key: val, onClick: pick, tabIndex: 0, role: 'button', 'aria-pressed': on ? 'true' : 'false', 'aria-label': label + ': ' + (optLabel[val] || val),
               onKeyDown: e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); pick(); } },
               style: { border: '2px solid ' + (on ? TEAL : HAIR), borderRadius: 8, overflow: 'hidden', cursor: 'pointer', background: '#fff' } },
@@ -3925,7 +3942,7 @@ class Component extends DCLogic {
       // Confirm button after the WIDTH input of a custom-size pair (both dimensions filled)
       const widthHK = WIDTH_KEYS[def.key];
       const bothFilled = widthHK && cfg[widthHK] != null && cfg[widthHK] !== '' && cfg[def.key] != null && cfg[def.key] !== '';
-      const confirmBtn = widthHK ? h('button', { type: 'button', disabled: !bothFilled,
+      const confirmBtn = widthHK && !opts.book ? h('button', { type: 'button', disabled: !bothFilled,
         onClick: e => { e.preventDefault(); e.stopPropagation(); if (bothFilled) this.setState({ sizeConfirmed: true, ddOpen: null }); },
         style: { marginTop: 4, alignSelf: 'flex-start', background: bothFilled ? TEAL : '#e9ecef', color: bothFilled ? '#fff' : MUT, border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 13.5, fontWeight: 600, cursor: bothFilled ? 'pointer' : 'not-allowed', font: '600 13.5px Montserrat,sans-serif' } }, 'Confirm size') : null;
       return h('div', { key: def.key, style: rowStyle },
@@ -3962,6 +3979,124 @@ class Component extends DCLogic {
     if (opts.manualQty) groups[groups.length - 1].nodes[groups[groups.length - 1].nodes.length - 1] = opts.manualQty;
     return { groups, sectionHeader, qtyChosen, ov };
   }
+  // (user, 2026-09-30) the configurator as a guided "book": one friendly question per page, chapters
+  // General → Optional Finishing → Quantity with progress, a page-turn between questions and a Confirm
+  // button. The questions, options and valid combinations are the same engine/CFG_OVERRIDES ones as before.
+  bookQuestion(key, label, NAME) {
+    const k = (String(key) + ' ' + String(label || '')).toLowerCase(), n = NAME || 'your print';
+    const Q = [
+      [/categor|product type/, 'Which type of ' + n + ' would you like?', 'Each type has its own sizes and finishes.'],
+      [/cover.?type/, 'Which cover would you like?', 'A soft cover is flexible. A hard cover is rigid and premium.'],
+      [/jawi/, 'Do you need Jawi content?', ''],
+      [/duplicat/, 'Would you like to duplicate the job for multiple artworks?', 'Same settings, different designs. For example, one card for each staff member.'],
+      [/quantity/, 'What quantity do you need?', 'Larger quantities lower the price per piece.'],
+      [/hot.?stamp|foil/, 'Do you need Hot Stamping?', 'Metallic foil, like gold or silver, pressed onto your design.'],
+      [/spot/, 'Do you need Spot UV?', 'A glossy, raised coating on chosen areas so they stand out.'],
+      [/emboss|deboss/, 'Do you need Embossing?', 'Raises part of your design so people can feel it.'],
+      [/corner/, 'Do you need Round Corners?', 'Softly rounded corners instead of sharp ones.'],
+      [/hole|punch|drill|eyelet/, 'Do you need Hole Punching?', 'Holes for hanging, tagging or filing.'],
+      [/number/, 'Do you need running numbers?', 'Each piece printed with its own number.'],
+      [/lamin/, 'Would you like lamination?', 'A thin protective film. Matte feels soft, gloss looks shiny.'],
+      [/perforat/, 'Do you need perforation lines?', 'Tear-off lines, for example for coupons or tickets.'],
+      [/envelope/, 'Would you like envelopes?', 'Matching envelopes, packed with your order.'],
+      [/pack|shrink|wrap/, 'How would you like it packed?', 'How the finished pieces are bundled for delivery.'],
+      [/die.?cut|cutting|shape/, 'What shape should it be cut to?', 'Standard straight cut, or a custom shape.'],
+      [/varnish|coat/, 'Would you like a protective coating?', 'A clear layer that protects the print.'],
+      [/height/, 'What height do you need?', 'In millimetres.'],
+      [/width/, 'What width do you need?', 'In millimetres.'],
+      [/size/, 'Please select your size for your ' + n + '.', 'Pick a standard size, or choose a custom size and enter your own.'],
+      [/orient/, 'Do you prefer it to be Landscape or Portrait layout?', 'Landscape is wider than it is tall. Portrait is taller than it is wide.'],
+      [/paper|material|stock/, 'What material would you prefer?', 'Heavier card feels thicker and more premium.'],
+      [/fold|crease/, 'How should it be folded?', 'Choose the fold that suits how it will be read.'],
+      [/bind/, 'How should it be bound?', 'How the pages are held together.'],
+      [/page/, 'How many pages do you need?', 'Count every printed page.'],
+      [/print|colou?r|side/, 'How is the printing to be done?', 'Colourful prints in full colour (CMYK). Single Colour uses one ink.'],
+    ];
+    const hit = Q.find(q => q[0].test(k)), L = String(label || key);
+    if (!hit) return /^add\b/i.test(L) ? ['Would you like to ' + L.charAt(0).toLowerCase() + L.slice(1) + '?', ''] : ['Choose your ' + L, ''];
+    // booklets ask the same question for the cover and the inside pages: say which one
+    const part = /cover.?type/i.test(L) ? null : /^cover\b/i.test(L) ? 'cover' : /^(content|inner|inside|text)\b/i.test(L) ? 'inside pages' : null;
+    return [part ? hit[1].replace(/[?.]$/, ' for the ' + part + '?') : hit[1], hit[2]];
+  }
+  cfgBook(groups, NAME) {
+    const s = this.state, prod = this.pkProduct(), pid = prod ? prod.id : 0, fields = this.pkFields();
+    const same = s.bookProd === pid;
+    const bookKey = same ? s.bookKey : null;
+    const labelOf = k => { if (k === 'quantity') return 'Quantity'; const f = fields.find(x => x.def.key === k); return f ? niceLabel(f.def.label || k, k) : k; };
+    const onQtyPage = k => k === 'quantity' || /duplicat/i.test(k + ' ' + labelOf(k));
+    // chapters: the engine's sections (General, Optional Finishing, …), then Quantity (+ duplicate job) last
+    const pages = [];
+    groups.forEach(g => { const ns = g.nodes.filter(n => n && !onQtyPage(String(n.key))); if (ns.length) pages.push({ name: g.sec, nodes: ns }); });
+    const qn = []; groups.forEach(g => g.nodes.forEach(n => { if (n && onQtyPage(String(n.key))) qn.push(n); }));
+    qn.sort((a, b) => (a.key === 'quantity' ? 0 : 1) - (b.key === 'quantity' ? 0 : 1));
+    if (qn.length) pages.push({ name: 'Quantity', nodes: qn });
+    const flat = []; pages.forEach((p, pi) => p.nodes.forEach(n => flat.push({ n, pi, key: String(n.key) })));
+    if (!flat.length) return null;
+    const answered = e => { const p = e.n.props || {};
+      if (p['data-cfgph'] != null) return p['data-cfgph'] !== '1';
+      if (p['data-cfgans'] != null) return p['data-cfgans'] === '1';
+      const f = fields.find(x => x.def.key === e.key);
+      if (f && f.def.widget === 'foilColours') { const c = this.pkV(); return this.foilSlots(c).every(k => c[k]); }
+      if (f && f.def.type) { const v = (s.cfg || {})[e.key]; if (v == null || v === '') return false;
+        // typed sizes must be inside the product's range before the customer can move on
+        if (f.def.type === 'number') { const n = parseFloat(v); if (!(n === n) || (f.def.min != null && n < f.def.min) || (f.def.max != null && n > f.def.max)) return false; }
+        return true; }
+      return true; };
+    // the page shown is the first question (in the form's order) the customer hasn't confirmed yet, resolved on
+    // every render — so a question that only appears once an answer is in (e.g. Paper after Orientation, or one
+    // that appears earlier in the order) is always asked. Back / a chapter / "Change" pin a page explicitly.
+    const seen = same ? (s.bookSeen || {}) : {};
+    let idx = bookKey != null ? flat.findIndex(e => e.key === bookKey) : -1;
+    if (idx < 0) idx = flat.findIndex(e => !seen[e.key]);
+    const bookDone = idx < 0;
+    if (idx < 0) idx = flat.length - 1;
+    const cur = flat[idx];
+    // pin the page a moment after it shows (once any question unlocked by the last answer has appeared), so an
+    // answer that adds a question elsewhere never moves the customer off the page — only Confirm / Back do
+    this._bookCurKey = cur.key;
+    if (bookKey == null && !bookDone && typeof window !== 'undefined') {
+      clearTimeout(this._bookPinT);
+      this._bookPinT = setTimeout(() => { if (this.state.bookKey == null && this.pkProduct() && this.pkProduct().id === pid) this.setState({ bookProd: pid, bookSeen: this.state.bookProd === pid ? (this.state.bookSeen || {}) : {}, bookKey: this._bookCurKey }); }, 300);
+    }
+    const goTo = (i, dir) => { const e = flat[Math.max(0, Math.min(i, flat.length - 1))]; this.setState({ bookProd: pid, bookSeen: seen, bookKey: e.key, bookDir: dir || 1, ddOpen: null }); };
+    const nDone = bookDone ? flat.length : flat.filter(e => seen[e.key]).length, pct = Math.round(nDone / flat.length * 100);
+    const chapters = h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 } },
+      pages.map((p, pi) => { const on = !bookDone && cur.pi === pi, done = bookDone || p.nodes.every(n => seen[String(n.key)]);
+        const first = flat.findIndex(e => e.pi === pi);
+        return h('button', { key: p.name, type: 'button', onClick: () => goTo(first, pi < cur.pi ? -1 : 1),
+          style: { display: 'inline-flex', alignItems: 'center', gap: 8, font: '600 13px Montserrat,sans-serif', color: on ? TEAL : (done ? INK : MUT), background: on ? '#fdf2f2' : '#fff', border: '1px solid ' + (on ? TEAL : HAIR), borderRadius: 999, padding: '7px 14px 7px 8px', cursor: 'pointer' } },
+          h('span', { 'aria-hidden': 'true', style: { width: 22, height: 22, borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: 11.5, color: '#fff', background: on || done ? TEAL : '#c9ccd1' } }, done ? '✓' : String(pi + 1)),
+          p.name); }));
+    const bar = h('div', { style: { height: 6, background: '#f1f2f4', borderRadius: 3, overflow: 'hidden', marginBottom: 6 } },
+      h('div', { style: { width: pct + '%', height: '100%', background: TEAL, borderRadius: 3, transition: 'width .35s ease' } }));
+    const shell = kids => h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 14, padding: '20px 22px 22px', background: '#fff' } }, kids);
+    if (bookDone) {
+      return shell([chapters, bar,
+        h('div', { key: 'dn', style: { animation: 'pkFlip .45s cubic-bezier(.2,.8,.2,1) both', transformOrigin: 'left center' } },
+          h('div', { style: { fontSize: 22, fontWeight: 600, letterSpacing: '-.01em', margin: '18px 0 6px' } }, 'All set! Ready to order your ' + NAME + '.'),
+          h('div', { style: { fontSize: 14, color: MUT, marginBottom: 16 } }, 'Check your answers, then add it to your cart from the Summary.'),
+          h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden' } },
+            flat.map((e, i) => { const p = e.n.props || {}, fd = (fields.find(x => x.def.key === e.key) || {}).def || {}, c = this.pkV();
+              const v = fd.widget === 'foilColours' ? this.foilSlots(c).map(k => c[k]).filter(Boolean).join(', ') : (p['data-cfgcur'] || (s.cfg || {})[e.key] || '—');
+              return h('div', { key: e.key, style: { display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderTop: i ? '1px solid ' + LINE : 'none', fontSize: 13.5 } },
+                h('span', { style: { flex: '0 0 40%', color: MUT } }, labelOf(e.key)),
+                h('span', { style: { flex: 1, fontWeight: 500, color: answered(e) ? INK : TEAL } }, answered(e) ? String(v) : 'Please select'),
+                h('span', { role: 'button', tabIndex: 0, onClick: () => goTo(i, -1), onKeyDown: ev => { if (ev.key === 'Enter') goTo(i, -1); }, style: { color: '#2f7fd1', textDecoration: 'underline', cursor: 'pointer', fontSize: 13 } }, 'Change')); })))]);
+    }
+    const curDef = (fields.find(x => x.def.key === cur.key) || {}).def || {};
+    const [qText, qDesc] = curDef.widget === 'foilColours' ? ['Which foil colour would you like?', 'Choose a colour for each stamped area.'] : this.bookQuestion(cur.key, labelOf(cur.key), NAME);
+    const ok = answered(cur), last = !flat.some(e => e !== cur && !seen[e.key]);
+    const next = () => { if (!ok) return; this.setState({ bookProd: pid, bookSeen: Object.assign({}, seen, { [cur.key]: 1 }), bookKey: null, bookDir: 1, ddOpen: null }); };
+    return shell([chapters, bar,
+      h('div', { key: 'cnt', style: { fontSize: 12, color: FAINT, marginBottom: 18 } }, 'Question ' + (seen[cur.key] ? idx + 1 : flat.filter(e => seen[e.key]).length + 1) + ' of ' + flat.length),
+      h('div', { key: 'pg-' + cur.key, style: { animation: ((s.bookDir || 1) < 0 ? 'pkFlipBack' : 'pkFlip') + ' .45s cubic-bezier(.2,.8,.2,1) both', transformOrigin: (s.bookDir || 1) < 0 ? 'right center' : 'left center' } },
+        h('div', { style: { fontSize: 22, fontWeight: 600, letterSpacing: '-.01em', lineHeight: 1.3, marginBottom: 6 } }, qText),
+        qDesc ? h('div', { style: { fontSize: 14, color: MUT, lineHeight: 1.6, marginBottom: 18 } }, qDesc) : null,
+        cur.n),
+      h('div', { key: 'nav', style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 24, paddingTop: 18, borderTop: '1px solid ' + LINE } },
+        idx > 0 ? h('button', { type: 'button', onClick: () => goTo(idx - 1, -1), style: { font: '600 14px Montserrat,sans-serif', color: INK, background: '#fff', border: '1px solid ' + HAIR, borderRadius: 8, padding: '11px 20px', cursor: 'pointer' } }, '← Back') : h('span'),
+        h('button', { type: 'button', disabled: !ok, onClick: next, style: { font: '600 14px Montserrat,sans-serif', color: '#fff', background: ok ? TEAL : '#e3a09f', border: 'none', borderRadius: 8, padding: '12px 28px', cursor: ok ? 'pointer' : 'not-allowed' } }, last ? 'Confirm & finish' : 'Confirm'))]);
+  }
   s_product() {
     // (user, 2026-09-29) the configurator is for members only: log in or sign up first, then it opens
     if (!this.state.user) {
@@ -3974,17 +4109,14 @@ class Component extends DCLogic {
     const quoteOnly = q && q.quoteOnly;
     const ready = this.pkReady();
     const NAME = prod ? this.catName(prod.id) : 'Business Card';
-    const { groups, sectionHeader, qtyChosen, ov } = this.cfgQuestionGroups();
+    const { groups, sectionHeader, qtyChosen, ov } = this.cfgQuestionGroups({ book: true });
     return h('div', null,
       this.cfgBanner(prod, NAME),
       h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '14px 20px 0' } },
       h('div', { style: { fontSize: 12.5, color: FAINT, marginBottom: 14 } },
         h('span', { 'data-go': 'home', style: { color: TEAL } }, 'Home'), ' › ', h('span', { 'data-go': prod ? ('catopen:' + this.catCategoryOf(prod.id)) : 'category', style: { color: TEAL } }, prod ? this.catCategoryLabel(this.catCategoryOf(prod.id)) : 'Products'), ' › ', NAME),
       h('div', { className: 'pk-cfg-grid', style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 352px', gap: 28, alignItems: 'start' } },
-        h('div', null,
-          h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4, border: '1px solid ' + HAIR, borderRadius: 14, padding: 20 } },
-            h('div', { style: { fontSize: 18, fontWeight: 600, letterSpacing: '-.01em', color: INK, borderBottom: '2px solid ' + TEAL, paddingBottom: 8, marginBottom: 4, display: 'inline-block' } }, 'Craft your specification'),
-            groups.map(g => h('div', { key: g.sec, style: { display: 'flex', flexDirection: 'column' } }, sectionHeader(g.sec), g.nodes)))),
+        h('div', null, this.cfgBook(groups, NAME)),
         h('div', { style: { position: 'sticky', top: 122, display: 'flex', flexDirection: 'column', gap: 14 } },
           this.card([
             h('div', { key: 'h', style: { fontSize: 18, fontWeight: 600, letterSpacing: '-.01em', color: INK, borderBottom: '2px solid ' + TEAL, paddingBottom: 8, marginBottom: 12, display: 'inline-block' } }, 'Summary'),
@@ -4346,7 +4478,7 @@ class Component extends DCLogic {
     const link = (label, on, color) => h('span', { role: 'button', tabIndex: 0, onClick: on, onKeyDown: e => { if (e.key === 'Enter') on(); }, style: { fontSize: 14, color: color || '#2f7fd1', textDecoration: 'underline', cursor: 'pointer' } }, label);
     const icon = (d, on, label) => h('span', { role: 'button', tabIndex: 0, 'aria-label': label, title: label, onClick: on, onKeyDown: e => { if (e.key === 'Enter') on(); }, style: { display: 'inline-grid', placeItems: 'center', cursor: 'pointer', color: MUT } },
       h('svg', { width: 17, height: 17, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }, d.map((p, k) => h('path', { key: k, d: p }))));
-    const openProd = pid => { if (typeof window !== 'undefined') window.scrollTo(0, 0); this.pushUrl(this.productPath(pid) || '/'); this.setState({ prodId: pid, cfg: {}, qty: 1000, qtyChosen: false, route: 'product', megaOpen: false }); };
+    const openProd = pid => { if (typeof window !== 'undefined') window.scrollTo(0, 0); this.pushUrl(this.productPath(pid) || '/'); this.setState({ prodId: pid, cfg: {}, qty: 1000, qtyChosen: false, bookProd: null, bookSeen: {}, bookKey: null, route: 'product', megaOpen: false }); };
     const PENCIL = ['M12 20h9', 'M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z'], TRASH = ['M3 6h18', 'M8 6V4h8v2', 'M19 6l-1 14H6L5 6', 'M10 11v6', 'M14 11v6'];
     if (!cart.length) return page(box([title('Cart'),
       h('div', { key: 'e', style: { fontSize: 15, color: MUT, marginBottom: 18 } }, 'Your cart is empty.'),
