@@ -4131,6 +4131,7 @@ class Component extends DCLogic {
     let idx = bookKey != null ? flat.findIndex(e => e.key === bookKey) : -1;
     if (idx < 0) idx = flat.findIndex(e => !seen[e.key]);
     const bookDone = idx < 0;
+    this._bookDoneNow = bookDone; // the Summary card beside the book shows only price + time on the finished page
     if (idx < 0) idx = flat.length - 1;
     const cur = flat[idx];
     // pin the page a moment after it shows (once any question unlocked by the last answer has appeared), so an
@@ -4150,15 +4151,17 @@ class Component extends DCLogic {
         h('div', { key: 'nav', style: { display: 'flex', marginBottom: 18 } }, h('button', { type: 'button', onClick: () => goTo(flat.length - 1, -1), style: { font: '600 14px Montserrat,sans-serif', color: INK, background: '#fff', border: '1px solid ' + HAIR, borderRadius: 8, padding: '11px 20px', cursor: 'pointer' } }, '← Back')),
         bar,
         h('div', { key: 'dn', style: { animation: 'pkFlip .45s cubic-bezier(.2,.8,.2,1) both', transformOrigin: 'left center' } },
-          h('div', { style: { fontSize: 22, fontWeight: 600, letterSpacing: '-.01em', margin: '18px 0 6px' } }, 'All set! Ready to order your ' + NAME + '.'),
-          h('div', { style: { fontSize: 14, color: MUT, marginBottom: 16 } }, 'Check your answers, then add it to your cart from the Summary.'),
+          // (user, 2026-09-30) the finished page is the Summary: the selections, with the price and time beside it
+          h('div', { style: { fontSize: 18, fontWeight: 600, letterSpacing: '-.01em', color: INK, borderBottom: '2px solid ' + TEAL, paddingBottom: 8, margin: '18px 0 14px', display: 'inline-block' } }, 'Summary'),
           h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden' } },
             flat.map((e, i) => { const p = e.n.props || {}, fd = (fields.find(x => x.def.key === e.key) || {}).def || {}, c = this.pkV();
               const v = fd.widget === 'foilColours' ? this.foilSlots(c).map(k => c[k]).filter(Boolean).join(', ') : (p['data-cfgcur'] || (s.cfg || {})[e.key] || '—');
               return h('div', { key: e.key, style: { display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderTop: i ? '1px solid ' + LINE : 'none', fontSize: 13.5 } },
                 h('span', { style: { flex: '0 0 40%', color: MUT } }, labelOf(e.key)),
                 h('span', { style: { flex: 1, fontWeight: 500, color: answered(e) ? INK : TEAL } }, answered(e) ? String(v) : 'Please select'),
-                h('span', { role: 'button', tabIndex: 0, onClick: () => goTo(i, -1), onKeyDown: ev => { if (ev.key === 'Enter') goTo(i, -1); }, style: { color: '#2f7fd1', textDecoration: 'underline', cursor: 'pointer', fontSize: 13 } }, 'Change')); })))]);
+                h('span', { role: 'button', tabIndex: 0, 'aria-label': 'Change ' + labelOf(e.key), title: 'Change', onClick: () => goTo(i, -1), onKeyDown: ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); goTo(i, -1); } }, style: { flex: 'none', display: 'inline-grid', placeItems: 'center', width: 30, height: 30, borderRadius: 8, color: MUT, cursor: 'pointer' } },
+                  h('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true },
+                    h('path', { d: 'M12 20h9' }), h('path', { d: 'M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z' })))); })))]);
     }
     const curDef = (fields.find(x => x.def.key === cur.key) || {}).def || {};
     const [qText, qDesc] = curDef.widget === 'foilColours' ? ['Which foil colour would you like?', 'Choose a colour for each stamped area.'] : this.bookQuestion(cur.key, labelOf(cur.key), NAME);
@@ -4170,7 +4173,7 @@ class Component extends DCLogic {
         idx > 0 ? h('button', { type: 'button', onClick: () => goTo(idx - 1, -1), style: { font: '600 14px Montserrat,sans-serif', color: INK, background: '#fff', border: '1px solid ' + HAIR, borderRadius: 8, padding: '11px 20px', cursor: 'pointer' } }, '← Back') : h('span'),
         h('button', { type: 'button', disabled: !ok, onClick: next, style: { font: '600 14px Montserrat,sans-serif', color: '#fff', background: ok ? TEAL : '#e3a09f', border: 'none', borderRadius: 8, padding: '12px 28px', cursor: ok ? 'pointer' : 'not-allowed' } }, last ? 'Confirm & finish' : 'Confirm')),
       bar,
-      h('div', { key: 'cnt', style: { fontSize: 12, color: FAINT, marginBottom: 18 } }, 'Question ' + (seen[cur.key] ? idx + 1 : flat.filter(e => seen[e.key]).length + 1) + ' of ' + flat.length),
+      h('div', { key: 'gap', style: { height: 18 } }), // (user, 2026-09-30) no 'Question N of M' line — the bar shows progress
       h('div', { key: 'pg-' + cur.key, style: { animation: ((s.bookDir || 1) < 0 ? 'pkFlipBack' : 'pkFlip') + ' .45s cubic-bezier(.2,.8,.2,1) both', transformOrigin: (s.bookDir || 1) < 0 ? 'right center' : 'left center' } },
         h('div', { style: { fontSize: 22, fontWeight: 600, letterSpacing: '-.01em', lineHeight: 1.3, marginBottom: 6 } }, qText),
         qDesc ? h('div', { style: { fontSize: 14, color: MUT, lineHeight: 1.6, marginBottom: 18 } }, qDesc) : null,
@@ -4199,17 +4202,17 @@ class Component extends DCLogic {
         h('div', null, this.cfgBook(groups, NAME)),
         h('div', { style: { position: 'sticky', top: 122, display: 'flex', flexDirection: 'column', gap: 14 } },
           this.card([
-            h('div', { key: 'h', style: { fontSize: 18, fontWeight: 600, letterSpacing: '-.01em', color: INK, borderBottom: '2px solid ' + TEAL, paddingBottom: 8, marginBottom: 12, display: 'inline-block' } }, 'Summary'),
-            // live spec summary, straight from the current configuration
-            (() => { let lines = []; try { lines = (this.pkOrderSpec().lines || []); } catch (e) {} return lines.length
+            h('div', { key: 'h', style: { fontSize: 18, fontWeight: 600, letterSpacing: '-.01em', color: INK, borderBottom: '2px solid ' + TEAL, paddingBottom: 8, marginBottom: 12, display: 'inline-block' } }, this._bookDoneNow ? 'Price' : 'Summary'),
+            // live spec summary, straight from the current configuration (not repeated once the book is finished)
+            this._bookDoneNow ? null : (() => { let lines = []; try { lines = (this.pkOrderSpec().lines || []); } catch (e) {} return lines.length
               ? h('div', { key: 'spec', style: { display: 'flex', flexDirection: 'column', gap: 8 } },
                   lines.map((l, i) => h('div', { key: i, style: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 14, fontSize: 12.5, lineHeight: 1.5 } },
                     h('span', { style: { color: FAINT, flex: '0 0 auto' } }, l[0]), h('span', { style: { color: INK, fontWeight: 500, textAlign: 'right' } }, l[1]))))
               : null; })(),
             // order quantity + production time
-            h('div', { key: 'qp', style: { display: 'flex', flexDirection: 'column', gap: 8, borderTop: '1px solid ' + LINE, paddingTop: 12, marginTop: 12, fontSize: 12.5 } },
-              [['Order Quantity', qtyChosen ? s.qty.toLocaleString() + ' pcs' : 'Please select'], ['Production time', this.procDays() != null ? (this.procDays() + (this.procDays() === 1 ? ' working day' : ' working days')) : '3 working days']]
-                .map((r, i) => h('div', { key: i, style: { display: 'flex', justifyContent: 'space-between', gap: 12, lineHeight: 1.5 } }, h('span', { style: { color: FAINT } }, r[0]), h('span', { style: { color: INK, fontWeight: 500 } }, r[1])))),
+            h('div', { key: 'qp', style: Object.assign({ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12.5 }, this._bookDoneNow ? {} : { borderTop: '1px solid ' + LINE, paddingTop: 12, marginTop: 12 }) },
+              [this._bookDoneNow ? null : ['Order Quantity', qtyChosen ? s.qty.toLocaleString() + ' pcs' : 'Please select'], ['Production time', this.procDays() != null ? (this.procDays() + (this.procDays() === 1 ? ' working day' : ' working days')) : '3 working days']]
+                .filter(Boolean).map((r, i) => h('div', { key: i, style: { display: 'flex', justifyContent: 'space-between', gap: 12, lineHeight: 1.5 } }, h('span', { style: { color: FAINT } }, r[0]), h('span', { style: { color: INK, fontWeight: 500 } }, r[1])))),
             // price
             quoteOnly
               ? h('div', { key: 'pr', style: { borderTop: '1px solid ' + LINE, paddingTop: 14, marginTop: 12 } }, h('span', { style: { fontSize: 22, fontWeight: 600, color: TEAL } }, 'Price on request'))
