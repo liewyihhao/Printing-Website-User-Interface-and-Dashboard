@@ -479,7 +479,7 @@ class Component extends DCLogic {
     if (v === 'doquote') return this.submitQuote();
     if (v.indexOf('doc:') === 0) { const rest = v.slice(4), i = rest.indexOf(':'); return this.openDoc(rest.slice(i + 1), rest.slice(0, i)); }
     if (v.indexOf('vieworder:') === 0) return this.openOrder(v.slice(10));
-    if (v.indexOf('trackorder:') === 0) { const oid = v.slice(11); if (typeof window !== 'undefined') window.scrollTo(0, 0); this.setState({ route: 'track', trackInput: oid, megaOpen: false }); return this.trackLookup(oid); }
+    if (v.indexOf('trackorder:') === 0) { const oid = v.slice(11); if (typeof window !== 'undefined') window.scrollTo(0, 0); this.setState({ route: 'track', trackInput: oid, trackJobTab: 0, megaOpen: false }); return this.trackLookup(oid); }
     if (v.indexOf('cfg:') === 0) {
       const rest = v.slice(4), i = rest.indexOf(':'), k = rest.slice(0, i), val = rest.slice(i + 1);
       return this.setState(s => ({ cfg: Object.assign({}, s.cfg, { [k]: val }) }));
@@ -5005,7 +5005,7 @@ class Component extends DCLogic {
       const rows = orders.filter(o => !oq || o.id.toLowerCase().indexOf(oq) >= 0).map(o => [
         (o.createdAt || '').slice(0, 10),
         h('span', { 'data-go': 'trackorder:' + o.id, style: { color: '#E52220', fontWeight: 600, cursor: 'pointer' } }, o.id.replace('PO-2026-', '')),
-        this.pillDot(o.status === 'paid' ? 'Payment received' : o.status === 'completed' ? 'Completed' : o.status === 'pending_payment' ? 'Pending payment' : (o.status || '').replace(/_/g, ' '), o.status === 'completed' ? 'ok' : o.status === 'paid' ? 'teal' : 'warn'),
+        (() => { const st = this.orderCustStatus(o); return this.pillDot(st[0], st[1]); })(),
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } }, (o.items || []).map((it, i) => h('span', { key: i, style: { fontSize: 12.5 } }, it.product))),
         this.money(o.total),
         h('span', { style: { display: 'flex', gap: 12 } },
@@ -5015,7 +5015,7 @@ class Component extends DCLogic {
           (o.payment && o.payment.status === 'validated') ? h('span', { role: 'button', tabIndex: 0, onClick: () => this.reorder(o), title: 'Order the same again', style: { cursor: 'pointer', color: TEAL, fontWeight: 600, fontSize: 12.5 } }, 'Reorder') : null),
       ]);
       content = [stitle('Orders'),
-        this.filterRow({ searchKey: 'coSearch', dateKey: 'coDate', statusKey: 'coStatus', statuses: ['Payment received', 'Completed', 'Pending payment'] }),
+        this.filterRow({ searchKey: 'coSearch', dateKey: 'coDate', statusKey: 'coStatus', statuses: ['Pending payment', 'Order received', 'Artwork check', 'In production', 'Shipped', 'Delivered'] }),
         this.dataCard([{ label: 'Date' }, { label: 'Order' }, { label: 'Status' }, { label: 'Items' }, { label: 'Amount', right: true }, { label: '', right: true }], rows, { empty: 'No orders yet.', minWidth: 760 })];
     } else if (tab === 'Invoices') {
       // (user, 2026-09-29) an invoice exists only once the order is paid (online, or confirmed by prepress)
@@ -5086,9 +5086,8 @@ class Component extends DCLogic {
         h('span', { onClick: () => { this.quoteView(q.id); this.openDoc(q.id, 'quote'); }, style: { color: '#E52220', fontWeight: 600, cursor: 'pointer' } }, q.id),
         this.pillDot({ requested: 'Being priced', issued: 'Ready for you', reviewed: 'Awaiting you', accepted: 'Accepted', amendment: 'Updating', declined: 'Closed' }[q.status] || q.status, q.status === 'accepted' ? 'ok' : q.status === 'issued' ? 'warn' : 'teal'),
         (q.requirement && q.requirement.product) || 'Custom job',
-        // who is handling it: walk-in → outlet staff + scheduler; website → scheduler
-        h('div', { style: { fontSize: 12.5, lineHeight: 1.6 } }, q.handledBy && q.handledBy.outletStaff ? h('div', null, h('span', { style: { color: FAINT } }, 'Outlet: '), q.handledBy.outletStaff) : null,
-          h('div', null, h('span', { style: { color: FAINT } }, 'Scheduler: '), (q.handledBy && q.handledBy.scheduler) || (['requested', 'amendment'].indexOf(q.status) >= 0 ? 'Being assigned' : '—'))),
+        // who is handling it (user, 2026-09-30): the outlet's name and the outlet staff only; a website quote → Printoka
+        h('div', { style: { fontSize: 12.5, lineHeight: 1.6 } }, q.handledBy ? [h('div', { key: 'o' }, q.handledBy.outlet), q.handledBy.staff ? h('div', { key: 's', style: { color: MUT } }, q.handledBy.staff) : null] : 'Printoka'),
         q.price != null ? this.rm(q.price) : '—',
         (q.status === 'issued' || q.status === 'reviewed') ? h('span', { onClick: () => this.quoteAccept(q.id), style: { color: '#E52220', fontWeight: 600, cursor: 'pointer', fontSize: 13 } }, 'Accept & pay') : (q.orderId ? h('span', { 'data-go': 'trackorder:' + q.orderId, style: { color: '#E52220', fontWeight: 600, cursor: 'pointer', fontSize: 13 } }, 'Track') : ''),
       ]);
@@ -5146,6 +5145,32 @@ class Component extends DCLogic {
   }
 
   // ===== ORDER TRACKING =====
+  // a job's status in the customer's words (the internal department statuses stay inside Printoka)
+  custJobLabel(status, dest) {
+    const toOutlet = dest === 'outlet';
+    if (status === 'intake') return 'Order received';
+    if (status === 'rejected') return 'Action needed: new artwork';
+    if (status === 'prepress_issue') return 'Awaiting your approval';
+    if (['prepress', 'escalated', 'artwork_ready'].indexOf(status) >= 0) return 'Artwork check';
+    if (status === 'dispatched') return toOutlet ? 'On the way to the outlet' : 'Shipped';
+    if (status === 'ready_collect') return 'Ready to collect';
+    if (status === 'completed') return toOutlet ? 'Collected' : 'Delivered';
+    return 'In production';
+  }
+  // (user, 2026-09-30) My Orders follows the jobs: Pending payment until paid, then where the jobs are — anything that
+  // needs the customer first, else the job furthest behind (with how many jobs are at that stage)
+  orderCustStatus(o) {
+    if (o.status === 'pending_payment' || (o.payment && o.payment.status !== 'validated' && !o.creditTerms)) return ['Pending payment', 'warn'];
+    const js = o.jobStages || [];
+    if (!js.length) return [o.status === 'completed' ? 'Completed' : 'Payment received', o.status === 'completed' ? 'ok' : 'teal'];
+    const need = js.find(j => j.status === 'rejected' || j.status === 'prepress_issue');
+    if (need) return [this.custJobLabel(need.status, need.dest), 'bad'];
+    const lag = js.slice().sort((a, b) => this.trackStage(a.status) - this.trackStage(b.status))[0];
+    const label = this.custJobLabel(lag.status, lag.dest);
+    const same = js.filter(j => this.custJobLabel(j.status, j.dest) === label).length;
+    const done = label === 'Delivered' || label === 'Collected';
+    return [label + (js.length > 1 && same < js.length ? ' · ' + same + ' of ' + js.length + ' jobs' : ''), done ? 'ok' : 'teal'];
+  }
   trackStage(status) {
     const map = { intake: 0, prepress: 1, prepress_issue: 1, escalated: 1, rejected: 1, artwork_ready: 1, scheduling: 2, to_outsource: 2, to_inhouse: 2, printing: 2, outsourcing: 2, printed: 2, inbound: 2, logistics: 2, dispatched: 3, at_hub: 3, ready_collect: 3, completed: 4 };
     return map[status] != null ? map[status] : 0;
@@ -5163,6 +5188,7 @@ class Component extends DCLogic {
       lookup,
       o === false ? h('div', { style: { color: '#c0392b', fontSize: 13 } }, 'No order found with that number.') : null);
     const jobs = o.jobs || [];
+    const jobTab = Math.min(this.state.trackJobTab || 0, Math.max(0, jobs.length - 1));
     const paid = o.payment && o.payment.status === 'validated';
     // where it ends up: an outlet (the customer collects there) or the customer's own address — follows logistics' Send to
     const dest = (jobs.find(j => j.finalDestination) || {}).finalDestination || null;
@@ -5203,9 +5229,8 @@ class Component extends DCLogic {
         h('div', { style: { display: 'flex', gap: 9, flexWrap: 'wrap' } }, paid ? this.btn('Invoice', 'ghost', 'doc:invoice:' + o.id) : null, this.btn('Order slip', 'ghost', 'doc:slip:' + o.id), this.btn('Contact support', 'teal', 'crm'))),
       own ? null : lookup,
       h('div', { key: 't', style: { border: '1px solid #e6e8eb', background: '#fff', padding: '22px 24px', marginBottom: 16 } },
-        h('div', { style: { fontSize: 14, color: MUT } }, jobs.length + (jobs.length === 1 ? ' job' : ' jobs') + ' in this order · each job is tracked below'),
         // (user, 2026-09-29) "Collect at:" / "Delivering to:" on its own line, then the name, then the address
-        dest ? h('div', { style: { marginTop: 16, fontSize: 14, color: INK, lineHeight: 1.6 } },
+        dest ? h('div', { style: { fontSize: 14, color: INK, lineHeight: 1.6 } },
           h('div', { style: { fontWeight: 600 } }, atOutlet ? 'Collect at:' : 'Delivering to:'),
           h('div', null, String(dest.name || '').replace(/\s*\((own facility|partner)\)\s*$/i, '')),
           dest.address ? h('div', { style: { color: MUT } }, dest.address + (/\.$/.test(dest.address) ? '' : '.')) : null,
@@ -5217,8 +5242,14 @@ class Component extends DCLogic {
             h('span', { style: { fontSize: 13, color: '#1f5e2a', flex: 1 } }, 'Your order is on its way. Let us know once it arrives.'),
             h('span', { onClick: () => fetch('/api/orders/' + o.id + '/received', { method: 'POST', headers: this.authHeaders() }).then(r => r.json()).then(d => { if (d.order) this.setState({ trackOrder: d.order }); }).catch(() => {}),
               style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13.5, padding: '10px 18px', borderRadius: 8, cursor: 'pointer' } }, 'I’ve received my order')) : null),
+      // (user, 2026-09-30) several jobs in one order: a tab per job (Job 1 … Job 10), one job shown at a time
+      jobs.length > 1 ? h('div', { key: 'tabs', role: 'tablist', style: { display: 'flex', gap: 4, flexWrap: 'wrap', borderBottom: '1px solid #e6e8eb', marginBottom: 16 } },
+        jobs.map((j, i) => { const on = jobTab === i;
+          return h('span', { key: j.id, role: 'tab', 'aria-selected': on, tabIndex: 0, onClick: () => this.setState({ trackJobTab: i }), onKeyDown: e => { if (e.key === 'Enter') this.setState({ trackJobTab: i }); },
+            style: { padding: '12px 18px', fontSize: 14, fontWeight: on ? 600 : 500, color: on ? INK : MUT, borderBottom: '2px solid ' + (on ? TEAL : 'transparent'), marginBottom: -1, cursor: 'pointer' } }, 'Job ' + (i + 1)); })) : null,
       h('div', { key: 'j', style: { display: 'flex', flexDirection: 'column', gap: 16 } },
         jobs.map((j, i) => {
+          if (jobs.length > 1 && i !== jobTab) return null;
           const it = (o.items || [])[i] || {};
           const lines = (j.specLines && j.specLines.length ? j.specLines : it.specLines) || String(j.spec || '').split(' · ').filter(Boolean).map(x => ['', x]);
           const arts = (o.files || []).filter(f => f.kind === 'artwork' && (f.line || 1) === i + 1);

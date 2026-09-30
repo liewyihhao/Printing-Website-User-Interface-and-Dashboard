@@ -336,7 +336,10 @@ async function api(req, res, pathname, query) {
   }
   if (seg[0] === 'orders' && !seg[1]) {
     const me = store.sessionCustomer(token);
-    return send(res, 200, { orders: (me && me.type === 'customer') ? store.ordersForUser(me.id) : store.orders() });
+    // a customer's orders carry each job's progress, so My Orders shows where the order is (not only the payment)
+    if (me && me.type === 'customer') return send(res, 200, { orders: store.ordersForUser(me.id).map(o => Object.assign({}, o, {
+      jobStages: (o.jobIds || []).map(jid => { const j = store.job(jid); return j ? { id: j.id, status: j.status, dest: (j.finalDestination || {}).type || null } : null; }).filter(Boolean) })) });
+    return send(res, 200, { orders: store.orders() });
   }
   // ---- admin backoffice data (require an admin session) ----
   if (seg[0] === 'admin') {
@@ -554,9 +557,8 @@ async function api(req, res, pathname, query) {
     const c = Object.assign({}, q);
     ['printerQuotes', 'printerActivity', 'priceBasis', 'handler', 'outletOpenedAt', 'outletOpenedBy', 'followUpDueAt', 'remarks', 'lastFollowUpAt', 'lastFollowUpBy', 'followups', 'issuedBy', 'requestedByStaff'].forEach(k => { delete c[k]; });
     c.history = (q.history || []).filter(x => ['issued', 'reviewed', 'accepted', 'rejected'].indexOf(x.action) >= 0).map(x => ({ ts: x.ts, action: x.action, price: x.price }));
-    // who handles it: walk-in → the outlet staff and the scheduler; website → the scheduler only (never the printer)
-    const sched = q.handler ? q.handler.name : ((q.history || []).find(x => x.action === 'issued') || {}).actor || null;
-    c.handledBy = { outletStaff: q.outlet ? ((q.issuedBy && q.issuedBy.name) || q.requestedByStaff || null) : null, scheduler: sched };
+    // who handles it (user, 2026-09-30): the outlet's name and the outlet staff's name only — never the scheduler or a printer
+    c.handledBy = q.outlet ? { outlet: outlet.outletName(q.outlet), staff: outlet.staffName((q.issuedBy && q.issuedBy.name) || q.requestedByStaff || '') } : null;
     return c;
   };
   if (seg[0] === 'quotes' && seg[2] === 'view' && req.method === 'POST') {

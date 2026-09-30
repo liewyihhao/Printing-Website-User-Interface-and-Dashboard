@@ -29,6 +29,9 @@ let _files = null; const files = () => _files || (_files = require('./files'));
 
 // ---------------------------------------------------------------- quotes
 const outletOf = me => (me && me.outlet) || null;
+// an outlet's display name (KL-Damansara → "KL Damansara Outlet") and a staff member's name without the role in brackets
+const outletName = id => { if (!id) return ''; try { const o = (ops().config().outlets || []).find(x => x.id === id); if (o && o.name) return o.name; } catch (e) {} return String(id).replace(/-/g, ' '); };
+const staffName = n => String(n || '').replace(/\s*\([^)]*\)\s*$/, '');
 const isManager = me => me && (me.role === 'outlet_manager' || me.type === 'admin');
 function refreshFollowUp(q) {
   // the original 7-day / 3-day "lx_quote_no_follow_up" reminder, evaluated lazily
@@ -71,7 +74,9 @@ function quoteView(q, full) {
     rejectReason: q.rejectReason || '', lastFollowUp: q.lastFollowUpAt ? { at: q.lastFollowUpAt, by: q.lastFollowUpBy } : null,
     amendments: (q.amendments || []).slice().reverse(), leadDays: q.leadDays || null, delivery: q.delivery || null,
     // HQ's raw 'issued' entry is shown once, as the outlet's "Quoted"
-    statuses: (q.history || []).filter(h => h.action !== 'issued').slice().reverse().map(h => ({ status: String(h.action).charAt(0).toUpperCase() + String(h.action).slice(1), by: h.actor, at: h.ts, note: h.note || '' })),
+    // (user, 2026-09-30) the outlet name and the staff name only — no "(Outlet Staff)" role, no "Created at …"
+    statuses: (q.history || []).filter(h => h.action !== 'issued').slice().reverse().map(h => ({ status: String(h.action).charAt(0).toUpperCase() + String(h.action).slice(1), by: staffName(h.actor), at: h.ts,
+      note: /^Created at /.test(h.note || '') ? outletName(String(h.note).replace(/^Created at /, '')) : (h.note || '') })),
   });
 }
 function canQuote(q, me) { return q && me && (me.type === 'admin' || (me.type === 'outlet' && q.outlet && q.outlet === outletOf(me))); }
@@ -384,4 +389,4 @@ function searchCustomers(q) {
   return store.customers().filter(c => c.type === 'customer' && (!s || [c.name, c.email, c.phone].join(' ').toLowerCase().indexOf(s) >= 0)).slice(0, 20).map(c => ({ value: c.id, label: c.name + ' (' + c.email + ')' }));
 }
 
-module.exports = { customerDetail, saveQuoteArtwork, acceptByOutlet, amendQuote, stageOf, listQuotes, getQuote, saveSpec, onIssued, outletPrice, followUp, rejectQuote, quoteArtwork, onAccepted, onPaid, outletOrders, orderListView, orderDetail, orderAction, orderNote, orderAddress, dashboard, performance, staffList, searchCustomers, refreshFollowUp };
+module.exports = { outletName, staffName, customerDetail, saveQuoteArtwork, acceptByOutlet, amendQuote, stageOf, listQuotes, getQuote, saveSpec, onIssued, outletPrice, followUp, rejectQuote, quoteArtwork, onAccepted, onPaid, outletOrders, orderListView, orderDetail, orderAction, orderNote, orderAddress, dashboard, performance, staffList, searchCustomers, refreshFollowUp };

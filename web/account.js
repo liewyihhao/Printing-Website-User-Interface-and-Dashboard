@@ -436,7 +436,8 @@
       }
     } else if (q) {
       main.push(this.acC('Specifications', [q.specLines && this.pSummary ? h('div', { key: 's', style: { display: 'flex', flexDirection: 'column', gap: 10 } }, this.pSummary({ product: q.product, specLines: q.specLines, qty: q.qty, rows: [], artworks: [] })) : [h('b', { key: 'p' }, q.product), h('div', { key: 's', style: { whiteSpace: 'pre-wrap', lineHeight: 1.7 } }, q.spec)],
-        q.specLines && q.notes ? h('p', { key: 'n', style: { margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.6 } }, q.notes) : null,
+        // the outlet's remarks, labelled (on its own it read as part of the order quantity)
+        q.specLines && q.notes ? h('p', { key: 'n', style: { margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.6 } }, h('span', { style: { color: MUT } }, 'Remarks: '), q.notes) : null,
         q.artwork ? h('div', { key: 'a', style: { background: ALT, borderRadius: 6, padding: 12 } }, h('a', { href: '#', onClick: e => { e.preventDefault(); fetch('/api/outlet/quotes/' + q.id + '/artwork', { headers: this.authHeaders() }).then(r => r.ok ? r.blob() : null).then(b => b && this.saveBlob(b, q.artwork.file || q.artwork.name)); }, style: { color: TEAL, fontWeight: 700 } }, '📄 ' + (q.artwork.name || 'File'))) : null],
         q.canEdit ? { icon: 'edit', label: 'Edit specifications', onClick: () => this.outEditSpec(q) } : null));
     }
