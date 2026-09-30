@@ -53,7 +53,7 @@
                     'Welcome, ' + (v.firstName || 'there'),
                     v.medalIcon ? img(v.medalIcon, { height: '1.7rem', width: 'auto', display: 'inline-block', marginLeft: 8, marginTop: -2 }) : null),
                   v.userMenu ? h('span', { 'data-go': '_usermenu', style: { position: 'fixed', inset: 0, zIndex: 80 } }) : null,
-                  v.userMenu ? h('div', { role: 'menu', style: { position: 'absolute', top: '100%', right: 0, marginTop: 6, zIndex: 81, background: '#fff', border: '1px solid ' + HAIR, borderRadius: 10, boxShadow: '0 12px 30px rgba(0,0,0,.12)', padding: '8px 0', minWidth: 210, whiteSpace: 'nowrap' } },
+                  v.userMenu ? h('div', { role: 'menu', style: { position: 'absolute', top: '100%', right: 0, marginTop: 6, zIndex: 81, background: '#fff', border: '1px solid ' + HAIR, borderRadius: 0, boxShadow: '0 12px 30px rgba(0,0,0,.12)', padding: '8px 0', minWidth: 210, whiteSpace: 'nowrap' } },
                     (v.isCustomer ? [['Dashboard', 'Dashboard'], ['Orders', 'Orders'], ['Quotations', 'Quotations'], ['Invoices', 'Invoices'], ['Transactions', 'Transactions'], ['Sales Missions', 'Sales Missions'], ['Artwork Gallery', 'Artwork'], ['Coupons', 'Coupons'], ['Account Details', 'Account']] : [['Dashboard', 'Dashboard']])
                       .map(m => h('div', { key: m[1], role: 'menuitem', 'data-go': 'acct:' + m[1], style: { padding: '9px 18px', fontSize: 13.5, fontWeight: 500, color: '#231f20', cursor: 'pointer' } }, m[0]))
                       .concat([h('div', { key: 'sep', style: { borderTop: '1px solid ' + HAIR, margin: '6px 0' } }), h('div', { key: 'lo', role: 'menuitem', 'data-go': '_logout', style: { padding: '9px 18px', fontSize: 13.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'Logout')])) : null)
@@ -61,7 +61,7 @@
                   img('assets/icons/user.svg', { height: 18, width: 'auto', display: 'block' }), 'Login/ Signup'),
             h('span', { 'data-go': 'cart', style: { position: 'relative', display: 'flex', cursor: 'pointer' } },
               img('assets/icons/cart.svg', { height: 19, width: 'auto', display: 'block' }),
-              v.cartCount ? h('span', { style: { position: 'absolute', top: -6, right: -9, background: TEAL, color: '#fff', fontSize: 10, fontWeight: 700, borderRadius: 9, padding: '1px 5px' } }, v.cartCount) : null),
+              v.cartCount ? h('span', { style: { position: 'absolute', top: -6, right: -9, background: TEAL, color: '#fff', fontSize: 10, fontWeight: 700, borderRadius: 0, padding: '1px 5px' } }, v.cartCount) : null),
             h('span', { 'data-go': '_country', style: { display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' } },
               img(v.isSG ? 'assets/icons/flag-sg.jpg' : v.isBN ? 'assets/icons/flag-bn.jpg' : 'assets/icons/flag-my.jpg',
                 { height: 15, width: 22, objectFit: 'cover', display: 'block' }), v.countryLabel),
@@ -93,7 +93,7 @@
     if (a.hidden) return null;
     return h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '14px 20px 0' } },
       h('div', { style: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px 20px', padding: '12px 16px', borderRadius: 2, color: '#fff', fontSize: 14, backgroundImage: 'linear-gradient(90deg,#FF9A2E,#F02B29)', boxShadow: '0 1px 3px rgba(33,33,33,.12)' } },
-        img('assets/icons/cropped-favicon-192x192.png', { height: 34, width: 34, display: 'block', borderRadius: 8, background: '#fff' }),
+        img('assets/icons/cropped-favicon-192x192.png', { height: 34, width: 34, display: 'block', borderRadius: 0, background: '#fff' }),
         h('div', { style: { flex: '1 1 auto', minWidth: 0, lineHeight: 1.35 } }, a.text || 'Members save up to 15% on every order — sign in to see your price. Free delivery on orders over RM 300.'),
         h('a', { 'data-go': a.link || 'membership', style: { display: 'flex', alignItems: 'center', gap: 6, color: '#fff', fontWeight: 500, textDecoration: 'none', whiteSpace: 'nowrap', cursor: 'pointer' } },
           a.cta || 'Find out more', img('assets/icons/arrow-right.svg', { height: 13, width: 'auto', display: 'block', filter: 'brightness(0) invert(1)' }))));
@@ -163,7 +163,7 @@
 
   // floating "Chat" tab (as on the original) — opens a WhatsApp chat with Printoka
   function chat() {
-    return h('a', { href: WHATSAPP, target: '_blank', rel: 'noopener noreferrer', 'aria-label': 'Chat with Printoka on WhatsApp', style: { position: 'fixed', right: 0, bottom: 0, zIndex: 70, display: 'flex', alignItems: 'center', gap: 8, background: '#fff', color: TEAL, border: '1px solid ' + HAIR, borderBottom: 'none', borderRadius: '6px 6px 0 0', padding: '8px 20px', boxShadow: '0 -2px 14px rgba(33,33,33,.10)', fontSize: 14, fontWeight: 600, textDecoration: 'none' } },
+    return h('a', { href: WHATSAPP, target: '_blank', rel: 'noopener noreferrer', 'aria-label': 'Chat with Printoka on WhatsApp', style: { position: 'fixed', right: 0, bottom: 0, zIndex: 70, display: 'flex', alignItems: 'center', gap: 8, background: '#fff', color: TEAL, border: '1px solid ' + HAIR, borderBottom: 'none', borderRadius: 0, padding: '8px 20px', boxShadow: '0 -2px 14px rgba(33,33,33,.10)', fontSize: 14, fontWeight: 600, textDecoration: 'none' } },
       img('assets/icons/phone.svg', { height: 15, width: 'auto', display: 'block' }), 'Chat');
   }
 

@@ -24,6 +24,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  /* (user, 2026-09-30) one title style everywhere: a short red bar above every page title (heroes opt out) */
+  h1:not(.pk-nobar)::before{content:"";display:block;width:24px;height:3px;background:#E52220;margin:0 0 12px}
+  h1.pk-bar-c::before{margin:0 auto 12px}
   body{margin:0;background:#fff;color:#212121;font-family:Montserrat,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
   *{box-sizing:border-box}
   a{color:#14568a;text-decoration:none}
@@ -38,7 +41,7 @@
   .pk-ddctl:hover{background:#f6f7f8}
   button:focus-visible,[data-go]:focus-visible,[role=button]:focus-visible,[role=option]:focus-visible,[role=combobox]:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #E52220;outline-offset:2px}
   /* skip-to-content link: off-screen until keyboard-focused */
-  .pk-skip{position:absolute;left:-9999px;top:8px;z-index:200;background:#E52220;color:#fff;padding:9px 15px;border-radius:6px;font-weight:600;text-decoration:none}
+  .pk-skip{position:absolute;left:-9999px;top:8px;z-index:200;background:#E52220;color:#fff;padding:9px 15px;border-radius:0;font-weight:600;text-decoration:none}
   .pk-skip:focus{left:8px}
   @keyframes pkFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
   @keyframes pkShine{0%{transform:translateX(0) skewX(-18deg)}60%,100%{transform:translateX(240px) skewX(-18deg)}}
@@ -56,8 +59,8 @@
   @keyframes pkPing{75%,100%{transform:scale(2.4);opacity:0}}
   /* blog articles (the original printoka.com posts): one typography for every article */
 .pk-prose{font-size:15.5px;line-height:1.8;color:#2b2b2b}.pk-prose p{margin:0 0 16px}.pk-prose h2{font-size:23px;font-weight:600;line-height:1.3;margin:34px 0 12px;letter-spacing:-.01em;color:#111}.pk-prose h3{font-size:19px;font-weight:600;margin:26px 0 10px;color:#111}.pk-prose h4{font-size:16px;font-weight:600;margin:20px 0 8px}
-.pk-prose img{max-width:100%;height:auto;display:block;margin:18px auto;border-radius:8px}.pk-prose a{color:#E52220;font-weight:500;text-decoration:none}.pk-prose a:hover{text-decoration:underline}.pk-prose ul,.pk-prose ol{margin:0 0 16px;padding-left:22px}.pk-prose li{margin:6px 0}
-.pk-prose strong{font-weight:600;color:#111}.pk-prose table{width:100%;border-collapse:collapse;margin:18px 0;font-size:14px}.pk-prose td,.pk-prose th{border:1px solid #eaeaea;padding:9px 11px;text-align:left}.pk-prose blockquote{margin:18px 0;padding:12px 18px;border-left:3px solid #E52220;background:#fdf2f2;border-radius:0 8px 8px 0}.pk-prose figure{margin:18px 0}
+.pk-prose img{max-width:100%;height:auto;display:block;margin:18px auto;border-radius:0}.pk-prose a{color:#E52220;font-weight:500;text-decoration:none}.pk-prose a:hover{text-decoration:underline}.pk-prose ul,.pk-prose ol{margin:0 0 16px;padding-left:22px}.pk-prose li{margin:6px 0}
+.pk-prose strong{font-weight:600;color:#111}.pk-prose table{width:100%;border-collapse:collapse;margin:18px 0;font-size:14px}.pk-prose td,.pk-prose th{border:1px solid #eaeaea;padding:9px 11px;text-align:left}.pk-prose blockquote{margin:18px 0;padding:12px 18px;border-left:3px solid #E52220;background:#fdf2f2;border-radius:0}.pk-prose figure{margin:18px 0}
 .pk-acc summary::-webkit-details-marker{display:none}.pk-acc:not([open]) .pk-acc-chev{transform:rotate(-90deg)}.pk-acc-chev{transition:transform .2s}
   .pk-mobilebar{display:none}
   /* configurator: summary column stacks under the questions on tablets / phones */

@@ -89,7 +89,7 @@
         h('span', { style: { position: 'absolute', left: -6, bottom: 9, background: TEAL, color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 2 } }, (ext || 'file').toUpperCase().slice(0, 4))));
     const card = a => { const on = del ? !!sel[a.id] : (mode === 'pick' && this.state.agPick === a.id);
       return h('div', { key: a.id, role: 'button', tabIndex: 0, onClick: () => choose(a), onKeyDown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(a); } },
-        title: a.name, style: { position: 'relative', background: '#fff', border: '1px solid ' + (on ? TEAL : HAIR), boxShadow: on ? '0 0 0 2px ' + TEAL : 'none', borderRadius: 8, overflow: 'hidden', cursor: 'pointer', display: 'flex', flexDirection: 'column' } },
+        title: a.name, style: { position: 'relative', background: '#fff', border: '1px solid ' + (on ? TEAL : HAIR), boxShadow: on ? '0 0 0 2px ' + TEAL : 'none', borderRadius: 0, overflow: 'hidden', cursor: 'pointer', display: 'flex', flexDirection: 'column' } },
         del ? h('span', { style: { position: 'absolute', top: 8, left: 8, height: 18, width: 18, borderRadius: 4, border: '2px solid ' + (on ? TEAL : '#b8bcc2'), background: on ? TEAL : '#fff', color: '#fff', fontSize: 12, lineHeight: '14px', textAlign: 'center', zIndex: 1 } }, on ? '✓' : '') : null,
         h('div', { style: { height: 110, background: '#e9ebee', display: 'grid', placeItems: 'center', overflow: 'hidden' } },
           a.thumb ? h('img', { src: a.thumb, alt: '', style: { maxHeight: '100%', maxWidth: '100%', display: 'block' } }) : badge(a.ext)),
@@ -97,11 +97,11 @@
           h('div', { style: { fontSize: 12, color: INK, wordBreak: 'break-word', lineHeight: 1.35 } }, a.name),
           h('div', { style: { fontSize: 11, color: FAINT } }, fmtSize(a.size || 0)),
           h('div', { style: { fontSize: 10.5, color: '#c4c7cc' } }, fmtDate(a.at)))); };
-    const btn = (label, onClick, kind, extra) => h('button', { type: 'button', onClick, style: Object.assign({ font: '600 12.5px Montserrat,sans-serif', letterSpacing: '.04em', border: kind === 'ghost' ? '1px solid ' + HAIR : 'none', background: kind === 'ghost' ? '#fff' : TEAL, color: kind === 'ghost' ? INK : '#fff', borderRadius: 6, padding: '9px 16px', cursor: 'pointer' }, extra || {}) }, label);
+    const btn = (label, onClick, kind, extra) => h('button', { type: 'button', onClick, style: Object.assign({ font: '600 12.5px Montserrat,sans-serif', letterSpacing: '.04em', border: kind === 'ghost' ? '1px solid ' + HAIR : 'none', background: kind === 'ghost' ? '#fff' : TEAL, color: kind === 'ghost' ? INK : '#fff', borderRadius: 0, padding: '9px 16px', cursor: 'pointer' }, extra || {}) }, label);
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
       // drop zone
       h('label', { onDragOver: e => e.preventDefault(), onDrop: e => { e.preventDefault(); onFiles(e.dataTransfer.files); },
-        style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap', background: '#e6eaf2', border: '1px dashed #c4ccda', borderRadius: 8, padding: '26px 16px', cursor: 'pointer', color: '#6b7380', fontSize: 17 } },
+        style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, flexWrap: 'wrap', background: '#e6eaf2', border: '1px dashed #c4ccda', borderRadius: 0, padding: '26px 16px', cursor: 'pointer', color: '#6b7380', fontSize: 17 } },
         h('input', { type: 'file', multiple: true, accept: '.pdf,.ai,.eps,.psd,.tif,.tiff,.jpg,.jpeg,.png,.svg,.cdr,.indd,.zip,.rar', style: { display: 'none' }, onChange: e => { onFiles(e.target.files); e.target.value = ''; } }),
         h('svg', { width: 34, height: 24, viewBox: '0 0 34 24', 'aria-hidden': true }, h('path', { d: 'M27 10.2A9 9 0 0 0 9.6 8.1 7 7 0 0 0 8 22h18a6 6 0 0 0 1-11.8z', fill: '#8a93a3' }), h('path', { d: 'M17 9v9M13 13l4-4 4 4', stroke: '#fff', strokeWidth: 2.2, fill: 'none', strokeLinecap: 'round' })),
         h('span', null, this.state.agBusy ? 'Uploading ' + this.state.agBusy + ' file' + (this.state.agBusy > 1 ? 's' : '') + '…' : 'Drag & Drop files here  - or -'),
@@ -118,7 +118,7 @@
           : [mode === 'pick' ? btn('CONFIRM', () => { if (picked) this.setState({ agAgree: true }); }, 'red', { key: 'ok', opacity: picked ? 1 : .45, cursor: picked ? 'pointer' : 'not-allowed', padding: '10px 26px' }) : null,
              list.length ? btn('DELETE FILES', () => this.setState({ agDelMode: true, agSel: {}, agPick: null }), 'ghost', { key: 'del' }) : null],
         h('label', { style: { marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: MUT } }, 'Sort By',
-          h('select', { value: sort, onChange: e => this.setState({ agSort: e.target.value, agPage: 1 }), style: { font: '400 13px Montserrat,sans-serif', padding: '7px 10px', border: '1px solid ' + HAIR, borderRadius: 6, background: '#fff' } },
+          h('select', { value: sort, onChange: e => this.setState({ agSort: e.target.value, agPage: 1 }), style: { font: '400 13px Montserrat,sans-serif', padding: '7px 10px', border: '1px solid ' + HAIR, borderRadius: 0, background: '#fff' } },
             h('option', { value: 'date_desc' }, 'Date Desc'), h('option', { value: 'date_asc' }, 'Date Asc'), h('option', { value: 'name' }, 'Name A–Z'))),
         pages > 1 ? h('span', { style: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: MUT } },
           h('button', { type: 'button', 'aria-label': 'Previous page', disabled: page <= 1, onClick: () => this.setState({ agPage: page - 1 }), style: { border: 'none', background: 'none', cursor: page > 1 ? 'pointer' : 'default', fontSize: 16, color: page > 1 ? INK : '#ccc' } }, '◀'),
@@ -132,20 +132,20 @@
     const pick = a => { this.cartSetArtwork(ag.line, ag.slot, a); close(); };
     const picked = (this.state.agList || []).find(a => a.id === this.state.agPick);
     return h('div', { key: 'ag', onClick: close, style: { position: 'fixed', inset: 0, zIndex: 98, background: 'rgba(15,20,25,.55)', display: 'grid', placeItems: 'start center', padding: '4vh 16px', overflow: 'auto' } },
-      h('div', { onClick: e => e.stopPropagation(), role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Artwork Storage', style: { position: 'relative', background: '#fff', borderRadius: 10, width: '100%', maxWidth: 1180, padding: '20px 22px 18px', boxShadow: '0 24px 60px rgba(0,0,0,.3)' } },
+      h('div', { onClick: e => e.stopPropagation(), role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Artwork Storage', style: { position: 'relative', background: '#fff', borderRadius: 0, width: '100%', maxWidth: 1180, padding: '20px 22px 18px', boxShadow: '0 24px 60px rgba(0,0,0,.3)' } },
         h('button', { type: 'button', onClick: close, 'aria-label': 'Close', style: { position: 'absolute', top: 12, right: 12, height: 30, width: 30, borderRadius: '50%', border: 'none', background: INK, color: '#fff', fontSize: 16, cursor: 'pointer' } }, '×'),
         h('div', { style: { marginBottom: 14, paddingRight: 40 } },
           h('div', { style: { fontSize: 20, fontWeight: 700, letterSpacing: '.02em', textTransform: 'uppercase' } }, 'Artwork Storage'),
           h('div', { style: { fontSize: 13, color: MUT, marginTop: 2 } }, 'Choose & click to select the file for ' + (ag.label || 'this job') + ', then Confirm')),
         this.agPanel('pick', pick),
-        this.state.agAgree && picked ? h('div', { onClick: e => { e.stopPropagation(); this.setState({ agAgree: false }); }, style: { position: 'absolute', inset: 0, borderRadius: 10, background: 'rgba(255,255,255,.72)', display: 'grid', placeItems: 'center', padding: 16 } },
-          h('div', { onClick: e => e.stopPropagation(), role: 'alertdialog', 'aria-modal': 'true', 'aria-label': 'Confirm artwork', style: { background: '#fff', borderRadius: 12, maxWidth: 440, width: '100%', padding: '22px 24px', boxShadow: '0 18px 50px rgba(0,0,0,.25)', border: '1px solid ' + HAIR } },
+        this.state.agAgree && picked ? h('div', { onClick: e => { e.stopPropagation(); this.setState({ agAgree: false }); }, style: { position: 'absolute', inset: 0, borderRadius: 0, background: 'rgba(255,255,255,.72)', display: 'grid', placeItems: 'center', padding: 16 } },
+          h('div', { onClick: e => e.stopPropagation(), role: 'alertdialog', 'aria-modal': 'true', 'aria-label': 'Confirm artwork', style: { background: '#fff', borderRadius: 0, maxWidth: 440, width: '100%', padding: '22px 24px', boxShadow: '0 18px 50px rgba(0,0,0,.25)', border: '1px solid ' + HAIR } },
             h('div', { style: { fontSize: 17, fontWeight: 700, marginBottom: 8 } }, 'Confirm your artwork'),
             h('div', { style: { fontSize: 13.5, color: INK, lineHeight: 1.6, marginBottom: 6 } }, 'I confirm this artwork is finalised. I understand it cannot be changed after my order is submitted.'),
             h('div', { style: { fontSize: 12.5, color: MUT, marginBottom: 18, wordBreak: 'break-word' } }, picked.name),
             h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
-              h('button', { type: 'button', onClick: () => this.setState({ agAgree: false }), style: { font: '600 13.5px Montserrat,sans-serif', background: '#fff', color: INK, border: '1px solid ' + HAIR, borderRadius: 8, padding: '10px 18px', cursor: 'pointer' } }, 'Cancel'),
-              h('button', { type: 'button', onClick: () => { this.setState({ agAgree: false, agPick: null }); pick(picked); }, style: { font: '600 13.5px Montserrat,sans-serif', background: TEAL, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', cursor: 'pointer' } }, 'I agree')))) : null));
+              h('button', { type: 'button', onClick: () => this.setState({ agAgree: false }), style: { font: '600 13.5px Montserrat,sans-serif', background: '#fff', color: INK, border: '1px solid ' + HAIR, borderRadius: 0, padding: '10px 18px', cursor: 'pointer' } }, 'Cancel'),
+              h('button', { type: 'button', onClick: () => { this.setState({ agAgree: false, agPick: null }); pick(picked); }, style: { font: '600 13.5px Montserrat,sans-serif', background: TEAL, color: '#fff', border: 'none', borderRadius: 0, padding: '10px 20px', cursor: 'pointer' } }, 'I agree')))) : null));
   };
 
   // ---------------------------------------------------------------- cart job artwork slots

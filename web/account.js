@@ -17,10 +17,10 @@
   const P = C.prototype;
 
   // ---------------------------------------------------------------- kit
-  const inp = { font: '400 13.5px Montserrat,sans-serif', padding: '9px 12px', border: '1px solid ' + HAIR, borderRadius: 8, width: '100%', background: '#fff' };
+  const inp = { font: '400 13.5px Montserrat,sans-serif', padding: '9px 12px', border: '1px solid ' + HAIR, borderRadius: 0, width: '100%', background: '#fff' };
   const pillInp = Object.assign({}, inp, { borderRadius: 999, maxWidth: 220 });
   const Btn = (label, onClick, kind, disabled) => h('button', { type: 'button', disabled: !!disabled, onClick: disabled ? undefined : onClick,
-    style: { font: '600 13px Montserrat,sans-serif', padding: kind === 'block' ? '14px 16px' : '9px 16px', borderRadius: 8, width: kind === 'block' ? '100%' : undefined, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? .5 : 1,
+    style: { font: '500 13px Montserrat,sans-serif', padding: kind === 'block' ? '14px 16px' : '9px 16px', borderRadius: 0, width: kind === 'block' ? '100%' : undefined, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? .5 : 1,
       border: '1px solid ' + (kind === 'primary' ? TEAL : '#d9d9d9'), background: kind === 'primary' ? TEAL : '#fff', color: kind === 'primary' ? '#fff' : INK } }, label);
   const FG = (label, control, req, hint) => h('label', { style: { display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, fontWeight: 600, color: INK } }, h('span', null, label, req ? h('span', { style: { color: TEAL } }, ' *') : null), hint ? h('span', { style: { fontSize: 12, fontWeight: 400, color: FAINT } }, hint) : null, control);
   const when = ts => { if (!ts) return '—'; const d = new Date(ts); return d.toLocaleDateString('en-GB').replace(/\//g, '-') + ' ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase(); };
@@ -69,7 +69,7 @@
           h('span', { onClick: () => this.setState({ acUserMenu: !open }), style: { display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', padding: '10px 0' } },
             h('span', { style: { height: 36, width: 36, borderRadius: '50%', background: o.accent || 'linear-gradient(180deg,#2BA6DE,#12CD8E)', display: 'grid', placeItems: 'center' } }, this.dashIcon(o.icon || 'printer', '#fff', 18)),
             h('span', { style: { lineHeight: 1.2 } }, h('b', { style: { fontSize: 13.5, display: 'block' } }, u.name || ''), h('span', { style: { fontSize: 12, color: FAINT } }, o.sub || String(u.id || '').replace(/\D/g, '').padStart(5, '0')))),
-          open ? h('div', { onClick: e => e.stopPropagation(), style: { position: 'absolute', top: '100%', right: 0, zIndex: 60, background: '#fff', border: '1px solid ' + HAIR, borderRadius: 10, boxShadow: '0 12px 30px rgba(0,0,0,.12)', padding: 14, display: 'flex', flexDirection: 'column', gap: 12, minWidth: 210 } },
+          open ? h('div', { onClick: e => e.stopPropagation(), style: { position: 'absolute', top: '100%', right: 0, zIndex: 60, background: '#fff', border: '1px solid ' + HAIR, borderRadius: 0, boxShadow: '0 12px 30px rgba(0,0,0,.12)', padding: 14, display: 'flex', flexDirection: 'column', gap: 12, minWidth: 210 } },
             (o.menu || []).concat([['Logout', () => this.logout()]]).map(m => h('span', { key: m[0], onClick: () => { this.setState({ acUserMenu: false }); m[1](); }, style: { fontSize: 13.5, fontWeight: 600, color: m[0] === 'Logout' ? TEAL : INK, cursor: 'pointer' } }, m[0]))) : null)));
   };
   P.acPage = function (o, content) {
@@ -90,12 +90,12 @@
         h('span', { style: { position: 'absolute', right: 22, bottom: 22, height: 46, width: 46, borderRadius: '50%', background: A[1], display: 'grid', placeItems: 'center' } }, this.dashIcon(it.icon, A[0], 22)));
     }));
   };
-  P.acCard = function (children, extra) { return h('div', { style: Object.assign({ background: '#fff', border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden' }, extra || {}) }, children); };
+  P.acCard = function (children, extra) { return h('div', { style: Object.assign({ background: '#fff', border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden' }, extra || {}) }, children); };
   // collapsible card (details/summary) with optional edit / add action
   P.acC = function (title, children, action) {
-    return h('details', { key: title, open: true, className: 'pk-acc', style: { background: '#fff', border: '1px solid ' + HAIR, borderRadius: 12, padding: '0 18px' } },
+    return h('details', { key: title, open: true, className: 'pk-acc', style: { background: '#fff', border: '1px solid ' + HAIR, borderRadius: 0, padding: '0 18px' } },
       h('summary', { style: { padding: '13px 0', fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', listStyle: 'none' } }, title,
-        action ? h('span', { title: action.label, onClick: e => { e.preventDefault(); e.stopPropagation(); action.onClick(); }, style: { marginLeft: 'auto', padding: 6, borderRadius: 6, cursor: 'pointer', fontSize: 15, color: MUT } }, action.icon === 'add' ? '＋' : '✎') : null,
+        action ? h('span', { title: action.label, onClick: e => { e.preventDefault(); e.stopPropagation(); action.onClick(); }, style: { marginLeft: 'auto', padding: 6, borderRadius: 0, cursor: 'pointer', fontSize: 15, color: MUT } }, action.icon === 'add' ? '＋' : '✎') : null,
         h('span', { className: 'pk-acc-chev', style: { marginLeft: action ? 0 : 'auto', color: FAINT, fontSize: 11 } }, '▼')),
       h('div', { style: { padding: '16px 0 18px', borderTop: '1px solid ' + HAIR, display: 'flex', flexDirection: 'column', gap: 14, fontSize: 13 } }, children));
   };
@@ -122,7 +122,7 @@
         h('p', { style: { margin: 0, fontSize: 13, fontWeight: 600, display: 'flex', gap: 8 } },
           h('span', { onClick: () => this.setState({ acView: null, sTab: o.home }), style: { color: TEAL, cursor: 'pointer' } }, 'Dashboard'), h('span', { style: { color: FAINT } }, '/'),
           h('span', { onClick: () => this.setState({ acView: null, sTab: o.type }), style: { color: TEAL, cursor: 'pointer' } }, o.type)),
-        h('div', { style: { display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' } }, h('h1', { style: { fontSize: 34, fontWeight: 600, margin: 0, letterSpacing: '-.02em' } }, o.title), o.statusNode || (o.status ? this.pillDot(o.status, BADGE(o.status)) : null))),
+        h('div', { style: { display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' } }, h('h1', { style: { fontSize: 34, fontWeight: 500, margin: 0, letterSpacing: '-.02em' } }, o.title), o.statusNode || (o.status ? this.pillDot(o.status, BADGE(o.status)) : null))),
       // optional full-width block above the two columns (e.g. the scheduler's quotes table)
       o.top ? h('div', { key: 'top', style: { display: 'flex', flexDirection: 'column', gap: 12 } }, o.top) : null,
       h('div', { key: 'bd', className: 'pk-acsingle', style: { display: 'flex', gap: 20, alignItems: 'flex-start', flexWrap: 'wrap' } },
@@ -137,7 +137,7 @@
     const rows = (o.rows || []).filter(r => (!q || JSON.stringify(r.search || '').toLowerCase().indexOf(q) >= 0) && (ssel === 'All status' || r.status === ssel) && (!DAYS[dsel] || Date.now() - Date.parse(r.date) <= DAYS[dsel] * 864e5));
     const statuses = Array.from(new Set((o.rows || []).map(r => r.status).filter(Boolean)));
     return [
-      h('h1', { key: k + '_t', style: { fontSize: 34, fontWeight: 600, margin: '6px 0 0', letterSpacing: '-.02em' } }, o.title),
+      h('h1', { key: k + '_t', style: { fontSize: 34, fontWeight: 500, margin: '6px 0 0', letterSpacing: '-.02em' } }, o.title),
       h('div', { key: k + '_f', style: { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' } },
         h('input', { placeholder: 'Search', value: this.state[k + '_q'] || '', onChange: e => this.setField(k + '_q', e.target.value), style: pillInp }),
         h('select', { value: dsel, onChange: e => this.setField(k + '_d', e.target.value), style: pillInp }, ['All dates', 'Last month', 'Last 3 months', 'Last 12 months'].map(x => h('option', { key: x }, x))),
@@ -170,7 +170,7 @@
     const m = this.state.acModal; if (!m) return null;
     const close = () => this.setState({ acModal: null });
     return h('div', { key: 'acmd', onClick: close, style: { position: 'fixed', inset: 0, zIndex: 120, background: 'rgba(15,20,25,.45)', display: 'grid', placeItems: 'center', padding: 16, overflow: 'auto' } },
-      h('div', { onClick: e => e.stopPropagation(), role: 'dialog', 'aria-label': m.title, style: { background: '#fff', borderRadius: 14, width: '100%', maxWidth: m.wide ? 720 : 520, maxHeight: '92vh', overflow: 'auto', boxShadow: '0 24px 60px rgba(0,0,0,.3)' } },
+      h('div', { onClick: e => e.stopPropagation(), role: 'dialog', 'aria-label': m.title, style: { background: '#fff', borderRadius: 0, width: '100%', maxWidth: m.wide ? 720 : 520, maxHeight: '92vh', overflow: 'auto', boxShadow: '0 24px 60px rgba(0,0,0,.3)' } },
         h('div', { style: { display: 'flex', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid ' + HAIR } }, h('h2', { style: { fontSize: 18, margin: 0, fontWeight: 600 } }, m.title), h('span', { onClick: close, style: { marginLeft: 'auto', fontSize: 22, cursor: 'pointer', color: FAINT } }, '×')),
         h('div', { style: { padding: 20, display: 'flex', flexDirection: 'column', gap: 16 } }, typeof m.body === 'function' ? m.body() : m.body)));
   };
@@ -300,7 +300,7 @@
         h('hr', { style: { border: 0, borderTop: '1px solid ' + HAIR, margin: 0 } }),
         this.acDL([['Quantity', (it.qty || 0).toLocaleString()], ['Price', this.rm(it.unitPrice)], ['Total', h('b', null, this.rm(it.lineTotal))]]),
         (o.jobs || [])[i] && this.artworkAction ? this.artworkAction(o, o.jobs[i], i, () => { this.acDrop('ord_' + id); this.acDrop('out_'); this.forceUpdate(); }) : null,
-        (files.filter(f => f.kind === 'artwork' && f.line === i + 1).length || (it.artworks || []).length) ? h('div', { style: { background: ALT, borderRadius: 6, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 } },
+        (files.filter(f => f.kind === 'artwork' && f.line === i + 1).length || (it.artworks || []).length) ? h('div', { style: { background: ALT, borderRadius: 0, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 } },
           files.filter(f => f.kind === 'artwork' && f.line === i + 1).map(f => h('span', { key: f.id, onClick: () => this.openOrderFile(id, f), style: { color: TEAL, fontWeight: 700, cursor: 'pointer' } }, '📄 ' + f.name)),
           (it.artworks || []).filter(a => !files.some(f => f.name === a)).map((a, k) => h('span', { key: 'n' + k, style: { color: MUT } }, '📄 ' + a + ' (not uploaded)'))) : null))),
     ];
@@ -352,7 +352,7 @@
       const F = k => this.acF(k) !== '' ? this.acF(k) : (k === 'price' ? (q.price || '') : k === 'weight' ? (q.weight || '') : k === 'currency' ? (q.currency || 'MYR') : '');
       main.push(this.acC('Quote', [
         FG('Weight', h('input', { value: F('weight'), onChange: e => this.acSetF('weight', e.target.value), style: inp }), 1),
-        FG('Price', h('div', { style: { display: 'flex' } }, h('select', { value: F('currency'), onChange: e => this.acSetF('currency', e.target.value), style: Object.assign({}, inp, { width: 100, borderRadius: '8px 0 0 8px', borderRight: 0 }) }, ['MYR', 'SGD', 'BND'].map(c => h('option', { key: c }, c))), h('input', { value: F('price'), onChange: e => this.acSetF('price', e.target.value), style: Object.assign({}, inp, { borderRadius: '0 8px 8px 0' }) })), 1),
+        FG('Price', h('div', { style: { display: 'flex' } }, h('select', { value: F('currency'), onChange: e => this.acSetF('currency', e.target.value), style: Object.assign({}, inp, { width: 100, borderRadius: 0, borderRight: 0 }) }, ['MYR', 'SGD', 'BND'].map(c => h('option', { key: c }, c))), h('input', { value: F('price'), onChange: e => this.acSetF('price', e.target.value), style: Object.assign({}, inp, { borderRadius: 0 }) })), 1),
         h('div', { key: 'b', style: { display: 'flex', gap: 8 } }, Btn('Submit', () => this.aFetchJ('/api/outlet/quotes/' + q.id + '/price', { weight: F('weight'), price: F('price'), currency: F('currency') }).then(r => done(r, 'Quote submited successfully')), 'primary'), Btn('Cancel', () => this.setState({ acEdit: null })))]));
     }
     if (mode === 'edit-spec' || mode === 'amend') {
@@ -385,10 +385,10 @@
       // and set-password emails as signing up); then the product and the configurator; then where it is delivered
       const pickCust = c => { this.acSetF('requesterId', c.value || c.id); this.acSetF('requesterLabel', c.label || (c.name + ' (' + c.email + ')')); this.acSetF('dlAddr', ''); this.setState({ acCustQ: '' }); };
       const custPick = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
-        reqLabel ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5, background: ALT, borderRadius: 8, padding: '10px 12px' } }, h('b', { style: { flex: 1 } }, reqLabel), h('span', { style: { color: TEAL, fontWeight: 700 } }, '✓')) : null,
+        reqLabel ? h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5, background: ALT, borderRadius: 0, padding: '10px 12px' } }, h('b', { style: { flex: 1 } }, reqLabel), h('span', { style: { color: TEAL, fontWeight: 700 } }, '✓')) : null,
         h('input', { placeholder: 'Search customer name or email', value: this.state.acCustQ || '', onChange: e => this.setState({ acCustQ: e.target.value }), style: inp }),
         custQ && custRes && !cust.length ? h('div', { style: { fontSize: 13, color: FAINT, padding: '2px' } }, 'No customer found. Add them as a new customer.') : null,
-        custQ && cust.length ? h('div', { style: { maxHeight: 200, overflow: 'auto', border: '1px solid ' + LINE, borderRadius: 8 } }, cust.map(c => h('div', { key: c.value, onClick: () => pickCust(c), style: { padding: '9px 12px', fontSize: 13, cursor: 'pointer', background: F('requesterId') === c.value ? '#fdf2f2' : '#fff', borderTop: '1px solid ' + LINE } }, c.label))) : null,
+        custQ && cust.length ? h('div', { style: { maxHeight: 200, overflow: 'auto', border: '1px solid ' + LINE, borderRadius: 0 } }, cust.map(c => h('div', { key: c.value, onClick: () => pickCust(c), style: { padding: '9px 12px', fontSize: 13, cursor: 'pointer', background: F('requesterId') === c.value ? '#fdf2f2' : '#fff', borderTop: '1px solid ' + LINE } }, c.label))) : null,
         h('div', null, Btn('+ Add customer', () => this.outNewUser(c => pickCust(c)))));
       if (isNew && !this.acF('reqDone')) {
         main.push(this.acC('Requester', [custPick, h('div', { key: 'n' }, Btn('Next', () => this.acSetF('reqDone', true), 'primary', !F('requesterId')))]));
@@ -418,7 +418,7 @@
           dsel === 'new' ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 8 } },
             naIn('name', 'Recipient name (' + ((cd && cd.name) || 'customer') + ')'), naIn('phone', 'Phone'), naIn('line1', 'Street address', 1), naIn('line2', 'Apartment, unit (optional)', 1), naIn('postcode', 'Postcode'), naIn('city', 'Town / City'), naIn('state', 'State')) : null) : null), 1);
       main.push(this.acC('Specifications', [
-        amend ? null : isNew ? h('div', { key: 'rq', style: { display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5, background: ALT, borderRadius: 8, padding: '10px 12px' } },
+        amend ? null : isNew ? h('div', { key: 'rq', style: { display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5, background: ALT, borderRadius: 0, padding: '10px 12px' } },
           h('span', { style: { color: MUT } }, 'Requester'), h('b', { style: { flex: 1 } }, reqLabel), h('span', { onClick: () => this.acSetF('reqDone', false), style: { color: TEAL, fontWeight: 600, cursor: 'pointer' } }, 'Change'))
           : FG('Requester', custPick, 1),
         FG('Product', h('select', { value: pid, onChange: e => { const v = e.target.value; this.acSetF('productId', v); this.setState({ prodId: v === '' ? null : Number(v), cfg: {}, sizeConfirmed: false }); }, style: inp },
@@ -438,7 +438,7 @@
       main.push(this.acC('Specifications', [q.specLines && this.pSummary ? h('div', { key: 's', style: { display: 'flex', flexDirection: 'column', gap: 10 } }, this.pSummary({ product: q.product, specLines: q.specLines, qty: q.qty, rows: [], artworks: [] })) : [h('b', { key: 'p' }, q.product), h('div', { key: 's', style: { whiteSpace: 'pre-wrap', lineHeight: 1.7 } }, q.spec)],
         // the outlet's remarks, labelled (on its own it read as part of the order quantity)
         q.specLines && q.notes ? h('p', { key: 'n', style: { margin: 0, whiteSpace: 'pre-wrap', lineHeight: 1.6 } }, h('span', { style: { color: MUT } }, 'Remarks: '), q.notes) : null,
-        q.artwork ? h('div', { key: 'a', style: { background: ALT, borderRadius: 6, padding: 12 } }, h('a', { href: '#', onClick: e => { e.preventDefault(); fetch('/api/outlet/quotes/' + q.id + '/artwork', { headers: this.authHeaders() }).then(r => r.ok ? r.blob() : null).then(b => b && this.saveBlob(b, q.artwork.file || q.artwork.name)); }, style: { color: TEAL, fontWeight: 700 } }, '📄 ' + (q.artwork.name || 'File'))) : null],
+        q.artwork ? h('div', { key: 'a', style: { background: ALT, borderRadius: 0, padding: 12 } }, h('a', { href: '#', onClick: e => { e.preventDefault(); fetch('/api/outlet/quotes/' + q.id + '/artwork', { headers: this.authHeaders() }).then(r => r.ok ? r.blob() : null).then(b => b && this.saveBlob(b, q.artwork.file || q.artwork.name)); }, style: { color: TEAL, fontWeight: 700 } }, '📄 ' + (q.artwork.name || 'File'))) : null],
         q.canEdit ? { icon: 'edit', label: 'Edit specifications', onClick: () => this.outEditSpec(q) } : null));
     }
     const aside = q ? [
@@ -467,7 +467,7 @@
     const months = Number(this.state.outRange || 6), keys = perf.months.map(m => m.key), labels = {}; perf.months.forEach(m => { labels[m.key] = m.label; });
     const k12 = keys.slice(-12), m = this.acMetric(perf.sales, keys, months);
     const prods = Object.keys(perf.byProduct);
-    return [h('h1', { key: 't', style: { fontSize: 34, fontWeight: 600, margin: '6px 0 0' } }, 'Sales performance report'),
+    return [h('h1', { key: 't', style: { fontSize: 34, fontWeight: 500, margin: '6px 0 0' } }, 'Sales performance report'),
       h('div', { key: 'f', style: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' } }, this.acRange('outRange')),
       this.acCard(h('div', { style: { padding: 20 } },
         h('div', { style: { display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 12 } }, h('div', null, h('div', { style: { fontWeight: 600 } }, 'Outlet sales performance'), h('div', { style: { fontSize: 22, marginTop: 4 } }, labels[keys[keys.length - months]] + ' - ' + labels[keys[keys.length - 1]])),
@@ -486,7 +486,7 @@
     const pd = this.acGet('out_ind_' + sid, '/api/outlet/performance?individual=1' + (sid ? '&staff=' + encodeURIComponent(sid) : ''));
     const perf = pd && (pd.error ? { error: pd.error } : pd.performance);
     const months = Number(this.state.outRange || 6);
-    const head = [h('h1', { key: 't', style: { fontSize: 34, fontWeight: 600, margin: '6px 0 0' } }, 'Individual performance report'),
+    const head = [h('h1', { key: 't', style: { fontSize: 34, fontWeight: 500, margin: '6px 0 0' } }, 'Individual performance report'),
       h('div', { key: 'f', style: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' } },
         staff.length ? h('select', { value: sid, onChange: e => this.setField('outStaff', e.target.value), style: pillInp }, [h('option', { key: '', value: '' }, 'Me')].concat(staff.map(s => h('option', { key: s.id, value: s.id }, s.name)))) : null,
         this.acRange('outRange'), h('span', { onClick: () => this.setState({ acView: null, sTab: 'Sales performance' }), style: { marginLeft: 'auto', fontWeight: 700, color: TEAL, cursor: 'pointer', fontSize: 13.5 } }, 'Outlet performance report ›'))];
@@ -513,7 +513,7 @@
     const staff = (pd && pd.staff) || [];
     const perf = pd && (pd.error ? { error: pd.error } : pd.performance);
     const months = Number(this.state.indRange || 6);
-    const head = [h('h1', { key: 't', style: { fontSize: 34, fontWeight: 600, margin: '6px 0 0' } }, 'Individual performance report'),
+    const head = [h('h1', { key: 't', style: { fontSize: 34, fontWeight: 500, margin: '6px 0 0' } }, 'Individual performance report'),
       h('div', { key: 'f', style: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' } },
         staff.length ? h('select', { value: sid, onChange: e => this.setField('indStaff', e.target.value), style: pillInp }, [h('option', { key: '', value: '' }, 'Me')].concat(staff.map(s => h('option', { key: s.id, value: s.id }, s.name)))) : null,
         this.acRange('indRange'), back ? h('span', { onClick: back, style: { marginLeft: 'auto', fontWeight: 700, color: TEAL, cursor: 'pointer', fontSize: 13.5 } }, 'Back to dashboard ›') : null)];

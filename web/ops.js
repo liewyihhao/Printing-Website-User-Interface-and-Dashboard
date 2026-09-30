@@ -147,7 +147,7 @@
     const jobs = this.opsJobs();
     const stages = [['outlet', 'Outlet'], ['prepress', 'Prepress'], ['scheduler', 'Scheduler'], ['production', 'Production'], ['logistics', 'Logistics'], ['hub', 'Hub'], ['done', 'Done']];
     const n = q => jobs.filter(j => j.queue === q).length;
-    return h('div', { key: 'pipe', style: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, border: '1px solid ' + HAIR, borderRadius: 12, padding: '12px 16px', background: '#fff' } },
+    return h('div', { key: 'pipe', style: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, border: '1px solid ' + HAIR, borderRadius: 0, padding: '12px 16px', background: '#fff' } },
       h('span', { style: { fontSize: 11, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', color: FAINT, marginRight: 6 } }, 'Live pipeline'),
       stages.map((s, i) => { const on = s[0] === highlight, c = n(s[0]);
         return h('span', { key: s[0], style: { display: 'flex', alignItems: 'center', gap: 6 } },
@@ -169,14 +169,14 @@
           i % step === 0 || i === n - 1 ? h('text', { x: X + bw / 2, y: H + 20, textAnchor: 'middle', fontSize: 16, fill: FAINT }, x.day.slice(5)) : null); }));
   };
   // ---------------------------------------------------------------- small UI kit
-  const box = (children, extra) => h('div', { style: Object.assign({ background: '#fff', borderRadius: 12, border: '1px solid ' + HAIR, padding: 18 }, extra || {}) }, children);
-  const title = (t, sub) => h('div', { style: { marginBottom: 2 } }, h('h1', { style: { fontSize: 24, fontWeight: 700, letterSpacing: '-.02em', margin: '2px 0 4px' } }, t), sub ? h('p', { style: { margin: 0, fontSize: 13.5, color: MUT, maxWidth: '90ch', lineHeight: 1.6 } }, sub) : null);
+  const box = (children, extra) => h('div', { style: Object.assign({ background: '#fff', borderRadius: 0, border: '1px solid ' + HAIR, padding: 18 }, extra || {}) }, children);
+  const title = (t, sub) => h('div', { style: { marginBottom: 2 } }, h('h1', { style: { fontSize: 24, fontWeight: 500, letterSpacing: '-.02em', margin: '2px 0 4px' } }, t), sub ? h('p', { style: { margin: 0, fontSize: 13.5, color: MUT, maxWidth: '90ch', lineHeight: 1.6 } }, sub) : null);
   const sub2 = t => h('div', { style: { fontSize: 15, fontWeight: 600, margin: '4px 0 10px' } }, t);
   const mins = m => m == null ? '—' : m < 60 ? Math.round(m) + ' min' : m < 1440 ? (m / 60).toFixed(1) + ' h' : (m / 1440).toFixed(1) + ' d';
   const pct = v => v == null ? '—' : v + '%';
   const when = ts => { if (!ts) return '—'; const d = new Date(ts); return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }); };
-  const inp = { font: '400 13.5px Montserrat,sans-serif', padding: '9px 11px', border: '1px solid ' + HAIR, borderRadius: 8, width: '100%', background: '#fff' };
-  const btnS = (kind) => ({ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, font: '600 13px Montserrat,sans-serif', padding: '9px 15px', borderRadius: 8, cursor: 'pointer', border: '1px solid ' + (kind === 'primary' ? TEAL : kind === 'dark' ? INK : HAIR), background: kind === 'primary' ? TEAL : kind === 'dark' ? INK : '#fff', color: kind === 'primary' || kind === 'dark' ? '#fff' : INK, whiteSpace: 'nowrap' });
+  const inp = { font: '400 13.5px Montserrat,sans-serif', padding: '9px 11px', border: '1px solid ' + HAIR, borderRadius: 0, width: '100%', background: '#fff' };
+  const btnS = (kind) => ({ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, font: '500 13px Montserrat,sans-serif', padding: '9px 15px', borderRadius: 0, cursor: 'pointer', border: '1px solid ' + (kind === 'primary' ? TEAL : kind === 'dark' ? INK : HAIR), background: kind === 'primary' ? TEAL : kind === 'dark' ? INK : '#fff', color: kind === 'primary' || kind === 'dark' ? '#fff' : INK, whiteSpace: 'nowrap' });
   const B = (label, onClick, kind, disabled, title) => h('button', { type: 'button', title: title || undefined, disabled: !!disabled, onClick: disabled ? undefined : onClick, style: Object.assign(btnS(kind), disabled ? { opacity: .45, cursor: 'not-allowed' } : {}) }, label);
   const field = (label, control, hint) => h('label', { style: { display: 'flex', flexDirection: 'column', gap: 5, fontSize: 12.5, fontWeight: 600, color: INK } }, label, control, hint ? h('span', { style: { fontSize: 11.5, fontWeight: 400, color: FAINT, lineHeight: 1.5 } }, hint) : null);
   const kv = (rows) => h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(210px,1fr))', gap: '10px 18px' } },
@@ -217,7 +217,7 @@
   P.oTile = function (j, extra) {
     const acts = (j.actions || []).filter(a => a.permitted);
     const late = j.deadline && Date.parse(j.deadline) < Date.now() && j.status !== 'completed';
-    return h('div', { key: j.id, style: { border: '1px solid ' + (late ? '#f5c8c7' : HAIR), borderRadius: 12, background: '#fff', padding: 14, display: 'flex', flexDirection: 'column', gap: 8 } },
+    return h('div', { key: j.id, style: { border: '1px solid ' + (late ? '#f5c8c7' : HAIR), borderRadius: 0, background: '#fff', padding: 14, display: 'flex', flexDirection: 'column', gap: 8 } },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
         h('span', { style: { font: '600 12px ui-monospace,Menlo,monospace', color: TEAL } }, j.id),
         this.chip(j.statusLabel || j.status, late ? 'bad' : 'teal'),
@@ -244,7 +244,7 @@
   const origTile = P.oTile;
   P.oTile = function (j, extra) { return origTile.call(this, Object.assign({}, j, { actions: dedupe(j.actions || []) }), extra); };
   P.oGrid = function (jobs, emptyText, extraFn) {
-    if (!jobs.length) return h('div', { key: 'empty', style: { border: '1px dashed ' + HAIR, borderRadius: 12, padding: 34, textAlign: 'center', color: FAINT, fontSize: 13, background: '#fff' } }, this.state.ops && this.state.ops.loaded ? emptyText : 'Loading live jobs…');
+    if (!jobs.length) return h('div', { key: 'empty', style: { border: '1px dashed ' + HAIR, borderRadius: 0, padding: 34, textAlign: 'center', color: FAINT, fontSize: 13, background: '#fff' } }, this.state.ops && this.state.ops.loaded ? emptyText : 'Loading live jobs…');
     return h('div', { key: 'grid', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 14 } }, jobs.map(j => this.oTile(j, extraFn ? extraFn(j) : null)));
   };
   // order listing view (shared by every department): search + status filter + table → details
@@ -297,7 +297,7 @@
     const F = this.state.opsForm || {}; const setF = (k, v) => this.setState(st => ({ opsForm: Object.assign({}, st.opsForm, { [k]: v }) }));
     const cfg = this.state.opsConfig || { hubs: [], outlets: [], machines: [], couriers: [] };
     const frame = (heading, body, footer, wide) => h('div', { key: 'opsm', onClick: close, style: { position: 'fixed', inset: 0, zIndex: 95, background: 'rgba(15,20,25,.5)', display: 'grid', placeItems: 'center', padding: 14, overflow: 'auto' } },
-      h('div', { onClick: e => e.stopPropagation(), role: 'dialog', 'aria-label': heading, style: { background: '#fff', borderRadius: 14, width: '100%', maxWidth: wide ? 960 : 620, maxHeight: '92vh', overflow: 'auto', boxShadow: '0 24px 60px rgba(33,33,33,.3)' } },
+      h('div', { onClick: e => e.stopPropagation(), role: 'dialog', 'aria-label': heading, style: { background: '#fff', borderRadius: 0, width: '100%', maxWidth: wide ? 960 : 620, maxHeight: '92vh', overflow: 'auto', boxShadow: '0 24px 60px rgba(33,33,33,.3)' } },
         h('div', { style: { padding: '15px 20px', borderBottom: '1px solid ' + HAIR, display: 'flex', alignItems: 'center', gap: 10, position: 'sticky', top: 0, background: '#fff', zIndex: 1 } },
           j ? h('span', { style: { font: '600 12px ui-monospace,Menlo,monospace', color: TEAL } }, j.id) : null,
           h('span', { style: { fontSize: 15.5, fontWeight: 600 } }, heading),
@@ -310,7 +310,7 @@
         field('Deliver to', h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, ['hub', 'outlet', 'customer'].map(x => h('span', { key: x, onClick: () => setF('destType', x), style: Object.assign(btnS(t === x ? 'dark' : 'ghost'), { fontWeight: 600 }) }, DEST_ICON[x] + ' ' + x[0].toUpperCase() + x.slice(1))))),
         t === 'hub' ? field('Hub', h('select', { value: F.destId || (j && j.hub) || '', onChange: e => setF('destId', e.target.value), style: inp }, cfg.hubs.map(x => h('option', { key: x.id, value: x.id }, x.name)))) : null,
         t === 'outlet' ? field('Outlet', h('select', { value: F.destId || (j && j.finalDestination && j.finalDestination.type === 'outlet' ? j.finalDestination.id : (cfg.outlets[0] || {}).id) || '', onChange: e => setF('destId', e.target.value), style: inp }, cfg.outlets.map(x => h('option', { key: x.id, value: x.id }, x.name)))) : null,
-        t === 'customer' ? h('div', { style: { fontSize: 12.5, color: MUT, background: ALT, borderRadius: 8, padding: '9px 12px' } }, 'Customer address: ', h('b', null, (j && j.finalDestination && j.finalDestination.type === 'customer' ? (j.finalDestination.address || 'on the order') : 'the order’s delivery address'))) : null,
+        t === 'customer' ? h('div', { style: { fontSize: 12.5, color: MUT, background: ALT, borderRadius: 0, padding: '9px 12px' } }, 'Customer address: ', h('b', null, (j && j.finalDestination && j.finalDestination.type === 'customer' ? (j.finalDestination.address || 'on the order') : 'the order’s delivery address'))) : null,
       ];
     };
     const destPayload = (defType) => { const t = F.destType || defType || 'customer'; return { destType: t, destId: F.destId || (t === 'hub' ? (j && j.hub) : t === 'outlet' ? (j && j.finalDestination && j.finalDestination.type === 'outlet' ? j.finalDestination.id : (cfg.outlets[0] || {}).id) : null) }; };
@@ -329,8 +329,8 @@
         kv([['Customer', jj.customer], ['Order', jj.orderId], ['Product', jj.product], ['Quantity', (jj.qty || 0).toLocaleString()], ['Value', this.rm(jj.price || 0)], ['Payment', jj.paymentValidated ? 'Confirmed' : jj.creditTerms ? 'Credit terms' : 'Pending'],
           ['Deadline', jj.deadline ? when(jj.deadline) : '—'], ['Artwork', jj.artwork && jj.artwork.file], ['Machine', jj.machine], ['Printer', jj.printer || (jj.outsource && jj.outsource.awardedTo ? (jj.outsource.vendors.find(v => v.vendorId === jj.outsource.awardedTo) || {}).vendorName : null)],
           ['Current destination', destText(jj.destination)], ['Final destination', destText(jj.finalDestination)], ['Assigned hub', jj.hub], ['Owner', jj.owner && Object.keys(jj.owner).map(k => k + ': ' + jj.owner[k]).join(' · ')]]),
-        jj.spec ? h('div', { key: 'sp', style: { fontSize: 12.5, color: MUT, lineHeight: 1.6, background: ALT, borderRadius: 8, padding: '10px 12px' } }, jj.spec) : null,
-        jj.instructions ? h('div', { key: 'in', style: { fontSize: 12.5, color: INK, background: '#fff8e6', border: '1px solid #f3e2b8', borderRadius: 8, padding: '10px 12px' } }, h('b', null, 'Delivery instructions: '), jj.instructions) : null,
+        jj.spec ? h('div', { key: 'sp', style: { fontSize: 12.5, color: MUT, lineHeight: 1.6, background: ALT, borderRadius: 0, padding: '10px 12px' } }, jj.spec) : null,
+        jj.instructions ? h('div', { key: 'in', style: { fontSize: 12.5, color: INK, background: '#fff8e6', border: '1px solid #f3e2b8', borderRadius: 0, padding: '10px 12px' } }, h('b', null, 'Delivery instructions: '), jj.instructions) : null,
         this.oLabel(L),
         ship.length ? h('div', { key: 'sh' }, sub2('Shipments'), ship) : null,
         h('div', { key: 'tl' }, sub2('Timeline'), audit.length ? audit.map((e, i) => h('div', { key: i, style: { display: 'grid', gridTemplateColumns: '120px minmax(0,1fr)', gap: 10, fontSize: 12.5, padding: '6px 0', borderTop: i ? '1px solid ' + LINE : 'none' } },
@@ -364,14 +364,14 @@
       return frame('Outsource order processing', [
         this.oStepper(steps),
         !o ? h('div', { key: 'rq' }, sub2('1 · Request quotes'),
-          h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 8 } }, vendors.map(v => h('label', { key: v.id, style: { display: 'flex', gap: 8, alignItems: 'center', border: '1px solid ' + HAIR, borderRadius: 8, padding: '9px 11px', fontSize: 13, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: picked.indexOf(v.id) >= 0, onChange: () => toggle(v.id) }), v.name, v.internal ? this.chip('Internal', 'neutral') : null))),
+          h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(220px,1fr))', gap: 8 } }, vendors.map(v => h('label', { key: v.id, style: { display: 'flex', gap: 8, alignItems: 'center', border: '1px solid ' + HAIR, borderRadius: 0, padding: '9px 11px', fontSize: 13, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: picked.indexOf(v.id) >= 0, onChange: () => toggle(v.id) }), v.name, v.internal ? this.chip('Internal', 'neutral') : null))),
           h('div', { style: { marginTop: 10 } }, B('Send quote request to ' + picked.length + ' printer' + (picked.length === 1 ? '' : 's'), () => this.opsFetch('/api/jobs/' + j.id + '/request-quotes', { vendorIds: picked }).then(d => this.opsDone(d, 'Quote requests sent.')), 'primary', !picked.length))) : null,
         o && !o.awardedTo ? h('div', { key: 'cmp' }, sub2('2 · Compare & award'),
           this.dataCard([{ label: 'Printer' }, { label: 'Price', right: true }, { label: 'Lead time' }, { label: '' }], o.vendors.map(v => [
             h('span', null, v.vendorName, best && v.vendorId === best.vendorId ? h('b', { style: { color: '#3d8b40', fontSize: 11, marginLeft: 6 } }, 'BEST') : null),
             v.submittedAt ? this.rm(v.price) : h('span', { style: { color: FAINT } }, 'no quote yet'), v.submittedAt ? v.leadDays + ' days' : '—',
             v.submittedAt || canDirect ? h('span', { onClick: () => this.opsOpen('award', j, { vendorId: v.vendorId, vendorName: v.vendorName, quoted: !!v.submittedAt, price: v.price }), style: { color: TEAL, fontWeight: 600, cursor: 'pointer' } }, 'Award') : '']), { minWidth: 520 })) : null,
-        o && o.awardedTo ? h('div', { key: 'aw', style: { fontSize: 13, color: INK, background: '#e6f4ea', borderRadius: 8, padding: '10px 12px' } }, 'Awarded to ', h('b', null, (o.vendors.find(v => v.vendorId === o.awardedTo) || {}).vendorName), ' · ', o.po, o.direct ? ' · direct award (no quote)' : '', ' · ships to ', destText(j.destination)) : null,
+        o && o.awardedTo ? h('div', { key: 'aw', style: { fontSize: 13, color: INK, background: '#e6f4ea', borderRadius: 0, padding: '10px 12px' } }, 'Awarded to ', h('b', null, (o.vendors.find(v => v.vendorId === o.awardedTo) || {}).vendorName), ' · ', o.po, o.direct ? ' · direct award (no quote)' : '', ' · ships to ', destText(j.destination)) : null,
         canDirect && !(o && o.awardedTo) ? h('div', { key: 'dir', style: { borderTop: '1px solid ' + LINE, paddingTop: 12 } }, sub2('Award directly (no quote)'),
           h('div', { style: { fontSize: 12.5, color: MUT, marginBottom: 8 } }, 'For internal production or an agreed printer: award the job even though no quote was submitted.'),
           h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, h('select', { value: F.dv || '', onChange: e => setF('dv', e.target.value), style: Object.assign({}, inp, { maxWidth: 320 }) }, [h('option', { key: '', value: '' }, 'Choose a printer…')].concat(vendors.map(v => h('option', { key: v.id, value: v.id }, v.name + (v.internal ? ' (internal)' : ''))))),
@@ -391,7 +391,7 @@
           field('Lead days (optional)', h('input', { type: 'number', value: F.lead || '', onChange: e => setF('lead', e.target.value), style: Object.assign({}, inp, { maxWidth: 140 }) }))) : null,
         destPicker('hub'),
         field('Instructions for the printer (optional)', h('textarea', { rows: 2, value: F.instructions || '', onChange: e => setF('instructions', e.target.value), style: Object.assign({}, inp, { resize: 'vertical' }) })),
-        need ? h('label', { key: 'cb', style: { display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13, color: '#8a4b00', background: '#fff8e6', border: '1px solid #f3e2b8', borderRadius: 8, padding: '11px 12px', cursor: 'pointer', lineHeight: 1.5 } },
+        need ? h('label', { key: 'cb', style: { display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13, color: '#8a4b00', background: '#fff8e6', border: '1px solid #f3e2b8', borderRadius: 0, padding: '11px 12px', cursor: 'pointer', lineHeight: 1.5 } },
           h('input', { type: 'checkbox', checked: !!F.confirm, onChange: e => setF('confirm', e.target.checked), style: { marginTop: 3 } }), 'This printer didn’t submit a quote yet. Please make sure it is internal production.') : null,
       ], [B('Cancel', close, 'ghost'), B('Confirm award', go, 'primary', need && !F.confirm)]);
     }
@@ -411,9 +411,9 @@
       const next = () => G.done === 'finish' ? this.opsTransition(j.id, 'finish', {}, j.id + ' sent to logistics.').then(ok => ok && close()) : this.opsOpen('ship', j, { action: G.done });
       return frame(G.head, [
         this.oStepper(G.steps.map(s => [s[1], !!prog[s[0]]])),
-        canTick ? null : h('div', { key: 'ro', style: { fontSize: 12.5, color: MUT, background: ALT, borderRadius: 8, padding: '9px 12px' } }, 'View only — this form is updated by the ' + ({ inhouse: 'production floor', hub: 'hub team', logistics: 'logistics team' })[m.group] + '.'),
+        canTick ? null : h('div', { key: 'ro', style: { fontSize: 12.5, color: MUT, background: ALT, borderRadius: 0, padding: '9px 12px' } }, 'View only — this form is updated by the ' + ({ inhouse: 'production floor', hub: 'hub team', logistics: 'logistics team' })[m.group] + '.'),
         h('div', { key: 'st', style: { display: 'flex', flexDirection: 'column', gap: 8 } }, G.steps.map(s => { const v = prog[s[0]];
-          return h('label', { key: s[0], style: { display: 'flex', gap: 12, alignItems: 'center', border: '1px solid ' + (v ? '#cfe8d4' : HAIR), background: v ? '#f3faf5' : '#fff', borderRadius: 10, padding: '12px 14px', cursor: canTick ? 'pointer' : 'default' } },
+          return h('label', { key: s[0], style: { display: 'flex', gap: 12, alignItems: 'center', border: '1px solid ' + (v ? '#cfe8d4' : HAIR), background: v ? '#f3faf5' : '#fff', borderRadius: 0, padding: '12px 14px', cursor: canTick ? 'pointer' : 'default' } },
             h('input', { type: 'checkbox', checked: !!v, disabled: !canTick, onChange: e => this.opsStep(j.id, m.group, s[0], e.target.checked), style: { width: 18, height: 18 } }),
             h('span', { style: { flex: 1, fontSize: 13.5, fontWeight: 600 } }, s[1]),
             v ? h('span', { style: { fontSize: 11.5, color: FAINT } }, v.by + ' · ' + when(v.at)) : null); })),
@@ -452,7 +452,7 @@
       return frame('Custom quote details', [
         this.oStepper(this.oQuoteSteps(q)),
         kv([['Quote', q.id], ['Customer', q.customer && q.customer.name], ['Email', q.customer && q.customer.email], ['Phone', q.customer && q.customer.phone], ['Outlet', q.outlet], ['Product', r.product], ['Quantity', r.qty], ['Size', r.size], ['Material', r.material], ['Finishing', r.finishing], ['Price', q.price != null ? this.rm(q.price) : null], ['Lead time', q.leadDays ? q.leadDays + ' days' : null], ['Order', q.orderId]]),
-        r.remarks || r.quoteData ? h('div', { key: 'rm', style: { whiteSpace: 'pre-wrap', fontSize: 12.5, color: MUT, background: ALT, borderRadius: 8, padding: '10px 12px' } }, r.quoteData || r.remarks) : null,
+        r.remarks || r.quoteData ? h('div', { key: 'rm', style: { whiteSpace: 'pre-wrap', fontSize: 12.5, color: MUT, background: ALT, borderRadius: 0, padding: '10px 12px' } }, r.quoteData || r.remarks) : null,
         h('div', { key: 'hi' }, sub2('History'), (q.history || []).slice().reverse().map((e, i) => h('div', { key: i, style: { fontSize: 12.5, color: MUT, padding: '5px 0', borderTop: i ? '1px solid ' + LINE : 'none' } }, when(e.ts) + ' · ' + (e.actor || '') + ' · ' + (e.action || '') + (e.price ? ' · ' + this.rm(e.price) : '') + (e.note ? ' — ' + e.note : '')))),
         this.oPrinterQuotes && ['admin', 'production'].indexOf(this.userType()) >= 0 && ['accepted', 'rejected', 'declined'].indexOf(q.status) < 0 ? this.oPrinterQuotes(q) : null,
       ], [B('Open quote PDF', () => this.openDoc(q.id, 'quote'), 'ghost'), B('Close', close, 'primary')], true);
@@ -462,7 +462,7 @@
   // the shipping label that travels with every job
   P.oLabel = function (L) {
     if (!L || !L.id) return null;
-    return h('div', { key: 'lbl', style: { border: '2px solid ' + INK, borderRadius: 10, overflow: 'hidden', maxWidth: 420 } },
+    return h('div', { key: 'lbl', style: { border: '2px solid ' + INK, borderRadius: 0, overflow: 'hidden', maxWidth: 420 } },
       h('div', { style: { background: INK, color: '#fff', padding: '7px 12px', display: 'flex', justifyContent: 'space-between', fontSize: 11.5, fontWeight: 600 } }, h('span', null, 'SHIPPING LABEL'), h('span', { style: { fontFamily: 'ui-monospace,Menlo,monospace' } }, L.id)),
       h('div', { style: { padding: 12, display: 'flex', flexDirection: 'column', gap: 4, fontSize: 12.5 } },
         h('div', { style: { fontSize: 11, color: FAINT } }, 'FROM ' + (L.from || '')),
@@ -729,10 +729,10 @@
     const ship = j => this.opsFetch('/api/vendor/jobs/' + j.id + '/ship', { courier: this.state['vs_c_' + j.id] || '', tracking: this.state['vs_t_' + j.id] || '' })
       .then(d => { if (d.error) return this.opsToastSet(true, d.error); this.opsToastSet(false, j.id + ' marked shipped.'); this.loadVendorRequests(); });
     const reqCard = j => { const me = mine(j); const sent = !!me.submittedAt;
-      return h('div', { key: j.id, style: { border: '1px solid ' + HAIR, borderRadius: 12, padding: 16, background: '#fff', display: 'flex', flexDirection: 'column', gap: 9 } },
+      return h('div', { key: j.id, style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: 16, background: '#fff', display: 'flex', flexDirection: 'column', gap: 9 } },
         h('div', { style: { display: 'flex', justifyContent: 'space-between' } }, h('span', { style: { font: '600 12px ui-monospace,Menlo,monospace', color: TEAL } }, j.id), this.chip(sent ? 'Quote submitted' : 'Awaiting quote', sent ? 'ok' : 'warn')),
         h('div', { style: { fontSize: 14.5, fontWeight: 600 } }, j.product), h('div', { style: { fontSize: 12.5, color: MUT } }, (j.spec || '') + ' · qty ' + (j.qty || 0).toLocaleString()),
-        sent ? h('div', { style: { fontSize: 13, background: ALT, borderRadius: 8, padding: '9px 11px' } }, 'Your quote: ', h('b', null, this.rm(me.price)), ' · ' + me.leadDays + ' days')
+        sent ? h('div', { style: { fontSize: 13, background: ALT, borderRadius: 0, padding: '9px 11px' } }, 'Your quote: ', h('b', null, this.rm(me.price)), ' · ' + me.leadDays + ' days')
           : isStaff ? h('div', { style: { fontSize: 12.5, color: FAINT } }, 'Your printer manager submits the price for this job.')
           : h('div', { style: { display: 'flex', flexDirection: 'column', gap: 7 } },
             h('div', { style: { display: 'flex', gap: 7 } }, h('input', { type: 'number', placeholder: 'Price (RM)', value: this.state['vq_' + j.id + '_price'] || '', onChange: e => this.setField('vq_' + j.id + '_price', e.target.value), style: inp }), h('input', { type: 'number', placeholder: 'Lead days', value: this.state['vq_' + j.id + '_lead'] || '', onChange: e => this.setField('vq_' + j.id + '_lead', e.target.value), style: inp })),
@@ -746,7 +746,7 @@
         h('input', { placeholder: 'Tracking no.', value: this.state['vs_t_' + j.id] || '', onChange: e => this.setField('vs_t_' + j.id, e.target.value), style: Object.assign({}, inp, { flex: '1 1 130px' }) }),
         B('Print label', () => this.printLabel(j.label), 'ghost'), B('Mark shipped', () => ship(j), 'primary', !this.state['vs_c_' + j.id]))
         : this.chip('Shipped' + (j.tracking ? ' · ' + j.tracking : ''), 'ok'));
-    const grid = (list, fn, empty) => list.length ? h('div', { key: 'g', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 16 } }, list.map(fn)) : h('div', { key: 'e', style: { border: '1px dashed ' + HAIR, borderRadius: 12, padding: 30, textAlign: 'center', color: FAINT, background: '#fff' } }, empty);
+    const grid = (list, fn, empty) => list.length ? h('div', { key: 'g', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 16 } }, list.map(fn)) : h('div', { key: 'e', style: { border: '1px dashed ' + HAIR, borderRadius: 0, padding: 30, textAlign: 'center', color: FAINT, background: '#fff' } }, empty);
     let content;
     if (tab === 'Dashboard') content = [title(u.name || 'Printer', isStaff ? 'Print staff — ship awarded jobs with the Printoka label.' : 'Printer manager — quote on jobs, win POs and ship with the Printoka label.'),
       this.opsStatGrid([['Quote requests', pending, 'edit-3', 'teal', 'awaiting your price', pending ? 'New' : null, pending > 0], ['To print & ship', toShip.length, 'box', 'orange', 'awarded to you'], ['Shipped', shipped.length, 'truck', 'teal', 'on the way / delivered']]), this.notifPanel()];

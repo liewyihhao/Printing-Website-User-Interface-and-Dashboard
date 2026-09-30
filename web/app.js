@@ -769,7 +769,7 @@ class Component extends DCLogic {
     if (!pickers.length) return null;
     const pick = (k, v) => this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [k]: v }) }));
     const swatch = (key, c) => { const on = cfg[key] === c[0]; return h('span', { key: c[0], onClick: e => { e.stopPropagation(); pick(key, c[0]); }, style: { display: 'inline-flex', alignItems: 'center', gap: 7, border: '1px solid ' + (on ? TEAL : HAIR), borderRadius: 999, padding: '5px 13px 5px 6px', cursor: 'pointer', background: on ? '#fdf2f2' : '#fff', fontSize: 12.5, fontWeight: on ? 600 : 500, color: on ? TEAL : INK } }, h('span', { style: { width: 15, height: 15, borderRadius: '50%', background: c[1], border: '1px solid rgba(0,0,0,.2)', flex: 'none' } }), c[0]); };
-    const row = (label, children) => h('div', { key: label, style: { border: '1px solid ' + HAIR, borderRadius: 10, padding: 14, background: '#fff', display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' } }, h('div', { style: { fontSize: 13, fontWeight: 600, minWidth: 110 } }, label), h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, children));
+    const row = (label, children) => h('div', { key: label, style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: 14, background: '#fff', display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' } }, h('div', { style: { fontSize: 13, fontWeight: 600, minWidth: 110 } }, label), h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, children));
     return h('div', { key: def.key, style: { padding: '6px 0 15px', borderTop: '1px solid ' + LINE } },
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
         pickers.map(p => row(p.label, COLOURS.map(c => swatch(p.key, c))))));
@@ -1259,12 +1259,12 @@ class Component extends DCLogic {
   // a member promo code as a ticket: code, terms, copy button (dismissable on the welcome card)
   couponTicket(cp, dismissable) {
     const copy = () => { try { navigator.clipboard.writeText(cp.code); } catch (e) {} this.setState({ couponCopied: cp.code }); };
-    return h('div', { style: { display: 'flex', alignItems: 'stretch', border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', background: '#fff' } },
+    return h('div', { style: { display: 'flex', alignItems: 'stretch', border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden', background: '#fff' } },
       h('div', { style: { flex: 'none', width: 104, background: 'linear-gradient(135deg,' + TEAL + ',#F0572B)', color: '#fff', display: 'grid', placeItems: 'center', textAlign: 'center', padding: '14px 8px' } },
         h('div', null, h('div', { style: { fontSize: cp.amount ? 22 : 26, fontWeight: 700, lineHeight: 1 } }, this.couponOff(cp)), h('div', { style: { fontSize: 11.5, fontWeight: 600, marginTop: 3, letterSpacing: '.06em' } }, 'OFF'))),
       h('div', { style: { flex: 1, minWidth: 0, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 6 } },
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' } },
-          h('span', { style: { fontSize: 16, fontWeight: 700, letterSpacing: '.04em', color: INK, border: '1px dashed ' + TEAL, borderRadius: 6, padding: '4px 10px', background: '#fdf2f2' } }, cp.code),
+          h('span', { style: { fontSize: 16, fontWeight: 700, letterSpacing: '.04em', color: INK, border: '1px dashed ' + TEAL, borderRadius: 0, padding: '4px 10px', background: '#fdf2f2' } }, cp.code),
           h('span', { role: 'button', tabIndex: 0, onClick: copy, style: { fontSize: 12.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, this.state.couponCopied === cp.code ? 'Copied' : 'Copy code'),
           dismissable ? h('span', { role: 'button', tabIndex: 0, onClick: () => this.setState({ welcomeCoupon: null }), style: { marginLeft: 'auto', fontSize: 12.5, color: FAINT, cursor: 'pointer' } }, 'Dismiss') : null),
         h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.6 } }, (!cp.multiUse && cp.usedAt) ? 'Used' + (cp.orderId ? ' on order ' + cp.orderId : '') + '.'
@@ -1450,7 +1450,7 @@ class Component extends DCLogic {
   settingsForm(group, fields, desc) {
     const cur = (this.state.settings && this.state.settings[group]) || {};
     const val = k => { const s = this.state['sf_' + group + '_' + k]; return s != null ? s : (cur[k] != null ? cur[k] : ''); };
-    const inp = { font: '400 13.5px Montserrat,sans-serif', padding: '10px 12px', border: '1px solid ' + HAIR, borderRadius: 8, width: '100%', background: '#fff' };
+    const inp = { font: '400 13.5px Montserrat,sans-serif', padding: '10px 12px', border: '1px solid ' + HAIR, borderRadius: 0, width: '100%', background: '#fff' };
     const save = () => { const patch = {}; fields.forEach(f => { patch[f[0]] = val(f[0]); }); this.saveSettings({ [group]: patch }, group); };
     return [
       h('p', { key: 'd', style: { fontSize: 13.5, color: MUT, lineHeight: 1.7, margin: '0 0 14px', maxWidth: '82ch' } }, desc),
@@ -1461,7 +1461,7 @@ class Component extends DCLogic {
             ? h('textarea', { value: val(f[0]), onChange: e => this.setField('sf_' + group + '_' + f[0], e.target.value), style: Object.assign({}, inp, { minHeight: 72, resize: 'vertical', fontFamily: 'inherit' }) })
             : h('input', { type: f[2] === 'number' ? 'number' : 'text', value: val(f[0]), onChange: e => this.setField('sf_' + group + '_' + f[0], e.target.value), style: inp })))),
       h('div', { key: 's', style: { marginTop: 14, display: 'flex', gap: 12, alignItems: 'center' } },
-        h('span', { onClick: save, style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 14, padding: '11px 24px', borderRadius: 8, cursor: this.state.setBusy === group ? 'wait' : 'pointer' } }, this.state.setBusy === group ? 'Saving…' : 'Save changes'),
+        h('span', { onClick: save, style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 14, padding: '11px 24px', borderRadius: 0, cursor: this.state.setBusy === group ? 'wait' : 'pointer' } }, this.state.setBusy === group ? 'Saving…' : 'Save changes'),
         (this.state.setMsg && this.state.setBusy !== group) ? h('span', { style: { fontSize: 12.5, color: '#3d8b40' } }, this.state.setMsg) : null),
     ];
   }
@@ -1471,7 +1471,7 @@ class Component extends DCLogic {
     const unread = list.filter(n => !n.read);
     if (!list.length) return null;
     const ICON = { order_placed: '📦', quote_request: '📝', quote_issued: '💬', quote_reviewed: '👀', quote_converted: '✅', quote_amend: '✏️', quote_declined: '🚫' };
-    return h('div', { key: 'notif', style: { border: '1px solid ' + HAIR, borderRadius: 12, background: '#fff', overflow: 'hidden', marginBottom: 4 } },
+    return h('div', { key: 'notif', style: { border: '1px solid ' + HAIR, borderRadius: 0, background: '#fff', overflow: 'hidden', marginBottom: 4 } },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '11px 15px', borderBottom: list.length ? '1px solid ' + LINE : 'none', background: ALT } },
         h('span', { style: { fontSize: 13, fontWeight: 700 } }, 'Notifications'),
         unread.length ? h('span', { style: { background: TEAL, color: '#fff', fontSize: 11, fontWeight: 700, borderRadius: 999, padding: '1px 8px' } }, unread.length + ' new') : h('span', { style: { fontSize: 12, color: FAINT } }, 'all caught up'),
@@ -1532,7 +1532,7 @@ class Component extends DCLogic {
     const close = () => { try { localStorage.setItem('pk_ann', a.text); } catch (e) {} this.setState({ annClosed: a.text }); };
     const goCta = () => { close(); this.go(a.link || 'membership'); };
     return h('div', { key: 'annpop', onClick: close, style: { position: 'fixed', inset: 0, zIndex: 97, background: 'rgba(20,20,25,.4)', display: 'grid', placeItems: 'center', padding: 20 } },
-      h('div', { onClick: e => e.stopPropagation(), role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Announcement', style: { position: 'relative', maxWidth: 460, width: '100%', borderRadius: 16, overflow: 'hidden', boxShadow: '0 24px 60px rgba(33,33,33,.35)', background: 'linear-gradient(135deg,#FF9A2E,#F02B29)', color: '#fff' } },
+      h('div', { onClick: e => e.stopPropagation(), role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Announcement', style: { position: 'relative', maxWidth: 460, width: '100%', borderRadius: 0, overflow: 'hidden', boxShadow: '0 24px 60px rgba(33,33,33,.35)', background: 'linear-gradient(135deg,#FF9A2E,#F02B29)', color: '#fff' } },
         h('span', { onClick: close, role: 'button', tabIndex: 0, 'aria-label': 'Close announcement', onKeyDown: e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); close(); } }, style: { position: 'absolute', top: 12, right: 14, fontSize: 22, lineHeight: 1, cursor: 'pointer', color: 'rgba(255,255,255,.9)' } }, '×'),
         h('div', { style: { padding: '30px 28px 26px', textAlign: 'center' } },
           // (user, 2026-09-30) the full printoka logo with its wordmark, knocked out to white on the red — no white tile behind it
@@ -1546,16 +1546,16 @@ class Component extends DCLogic {
     if (!this.state.nu_open) return null;
     const close = () => this.setState({ nu_open: false, nu_done: null, nu_err: null, nu_first: '', nu_last: '', nu_company: '', nu_addr: '', nu_city: '', nu_country: '', nu_phone: '', nu_email: '', nu_promo: false });
     const done = this.state.nu_done;
-    const inp = { font: '400 14px Montserrat,sans-serif', padding: '10px 12px', border: '1px solid ' + HAIR, borderRadius: 8, width: '100%', background: '#fff' };
+    const inp = { font: '400 14px Montserrat,sans-serif', padding: '10px 12px', border: '1px solid ' + HAIR, borderRadius: 0, width: '100%', background: '#fff' };
     const lbl = (t, req) => h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, t, req ? h('span', { style: { color: '#E52220' } }, ' *') : null);
     const field = (label, key, req, ph) => h('div', null, lbl(label, req), h('input', { placeholder: ph || '', value: this.state[key] || '', onChange: e => this.setField(key, e.target.value), style: inp }));
     return h('div', { key: 'nu', onClick: close, style: { position: 'fixed', inset: 0, zIndex: 96, background: 'rgba(20,25,30,.45)', display: 'grid', placeItems: 'start center', padding: 20, overflow: 'auto' } },
-      h('div', { onClick: e => e.stopPropagation(), style: { background: '#fff', borderRadius: 14, maxWidth: 620, width: '100%', margin: '24px 0', boxShadow: '0 24px 60px rgba(33,33,33,.3)', overflow: 'hidden' } },
+      h('div', { onClick: e => e.stopPropagation(), style: { background: '#fff', borderRadius: 0, maxWidth: 620, width: '100%', margin: '24px 0', boxShadow: '0 24px 60px rgba(33,33,33,.3)', overflow: 'hidden' } },
         h('div', { style: { height: 4, background: '#E52220' } }),
         h('div', { style: { padding: '20px 26px 26px' } },
           h('div', { style: { display: 'flex', alignItems: 'center', marginBottom: 18 } }, h('span', { style: { fontSize: 20, fontWeight: 600 } }, 'Create new user'), h('span', { onClick: close, style: { marginLeft: 'auto', color: FAINT, fontSize: 22, cursor: 'pointer' } }, '×')),
           done ? h('div', null,
-            h('div', { style: { background: '#f2fbf4', border: '1px solid #12B3A6', borderRadius: 12, padding: 18 } },
+            h('div', { style: { background: '#f2fbf4', border: '1px solid #12B3A6', borderRadius: 0, padding: 18 } },
               h('div', { style: { fontSize: 15, fontWeight: 600, marginBottom: 6 } }, '✅ Account created for ' + (done.customer && done.customer.name)),
               h('div', { style: { fontSize: 13, color: MUT, lineHeight: 1.7 } }, 'Email ', h('b', null, done.customer && done.customer.email), h('br'), 'Temporary password ', h('b', { style: { fontFamily: 'ui-monospace,Menlo,monospace' } }, done.tempPassword), h('div', { style: { fontSize: 12, color: FAINT, marginTop: 4 } }, 'Share this so they can sign in. They can reset it anytime.'))),
             h('div', { style: { marginTop: 16, display: 'flex', gap: 10 } },
@@ -1767,7 +1767,7 @@ class Component extends DCLogic {
         body = [
           this.docHeader('Invoice', inv.number || inv.id, inv.date, this.chip(paid ? 'Paid' : inv.status === 'cancelled' ? 'Cancelled' : 'Unpaid', paid ? 'ok' : inv.status === 'cancelled' ? 'neutral' : 'warn')),
           h('div', { key: 'bt', style: { marginBottom: 16, fontSize: 12.5 } }, h('div', { style: { fontWeight: 600, marginBottom: 3 } }, 'Bill to'), h('div', { style: { color: MUT } }, inv.userName || '—')),
-          h('div', { key: 'ds', style: { whiteSpace: 'pre-wrap', fontSize: 12.5, color: INK, lineHeight: 1.7, border: '1px solid ' + LINE, borderRadius: 8, padding: '14px 16px', marginBottom: 16 } }, inv.description || '—'),
+          h('div', { key: 'ds', style: { whiteSpace: 'pre-wrap', fontSize: 12.5, color: INK, lineHeight: 1.7, border: '1px solid ' + LINE, borderRadius: 0, padding: '14px 16px', marginBottom: 16 } }, inv.description || '—'),
           h('div', { key: 'tot', style: { marginLeft: 'auto', maxWidth: 260 } }, h('div', { style: { borderTop: '2px solid ' + INK } }, row('Total', this.rm(inv.price), true))),
         ];
       } else if (type === 'quote') {
@@ -1777,16 +1777,16 @@ class Component extends DCLogic {
           h('div', { key: 'to', style: { display: 'flex', justifyContent: 'space-between', gap: 20, marginBottom: 16, fontSize: 12.5 } },
             h('div', null, h('div', { style: { fontWeight: 600, marginBottom: 3 } }, 'To'), h('div', { style: { color: MUT, lineHeight: 1.6 } }, (q.customer && q.customer.name) || '—', (q.customer && q.customer.company) ? h('div', null, q.customer.company) : null, (q.customer && q.customer.email) ? h('div', null, q.customer.email) : null)),
             h('div', { style: { textAlign: 'right', color: MUT } }, h('div', { style: { fontWeight: 600, color: INK } }, q.requirement && q.requirement.product), q.requirement && q.requirement.qty ? h('div', null, 'Qty ' + q.requirement.qty) : null, q.leadDays ? h('div', null, 'Lead time: ' + q.leadDays + ' days') : null)),
-          (q.requirement && q.requirement.quoteData) ? h('div', { key: 'qd', style: { whiteSpace: 'pre-wrap', fontSize: 12.5, color: INK, lineHeight: 1.7, border: '1px solid ' + LINE, borderRadius: 8, padding: '14px 16px', marginBottom: 16 } }, q.requirement.quoteData) : null,
+          (q.requirement && q.requirement.quoteData) ? h('div', { key: 'qd', style: { whiteSpace: 'pre-wrap', fontSize: 12.5, color: INK, lineHeight: 1.7, border: '1px solid ' + LINE, borderRadius: 0, padding: '14px 16px', marginBottom: 16 } }, q.requirement.quoteData) : null,
           h('div', { key: 'tot', style: { marginLeft: 'auto', maxWidth: 260 } }, h('div', { style: { borderTop: '2px solid ' + INK } }, row('Total price', this.rm(q.price), true))),
         ];
       }
     }
     return h('div', { key: 'doc', onClick: close, style: { position: 'fixed', inset: 0, zIndex: 95, background: 'rgba(15,20,25,.5)', display: 'grid', placeItems: 'center', padding: 20, overflow: 'auto' } },
-      h('div', { onClick: e => e.stopPropagation(), style: { background: '#fff', borderRadius: 12, maxWidth: 660, width: '100%', maxHeight: '92vh', overflow: 'auto', boxShadow: '0 24px 60px rgba(33,33,33,.3)' } },
+      h('div', { onClick: e => e.stopPropagation(), style: { background: '#fff', borderRadius: 0, maxWidth: 660, width: '100%', maxHeight: '92vh', overflow: 'auto', boxShadow: '0 24px 60px rgba(33,33,33,.3)' } },
         h('div', { style: { padding: '14px 22px', borderBottom: '1px solid ' + HAIR, display: 'flex', alignItems: 'center', gap: 10 } },
           h('span', { style: { fontSize: 14, fontWeight: 600 } }, title),
-          h('span', { onClick: () => { if (typeof window !== 'undefined') window.print(); }, style: { marginLeft: 'auto', fontSize: 12.5, fontWeight: 600, color: '#fff', background: TEAL, borderRadius: 7, padding: '7px 14px', cursor: 'pointer' } }, 'Print / Save PDF'),
+          h('span', { onClick: () => { if (typeof window !== 'undefined') window.print(); }, style: { marginLeft: 'auto', fontSize: 12.5, fontWeight: 600, color: '#fff', background: TEAL, borderRadius: 0, padding: '7px 14px', cursor: 'pointer' } }, 'Print / Save PDF'),
           h('span', { onClick: close, style: { color: FAINT, fontSize: 20, cursor: 'pointer' } }, '×')),
         !rec ? h('div', { style: { padding: 40, textAlign: 'center', color: FAINT } }, rec === false ? 'Could not load the document.' : 'Loading…') :
         h('div', { id: 'pk-doc', style: { padding: 28 } }, body,
@@ -1808,15 +1808,15 @@ class Component extends DCLogic {
     const sect = (t, node) => h('div', { key: t, style: { marginBottom: 16 } }, h('div', { style: { fontSize: 11, fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: FAINT, marginBottom: 8 } }, t), node);
     const hist = (o && o.customerHistory) || { totalOrders: 0, totalRevenue: 0, avgOrderValue: 0 };
     return h('div', { key: 'ord', onClick: close, style: { position: 'fixed', inset: 0, zIndex: 92, background: 'rgba(15,20,25,.5)', display: 'grid', placeItems: 'start center', padding: 20, overflow: 'auto' } },
-      h('div', { onClick: e => e.stopPropagation(), style: { background: '#fff', borderRadius: 14, maxWidth: 900, width: '100%', margin: '10px 0', boxShadow: '0 24px 60px rgba(33,33,33,.3)' } },
-        h('div', { style: { padding: '15px 22px', borderBottom: '1px solid ' + HAIR, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', position: 'sticky', top: 0, background: '#fff', borderRadius: '14px 14px 0 0', zIndex: 1 } },
+      h('div', { onClick: e => e.stopPropagation(), style: { background: '#fff', borderRadius: 0, maxWidth: 900, width: '100%', margin: '10px 0', boxShadow: '0 24px 60px rgba(33,33,33,.3)' } },
+        h('div', { style: { padding: '15px 22px', borderBottom: '1px solid ' + HAIR, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', position: 'sticky', top: 0, background: '#fff', borderRadius: 0, zIndex: 1 } },
           h('span', { style: { font: '600 13px ui-monospace,Menlo,monospace', color: TEAL } }, this.state.ordViewId),
           o ? this.chip(paid ? 'Payment received' : 'Pending payment', paid ? 'ok' : 'warn') : null,
           o ? h('span', { style: { fontSize: 12.5, color: MUT } }, (o.channel || 'online') + ' · ' + (o.createdAt || '').slice(0, 10)) : null,
           h('span', { style: { marginLeft: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap' } },
-            o ? h('span', { onClick: () => this.openDoc(o.id, 'invoice'), style: { fontSize: 12.5, fontWeight: 600, color: TEAL, border: '1px solid ' + HAIR, borderRadius: 7, padding: '7px 12px', cursor: 'pointer' } }, 'Invoice PDF') : null,
-            o ? h('span', { onClick: () => this.openDoc(o.id, 'slip'), style: { fontSize: 12.5, fontWeight: 600, color: TEAL, border: '1px solid ' + HAIR, borderRadius: 7, padding: '7px 12px', cursor: 'pointer' } }, 'Order slip') : null,
-            (o && !paid) ? h('span', { onClick: () => this.validateOrder(o.id), style: { fontSize: 12.5, fontWeight: 600, color: '#fff', background: TEAL, borderRadius: 7, padding: '7px 12px', cursor: 'pointer' } }, 'Validate payment') : null,
+            o ? h('span', { onClick: () => this.openDoc(o.id, 'invoice'), style: { fontSize: 12.5, fontWeight: 600, color: TEAL, border: '1px solid ' + HAIR, borderRadius: 0, padding: '7px 12px', cursor: 'pointer' } }, 'Invoice PDF') : null,
+            o ? h('span', { onClick: () => this.openDoc(o.id, 'slip'), style: { fontSize: 12.5, fontWeight: 600, color: TEAL, border: '1px solid ' + HAIR, borderRadius: 0, padding: '7px 12px', cursor: 'pointer' } }, 'Order slip') : null,
+            (o && !paid) ? h('span', { onClick: () => this.validateOrder(o.id), style: { fontSize: 12.5, fontWeight: 600, color: '#fff', background: TEAL, borderRadius: 0, padding: '7px 12px', cursor: 'pointer' } }, 'Validate payment') : null,
             h('span', { onClick: close, style: { color: FAINT, fontSize: 22, cursor: 'pointer', lineHeight: 1 } }, '×'))),
         !o ? h('div', { style: { padding: 50, textAlign: 'center', color: FAINT } }, o === false ? 'Could not load the order.' : 'Loading…') :
         h('div', { style: { padding: 22 } },
@@ -1828,7 +1828,7 @@ class Component extends DCLogic {
               h('div', { key: i, style: { textAlign: 'right' } }, h('div', { style: { fontSize: 10.5, color: FAINT, textTransform: 'uppercase', letterSpacing: '.05em' } }, k[0]), h('div', { style: { fontSize: 15, fontWeight: 600 } }, k[1]))))),
           // order details (line items + full spec + artworks)
           sect('Order details & artworks', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
-            (o.items || []).map((it, i) => h('div', { key: i, style: { border: '1px solid ' + HAIR, borderRadius: 10, padding: 13, display: 'flex', gap: 12 } },
+            (o.items || []).map((it, i) => h('div', { key: i, style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: 13, display: 'flex', gap: 12 } },
               h('div', { style: { flex: '0 0 60px' } }, this.art(it.product)),
               h('div', { style: { flex: 1, minWidth: 0 } },
                 h('div', { style: { display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' } },
@@ -1837,7 +1837,7 @@ class Component extends DCLogic {
                 h('div', { style: { fontSize: 12, color: MUT, lineHeight: 1.6, marginTop: 4 } }, this.specView(it)),
                 h('div', { style: { fontSize: 12, color: FAINT, marginTop: 4 } }, 'Qty ' + (it.qty || 0).toLocaleString() + ' · unit ' + this.rm(it.unitPrice)),
                 (it.artworks || []).length ? h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 } }, (it.artworks || []).map((a, k) =>
-                  h('span', { key: k, style: { display: 'inline-flex', alignItems: 'center', gap: 5, background: CHIP, color: TEAL, fontSize: 11.5, fontWeight: 600, borderRadius: 6, padding: '4px 8px' } }, '📎 ' + a))) : h('div', { style: { fontSize: 11.5, color: FAINT, marginTop: 6 } }, 'No artwork uploaded yet')))))),
+                  h('span', { key: k, style: { display: 'inline-flex', alignItems: 'center', gap: 5, background: CHIP, color: TEAL, fontSize: 11.5, fontWeight: 600, borderRadius: 0, padding: '4px 8px' } }, '📎 ' + a))) : h('div', { style: { fontSize: 11.5, color: FAINT, marginTop: 6 } }, 'No artwork uploaded yet')))))),
           // billing + shipping + payment
           h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 16 } },
             sect('Billing address', h('div', { style: { fontSize: 12.5 } }, this.docAddr(o.billing || o.customer))),
@@ -1847,7 +1847,7 @@ class Component extends DCLogic {
               h('div', null, 'Status: ', this.chip(paid ? 'Validated' : 'Pending', paid ? 'ok' : 'warn')),
               (o.payment && o.payment.reference) ? h('div', { style: { fontFamily: 'ui-monospace,Menlo,monospace', fontSize: 11.5, marginTop: 4 } }, 'Ref: ' + o.payment.reference) : null,
               (o.payment && o.payment.paidAt) ? h('div', null, 'Paid: ' + o.payment.paidAt.slice(0, 16).replace('T', ' ')) : null,
-              (o.payment && o.payment.proof) ? h('div', { style: { marginTop: 6 } }, h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 5, background: CHIP, color: TEAL, fontSize: 11.5, fontWeight: 600, borderRadius: 6, padding: '4px 8px' } }, '🧾 ' + o.payment.proof)) : null))),
+              (o.payment && o.payment.proof) ? h('div', { style: { marginTop: 6 } }, h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 5, background: CHIP, color: TEAL, fontSize: 11.5, fontWeight: 600, borderRadius: 0, padding: '4px 8px' } }, '🧾 ' + o.payment.proof)) : null))),
           // price summary
           sect('Price', h('div', { style: { maxWidth: 300 } },
             [['Subtotal', this.rm(o.subtotal)], o.memberDiscount ? ['Member discount', '− ' + this.rm(o.memberDiscount)] : null, o.couponDiscount ? ['Discount code ' + (o.coupon || ''), '− ' + this.rm(o.couponDiscount)] : null, o.creditApplied ? ['Credit applied', '− ' + this.rm(o.creditApplied)] : null, ['SST 8%', this.rm(o.tax)], ['Delivery', this.rm(o.shipping)]].filter(Boolean).map((r, i) =>
@@ -2059,21 +2059,21 @@ class Component extends DCLogic {
     const cc = { au: 'Australia', nz: 'New Zealand', sg: 'Singapore', bn: 'Brunei', my: 'Malaysia' }[p.locale];
     return h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px 40px' } },
       h('div', { style: { fontSize: 12.5, color: FAINT, marginBottom: 12 } }, h('span', { 'data-go': 'home', style: { color: TEAL, cursor: 'pointer' } }, 'Home'), ' › ' + cc + ' › ' + p.title),
-      h('section', { style: { background: 'linear-gradient(180deg,#fdf2f2,#fff)', borderRadius: 16, padding: '34px 28px', marginBottom: 26 } },
+      h('section', { style: { background: 'linear-gradient(180deg,#fdf2f2,#fff)', borderRadius: 0, padding: '34px 28px', marginBottom: 26 } },
         h('div', { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: TEAL, marginBottom: 10 } }, 'Online printing · ' + cc),
-        h('h1', { style: { margin: '0 0 12px', fontSize: 'clamp(28px,4vw,42px)', lineHeight: 1.1, letterSpacing: '-.02em', fontWeight: 600, maxWidth: '20ch' } }, p.title),
+        h('h1', { className: 'pk-nobar', style: { margin: '0 0 12px', fontSize: 'clamp(28px,4vw,42px)', lineHeight: 1.1, letterSpacing: '-.02em', fontWeight: 600, maxWidth: '20ch' } }, p.title),
         h('p', { style: { margin: '0 0 18px', fontSize: 16, color: MUT, lineHeight: 1.65, maxWidth: '60ch' } },
           'Order ' + p.title.toLowerCase() + ' online with instant, factory-direct pricing — no waiting for a manual quote. Configure your specs, see the exact price with member-tier savings, upload artwork and we print and deliver' + (place ? ' to ' + place : '') + '.'),
         h('div', { style: { display: 'flex', gap: 11, flexWrap: 'wrap' } }, this.btn('Get an instant price →', 'teal', 'catopen:' + cat), this.btn('Browse all products', 'ghost', 'catopen:all'))),
       h('h2', { style: { fontSize: 22, fontWeight: 600, margin: '0 0 16px' } }, 'Popular products' + (place ? ' in ' + place : '')),
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(210px,1fr))', gap: 16 } },
         prods.map(pr => { const from = this.catFromPrice(pr.id);
-          return h('a', { key: pr.id, href: this.productPath(pr.id) || undefined, 'data-go': 'open:' + pr.id, style: { border: '1px solid ' + HAIR, borderRadius: 12, background: '#fff', overflow: 'hidden', cursor: 'pointer', display: 'block', color: 'inherit', textDecoration: 'none' } },
+          return h('a', { key: pr.id, href: this.productPath(pr.id) || undefined, 'data-go': 'open:' + pr.id, style: { border: '1px solid ' + HAIR, borderRadius: 0, background: '#fff', overflow: 'hidden', cursor: 'pointer', display: 'block', color: 'inherit', textDecoration: 'none' } },
             this.art(pr.engName),
             h('div', { style: { padding: '13px 14px' } },
               h('div', { style: { fontSize: 13.5, fontWeight: 500, minHeight: 34, lineHeight: 1.3 } }, pr.name),
               h('div', { style: { fontSize: 14, fontWeight: 600, color: TEAL, marginTop: 6 } }, from != null ? 'from ' + this.money(from) + '/pc' : 'Quote'))); })),
-      h('div', { style: { marginTop: 28, border: '1px solid ' + HAIR, borderRadius: 12, padding: 22, background: '#fff' } },
+      h('div', { style: { marginTop: 28, border: '1px solid ' + HAIR, borderRadius: 0, padding: 22, background: '#fff' } },
         h('h2', { style: { fontSize: 20, fontWeight: 600, margin: '0 0 10px' } }, 'Why print with Printoka' + (place ? ' in ' + place : '') + '?'),
         h('p', { style: { fontSize: 14.5, color: MUT, lineHeight: 1.8, margin: 0, maxWidth: '80ch' } },
           'Printoka is an online printing marketplace aggregating 30+ vendors plus our own facility in Miri, Sarawak. We serve ' + cc + ' with more than 100 products, instant online pricing, a five-tier membership discount and delivery' + (place ? ' across ' + place + ' and nationwide' : ' nationwide') + '. Every price you see in the configurator is the price on your quotation, at checkout and on the invoice — one number, traceable to one engine.')),
@@ -2115,7 +2115,7 @@ class Component extends DCLogic {
     const jobs = this.opsJobs();
     const stages = [['outlet', 'Intake'], ['prepress', 'Prepress'], ['scheduler', 'Scheduler'], ['logistics', 'Logistics'], ['done', 'Done']];
     const n = q => jobs.filter(j => j.queue === q).length;
-    return h('div', { key: 'pipe', style: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, border: '1px solid ' + HAIR, borderRadius: 12, padding: '12px 16px', margin: '4px 0 18px', background: '#fff' } },
+    return h('div', { key: 'pipe', style: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 6, border: '1px solid ' + HAIR, borderRadius: 0, padding: '12px 16px', margin: '4px 0 18px', background: '#fff' } },
       h('span', { style: { fontSize: 11, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', color: FAINT, marginRight: 6 } }, 'Live pipeline'),
       stages.map((s, i) => {
         const on = s[0] === highlightQueue, c = n(s[0]);
@@ -2130,7 +2130,7 @@ class Component extends DCLogic {
     const chan = { online: ['Online', 'neutral'], outlet: ['Outlet', 'amber'], outsourced: ['Outsourced', 'mag'] }[j.channel] || ['Online', 'neutral'];
     const acts = (j.actions || []).filter(a => a.permitted);
     const owner = j.owner && Object.keys(j.owner).length ? Object.keys(j.owner).map(k => k + ':' + j.owner[k]).join(' · ') : null;
-    return h('div', { key: j.id, style: { border: '1px solid ' + (tone === 'action' ? TEAL : HAIR), borderRadius: 12, background: '#fff', padding: 15, display: 'flex', flexDirection: 'column', gap: 9 } },
+    return h('div', { key: j.id, style: { border: '1px solid ' + (tone === 'action' ? TEAL : HAIR), borderRadius: 0, background: '#fff', padding: 15, display: 'flex', flexDirection: 'column', gap: 9 } },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' } },
         h('span', { style: { font: '600 12px ui-monospace,Menlo,monospace', color: TEAL } }, j.id),
         this.chip(chan[0], chan[1]),
@@ -2146,10 +2146,10 @@ class Component extends DCLogic {
       owner && h('div', { style: { fontSize: 11.5, color: FAINT } }, 'Owner ' + owner),
       acts.length ? h('div', { style: { display: 'flex', gap: 7, flexWrap: 'wrap', borderTop: '1px solid ' + LINE, paddingTop: 10 } },
         acts.some(a => a.action === 'approve' || a.action === 'flag_minor')
-          ? h('span', { key: 'review', onClick: () => this.setState({ reviewJob: j.id }), style: { fontSize: 12, fontWeight: 600, borderRadius: 7, padding: '7px 14px', cursor: 'pointer', border: '1px solid ' + TEAL, background: TEAL, color: '#fff' } }, 'Review file →')
+          ? h('span', { key: 'review', onClick: () => this.setState({ reviewJob: j.id }), style: { fontSize: 12, fontWeight: 600, borderRadius: 0, padding: '7px 14px', cursor: 'pointer', border: '1px solid ' + TEAL, background: TEAL, color: '#fff' } }, 'Review file →')
           : acts.map(a => h('span', { key: a.action, onClick: a.enabled ? (() => this.opsAction(j, a)) : undefined,
             title: a.enabled ? a.note : (a.blockedBy || []).join(' '),
-            style: { fontSize: 12, fontWeight: 600, borderRadius: 7, padding: '7px 12px', cursor: a.enabled ? 'pointer' : 'not-allowed',
+            style: { fontSize: 12, fontWeight: 600, borderRadius: 0, padding: '7px 12px', cursor: a.enabled ? 'pointer' : 'not-allowed',
               border: '1px solid ' + (a.enabled ? (a.action.indexOf('reject') === 0 || a.action === 'escalate' ? '#eaeaea' : TEAL) : '#eaeaea'),
               background: a.enabled ? (a.action.indexOf('reject') === 0 || a.action === 'escalate' ? '#fff' : TEAL) : '#f6f7f8',
               color: a.enabled ? (a.action.indexOf('reject') === 0 || a.action === 'escalate' ? MUT : '#fff') : '#b9c4cb' },
@@ -2175,7 +2175,7 @@ class Component extends DCLogic {
     ];
     const dot = s => h('span', { style: { height: 8, width: 8, borderRadius: '50%', flex: 'none', background: s === 'pass' ? '#63AA02' : s === 'warn' ? '#d99100' : '#c71917' } });
     return h('div', { key: 'review', onClick: close, style: { position: 'fixed', inset: 0, zIndex: 90, background: 'rgba(15,20,25,.5)', display: 'grid', placeItems: 'center', padding: 20 } },
-      h('div', { onClick: e => e.stopPropagation(), style: { background: '#fff', borderRadius: 14, maxWidth: 920, width: '100%', maxHeight: '90vh', overflow: 'auto', boxShadow: '0 24px 60px rgba(33,33,33,.30)' } },
+      h('div', { onClick: e => e.stopPropagation(), style: { background: '#fff', borderRadius: 0, maxWidth: 920, width: '100%', maxHeight: '90vh', overflow: 'auto', boxShadow: '0 24px 60px rgba(33,33,33,.30)' } },
         h('div', { style: { padding: '16px 20px', borderBottom: '1px solid ' + HAIR, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' } },
           h('span', { style: { font: '600 12px ui-monospace,Menlo,monospace', color: TEAL } }, j.id),
           h('span', { style: { fontSize: 15, fontWeight: 600 } }, j.customer + ' · file check'),
@@ -2189,29 +2189,29 @@ class Component extends DCLogic {
                 h('div', { style: { position: 'absolute', inset: '8%', border: '1px dashed #d99100' } })),
               !j.artworkMatches ? h('div', { style: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '7%', background: 'repeating-linear-gradient(45deg,#fdecec,#fdecec 6px,#fff 6px,#fff 12px)' } }) : null),
             h('div', { style: { display: 'flex', gap: 8, marginTop: 12, fontSize: 11.5, color: MUT, flexWrap: 'wrap' } },
-              [j.spec || 'trim', 'bleed 3 mm', 'safe 3 mm'].map((t, i) => h('span', { key: i, style: { border: '1px solid ' + HAIR, borderRadius: 6, padding: '3px 8px', background: '#fff' } }, t)))),
+              [j.spec || 'trim', 'bleed 3 mm', 'safe 3 mm'].map((t, i) => h('span', { key: i, style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: '3px 8px', background: '#fff' } }, t)))),
           // checklist + status + reason
           h('div', { style: { padding: 20, display: 'flex', flexDirection: 'column', gap: 14 } },
             CHECKS.map((grp, gi) => h('div', { key: gi },
               h('div', { style: { fontSize: 11, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: FAINT, marginBottom: 6 } }, grp[0]),
               grp[1].map((c, ci) => h('div', { key: ci, style: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 12.5, padding: '3px 0', color: MUT } }, dot(c[1]), c[0])))),
-            !canApprove ? h('div', { style: { fontSize: 11.5, color: '#c0392b', lineHeight: 1.5, background: '#fdecec', border: '1px solid #f5c8c7', borderRadius: 8, padding: '8px 10px' } }, '⚠ ' + ((approveA && approveA.blockedBy) || ['Approval blocked.']).join(' ')) : null,
+            !canApprove ? h('div', { style: { fontSize: 11.5, color: '#c0392b', lineHeight: 1.5, background: '#fdecec', border: '1px solid #f5c8c7', borderRadius: 0, padding: '8px 10px' } }, '⚠ ' + ((approveA && approveA.blockedBy) || ['Approval blocked.']).join(' ')) : null,
             h('div', null,
               h('div', { style: { fontSize: 12, fontWeight: 600, marginBottom: 6 } }, 'Rejection reason'),
-              h('select', { value: reason, onChange: e => this.setState({ rejReason: e.target.value }), style: { font: '400 13px Montserrat,sans-serif', padding: '8px 10px', border: '1px solid ' + HAIR, borderRadius: 7, width: '100%' } },
+              h('select', { value: reason, onChange: e => this.setState({ rejReason: e.target.value }), style: { font: '400 13px Montserrat,sans-serif', padding: '8px 10px', border: '1px solid ' + HAIR, borderRadius: 0, width: '100%' } },
                 REASONS.map(r => h('option', { key: r, value: r }, r))),
               h('div', { style: { fontSize: 11, color: FAINT, marginTop: 5, lineHeight: 1.5 } }, 'Reject attaches the reason + a visual-proof screenshot and returns the job to the outlet.')))),
         h('div', { style: { padding: '14px 20px', borderTop: '1px solid ' + HAIR, display: 'flex', gap: 9, flexWrap: 'wrap', justifyContent: 'flex-end' } },
-          h('span', { onClick: () => act('escalate', { reason: 'Critical — manager review' }), style: { fontSize: 13, fontWeight: 600, padding: '10px 16px', borderRadius: 8, border: '1px solid ' + HAIR, color: MUT, cursor: 'pointer' } }, 'Escalate (critical)'),
-          h('span', { onClick: () => act('reject_major', { reason: reason, proof: 'proof-' + j.id + '.png' }), style: { fontSize: 13, fontWeight: 600, padding: '10px 16px', borderRadius: 8, border: '1px solid #f5c8c7', color: '#c71917', background: '#fff', cursor: 'pointer' } }, 'Reject → outlet'),
-          h('span', { onClick: canApprove ? (() => act('approve')) : undefined, style: { fontSize: 13, fontWeight: 600, padding: '10px 20px', borderRadius: 8, border: '1px solid ' + (canApprove ? TEAL : '#eaeaea'), background: canApprove ? TEAL : '#f6f7f8', color: canApprove ? '#fff' : '#b9c4cb', cursor: canApprove ? 'pointer' : 'not-allowed' } }, 'Approve → Scheduler'))));
+          h('span', { onClick: () => act('escalate', { reason: 'Critical — manager review' }), style: { fontSize: 13, fontWeight: 600, padding: '10px 16px', borderRadius: 0, border: '1px solid ' + HAIR, color: MUT, cursor: 'pointer' } }, 'Escalate (critical)'),
+          h('span', { onClick: () => act('reject_major', { reason: reason, proof: 'proof-' + j.id + '.png' }), style: { fontSize: 13, fontWeight: 600, padding: '10px 16px', borderRadius: 0, border: '1px solid #f5c8c7', color: '#c71917', background: '#fff', cursor: 'pointer' } }, 'Reject → outlet'),
+          h('span', { onClick: canApprove ? (() => act('approve')) : undefined, style: { fontSize: 13, fontWeight: 600, padding: '10px 20px', borderRadius: 0, border: '1px solid ' + (canApprove ? TEAL : '#eaeaea'), background: canApprove ? TEAL : '#f6f7f8', color: canApprove ? '#fff' : '#b9c4cb', cursor: canApprove ? 'pointer' : 'not-allowed' } }, 'Approve → Scheduler'))));
   }
   // fault-tolerant wrapper — a single bad job can never blank the whole dashboard
   opsCard(j, tone) {
     try { return this.opsJobCard(j, tone); }
     catch (e) {
       if (typeof window !== 'undefined') { window.__cardErr = (e && e.stack) || String(e); }
-      return h('div', { key: j.id, style: { border: '1px solid ' + HAIR, borderRadius: 12, padding: 15, fontSize: 12.5, color: MUT } },
+      return h('div', { key: j.id, style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: 15, fontSize: 12.5, color: MUT } },
         h('span', { style: { font: '600 12px ui-monospace,Menlo,monospace', color: TEAL } }, j.id), ' · ', (j.customer || ''), ' — ', (j.statusLabel || j.status));
     }
   }
@@ -2228,7 +2228,7 @@ class Component extends DCLogic {
       mine.length
         ? h('div', { key: 'jobs', style: { display: 'grid', gridTemplateColumns: opts.showAll ? 'repeat(auto-fill,minmax(300px,1fr))' : 'repeat(auto-fill,minmax(320px,1fr))', gap: 14 } },
           mine.map(j => this.opsCard(j, opts.tone)))
-        : h('div', { key: 'empty', style: { border: '1px dashed ' + HAIR, borderRadius: 12, padding: 40, textAlign: 'center', color: FAINT, fontSize: 13 } }, this.state.ops && this.state.ops.loaded ? 'No jobs in this queue right now.' : 'Loading live jobs…'),
+        : h('div', { key: 'empty', style: { border: '1px dashed ' + HAIR, borderRadius: 0, padding: 40, textAlign: 'center', color: FAINT, fontSize: 13 } }, this.state.ops && this.state.ops.loaded ? 'No jobs in this queue right now.' : 'Loading live jobs…'),
       opts.footer || null,
       this.opsReviewDialog(),
     ]);
@@ -2323,7 +2323,7 @@ class Component extends DCLogic {
   }
 
   btn(label, kind, go, extra) {
-    const st = { display: 'inline-flex', alignItems: 'center', gap: 8, borderRadius: 8, padding: '11px 20px', fontSize: 14, fontWeight: 600, border: '1px solid transparent', cursor: 'pointer', fontFamily: 'Montserrat,sans-serif', whiteSpace: 'nowrap' };
+    const st = { display: 'inline-flex', alignItems: 'center', gap: 8, borderRadius: 0, padding: '11px 20px', fontSize: 14, fontWeight: 500, border: '1px solid transparent', cursor: 'pointer', fontFamily: 'Montserrat,sans-serif', whiteSpace: 'nowrap' };
     // (user, 2026-09-30) every solid button is the brand red — the old orange "amber" buttons included
     if (kind === 'amber') Object.assign(st, { background: TEAL, color: '#fff' });
     else if (kind === 'teal') Object.assign(st, { background: TEAL, color: '#fff' });
@@ -2349,7 +2349,7 @@ class Component extends DCLogic {
   }
 
   card(children, extra) {
-    return h('div', { style: Object.assign({ border: '1px solid ' + HAIR, borderRadius: 12, background: '#fff', padding: 18 }, extra || {}) }, children);
+    return h('div', { style: Object.assign({ border: '1px solid ' + HAIR, borderRadius: 0, background: '#fff', padding: 18 }, extra || {}) }, children);
   }
 
   kpi(label, value, note, tone) {
@@ -2361,7 +2361,7 @@ class Component extends DCLogic {
   }
 
   table(headers, rows, widths) {
-    return h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', background: '#fff' } },
+    return h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden', background: '#fff' } },
       h('table', { style: { width: '100%', borderCollapse: 'collapse', fontSize: 13 } },
         h('thead', null, h('tr', { style: { background: ALT } }, headers.map((hd, i) =>
           h('th', { key: i, style: { textAlign: 'left', padding: '11px 14px', fontSize: 11, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', color: FAINT, borderBottom: '1px solid ' + HAIR, width: widths && widths[i] } }, hd)))),
@@ -2381,12 +2381,12 @@ class Component extends DCLogic {
   // ---------- app shell for role dashboards ----------
   shell(role, navItems, active, children) {
     return h('div', { 'data-shell': '1', style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px 0', display: 'grid', gridTemplateColumns: '218px minmax(0,1fr)', gap: 22, alignItems: 'start' } },
-      h('aside', { style: { border: '1px solid ' + HAIR, borderRadius: 12, padding: 14, background: '#fff', position: 'sticky', top: 120 } },
+      h('aside', { style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: 14, background: '#fff', position: 'sticky', top: 120 } },
         h('div', { style: { fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: FAINT, padding: '2px 6px 10px' } }, role),
         navItems.map((n, i) => {
           const label = Array.isArray(n) ? n[0] : n, on = label === active;
           if (Array.isArray(n) && n[2] === '__group') return h('div', { key: i, style: { fontSize: 10, fontWeight: 700, letterSpacing: '.09em', textTransform: 'uppercase', color: FAINT, padding: i ? '14px 6px 5px' : '2px 6px 5px', borderTop: i ? '1px solid ' + LINE : 'none', marginTop: i ? 4 : 0 } }, label);
-          return h('div', { key: i, 'data-go': Array.isArray(n) && n[2] ? n[2] : undefined, style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '8px 10px', borderRadius: 8, fontSize: 13, fontWeight: on ? 600 : 400, color: on ? TEAL : MUT, background: on ? CHIP : 'transparent', cursor: Array.isArray(n) && n[2] ? 'pointer' : 'default' } },
+          return h('div', { key: i, 'data-go': Array.isArray(n) && n[2] ? n[2] : undefined, style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '8px 10px', borderRadius: 0, fontSize: 13, fontWeight: on ? 600 : 400, color: on ? TEAL : MUT, background: on ? CHIP : 'transparent', cursor: Array.isArray(n) && n[2] ? 'pointer' : 'default' } },
             h('span', null, label), Array.isArray(n) && n[1] ? this.chip(n[1], 'bad') : null);
         })),
       h('div', { style: { minWidth: 0, display: 'flex', flexDirection: 'column', gap: 20 } }, children));
@@ -2395,7 +2395,7 @@ class Component extends DCLogic {
   head(title, sub, actions) {
     return h('div', { style: { display: 'flex', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' } },
       h('div', { style: { flex: '1 1 320px', minWidth: 0 } },
-        h('h1', { style: { margin: '0 0 6px', fontSize: 28, fontWeight: 600, letterSpacing: '-.02em' } }, title),
+        h('h1', { style: { margin: '0 0 6px', fontSize: 28, fontWeight: 500, letterSpacing: '-.02em' } }, title),
         sub ? h('p', { style: { margin: 0, fontSize: 14, color: MUT, maxWidth: '76ch', lineHeight: 1.7 } }, sub) : null),
       actions && h('div', { style: { display: 'flex', gap: 9, flexWrap: 'wrap' } }, actions));
   }
@@ -2436,7 +2436,7 @@ class Component extends DCLogic {
     else if (change === 'N/A' || change === '—') { bg = '#eef1f4'; col = '#8a9199'; }
     else if (/^\+/.test(txt)) { bg = '#e6f4ea'; col = '#3d8b40'; }
     else if (/^-/.test(txt)) { bg = '#fde3e1'; col = '#c71917'; }
-    return h('span', { style: { background: bg, color: col, fontSize: 11, fontWeight: 700, borderRadius: 6, padding: '2px 7px', whiteSpace: 'nowrap' } }, txt);
+    return h('span', { style: { background: bg, color: col, fontSize: 11, fontWeight: 700, borderRadius: 0, padding: '2px 7px', whiteSpace: 'nowrap' } }, txt);
   }
   // dashboard stat / metric card with a soft-circle icon (opts: badge, note, icon, accent, go)
   statCard(label, value, o) {
@@ -2533,9 +2533,9 @@ class Component extends DCLogic {
   passwordModal() {
     if (!this.state.pw_open) return null;
     const close = () => this.setState({ pw_open: false, pw_err: null });
-    const fld = (label, key) => h('div', null, h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, label), h('input', { type: 'password', placeholder: label === 'Current Password' ? 'Please enter your current password' : '', value: this.state[key] || '', onChange: e => this.setField(key, e.target.value), style: { font: '400 14px Montserrat,sans-serif', padding: '10px 12px', border: '1px solid ' + HAIR, borderRadius: 8, width: '100%' } }));
+    const fld = (label, key) => h('div', null, h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } }, label), h('input', { type: 'password', placeholder: label === 'Current Password' ? 'Please enter your current password' : '', value: this.state[key] || '', onChange: e => this.setField(key, e.target.value), style: { font: '400 14px Montserrat,sans-serif', padding: '10px 12px', border: '1px solid ' + HAIR, borderRadius: 0, width: '100%' } }));
     return h('div', { key: 'pw', onClick: close, style: { position: 'fixed', inset: 0, zIndex: 96, background: 'rgba(20,25,30,.45)', display: 'grid', placeItems: 'start center', padding: 20, overflow: 'auto' } },
-      h('div', { onClick: e => e.stopPropagation(), style: { background: '#fff', borderRadius: 14, maxWidth: 640, width: '100%', margin: '40px 0', overflow: 'hidden', boxShadow: '0 24px 60px rgba(33,33,33,.3)' } },
+      h('div', { onClick: e => e.stopPropagation(), style: { background: '#fff', borderRadius: 0, maxWidth: 640, width: '100%', margin: '40px 0', overflow: 'hidden', boxShadow: '0 24px 60px rgba(33,33,33,.3)' } },
         h('div', { style: { height: 4, background: '#E52220' } }),
         h('div', { style: { padding: '20px 26px 26px' } },
           h('div', { style: { display: 'flex', alignItems: 'center', marginBottom: 16 } }, h('span', { style: { fontSize: 20, fontWeight: 600 } }, 'Change Password'), h('span', { onClick: close, style: { marginLeft: 'auto', color: FAINT, fontSize: 22, cursor: 'pointer' } }, '×')),
@@ -2561,7 +2561,7 @@ class Component extends DCLogic {
   dataCard(cols, rows, o) {
     o = o || {};
     return h('div', null,
-      h('div', { style: { background: '#fff', borderRadius: 12, border: '1px solid ' + HAIR, overflow: 'hidden' } },
+      h('div', { style: { background: '#fff', borderRadius: 0, border: '1px solid ' + HAIR, overflow: 'hidden' } },
         h('div', { style: { overflowX: 'auto' } },
           h('table', { style: { width: '100%', borderCollapse: 'collapse', fontSize: 13.5, minWidth: o.minWidth || 640 } },
             h('thead', null, h('tr', null, cols.map((c, i) => { const isObj = c && typeof c === 'object'; return h('th', { key: i, style: { textAlign: (isObj && c.right) ? 'right' : 'left', padding: '14px 18px', fontSize: 12.5, fontWeight: 700, color: INK, borderBottom: '1px solid ' + HAIR, whiteSpace: 'nowrap' } }, isObj ? (c.label || '') : c); }))),
@@ -2572,9 +2572,9 @@ class Component extends DCLogic {
       h('div', { style: { display: 'flex', alignItems: 'center', marginTop: 12, fontSize: 12.5, color: FAINT } },
         h('span', null, rows.length ? 'Rows 1–' + rows.length + ' of ' + rows.length : 'Showing 0 to 0 of 0 entries'),
         h('span', { style: { marginLeft: 'auto', display: 'flex', gap: 4, alignItems: 'center' } },
-          h('span', { style: { border: '1px solid ' + HAIR, borderRadius: 8, padding: '5px 9px', color: FAINT } }, '‹'),
-          rows.length ? h('span', { style: { border: '1px solid #E52220', color: '#E52220', borderRadius: 8, padding: '5px 11px', fontWeight: 700 } }, '1') : null,
-          h('span', { style: { border: '1px solid ' + HAIR, borderRadius: 8, padding: '5px 9px', color: FAINT } }, '›'))));
+          h('span', { style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: '5px 9px', color: FAINT } }, '‹'),
+          rows.length ? h('span', { style: { border: '1px solid #E52220', color: '#E52220', borderRadius: 0, padding: '5px 11px', fontWeight: 700 } }, '1') : null,
+          h('span', { style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: '5px 9px', color: FAINT } }, '›'))));
   }
   // pill with a leading status dot (original "+pill_dot")
   pillDot(text, tone) {
@@ -2584,7 +2584,7 @@ class Component extends DCLogic {
   }
   // shared production/vendor "Dashboard" tab: stat cards + throughput chart + notifications
   opsStatGrid(cards) {
-    return h('div', { style: { background: '#fff', borderRadius: 12, border: '1px solid ' + HAIR, overflow: 'hidden' } },
+    return h('div', { style: { background: '#fff', borderRadius: 0, border: '1px solid ' + HAIR, overflow: 'hidden' } },
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', background: '#fff' } },
         cards.map(c => h('div', { key: c[0], style: { boxShadow: '1px 1px 0 ' + HAIR } }, this.statCard(c[0], String(c[1]), { icon: c[2], accent: c[3], note: c[4], badge: c[5], dot: c[6] })))));
   }
@@ -2592,7 +2592,7 @@ class Component extends DCLogic {
     const MONTHS = ['APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP'];
     return [
       this.opsStatGrid(cards),
-      h('div', { key: 'ch', style: { background: '#fff', borderRadius: 12, border: '1px solid ' + HAIR, padding: 20 } },
+      h('div', { key: 'ch', style: { background: '#fff', borderRadius: 0, border: '1px solid ' + HAIR, padding: 20 } },
         h('div', { style: { fontSize: 13, fontWeight: 600, color: MUT, marginBottom: 2 } }, chartLabel || 'Throughput'),
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 8 } }, h('span', { style: { fontSize: 26, fontWeight: 700 } }, '0'), this.metricBadge('N/A')),
         h('div', { style: { marginTop: 14 } }, this.lineChart(MONTHS, [0, 0, 0, 0, 0, 0], { h: 280 }))),
@@ -2606,7 +2606,7 @@ class Component extends DCLogic {
       this.opsPipeline(dept),
       mine.length
         ? h('div', { key: 'jobs', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 14 } }, mine.map(j => this.opsCard(j, tone)))
-        : h('div', { key: 'empty', style: { border: '1px dashed ' + HAIR, borderRadius: 12, padding: 40, textAlign: 'center', color: FAINT, fontSize: 13, background: '#fff' } }, this.state.ops && this.state.ops.loaded ? 'No jobs in this queue right now.' : 'Loading live jobs…'),
+        : h('div', { key: 'empty', style: { border: '1px dashed ' + HAIR, borderRadius: 0, padding: 40, textAlign: 'center', color: FAINT, fontSize: 13, background: '#fff' } }, this.state.ops && this.state.ops.loaded ? 'No jobs in this queue right now.' : 'Loading live jobs…'),
       this.opsReviewDialog(),
     ];
   }
@@ -2739,7 +2739,7 @@ class Component extends DCLogic {
         h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '0 20px', display: 'flex', gap: 40, alignItems: 'center', flexWrap: 'wrap' } },
           h('div', { style: { flex: '1 1 420px', minWidth: 0 } },
             h('div', { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: '.09em', textTransform: 'uppercase', color: TEALD, marginBottom: 10 } }, 'Malaysia · Singapore · Brunei'),
-            h('h1', { style: { margin: '0 0 14px', fontSize: 'clamp(32px,4.4vw,50px)', lineHeight: 1.06, letterSpacing: '-.03em', fontWeight: 600 } }, 'Your exact print price, ', h('span', { style: { color: TEAL } }, 'in seconds.')),
+            h('h1', { className: 'pk-nobar', style: { margin: '0 0 14px', fontSize: 'clamp(32px,4.4vw,50px)', lineHeight: 1.06, letterSpacing: '-.03em', fontWeight: 600 } }, 'Your exact print price, ', h('span', { style: { color: TEAL } }, 'in seconds.')),
             h('p', { style: { margin: '0 0 22px', fontSize: 16.5, color: MUT, maxWidth: '48ch', lineHeight: 1.65 } }, 'Configure your job and see the price to the cent. Order online when it looks right.'),
             h('div', { style: { display: 'flex', gap: 11, flexWrap: 'wrap' } }, this.btn('Get your price', 'teal', 'category'), this.btn('Browse products', 'ghost', 'category')),
             h('div', { style: { marginTop: 20, display: 'flex', gap: 22, flexWrap: 'wrap', fontSize: 12.5, color: FAINT } },
@@ -2782,7 +2782,7 @@ class Component extends DCLogic {
           [['Artwork Guides', 'How to set up bleed, trim and safe area', '3 mm bleed on every side'],
            ['Paper & Finishes', 'Choosing between 250gsm and 360gsm art card', 'Stock weight guide'],
            ['Business Tips', 'What to print for a new retail outlet', 'Launch checklist']].map((a, i) =>
-            h('div', { key: i, 'data-go': 'learn', style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', background: '#fff' } },
+            h('div', { key: i, 'data-go': 'learn', style: { border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden', background: '#fff' } },
               h('div', { style: { height: 120, background: 'linear-gradient(120deg,#FAFAFA,#fdf2f2)' } }),
               h('div', { style: { padding: 16 } },
                 h('div', { style: { fontSize: 11, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', color: TEAL } }, a[0]),
@@ -2808,17 +2808,17 @@ class Component extends DCLogic {
     return h('section', { key: 'banners', style: { maxWidth: 1180, margin: '0 auto', padding: '34px 20px 6px' } },
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 18 } },
         HOME_BANNERS.map((b, i) => h('a', { key: i, href: b[1] === 'signup' ? '/auth' : (this.navHref(b[1]) || undefined), 'data-go': b[1], 'aria-label': b[2],
-          style: { display: 'block', borderRadius: 12, overflow: 'hidden', border: '1px solid ' + HAIR, cursor: 'pointer', background: '#fff' } },
+          style: { display: 'block', borderRadius: 0, overflow: 'hidden', border: '1px solid ' + HAIR, cursor: 'pointer', background: '#fff' } },
           h('img', { src: this.homeImg(b[0]), alt: b[2], width: 400, height: 267, loading: 'lazy', style: { display: 'block', width: '100%', height: 'auto' } })))));
   }
 
   // "Featured Hot Selling Printing Products in Malaysia" — the original's list on its blue-green band
   homeFeatured() {
     return h('section', { key: 'featured', style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px 34px' } },
-      h('div', { style: { background: HOME_GRADIENTS[2], borderRadius: 14, padding: '26px 30px 30px' } },
+      h('div', { style: { background: HOME_GRADIENTS[2], borderRadius: 0, padding: '26px 30px 30px' } },
         h('h2', { style: { margin: '0 0 20px', textAlign: 'center', color: '#fff', fontSize: 22, fontWeight: 600, letterSpacing: '-.01em' } }, 'Featured Hot Selling Printing Products in Malaysia'),
         this.hScroller(HOME_FEATURED.map((f, i) => h('a', { key: i, href: this.productPath(f[1]) || undefined, 'data-go': 'open:' + f[1],
-          style: { flex: '0 0 184px', scrollSnapAlign: 'start', background: '#fff', borderRadius: 8, padding: '16px 12px 18px', textAlign: 'center', color: INK, textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 } },
+          style: { flex: '0 0 184px', scrollSnapAlign: 'start', background: '#fff', borderRadius: 0, padding: '16px 12px 18px', textAlign: 'center', color: INK, textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 } },
           h('img', { src: this.homeImg(f[2]), alt: f[0], loading: 'lazy', style: { height: 130, width: '100%', objectFit: 'contain', display: 'block' } }),
           h('span', { style: { fontSize: 15, lineHeight: 1.35 } }, f[0]))))));
   }
@@ -2829,10 +2829,10 @@ class Component extends DCLogic {
     const cats = this.catCategories();
     const open = this.state.homeCatOpen;
     const tile = p => h('a', { key: p.id, href: this.productPath(p.id) || undefined, 'data-go': 'open:' + p.id,
-      style: { flex: '0 0 132px', scrollSnapAlign: 'start', padding: '14px 4px', textAlign: 'center', color: MUT, textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, borderRadius: 8 } },
+      style: { flex: '0 0 132px', scrollSnapAlign: 'start', padding: '14px 4px', textAlign: 'center', color: MUT, textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, borderRadius: 0 } },
       HOME_PRODUCT_IMG[p.id]
         ? h('img', { src: window.__asset('assets/original/' + HOME_PRODUCT_IMG[p.id]), alt: p.name, loading: 'lazy', style: { height: 116, width: '100%', objectFit: 'contain', display: 'block' } })
-        : h('div', { style: { height: 116, width: '100%', overflow: 'hidden', borderRadius: 6, display: 'grid', placeItems: 'center' } }, this.art(p.engName)),
+        : h('div', { style: { height: 116, width: '100%', overflow: 'hidden', borderRadius: 0, display: 'grid', placeItems: 'center' } }, this.art(p.engName)),
       h('span', { style: { fontSize: 14, lineHeight: 1.35 } }, p.name));
     // sticky: the category menu stays in view while the rows scroll, until the last row ends
     const sidebar = h('aside', { style: { flex: '0 1 280px', minWidth: 240, display: 'flex', flexDirection: 'column', gap: 22, position: 'sticky', top: 128, alignSelf: 'flex-start', maxHeight: 'calc(100vh - 140px)', overflowY: 'auto' } },
@@ -2844,7 +2844,7 @@ class Component extends DCLogic {
           on ? h('div', { style: { display: 'flex', flexDirection: 'column', padding: '0 10px 10px 18px', gap: 2 } },
             list.map(p => h('a', { key: p.id, href: this.productPath(p.id) || undefined, 'data-go': 'open:' + p.id, style: { fontSize: 13.5, color: MUT, padding: '5px 0', textDecoration: 'none' } }, p.name)),
             h('span', { 'data-go': c.id === 'packaging-boxes' ? 'packaging' : 'catopen:' + c.id, style: { fontSize: 13, fontWeight: 600, color: TEAL, padding: '6px 0', cursor: 'pointer' } }, 'View all →')) : null); })),
-      h('div', { style: { background: 'linear-gradient(160deg,#fff,#eeeeee)', border: '1px solid ' + HAIR, borderRadius: 12, padding: '22px 20px 0', overflow: 'hidden' } },
+      h('div', { style: { background: 'linear-gradient(160deg,#fff,#eeeeee)', border: '1px solid ' + HAIR, borderRadius: 0, padding: '22px 20px 0', overflow: 'hidden' } },
         h('div', { style: { fontSize: 19, fontWeight: 500, lineHeight: 1.35, marginBottom: 8 } }, 'Premium membership plan'),
         h('div', { style: { fontSize: 14.5, color: MUT, lineHeight: 1.6, marginBottom: 16 } }, 'Sign up now and get an exclusive rate for you.'),
         this.btn('Sign up', 'teal', 'signup'),
@@ -2852,12 +2852,12 @@ class Component extends DCLogic {
     const rows = h('div', { style: { flex: '1 1 600px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 20 } },
       cats.map((c, i) => { const list = this.catProducts(c.id).slice().sort((a, b) => (HOME_PRODUCT_IMG[b.id] ? 1 : 0) - (HOME_PRODUCT_IMG[a.id] ? 1 : 0));
         const go = c.id === 'packaging-boxes' ? 'packaging' : 'catopen:' + c.id;
-        return h('div', { key: c.id, style: { background: HOME_GRADIENTS[i % 3], borderRadius: 12, display: 'flex', flexWrap: 'wrap', overflow: 'hidden', minHeight: 250 } },
+        return h('div', { key: c.id, style: { background: HOME_GRADIENTS[i % 3], borderRadius: 0, display: 'flex', flexWrap: 'wrap', overflow: 'hidden', minHeight: 250 } },
           h('div', { style: { flex: '0 0 220px', position: 'relative', padding: '20px 18px', color: '#fff', minHeight: 110 } },
             h('a', { href: this.navHref(go) || undefined, 'data-go': go, style: { position: 'relative', zIndex: 1, display: 'block', color: '#fff', fontSize: 20, fontWeight: 500, lineHeight: 1.35, textDecoration: 'none' } }, c.label + ' Printing'),
             HOME_CAT_PANEL[c.id] ? h('img', { className: 'pk-hide-sm', src: this.homeImg(HOME_CAT_PANEL[c.id]), alt: '', loading: 'lazy', style: { position: 'absolute', left: 0, bottom: 0, width: 210, maxHeight: 170, objectFit: 'contain', objectPosition: 'left bottom' } }) : null),
           h('div', { style: { flex: '1 1 320px', minWidth: 0, padding: 18 } },
-            h('div', { style: { background: '#fff', borderRadius: 8, padding: '4px 26px' } }, this.hScroller(list.map(tile)))));
+            h('div', { style: { background: '#fff', borderRadius: 0, padding: '4px 26px' } }, this.hScroller(list.map(tile)))));
       }));
     return h('section', { key: 'homecats', style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px 40px' } },
       h('div', { style: { display: 'flex', gap: 28, alignItems: 'flex-start', flexWrap: 'wrap' } }, sidebar, rows));
@@ -2882,9 +2882,9 @@ class Component extends DCLogic {
             cats.map(c => { const on = c.id === active.id;
               return h('button', { key: c.id, type: 'button', role: 'tab', 'aria-selected': on ? 'true' : 'false',
                 onClick: () => this.setState({ faqCat: c.id, faqOpen: null }),
-                style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, background: 'none', border: 'none', padding: '14px 12px', font: (on ? 600 : 500) + ' 15px Montserrat,sans-serif', color: on ? TEAL : INK, textAlign: 'left', cursor: 'pointer', borderRadius: 8 } },
+                style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, background: 'none', border: 'none', padding: '14px 12px', font: (on ? 600 : 500) + ' 15px Montserrat,sans-serif', color: on ? TEAL : INK, textAlign: 'left', cursor: 'pointer', borderRadius: 0 } },
                 h('span', null, c.title), h('span', { 'aria-hidden': 'true', style: { color: on ? TEAL : FAINT, fontSize: 16 } }, '›')); })),
-          h('div', { role: 'tabpanel', style: { flex: '1 1 480px', minWidth: 0, background: '#fff', borderRadius: 14, padding: '26px 28px' } },
+          h('div', { role: 'tabpanel', style: { flex: '1 1 480px', minWidth: 0, background: '#fff', borderRadius: 0, padding: '26px 28px' } },
             h('div', { style: { fontSize: 17, fontWeight: 600, marginBottom: 10 } }, active.title),
             active.questions.map((qa, i) => { const open = openQ === active.id + ':' + i;
               return h('div', { key: i, style: { borderBottom: i < active.questions.length - 1 ? '1px solid ' + LINE : 'none' } },
@@ -2988,7 +2988,7 @@ class Component extends DCLogic {
     return h('div', null,
       h('section', { style: { background: ALT, borderBottom: '1px solid ' + HAIR } },
         h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '54px 20px' } },
-          h('h1', { style: { margin: 0, maxWidth: '20ch', fontSize: 'clamp(26px,3.6vw,38px)', fontWeight: 600, lineHeight: 1.2, letterSpacing: '-.02em' } }, 'Printing matched to the right press'),
+          h('h1', { className: 'pk-nobar', style: { margin: 0, maxWidth: '20ch', fontSize: 'clamp(26px,3.6vw,38px)', fontWeight: 600, lineHeight: 1.2, letterSpacing: '-.02em' } }, 'Printing matched to the right press'),
           h('p', { style: { margin: '16px 0 0', maxWidth: '60ch', fontSize: 16, color: MUT, lineHeight: 1.8 } }, 'Printoka sends your job to the printer that suits it best, from our own facility in Miri to thirty partner vendors. You get factory pricing without chasing a quote first.'))),
       h('section', { style: { maxWidth: 1180, margin: '0 auto', padding: '36px 20px 0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 18 } },
         STATS.map((s, i) => h('div', { key: i, style: { border: '1px solid ' + HAIR, padding: '22px 24px' } },
@@ -3031,13 +3031,13 @@ class Component extends DCLogic {
     ];
     const PT = this.authPortal ? this.authPortal(role) : { title: 'Login', bg: '#E52220', accent: '#E52220' };
     const roleCopy = PT.title;
-    const inp = { border: '1px solid ' + HAIR, borderRadius: 8, padding: '12px 14px', fontSize: 14, font: '400 14px Montserrat,sans-serif', width: '100%', background: '#f4f6fb' };
+    const inp = { border: '1px solid ' + HAIR, borderRadius: 0, padding: '12px 14px', fontSize: 14, font: '400 14px Montserrat,sans-serif', width: '100%', background: '#f4f6fb' };
     const lbl = (t, req) => h('div', { style: { fontSize: 13, fontWeight: 500, color: INK, marginBottom: 6 } }, t, req ? h('span', { style: { color: '#E52220' } }, ' *') : null);
-    const err = this.state.authErr ? h('div', { key: 'e', style: { fontSize: 12.5, color: '#c0392b', background: '#fdecec', border: '1px solid #f5c8c7', borderRadius: 8, padding: '9px 11px' } }, this.state.authErr) : null;
+    const err = this.state.authErr ? h('div', { key: 'e', style: { fontSize: 12.5, color: '#c0392b', background: '#fdecec', border: '1px solid #f5c8c7', borderRadius: 0, padding: '9px 11px' } }, this.state.authErr) : null;
     const google = role !== 'member' ? null : h('div', { key: 'g', style: { textAlign: 'center' } },
       h('span', { title: 'Google sign-in plugs in here (OAuth)', style: { display: 'inline-grid', placeItems: 'center', height: 46, width: 46, borderRadius: '50%', border: '1px solid ' + HAIR, cursor: 'pointer', fontFamily: 'Georgia,serif', fontSize: 22, fontWeight: 700, color: '#4285F4' } }, 'G'),
       h('div', { style: { fontSize: 12.5, color: FAINT, marginTop: 10 } }, 'or ' + (mode === 'login' ? 'login' : 'register') + ' with email address'));
-    const card = h('div', { style: { background: '#fff', borderRadius: '28px 28px 16px 16px', padding: '30px 34px 34px', boxShadow: '0 20px 50px rgba(0,0,0,.18)', width: '100%', maxWidth: 460 } },
+    const card = h('div', { style: { background: '#fff', borderRadius: 0, padding: '30px 34px 34px', boxShadow: '0 20px 50px rgba(0,0,0,.18)', width: '100%', maxWidth: 460 } },
       h('div', { style: { height: 4, width: 34, background: PT.accent, borderRadius: 2, margin: '0 auto 10px' } }),
       h('h2', { style: { textAlign: 'center', fontSize: 22, fontWeight: 600, margin: '0 0 18px' } }, mode === 'login' ? roleCopy : 'Register'),
       google,
@@ -3050,7 +3050,7 @@ class Component extends DCLogic {
             h('span', { onClick: () => this.setField('lgShow', !this.state.lgShow), style: { position: 'absolute', right: 12, top: 12, cursor: 'pointer', color: FAINT, fontSize: 14 } }, this.state.lgShow ? '🙈' : '👁'))),
           h('div', { key: 'fp', style: { fontSize: 13 } }, h('span', { onClick: () => { this.pushUrl('/account/lost-password/'); this.setState({ authTab: 'lost', authErr: null, lostDone: false }); }, style: { color: '#2f6fd0', cursor: 'pointer' } }, 'Forgot your password?')),
           h('label', { key: 'rm', style: { display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, color: MUT, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: !!this.state.lgRemember, onChange: e => this.setField('lgRemember', e.target.checked) }), 'Remember me?'),
-          h('span', { key: 'b', 'data-go': 'dologin', style: { display: 'block', textAlign: 'center', background: PT.accent, color: '#fff', fontWeight: 600, fontSize: 15, padding: '13px', borderRadius: 8, cursor: 'pointer' } }, this.state.authBusy ? 'Signing in…' : 'Login'),
+          h('span', { key: 'b', 'data-go': 'dologin', style: { display: 'block', textAlign: 'center', background: PT.accent, color: '#fff', fontWeight: 600, fontSize: 15, padding: '13px', borderRadius: 0, cursor: 'pointer' } }, this.state.authBusy ? 'Signing in…' : 'Login'),
           this.state.authErrPortal && this.state.authErrPortal !== role ? h('div', { key: 'gp', style: { textAlign: 'center', fontSize: 13 } }, h('span', { onClick: () => this.openPortal(this.state.authErrPortal), style: { color: '#2f6fd0', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' } }, 'Go to the ' + this.authPortal(this.state.authErrPortal).title + ' page →')) : null,
           role === 'member' ? h('div', { key: 'reg', style: { textAlign: 'center', fontSize: 13.5, color: MUT } }, 'New member? ', h('span', { 'data-go': 'set:authTab:register', style: { color: '#2f6fd0', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' } }, 'Register'), ' here') : null,
           role === 'member' ? h('div', { key: 'alt', style: { textAlign: 'center', fontSize: 13.5, display: 'flex', gap: 16, justifyContent: 'center' } },
@@ -3065,16 +3065,16 @@ class Component extends DCLogic {
           h('div', { key: 'ph' }, lbl('Mobile number'), h('input', { type: 'tel', value: this.state.rgPhone || '', onChange: e => this.setField('rgPhone', e.target.value), style: inp })),
           h('div', { key: 'pw' }, lbl('Password', true), h('input', { type: 'password', value: this.state.rgPass || '', onChange: e => this.setField('rgPass', e.target.value), style: inp }), h('div', { style: { fontSize: 11.5, color: FAINT, marginTop: 4 } }, 'Minimum 6 characters')),
           h('label', { key: 'ag', style: { display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 12.5, color: MUT, cursor: 'pointer', lineHeight: 1.5 } }, h('input', { type: 'checkbox', checked: !!this.state.rgAgree, onChange: e => this.setField('rgAgree', e.target.checked), style: { marginTop: 3 } }), 'I agree to the Terms and consent to Printoka processing my data under the PDPA.'),
-          h('div', { key: 'promo', style: { display: 'flex', gap: 10, alignItems: 'center', background: '#fdf2f2', border: '1px dashed ' + TEAL, borderRadius: 8, padding: '10px 12px', fontSize: 13, color: INK } },
+          h('div', { key: 'promo', style: { display: 'flex', gap: 10, alignItems: 'center', background: '#fdf2f2', border: '1px dashed ' + TEAL, borderRadius: 0, padding: '10px 12px', fontSize: 13, color: INK } },
             h('span', { style: { flex: 'none', fontWeight: 700, color: TEAL, fontSize: 15 } }, 'RM30'),
             h('span', null, 'Sign up and get RM30 off your order of RM 180 or more, plus a 15% code for orders of RM 800 or more.')),
-          h('span', { key: 'b', 'data-go': 'doregister', style: { display: 'block', textAlign: 'center', background: '#E52220', color: '#fff', fontWeight: 600, fontSize: 15, padding: '13px', borderRadius: 8, cursor: 'pointer' } }, this.state.authBusy ? 'Creating…' : 'Create my account'),
+          h('span', { key: 'b', 'data-go': 'doregister', style: { display: 'block', textAlign: 'center', background: '#E52220', color: '#fff', fontWeight: 600, fontSize: 15, padding: '13px', borderRadius: 0, cursor: 'pointer' } }, this.state.authBusy ? 'Creating…' : 'Create my account'),
           h('div', { key: 'log', style: { textAlign: 'center', fontSize: 13.5, color: MUT } }, 'Already a member? ', h('span', { 'data-go': 'set:authTab:login', style: { color: '#2f6fd0', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' } }, 'Login'), ' here'),
         ]));
     return h('div', { 'data-portal': role, style: { background: PT.bg, margin: '-10px -20px 0', minHeight: 560 } },
       h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '48px 24px 60px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 40, alignItems: 'center' } },
         h('div', { style: { color: '#fff', maxWidth: 440 } },
-          h('h1', { style: { fontSize: 'clamp(26px,3vw,34px)', fontWeight: 700, letterSpacing: '-.01em', margin: '0 0 8px' } }, PT.head || 'Sign up for some member deals!'),
+          h('h1', { className: 'pk-nobar', style: { fontSize: 'clamp(26px,3vw,34px)', fontWeight: 700, letterSpacing: '-.01em', margin: '0 0 8px' } }, PT.head || 'Sign up for some member deals!'),
           h('p', { style: { margin: '0 0 24px', fontSize: 15, opacity: .95 } }, PT.sub || 'Sign up for some member deals!'),
           h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
             PT.feats ? PT.feats.map((f, i) => h('div', { key: i, style: { display: 'flex', alignItems: 'center', gap: 14 } },
@@ -3107,12 +3107,12 @@ class Component extends DCLogic {
     return h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px 0' } },
       h('div', { style: { border: '1px solid ' + HAIR, borderTop: '3px solid ' + TEAL, padding: '30px 32px', display: 'flex', flexWrap: 'wrap', gap: 22, alignItems: 'center', justifyContent: 'space-between' } },
         h('div', { style: { flex: '1 1 380px', minWidth: 0 } },
-          h('h1', { style: { margin: '0 0 10px', fontSize: 'clamp(21px,2.6vw,27px)', fontWeight: 600, letterSpacing: '-.01em' } }, 'Thank you — your order is in'),
+          h('h1', { style: { margin: '0 0 10px', fontSize: 'clamp(21px,2.6vw,27px)', fontWeight: 500, letterSpacing: '-.01em' } }, 'Thank you — your order is in'),
           h('p', { style: { margin: 0, fontSize: 14.5, color: MUT, lineHeight: 1.7 } }, 'Order ', h('b', { style: { color: INK } }, o.id), ' · ' + o.jobIds.length + ' job(s) · ',
             this.chip(paid ? 'Payment received' : 'Pending payment', paid ? 'ok' : 'warn'),
             (o.customer && o.customer.email) ? h('span', null, ' · confirmation sent to ' + o.customer.email) : '')),
         h('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap' } },
-          h('span', { role: 'button', tabIndex: 0, onClick: () => { this.setState({ cTab: 'Orders' }); this.loadUserOrders(); this.go('dash'); }, style: { display: 'inline-flex', alignItems: 'center', background: TEAL, color: '#fff', fontWeight: 600, fontSize: 14, borderRadius: 8, padding: '11px 20px', cursor: 'pointer' } }, 'Track in my dashboard'),
+          h('span', { role: 'button', tabIndex: 0, onClick: () => { this.setState({ cTab: 'Orders' }); this.loadUserOrders(); this.go('dash'); }, style: { display: 'inline-flex', alignItems: 'center', background: TEAL, color: '#fff', fontWeight: 600, fontSize: 14, borderRadius: 0, padding: '11px 20px', cursor: 'pointer' } }, 'Track in my dashboard'),
           this.btn('Download invoice', 'ghost', 'doc:invoice:' + o.id),
           this.btn('Order slip', 'ghost', 'doc:slip:' + o.id))),
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 22, marginTop: 22, alignItems: 'start' } },
@@ -3149,7 +3149,7 @@ class Component extends DCLogic {
     const INV = orderInv.concat(custInv);
     const SLIPS = orders.map(o => ({ id: 'OS-' + o.id.replace('PO-', ''), order: o.id, items: (o.items || []).map(it => it.product + ' · ' + (it.qty || 0).toLocaleString()).join(', '), files: (o.items || []).reduce((a, it) => a.concat(it.artworks || []), []).join(', ') || '—', date: (o.createdAt || '').slice(0, 10), open: () => this.openDoc(o.id, 'slip') }));
     const act = (label, on) => h('span', { onClick: on, style: { fontSize: 12.5, fontWeight: 600, color: TEAL, cursor: 'pointer', whiteSpace: 'nowrap' } }, label);
-    const empty = msg => h('div', { style: { border: '1px dashed ' + HAIR, borderRadius: 10, padding: 28, textAlign: 'center', color: FAINT, fontSize: 13 } }, msg);
+    const empty = msg => h('div', { style: { border: '1px dashed ' + HAIR, borderRadius: 0, padding: 28, textAlign: 'center', color: FAINT, fontSize: 13 } }, msg);
     return this.shell('Customer · ' + ((u && u.name) || ''), nav, 'Invoices & slips', [
       this.head('Invoices & order slips', 'One invoice per order as a simplified summary, plus any custom invoice our team prepared for you; one order slip per order carrying the full production detail including artwork filenames.'),
       h('div', { key: 't', style: { display: 'flex', gap: 22, borderBottom: '1px solid ' + HAIR, margin: '18px 0' } },
@@ -3219,11 +3219,11 @@ class Component extends DCLogic {
     const WHY = [['Certified production', 'ISO-grade quality control on every run.'], ['Mockup in days', 'Request a physical sample before the full run.'], ['Design & structure check', 'We verify your die-line and artwork are press-ready.'], ['Colour consistency', 'Consistent colour across every reprint.']];
     return h('div', null,
       // hero
-      h('section', { style: { background: 'linear-gradient(180deg,#fdf2f2,#fff)', borderRadius: 16, padding: '40px 34px', marginBottom: 26 } },
+      h('section', { style: { background: 'linear-gradient(180deg,#fdf2f2,#fff)', borderRadius: 0, padding: '40px 34px', marginBottom: 26 } },
         h('div', { style: { display: 'flex', gap: 36, alignItems: 'center', flexWrap: 'wrap' } },
           h('div', { style: { flex: '1 1 360px', minWidth: 0 } },
             h('div', { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: '.09em', textTransform: 'uppercase', color: TEALD, marginBottom: 10 } }, 'Custom packaging boxes'),
-            h('h1', { style: { margin: '0 0 12px', fontSize: 'clamp(30px,4vw,46px)', lineHeight: 1.05, letterSpacing: '-.03em', fontWeight: 600 } }, 'Create your own ', h('span', { style: { color: TEAL } }, 'packaging.')),
+            h('h1', { className: 'pk-nobar', style: { margin: '0 0 12px', fontSize: 'clamp(30px,4vw,46px)', lineHeight: 1.05, letterSpacing: '-.03em', fontWeight: 600 } }, 'Create your own ', h('span', { style: { color: TEAL } }, 'packaging.')),
             h('p', { style: { margin: '0 0 18px', fontSize: 16, color: MUT, maxWidth: '50ch', lineHeight: 1.65 } }, 'Design a box, sleeve or mailer to your exact size. Pick your material and finishing and see the price instantly. Every order comes with a free die-line to design on.'),
             h('div', { style: { display: 'flex', gap: 10, alignItems: 'center', marginBottom: 20, flexWrap: 'wrap' } },
               h('span', { style: { color: AMBER, fontSize: 18, letterSpacing: 2 } }, '★★★★★'),
@@ -3234,13 +3234,13 @@ class Component extends DCLogic {
           h('div', { style: { flex: '0 1 320px', minWidth: 240, display: 'grid', placeItems: 'center' } },
             h('div', { style: { width: '100%', maxWidth: 300, transform: 'perspective(760px) rotateX(6deg) rotateY(-20deg)', filter: 'drop-shadow(0 16px 26px rgba(33,33,33,.18))' } }, this.dieline('carton', null, 220))))),
       // box types
-      this.pkBand('Box styles', 'What would you like to make?', TYPES, (t) => h('div', { key: t[1], 'data-go': 'pkfam:' + ({ 'Basic Boxes': 'Basic boxes', 'Window Boxes': 'Window boxes', 'Sleeves': 'Sleeve' }[t[1]] || 'All boxes'), style: { border: '1px solid ' + HAIR, borderRadius: 12, background: '#fff', padding: '20px 18px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 9 } },
-        h('span', { style: { height: 44, width: 44, borderRadius: 10, background: '#fdf2f2', display: 'grid', placeItems: 'center' } }, this.dashIcon(t[0], TEAL, 22)),
+      this.pkBand('Box styles', 'What would you like to make?', TYPES, (t) => h('div', { key: t[1], 'data-go': 'pkfam:' + ({ 'Basic Boxes': 'Basic boxes', 'Window Boxes': 'Window boxes', 'Sleeves': 'Sleeve' }[t[1]] || 'All boxes'), style: { border: '1px solid ' + HAIR, borderRadius: 0, background: '#fff', padding: '20px 18px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 9 } },
+        h('span', { style: { height: 44, width: 44, borderRadius: 0, background: '#fdf2f2', display: 'grid', placeItems: 'center' } }, this.dashIcon(t[0], TEAL, 22)),
         h('div', { style: { fontSize: 15.5, fontWeight: 600 } }, t[1]),
         h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.6 } }, t[2]),
         h('span', { style: { fontSize: 12.5, fontWeight: 600, color: TEAL, marginTop: 'auto' } }, 'Order now →'))),
       // order steps
-      h('section', { style: { background: ALT, borderRadius: 14, padding: '30px 26px', marginBottom: 26 } },
+      h('section', { style: { background: ALT, borderRadius: 0, padding: '30px 26px', marginBottom: 26 } },
         h('h2', { style: { margin: '0 0 4px', fontSize: 22, fontWeight: 600, textAlign: 'center', letterSpacing: '-.02em' } }, 'Order in three steps'),
         h('p', { style: { margin: '0 0 24px', fontSize: 13.5, color: MUT, textAlign: 'center' } }, 'New to packaging? Here’s how to make your very own box order.'),
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 22 } },
@@ -3255,7 +3255,7 @@ class Component extends DCLogic {
         this.pkList('Details matter', 'Choose the right board for your product.', STOCKS),
         this.pkList('Finishing', 'Elevate your box with a premium finish.', FINISH)),
       // why printoka
-      h('section', { style: { border: '1px solid ' + HAIR, borderRadius: 14, padding: '26px 24px', marginBottom: 8 } },
+      h('section', { style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: '26px 24px', marginBottom: 8 } },
         h('h2', { style: { margin: '0 0 18px', fontSize: 20, fontWeight: 600, textAlign: 'center', letterSpacing: '-.02em' } }, 'Why Printoka for packaging'),
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 18 } },
           WHY.map((w, i) => h('div', { key: i, style: { display: 'flex', gap: 11 } },
@@ -3269,7 +3269,7 @@ class Component extends DCLogic {
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 16 } }, items.map(render)));
   }
   pkList(title, sub, rows) {
-    return h('section', { style: { border: '1px solid ' + HAIR, borderRadius: 14, padding: '22px 22px' } },
+    return h('section', { style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: '22px 22px' } },
       h('h3', { style: { margin: '0 0 3px', fontSize: 17, fontWeight: 600 } }, title),
       h('p', { style: { margin: '0 0 14px', fontSize: 13, color: MUT } }, sub),
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
@@ -3320,34 +3320,34 @@ class Component extends DCLogic {
           h('span', { style: { fontSize: 13, color: MUT } }, fam + ' · ' + famModels.length + ' style' + (famModels.length === 1 ? '' : 's')),
           h('span', { style: { fontSize: 13, color: MUT } }, 'Sort: Most popular')),
         famModels.length ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(190px,1fr))', gap: 16 } },
-          famModels.map((m, i) => h('div', { key: i, 'data-go': 'pkgo:configure', style: { border: '1px solid ' + HAIR, borderRadius: 12, background: '#fff', padding: '16px 16px 18px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 } },
+          famModels.map((m, i) => h('div', { key: i, 'data-go': 'pkgo:configure', style: { border: '1px solid ' + HAIR, borderRadius: 0, background: '#fff', padding: '16px 16px 18px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 } },
             this.dieline(m[3]),
             h('div', { style: { fontSize: 14.5, fontWeight: 600, color: TEAL, marginTop: 8 } }, m[0]),
             h('div', { style: { fontSize: 12.5, fontWeight: 500 } }, m[1]),
             h('div', { style: { fontSize: 12, color: MUT, lineHeight: 1.5 } }, m[2]))))
-          : h('div', { style: { border: '1px dashed ' + HAIR, borderRadius: 12, padding: 30, textAlign: 'center', fontSize: 13, color: MUT } }, 'More ' + fam.toLowerCase() + ' styles are available on request — get a custom quote.')),
-      'Product spec': h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden' } },
+          : h('div', { style: { border: '1px dashed ' + HAIR, borderRadius: 0, padding: 30, textAlign: 'center', fontSize: 13, color: MUT } }, 'More ' + fam.toLowerCase() + ' styles are available on request — get a custom quote.')),
+      'Product spec': h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden' } },
         specRows.map((r, i) => h('div', { key: i, style: { display: 'grid', gridTemplateColumns: '150px 1fr', gap: 14, padding: '13px 16px', borderTop: i ? '1px solid ' + LINE : 'none' } },
           h('span', { style: { fontSize: 13, fontWeight: 600, color: TEAL } }, r[0]), h('span', { style: { fontSize: 13, color: MUT, lineHeight: 1.6 } }, r[1])))),
-      'Artwork spec': h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, padding: 18, fontSize: 13.5, color: MUT, lineHeight: 1.8 } },
+      'Artwork spec': h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: 18, fontSize: 13.5, color: MUT, lineHeight: 1.8 } },
         h('p', { style: { margin: '0 0 8px' } }, 'Every box comes with a free die-line — a vector file of the cut, crease and bleed lines at your exact size. Design straight on top of it.'),
         h('ul', { style: { margin: 0, paddingLeft: 18 } }, ['3 mm bleed past every cut edge', 'CMYK, 300 dpi, fonts outlined', 'Keep text 4 mm clear of creases and cut lines'].map((x, i) => h('li', { key: i }, x)))),
       'Tutorial': h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
         [['1', 'Pick a box style and set its exact size'], ['2', 'Choose material, finishing and quantity — see the price at each tier'], ['3', 'Download the die-line, add your artwork, and submit']].map((s, i) =>
-          h('div', { key: i, style: { display: 'flex', gap: 12, border: '1px solid ' + HAIR, borderRadius: 12, padding: '13px 15px' } },
+          h('div', { key: i, style: { display: 'flex', gap: 12, border: '1px solid ' + HAIR, borderRadius: 0, padding: '13px 15px' } },
             h('span', { style: { flex: 'none', width: 24, height: 24, borderRadius: '50%', background: TEAL, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700 } }, s[0]),
             h('span', { style: { fontSize: 13.5, color: INK, alignSelf: 'center' } }, s[1])))),
     };
     return h('div', { key: 'body', style: { display: 'grid', gridTemplateColumns: '256px minmax(0,1fr)', gap: 20, marginTop: 20, alignItems: 'start' } },
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
-        h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', background: '#fff' } },
+        h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden', background: '#fff' } },
           h('div', { style: { padding: '11px 14px', borderBottom: '1px solid ' + HAIR, fontSize: 12, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: FAINT } }, 'Box family'),
           FAMILIES.map((f, i) => { const name = f[0].replace('— ', ''), isSub = f[0].indexOf('—') === 0, on = fam === name;
             return h('div', { key: i, 'data-go': 'set:pkFam:' + name, style: { display: 'flex', justifyContent: 'space-between', gap: 10, padding: '9px 14px', borderTop: i ? '1px solid ' + LINE : 'none', fontSize: 13, cursor: 'pointer', background: on ? '#fdf2f2' : '#fff', borderLeft: '2px solid ' + (on ? TEAL : 'transparent'), color: on ? TEAL : isSub ? MUT : INK, fontWeight: on ? 600 : isSub ? 400 : 600, paddingLeft: isSub ? 24 : 14 } },
               h('span', null, name), h('span', { style: { color: on ? TEAL : FAINT, fontSize: 12 } }, f[1])); })),
-        h('div', { style: { background: TEAL, color: '#fff', padding: '22px 20px', borderRadius: 12, textAlign: 'center' } },
+        h('div', { style: { background: TEAL, color: '#fff', padding: '22px 20px', borderRadius: 0, textAlign: 'center' } },
           h('div', { style: { fontSize: 14.5, fontWeight: 600, lineHeight: 1.5, marginBottom: 12 } }, 'Can’t find the style you need?'),
-          h('span', { 'data-go': 'contact', style: { display: 'inline-block', background: '#fff', color: TEAL, fontSize: 13.5, fontWeight: 600, padding: '10px 20px', borderRadius: 8, cursor: 'pointer' } }, 'Get a custom quote'),
+          h('span', { 'data-go': 'contact', style: { display: 'inline-block', background: '#fff', color: TEAL, fontSize: 13.5, fontWeight: 600, padding: '10px 20px', borderRadius: 0, cursor: 'pointer' } }, 'Get a custom quote'),
           h('div', { style: { fontSize: 12, marginTop: 10, opacity: .9 } }, 'For fully bespoke packaging and die-lines'))),
       h('div', { style: { minWidth: 0 } },
         h('div', { style: { display: 'flex', gap: 22, borderBottom: '1px solid ' + HAIR, marginBottom: 16, flexWrap: 'wrap' } },
@@ -3368,7 +3368,7 @@ class Component extends DCLogic {
 
     P.library = [
       h('div', { key: 'lanes', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 16 } },
-        LANES.map((l, i) => h('div', { key: i, style: { border: '1px solid ' + HAIR, borderTop: '3px solid ' + (i ? TEALD : TEAL), borderRadius: 12, background: '#fff', padding: '20px 22px' } },
+        LANES.map((l, i) => h('div', { key: i, style: { border: '1px solid ' + HAIR, borderTop: '3px solid ' + (i ? TEALD : TEAL), borderRadius: 0, background: '#fff', padding: '20px 22px' } },
           h('div', { style: { display: 'flex', gap: 10, alignItems: 'baseline', flexWrap: 'wrap', marginBottom: 4 } },
             h('span', { style: { fontSize: 16.5, fontWeight: 600 } }, l[0]),
             h('span', { style: { fontSize: 12.5, fontWeight: 600, color: TEAL } }, l[1])),
@@ -3380,7 +3380,7 @@ class Component extends DCLogic {
 
     const step = st.pkStep === undefined ? 0 : st.pkStep;
     const STEPS = ['Size', 'Material', 'Processes', 'Quantity', 'Price'];
-    const opt = (label, on, go, note) => h('span', { key: label, 'data-go': go, style: { position: 'relative', display: 'inline-flex', flexDirection: 'column', gap: 2, border: '1px solid ' + (on ? TEAL : HAIR), borderRadius: 8, background: on ? '#fdf2f2' : '#fff', padding: '11px 18px', fontSize: 13.5, fontWeight: on ? 600 : 400, color: on ? TEALD : INK, cursor: 'pointer', flex: '0 1 auto', minWidth: 0, textAlign: 'center', alignItems: 'center', overflow: 'hidden' } },
+    const opt = (label, on, go, note) => h('span', { key: label, 'data-go': go, style: { position: 'relative', display: 'inline-flex', flexDirection: 'column', gap: 2, border: '1px solid ' + (on ? TEAL : HAIR), borderRadius: 0, background: on ? '#fdf2f2' : '#fff', padding: '11px 18px', fontSize: 13.5, fontWeight: on ? 600 : 400, color: on ? TEALD : INK, cursor: 'pointer', flex: '0 1 auto', minWidth: 0, textAlign: 'center', alignItems: 'center', overflow: 'hidden' } },
       label, note && h('span', { style: { fontSize: 11, color: FAINT } }, note),
       on && h('span', { style: { position: 'absolute', right: 0, bottom: 0, width: 0, height: 0, borderLeft: '9px solid transparent', borderBottom: '9px solid ' + TEAL } }));
     const row = (label, hint, children) => h('div', { key: label, style: { display: 'grid', gridTemplateColumns: 'minmax(120px,150px) minmax(0,1fr)', gap: 18, padding: '18px 0', borderTop: '1px solid ' + LINE, alignItems: 'start' } },
@@ -3389,7 +3389,7 @@ class Component extends DCLogic {
         hint && h('div', { style: { fontSize: 11.5, color: FAINT, marginTop: 3, lineHeight: 1.5 } }, hint)),
       h('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap' } }, children));
 
-    const dimField = (label, value, unit) => h('div', { key: label, style: { display: 'flex', border: '1px solid ' + HAIR, borderRadius: 8, overflow: 'hidden', background: '#fff', flex: '1 1 220px', minWidth: 0, maxWidth: 320 } },
+    const dimField = (label, value, unit) => h('div', { key: label, style: { display: 'flex', border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden', background: '#fff', flex: '1 1 220px', minWidth: 0, maxWidth: 320 } },
       h('span', { style: { flex: '1 1 auto', minWidth: 0, background: ALT, padding: '10px 13px', fontSize: 13, color: MUT } }, label),
       h('span', { style: { flex: '0 0 auto', width: 78, padding: '10px 13px', fontSize: 13.5, fontWeight: 600, textAlign: 'right' } }, value),
       h('span', { style: { padding: '10px 13px', fontSize: 12.5, color: MUT, fontStyle: 'italic', borderLeft: '1px solid ' + HAIR } }, unit));
@@ -3408,13 +3408,13 @@ class Component extends DCLogic {
        row('Partial surface', 'Adds a die or plate charge', [opt('Embossing', false, 'set:pkStep:2'), opt('Spot UV', false, 'set:pkStep:2'), opt('Hot Stamping', false, 'set:pkStep:2')]),
        row('Others', null, [opt('Die-Cut', true, 'set:pkStep:2')])],
       [row('Quantity', 'Fixed break points — pricing is per print run', [
-         h('div', { key: 'q', style: { display: 'inline-flex', border: '1px solid ' + HAIR, borderRadius: 8, overflow: 'hidden' } },
+         h('div', { key: 'q', style: { display: 'inline-flex', border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden' } },
            h('span', { style: { padding: '10px 16px', borderRight: '1px solid ' + HAIR, cursor: 'pointer', color: MUT } }, '−'),
            h('span', { style: { padding: '10px 26px', fontSize: 14, fontWeight: 600 } }, '300'),
            h('span', { style: { padding: '10px 16px', borderLeft: '1px solid ' + HAIR, cursor: 'pointer', color: MUT } }, '+'))]),
-       row('Job name', 'Shown on the order slip and in your dashboard', [h('span', { key: 'n', style: { border: '1px solid ' + HAIR, borderRadius: 8, padding: '10px 13px', fontSize: 13, color: FAINT, flex: '1 1 auto', minWidth: 0, width: '100%' } }, 'e.g. Studio North candle carton')]),
-       row('Note to prepress', null, [h('span', { key: 'n', style: { border: '1px solid ' + HAIR, borderRadius: 8, padding: '10px 13px', fontSize: 13, color: FAINT, flex: '1 1 auto', minWidth: 0, width: '100%', minHeight: 68, display: 'block' } }, 'Anything the operator should know before die-cutting')])],
-      [h('div', { key: 'sum', style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden' } },
+       row('Job name', 'Shown on the order slip and in your dashboard', [h('span', { key: 'n', style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: '10px 13px', fontSize: 13, color: FAINT, flex: '1 1 auto', minWidth: 0, width: '100%' } }, 'e.g. Studio North candle carton')]),
+       row('Note to prepress', null, [h('span', { key: 'n', style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: '10px 13px', fontSize: 13, color: FAINT, flex: '1 1 auto', minWidth: 0, width: '100%', minHeight: 68, display: 'block' } }, 'Anything the operator should know before die-cutting')])],
+      [h('div', { key: 'sum', style: { border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden' } },
         [['Box template ID', 'M015'], ['Size mode', 'Die-Cut'], ['Dimensions', 'Length 80 mm · Width 150 mm · Caliper 0.3 mm'], ['Materials', 'Main paper · Gloss Art Card 1 Side Coated (250 GSM)'], ['Processes', '4 Colour Printing · Gloss Lamination (Front) · Die-Cut'], ['Note', '—'], ['Quantity', '300']]
           .map((r, i) => h('div', { key: i, style: { display: 'grid', gridTemplateColumns: 'minmax(110px,150px) minmax(0,1fr) 22px', gap: 14, padding: '13px 16px', borderTop: i ? '1px solid ' + LINE : 'none', background: i % 2 ? ALT : '#fff', alignItems: 'center' } },
             h('span', { style: { fontSize: 13, fontWeight: 600 } }, r[0]),
@@ -3422,12 +3422,12 @@ class Component extends DCLogic {
             h('span', { 'data-go': 'set:pkStep:' + Math.min(i, 3), style: { fontSize: 13, color: TEAL, cursor: 'pointer', textAlign: 'right' } }, '›')))),
        h('div', { key: 'zone', style: { display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap', marginTop: 16 } },
          h('span', { style: { fontSize: 14, fontWeight: 600 } }, 'Delivery zone'),
-         h('span', { style: { border: '1px solid ' + HAIR, borderRadius: 8, padding: '9px 14px', fontSize: 13, color: INK } }, 'West Malaysia'),
+         h('span', { style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: '9px 14px', fontSize: 13, color: INK } }, 'West Malaysia'),
          h('span', { style: { fontSize: 12, color: FAINT } }, 'Zone sets the courier list and free-shipping threshold'))],
     ];
 
     P.configure = [
-      h('div', { key: 'w', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 0, border: '1px solid ' + HAIR, borderRadius: 14, overflow: 'hidden', background: '#fff' } },
+      h('div', { key: 'w', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 0, border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden', background: '#fff' } },
         h('div', { style: { borderRight: '1px solid ' + HAIR, display: 'flex', flexDirection: 'column' } },
           h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, padding: '12px 15px', background: ALT, borderBottom: '1px solid ' + HAIR, color: INK } },
             h('span', { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: TEAL } }, 'Job #1 · M015'),
@@ -3435,7 +3435,7 @@ class Component extends DCLogic {
           h('div', { style: { flex: 1, minHeight: 300, display: 'grid', placeItems: 'center', padding: 24, background: '#fff' } },
             h('div', { style: { width: '100%', maxWidth: 320, transform: 'perspective(700px) rotateX(8deg) rotateY(-22deg)', filter: 'drop-shadow(0 12px 18px rgba(33,33,33,.18))' } }, this.dieline('divider', null, 180))),
           h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderTop: '1px solid ' + HAIR, background: ALT, flexWrap: 'wrap' } },
-            ['Orbit', 'Pause'].map((c, i) => h('span', { key: i, style: { border: '1px solid ' + HAIR, borderRadius: 6, background: '#fff', padding: '5px 10px', fontSize: 11.5, fontWeight: 600, color: MUT, cursor: 'pointer' } }, c)),
+            ['Orbit', 'Pause'].map((c, i) => h('span', { key: i, style: { border: '1px solid ' + HAIR, borderRadius: 0, background: '#fff', padding: '5px 10px', fontSize: 11.5, fontWeight: 600, color: MUT, cursor: 'pointer' } }, c)),
             h('span', { style: { flex: 1, minWidth: 90, height: 4, borderRadius: 999, background: LINE, position: 'relative' } },
               h('span', { style: { position: 'absolute', inset: 0, width: '45%', background: TEAL, borderRadius: 999 } }),
               h('span', { style: { position: 'absolute', left: '45%', top: -6, height: 16, width: 16, marginLeft: -8, borderRadius: '50%', background: '#fff', border: '1px solid ' + HAIR, boxShadow: '0 1px 4px rgba(33,33,33,.2)' } })),
@@ -3446,8 +3446,8 @@ class Component extends DCLogic {
           h('div', { style: { marginTop: 'auto' } },
             h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', background: ALT, borderTop: '1px solid ' + HAIR } },
               STEPS.map((s, i) => h('span', { key: i, 'data-go': 'set:pkStep:' + i, style: { padding: '14px 6px', textAlign: 'center', fontSize: 12, fontWeight: 600, color: i === step ? TEAL : MUT, borderBottom: '3px solid ' + (i === step ? TEAL : 'transparent'), cursor: 'pointer' } }, (i + 1) + '. ' + s))),
-            h('div', { 'data-go': 'pkgo:quote', style: { background: TEAL, color: '#fff', padding: '15px 18px', textAlign: 'center', fontSize: 15, fontWeight: 600, borderRadius: 8, cursor: 'pointer' } }, 'Continue to get offer price')))),
-      h('div', { key: 'n', style: { marginTop: 14, border: '1px solid ' + HAIR, borderRadius: 12, background: ALT, padding: 16, fontSize: 12.5, color: MUT, lineHeight: 1.75 } },
+            h('div', { 'data-go': 'pkgo:quote', style: { background: TEAL, color: '#fff', padding: '15px 18px', textAlign: 'center', fontSize: 15, fontWeight: 600, borderRadius: 0, cursor: 'pointer' } }, 'Continue to get offer price')))),
+      h('div', { key: 'n', style: { marginTop: 14, border: '1px solid ' + HAIR, borderRadius: 0, background: ALT, padding: 16, fontSize: 12.5, color: MUT, lineHeight: 1.75 } },
         h('b', { style: { color: INK } }, 'Artwork comes later: '), 'the die-line is generated from these dimensions, so the customer can download it, design against it and upload artwork after the order is placed — shipment and delivery dates firm up once artwork passes prepress.'),
     ];
 
@@ -3471,7 +3471,7 @@ class Component extends DCLogic {
     const nett = laneTotal * (1 - tierOff);
     const sst = this.cc() === 'MY' ? 0.08 : this.cc() === 'SG' ? 0.09 : 0;
     const QTY = RATES.map(r => r[0].toLocaleString('en-US'));
-    const laneCard = (name, total, per, days, on) => h('div', { key: name, 'data-go': 'set:pkLane:' + name, style: { border: '1px solid ' + (on ? TEAL : HAIR), borderRadius: 12, background: on ? '#fdf6f6' : '#fff', padding: '22px 20px', cursor: 'pointer', position: 'relative' } },
+    const laneCard = (name, total, per, days, on) => h('div', { key: name, 'data-go': 'set:pkLane:' + name, style: { border: '1px solid ' + (on ? TEAL : HAIR), borderRadius: 0, background: on ? '#fdf6f6' : '#fff', padding: '22px 20px', cursor: 'pointer', position: 'relative' } },
       h('div', { style: { display: 'flex', alignItems: 'center', gap: 9, justifyContent: 'center', marginBottom: 14 } },
         h('span', { style: { height: 18, width: 18, borderRadius: '50%', border: '2px solid ' + (on ? TEAL : HAIR), background: on ? TEAL : '#fff', display: 'grid', placeItems: 'center', color: '#fff', fontSize: 10, fontWeight: 700 } }, on ? '✓' : ''),
         h('span', { style: { fontSize: 15.5, fontWeight: 600 } }, name)),
@@ -3485,7 +3485,7 @@ class Component extends DCLogic {
           h('div', { style: { fontSize: 11.5, color: FAINT } }, 'process days'))),
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
         [['Standard price', 0, 'Cash'], ['Discount 4%', .04, 'Silver'], ['Discount 8%', .08, 'Gold'], ['Discount 14%', .14, 'Platinum']].map((d, i) =>
-          h('div', { key: i, style: { display: 'flex', alignItems: 'center', gap: 11, border: '1px solid ' + HAIR, borderRadius: 8, background: '#fff', padding: '9px 12px' } },
+          h('div', { key: i, style: { display: 'flex', alignItems: 'center', gap: 11, border: '1px solid ' + HAIR, borderRadius: 0, background: '#fff', padding: '9px 12px' } },
             h('span', { style: { flex: 'none', height: 26, width: 26, borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: 8, fontWeight: 700, color: '#fff', background: ['#9aa4ad', '#7f8992', AMBER, '#231f20'][i] } }, d[2].slice(0, 4).toUpperCase()),
             h('span', { style: { minWidth: 0 } },
               h('span', { style: { display: 'block', fontSize: 12.5, fontWeight: 600 } }, d[0]),
@@ -3494,12 +3494,12 @@ class Component extends DCLogic {
     P.quote = [
       h('div', { key: 'g', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 20, alignItems: 'start' } },
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: 18 } },
-          h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', background: '#fff' } },
+          h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden', background: '#fff' } },
             h('div', { style: { background: ALT, color: INK, padding: '12px 15px', borderBottom: '1px solid ' + HAIR, fontSize: 11.5, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase' } }, 'Product spec'),
             [['Box model', 'M015 · Divider box, partition lock'], ['Open size (H × W)', '401.2 mm × 150 mm'], ['Dimension (L × W × D)', '80 mm × 150 mm × 0.3 mm'], ['Paper', 'Gloss Art Card 250 gsm (1 side coated)'], ['Run', QTY[qi] + ' pcs · ' + lane + ' lane · ' + laneDays + ' process days']]
               .map((r, i) => h('div', { key: i, style: { display: 'grid', gridTemplateColumns: 'minmax(120px,170px) minmax(0,1fr)', gap: 14, padding: '12px 14px', borderTop: i ? '1px solid ' + LINE : 'none' } },
                 h('span', { style: { fontSize: 12.5, fontWeight: 600 } }, r[0]), h('span', { style: { fontSize: 12.5, color: MUT } }, r[1])))),
-          h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', background: '#fff' } },
+          h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden', background: '#fff' } },
             h('div', { style: { background: ALT, color: INK, padding: '12px 15px', borderBottom: '1px solid ' + HAIR, fontSize: 11.5, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase' } }, 'Finishing'),
             h('div', { style: { padding: '12px 14px 2px', fontSize: 12, color: MUT, lineHeight: 1.6 } }, 'Change any finishing option here — the price recalculates immediately.'),
             h('div', { style: { padding: '0 14px 14px' } },
@@ -3507,7 +3507,7 @@ class Component extends DCLogic {
               row('Emboss', 'Adds an embossing die charge', [opt('Not required', false, 'set:pkTab:quote'), opt('Required', true, 'set:pkTab:quote'), dimField('Emboss size (H)', '40', 'mm'), dimField('Emboss size (W)', '25', 'mm')]),
               row('Spot UV', null, [opt('Not required', true, 'set:pkTab:quote'), opt('Required', false, 'set:pkTab:quote')]),
               row('Hot stamping', null, [opt('Not required', true, 'set:pkTab:quote'), opt('Required', false, 'set:pkTab:quote')]))),
-          h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', background: '#fff' } },
+          h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden', background: '#fff' } },
             h('div', { style: { background: ALT, color: INK, padding: '12px 15px', borderBottom: '1px solid ' + HAIR, fontSize: 11.5, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase' } }, 'Ordering option & quantity'),
             h('div', { style: { padding: 14, display: 'flex', flexDirection: 'column', gap: 14 } },
               h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.7 } }, 'Request a sample for colour proofing and application testing before committing to the full run.'),
@@ -3515,23 +3515,23 @@ class Component extends DCLogic {
               h('div', null,
                 h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 8 } }, 'Quantity (mass production)'),
                 h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
-                  QTY.map((q, i) => h('span', { key: i, 'data-go': 'set:pkQty:' + i, style: { border: '1px solid ' + ((st.pkQty || 0) === i ? TEAL : HAIR), borderRadius: 8, background: (st.pkQty || 0) === i ? TEAL : '#fff', color: (st.pkQty || 0) === i ? '#fff' : INK, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' } }, q)))),
+                  QTY.map((q, i) => h('span', { key: i, 'data-go': 'set:pkQty:' + i, style: { border: '1px solid ' + ((st.pkQty || 0) === i ? TEAL : HAIR), borderRadius: 0, background: (st.pkQty || 0) === i ? TEAL : '#fff', color: (st.pkQty || 0) === i ? '#fff' : INK, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' } }, q)))),
               h('div', { style: { fontSize: 13, fontWeight: 600, marginTop: 4 } }, 'Choose your option according to the quantity chosen'),
               h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(230px,1fr))', gap: 14 } },
                 laneCard('Standard', rate[1], rate[2], rate[3], lane === 'Standard'),
                 shortRunOK
                   ? laneCard('Short Run', rate[4], rate[5], rate[6], lane === 'Short Run')
-                  : h('div', { key: 'sr', style: { border: '1px dashed ' + HAIR, borderRadius: 12, background: ALT, padding: '22px 20px', display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center' } },
+                  : h('div', { key: 'sr', style: { border: '1px dashed ' + HAIR, borderRadius: 0, background: ALT, padding: '22px 20px', display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center' } },
                       h('div', { style: { fontSize: 15.5, fontWeight: 600, color: MUT } }, 'Short Run'),
                       h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.7 } }, 'Not available at ' + QTY[qi] + ' pcs. Short Run covers 100 – 1,000 pcs on gloss art card only; above that the job runs on the Standard litho lane.'),
                       h('span', { 'data-go': 'set:pkQty:2', style: { alignSelf: 'flex-start', fontSize: 12.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'Price 1,000 pcs instead'))))),
-          h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', background: '#fff' } },
+          h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden', background: '#fff' } },
             h('div', { style: { background: ALT, color: INK, padding: '12px 15px', borderBottom: '1px solid ' + HAIR, fontSize: 11.5, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase' } }, 'Delivery'),
             h('div', { style: { padding: 14, display: 'flex', flexDirection: 'column', gap: 12 } },
               h('div', { style: { display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 12.5 } },
                 h('span', null, h('b', null, 'Country: '), 'West Malaysia'),
                 h('span', null, h('b', null, 'Courier: '), 'Appointed courier (free shipping)')),
-              h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 8, background: ALT, padding: 13, fontSize: 12.5, color: MUT, lineHeight: 1.7 } },
+              h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 0, background: ALT, padding: 13, fontSize: 12.5, color: MUT, lineHeight: 1.7 } },
                 h('div', { style: { fontWeight: 600, color: TEAL, marginBottom: 3 } }, 'Studio North Sdn Bhd · Aiman Lim'),
                 'Lot 8, Jalan Sungai Kayu Ara 32/38, Section 32, Berjaya Industrial Park, 40460 Shah Alam, Selangor'),
               h('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap' } }, this.btn('Add new address', 'ghost', 'packaging'), this.btn('Change', 'ghost', 'packaging')),
@@ -3544,7 +3544,7 @@ class Component extends DCLogic {
                     h('span', { style: { fontSize: 11, fontWeight: 600, color: TEAL } }, 'Extra 5% off'),
                     o[1] && this.chip('New', 'ok'))))))),
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, position: 'sticky', top: 84 } },
-          h('div', { style: { border: '1px solid ' + HAIR, borderTop: '3px solid ' + TEAL, borderRadius: 12, overflow: 'hidden', background: '#fff' } },
+          h('div', { style: { border: '1px solid ' + HAIR, borderTop: '3px solid ' + TEAL, borderRadius: 0, overflow: 'hidden', background: '#fff' } },
             h('div', { style: { background: TEAL, color: '#fff', padding: '12px 15px', fontSize: 11.5, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', gap: 10 } },
               h('span', null, 'Product · packaging'),
               h('span', { style: { cursor: 'pointer' } }, 'Slip ↓')),
@@ -3561,23 +3561,23 @@ class Component extends DCLogic {
               h('div', { style: { display: 'flex', gap: 9, fontSize: 11.5, color: MUT, lineHeight: 1.6 } },
                 h('span', { style: { height: 14, width: 14, border: '1px solid ' + HAIR, background: '#fff', flex: 'none', marginTop: 1 } }),
                 'I confirm I have read and understood the Terms and Conditions.'),
-              h('div', { 'data-go': 'checkout', style: { background: TEAL, color: '#fff', padding: '12px 16px', textAlign: 'center', fontSize: 14, fontWeight: 600, borderRadius: 8, cursor: 'pointer' } }, 'Submit order'),
-              h('div', { 'data-go': 'artwork', style: { border: '1px solid ' + TEAL, background: '#fff', color: TEAL, padding: '11px 16px', textAlign: 'center', fontSize: 13.5, fontWeight: 600, borderRadius: 8, cursor: 'pointer' } }, 'Upload & check artwork'),
-              h('div', { 'data-go': 'pkgo:dielines', style: { border: '1px solid ' + HAIR, background: '#fff', padding: '11px 16px', textAlign: 'center', fontSize: 13, fontWeight: 600, color: MUT, borderRadius: 8, cursor: 'pointer' } }, 'Free die-line (29 downloads left)'),
-              h('div', { 'data-go': 'pkgo:configure', style: { border: '1px solid ' + HAIR, background: '#fff', padding: '11px 16px', textAlign: 'center', fontSize: 13, fontWeight: 600, color: MUT, borderRadius: 8, cursor: 'pointer' } }, 'Back to configurator'))),
-          h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', background: '#fff' } },
+              h('div', { 'data-go': 'checkout', style: { background: TEAL, color: '#fff', padding: '12px 16px', textAlign: 'center', fontSize: 14, fontWeight: 600, borderRadius: 0, cursor: 'pointer' } }, 'Submit order'),
+              h('div', { 'data-go': 'artwork', style: { border: '1px solid ' + TEAL, background: '#fff', color: TEAL, padding: '11px 16px', textAlign: 'center', fontSize: 13.5, fontWeight: 600, borderRadius: 0, cursor: 'pointer' } }, 'Upload & check artwork'),
+              h('div', { 'data-go': 'pkgo:dielines', style: { border: '1px solid ' + HAIR, background: '#fff', padding: '11px 16px', textAlign: 'center', fontSize: 13, fontWeight: 600, color: MUT, borderRadius: 0, cursor: 'pointer' } }, 'Free die-line (29 downloads left)'),
+              h('div', { 'data-go': 'pkgo:configure', style: { border: '1px solid ' + HAIR, background: '#fff', padding: '11px 16px', textAlign: 'center', fontSize: 13, fontWeight: 600, color: MUT, borderRadius: 0, cursor: 'pointer' } }, 'Back to configurator'))),
+          h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden', background: '#fff' } },
             h('div', { style: { background: ALT, color: INK, padding: '12px 15px', borderBottom: '1px solid ' + HAIR, fontSize: 11.5, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase' } }, 'Nett price for deal'),
             [['Price before discount', this.money(laneTotal)], ['Membership discount · ' + this.tier() + ' ' + this.tierPct() + '%', '− ' + this.money(laneTotal * tierOff)], [this.taxLabel(), this.money(nett * sst)], ['Delivery fee', this.money(0)]]
               .map((r, i) => h('div', { key: i, style: { display: 'flex', justifyContent: 'space-between', gap: 12, padding: '10px 14px', borderTop: i ? '1px solid ' + LINE : 'none', fontSize: 12.5, color: MUT } },
                 h('span', null, r[0]), h('span', { style: { whiteSpace: 'nowrap', color: INK } }, r[1]))),
             h('div', { style: { display: 'flex', justifyContent: 'space-between', gap: 12, padding: '12px 14px', borderTop: '1px solid ' + HAIR, background: ALT, fontSize: 14, fontWeight: 600 } },
               h('span', null, 'Total amount'), h('span', { style: { whiteSpace: 'nowrap' } }, this.money(nett * (1 + sst))))),
-          h('div', { style: { backgroundImage: 'linear-gradient(90deg,#FF9A2E,#F02B29)', color: '#fff', padding: '16px 18px', borderRadius: 12 } },
+          h('div', { style: { backgroundImage: 'linear-gradient(90deg,#FF9A2E,#F02B29)', color: '#fff', padding: '16px 18px', borderRadius: 0 } },
             h('div', { style: { fontSize: 13.5, fontWeight: 600, marginBottom: 8 } }, 'Reach the next tier and pay less on this order'),
             [['Silver', 8], ['Gold', 10], ['Platinum', 15]].map((t, i) =>
               h('div', { key: i, style: { display: 'flex', justifyContent: 'space-between', gap: 10, padding: '6px 0', borderTop: i ? '1px solid rgba(255,255,255,.28)' : 'none', fontSize: 12.5 } },
                 h('span', null, t[0] + ' · ' + t[1] + '% off'), h('span', { style: { fontWeight: 600, whiteSpace: 'nowrap' } }, this.money(laneTotal * (1 - t[1] / 100))))),
-            h('span', { 'data-go': 'membership', style: { display: 'inline-block', marginTop: 10, background: '#fff', color: TEAL, fontSize: 12.5, fontWeight: 600, padding: '9px 16px', borderRadius: 8, cursor: 'pointer' } }, 'See how tiers work')))),
+            h('span', { 'data-go': 'membership', style: { display: 'inline-block', marginTop: 10, background: '#fff', color: TEAL, fontSize: 12.5, fontWeight: 600, padding: '9px 16px', borderRadius: 0, cursor: 'pointer' } }, 'See how tiers work')))),
     ];
 
     const dtab = st.pkDtab || 'dieline';
@@ -3588,11 +3588,11 @@ class Component extends DCLogic {
     ];
     P.dielines = [
       h('div', { key: 'top', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 16 } },
-        h('div', { style: { backgroundImage: 'linear-gradient(90deg,#FF9A2E,#F02B29)', color: '#fff', padding: '28px 30px', borderRadius: 12, display: 'flex', flexDirection: 'column', justifyContent: 'center' } },
+        h('div', { style: { backgroundImage: 'linear-gradient(90deg,#FF9A2E,#F02B29)', color: '#fff', padding: '28px 30px', borderRadius: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' } },
           h('div', { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase' } }, 'Every packaging repeat order'),
           h('div', { style: { fontSize: 'clamp(21px,2.6vw,27px)', fontWeight: 600, margin: '8px 0 6px', letterSpacing: '-.01em' } }, '5% off, or min ' + this.money(100)),
           h('div', { style: { fontSize: 13, lineHeight: 1.6 } }, 'Not applicable to Short Run packaging')),
-        h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, background: '#fff', padding: '22px 26px', display: 'flex', gap: 22, alignItems: 'center', flexWrap: 'wrap' } },
+        h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 0, background: '#fff', padding: '22px 26px', display: 'flex', gap: 22, alignItems: 'center', flexWrap: 'wrap' } },
           h('div', { style: { flex: 'none', height: 96, width: 96, borderRadius: '50%', background: 'conic-gradient(' + TEAL + ' 0 96.6%, ' + LINE + ' 0)', display: 'grid', placeItems: 'center' } },
             h('div', { style: { height: 74, width: 74, borderRadius: '50%', background: '#fff', display: 'grid', placeItems: 'center', textAlign: 'center' } },
               h('div', null,
@@ -3606,9 +3606,9 @@ class Component extends DCLogic {
         [['mockup', 'Mockup orders', 1], ['complete', 'Complete orders', 6], ['dieline', 'Free die-lines', DROWS.length]].map(t =>
           h('span', { key: t[0], 'data-go': 'set:pkDtab:' + t[0], style: { display: 'flex', gap: 7, alignItems: 'center', padding: '0 0 12px', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: dtab === t[0] ? TEAL : MUT, borderBottom: '2px solid ' + (dtab === t[0] ? TEAL : 'transparent'), marginBottom: -1 } },
             t[1], h('span', { style: { fontSize: 11.5, color: FAINT } }, t[2])))),
-      h('div', { key: 'panel', style: { border: '1px solid ' + HAIR, borderRadius: 12, background: '#fff', padding: 18 } },
+      h('div', { key: 'panel', style: { border: '1px solid ' + HAIR, borderRadius: 0, background: '#fff', padding: 18 } },
         h('div', { style: { display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', marginBottom: 16 } },
-          h('span', { style: { border: '1px solid ' + HAIR, borderRadius: 8, padding: '9px 14px', fontSize: 13, color: MUT } }, '10/03/2026 – 10/09/2026'),
+          h('span', { style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: '9px 14px', fontSize: 13, color: MUT } }, '10/03/2026 – 10/09/2026'),
           this.btn('Search', 'teal', 'packaging'),
           h('span', { style: { marginLeft: 'auto', fontSize: 12.5, color: FAINT } }, 'Showing 1 to ' + DROWS.length + ' of ' + DROWS.length + ' jobs')),
         dtab === 'dieline'
@@ -3674,7 +3674,7 @@ class Component extends DCLogic {
         crumbLink('Home', 'home'), ' › ', crumbLink('Packaging & Boxes', 'catopen:packaging-boxes'), ' › ',
         crumbLink('Custom box styles', 'pkfam:' + (st.pkFam || 'All boxes')), ' › ' + hd[0]),
       h('span', { 'data-go': 'pkfam:' + (st.pkFam || 'All boxes'), style: { display: 'inline-block', fontSize: 13, fontWeight: 600, color: TEAL, cursor: 'pointer', marginBottom: 14 } }, '← Back to box styles'),
-      h('h1', { style: { margin: '0 0 6px', fontSize: 28, fontWeight: 600, letterSpacing: '-.02em' } }, hd[0]),
+      h('h1', { style: { margin: '0 0 6px', fontSize: 28, fontWeight: 500, letterSpacing: '-.02em' } }, hd[0]),
       h('p', { style: { margin: '0 0 22px', fontSize: 14, color: MUT, maxWidth: '68ch', lineHeight: 1.7 } }, hd[1]),
       P[tab],
       tab === 'quote'
@@ -3691,13 +3691,13 @@ class Component extends DCLogic {
     // left sidebar: category menu (matches the original site's side-nav)
     const sidebar = h('aside', { key: 'side', style: { position: 'sticky', top: 122, alignSelf: 'start' } },
       h('div', { style: { fontSize: 11, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: FAINT, padding: '0 4px 10px' } }, 'Categories'),
-      h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', background: '#fff' } },
+      h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden', background: '#fff' } },
         cats.map((c, i) => {
           const on = c.id === active, n = c.id === 'all' ? this.pkProducts().length : this.catProducts(c.id).length;
           return h('div', { key: c.id, 'data-go': 'set:catFilter:' + c.id, style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, padding: '11px 14px', borderTop: i ? '1px solid ' + LINE : 'none', borderLeft: '3px solid ' + (on ? TEAL : 'transparent'), background: on ? '#fdf2f2' : '#fff', color: on ? TEAL : INK, fontSize: 13.5, fontWeight: on ? 600 : 500, cursor: 'pointer' } },
             h('span', null, c.label), h('span', { style: { fontSize: 11.5, color: on ? TEAL : FAINT } }, n));
         })),
-      h('div', { 'data-go': 'pkfam:All boxes', style: { marginTop: 10, border: '1px solid ' + HAIR, borderRadius: 12, padding: '13px 14px', background: ALT, cursor: 'pointer' } },
+      h('div', { 'data-go': 'pkfam:All boxes', style: { marginTop: 10, border: '1px solid ' + HAIR, borderRadius: 0, padding: '13px 14px', background: ALT, cursor: 'pointer' } },
         h('div', { style: { fontSize: 13.5, fontWeight: 600, marginBottom: 3 } }, 'Custom Packaging Boxes →'),
         h('div', { style: { fontSize: 12, color: MUT, lineHeight: 1.55 } }, 'Design your own boxes, sleeves, or mailer box')));
     const seo = this.categorySeo(active);
@@ -3710,20 +3710,20 @@ class Component extends DCLogic {
         h('div', null,
           // Packaging & Boxes: banner into the custom box-style picker (its own page)
           active === 'packaging-boxes' ? h('div', { key: 'boxbanner', 'data-go': 'pkfam:All boxes', role: 'link', tabIndex: 0, 'aria-label': 'Custom Packaging Boxes: choose a box style',
-            style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', background: 'linear-gradient(100deg,' + TEAL + ' 0%,#F0572B 100%)', color: '#fff', borderRadius: 14, padding: '26px 28px', marginBottom: 22, cursor: 'pointer', overflow: 'hidden' } },
+            style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap', background: 'linear-gradient(100deg,' + TEAL + ' 0%,#F0572B 100%)', color: '#fff', borderRadius: 0, padding: '26px 28px', marginBottom: 22, cursor: 'pointer', overflow: 'hidden' } },
             h('div', { style: { minWidth: 0, flex: '1 1 300px' } },
               h('div', { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: '.09em', textTransform: 'uppercase', opacity: .85, marginBottom: 6 } }, 'Made to your size'),
               h('div', { style: { fontSize: 24, fontWeight: 600, letterSpacing: '-.02em', marginBottom: 6 } }, 'Custom Packaging Boxes'),
               h('div', { style: { fontSize: 14.5, opacity: .92, marginBottom: 16 } }, 'Design your own boxes, sleeves, or mailer box'),
-              h('span', { style: { display: 'inline-block', background: '#fff', color: TEAL, fontSize: 13.5, fontWeight: 600, padding: '10px 18px', borderRadius: 8 } }, 'Choose a box style →')),
-            h('div', { 'aria-hidden': 'true', className: 'pk-hide-sm', style: { flex: '0 0 auto', width: 190, background: '#fff', borderRadius: 12, padding: '12px 14px' } }, this.dieline('carton', null, 90))) : null,
+              h('span', { style: { display: 'inline-block', background: '#fff', color: TEAL, fontSize: 13.5, fontWeight: 600, padding: '10px 18px', borderRadius: 0 } }, 'Choose a box style →')),
+            h('div', { 'aria-hidden': 'true', className: 'pk-hide-sm', style: { flex: '0 0 auto', width: 190, background: '#fff', borderRadius: 0, padding: '12px 14px' } }, this.dieline('carton', null, 90))) : null,
           h('div', { key: 'count', style: { fontSize: 13, color: MUT, marginBottom: 14 } }, items.length + ' products' + (active === 'all' ? '' : ' in ' + this.catCategoryLabel(active))),
           (() => {
             // more than 5 products => a horizontal carousel (scroll left/right); else a grid
             const carousel = items.length > 5;
             const card = p => {
               const from = this.catFromPrice(p.id);
-              return h('a', { key: p.id, href: this.productPath(p.id) || undefined, 'data-go': 'open:' + p.id, style: Object.assign({ border: '1px solid ' + HAIR, borderRadius: 12, background: '#fff', overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer', color: 'inherit', textDecoration: 'none' }, carousel ? { display: 'inline-flex', width: '216px', verticalAlign: 'top', whiteSpace: 'normal', marginRight: '16px', scrollSnapAlign: 'start' } : {}) },
+              return h('a', { key: p.id, href: this.productPath(p.id) || undefined, 'data-go': 'open:' + p.id, style: Object.assign({ border: '1px solid ' + HAIR, borderRadius: 0, background: '#fff', overflow: 'hidden', display: 'flex', flexDirection: 'column', cursor: 'pointer', color: 'inherit', textDecoration: 'none' }, carousel ? { display: 'inline-flex', width: '216px', verticalAlign: 'top', whiteSpace: 'normal', marginRight: '16px', scrollSnapAlign: 'start' } : {}) },
                 this.art(p.engName),
                 h('div', { style: { padding: '13px 14px', display: 'flex', flexDirection: 'column', gap: 6, flex: 1 } },
                   h('span', { style: { fontSize: 13.5, fontWeight: 500, lineHeight: 1.3, minHeight: 34 } }, p.name),
@@ -3806,7 +3806,7 @@ class Component extends DCLogic {
   cfgQuestionGroups(opts) {
     opts = opts || {};
     const s = this.state, prod = this.pkProduct(), cfg = this.pkV(), fields = this.pkFields();
-    const selStyle = { font: '400 14px Montserrat,sans-serif', color: INK, padding: '10px 12px', border: '1px solid ' + HAIR, borderRadius: 8, background: '#fff', width: '100%', appearance: 'auto' };
+    const selStyle = { font: '400 14px Montserrat,sans-serif', color: INK, padding: '10px 12px', border: '1px solid ' + HAIR, borderRadius: 0, background: '#fff', width: '100%', appearance: 'auto' };
     // each option is a full-width ROW: label (left) + native <select> (right), divided by a
     // hairline — the aesthetic of the original order form's "Craft your specification".
     const rowStyle = { display: 'grid', gridTemplateColumns: 'minmax(150px,240px) minmax(0,1fr)', gap: 24, alignItems: 'center', padding: '15px 0', borderTop: '1px solid ' + LINE };
@@ -3834,10 +3834,10 @@ class Component extends DCLogic {
             else if (e.key === 'ArrowDown' && !open) { e.preventDefault(); e.stopPropagation(); this.setState({ ddOpen: key }); }
             else if (e.key === 'Escape' && open) { e.preventDefault(); e.stopPropagation(); close(); }
           },
-          style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, font: '400 14px Montserrat,sans-serif', color: isPlaceholder ? FAINT : INK, padding: '10px 13px', border: '1px solid ' + (open ? TEAL : HAIR), borderRadius: 8, background: '#fff', cursor: 'pointer', boxShadow: open ? '0 0 0 3px rgba(229,34,32,.10)' : 'none' } },
+          style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, font: '400 14px Montserrat,sans-serif', color: isPlaceholder ? FAINT : INK, padding: '10px 13px', border: '1px solid ' + (open ? TEAL : HAIR), borderRadius: 0, background: '#fff', cursor: 'pointer', boxShadow: open ? '0 0 0 3px rgba(229,34,32,.10)' : 'none' } },
           h('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, curText),
           h('span', { 'aria-hidden': 'true', style: { flex: 'none', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .12s', color: FAINT, fontSize: 10 } }, '▼')),
-        open ? h('div', { onClick: e => e.stopPropagation(), role: 'listbox', 'aria-label': label, style: { position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 50, background: '#fff', border: '1px solid ' + HAIR, borderRadius: 8, boxShadow: '0 12px 30px rgba(33,33,33,.18)', overflow: 'hidden' } },
+        open ? h('div', { onClick: e => e.stopPropagation(), role: 'listbox', 'aria-label': label, style: { position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 50, background: '#fff', border: '1px solid ' + HAIR, borderRadius: 0, boxShadow: '0 12px 30px rgba(33,33,33,.18)', overflow: 'hidden' } },
           remark ? h('div', { style: { padding: '10px 13px', fontSize: 11.5, color: MUT, lineHeight: 1.55, background: ALT, borderBottom: '1px solid ' + LINE } }, remark) : null,
           h('div', { style: { maxHeight: 300, overflowY: 'auto' } },
             items.map((it, i) => h('div', { key: i, role: 'option', 'aria-selected': it.on ? 'true' : 'false', tabIndex: 0,
@@ -3876,7 +3876,7 @@ class Component extends DCLogic {
           tabIndex: avail ? 0 : -1, 'aria-label': fieldLabel + ': ' + it.label + (avail ? '' : ' (not available)'),
           onKeyDown: avail ? (e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); e.stopPropagation(); it.onPick(); adv(key); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } }) : undefined,
           style: { display: 'flex', flexDirection: 'column', textAlign: 'left', width: '100%', font: 'inherit', padding: 0, overflow: 'hidden',
-            border: '1px solid ' + (on ? TEAL : HAIR), borderRadius: 12, background: on ? '#fdf2f2' : (avail ? '#fff' : ALT),
+            border: '1px solid ' + (on ? TEAL : HAIR), borderRadius: 0, background: on ? '#fdf2f2' : (avail ? '#fff' : ALT),
             boxShadow: on ? '0 0 0 1px ' + TEAL : 'none', cursor: avail ? 'pointer' : 'default', opacity: avail ? 1 : 0.6, outlineOffset: '2px' } },
           it.img ? h('img', { src: it.img, alt: '', loading: 'lazy', style: { width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', display: 'block', background: '#fff', borderBottom: '1px solid ' + LINE, filter: avail ? 'none' : 'grayscale(1)' } })
             : h('div', { 'aria-hidden': 'true', style: { width: '100%', aspectRatio: '4 / 3', background: ALT, borderBottom: '1px solid ' + LINE, display: 'grid', placeItems: 'center', color: FAINT, fontSize: 12, fontWeight: 600, padding: 8, textAlign: 'center' } }, it.label),
@@ -3894,7 +3894,7 @@ class Component extends DCLogic {
           tabIndex: avail ? 0 : -1, 'aria-label': fieldLabel + ': ' + it.label + (avail ? '' : ' (not available)'),
           onKeyDown: avail ? (e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); e.stopPropagation(); it.onPick(); adv(key); } else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); } }) : undefined,
           style: { display: 'flex', alignItems: 'center', gap: 11, textAlign: 'left', width: '100%', font: 'inherit',
-            border: '1px solid ' + (on ? TEAL : HAIR), borderRadius: 12, background: on ? '#fdf2f2' : (avail ? '#fff' : ALT),
+            border: '1px solid ' + (on ? TEAL : HAIR), borderRadius: 0, background: on ? '#fdf2f2' : (avail ? '#fff' : ALT),
             padding: '13px 14px', cursor: avail ? 'pointer' : 'default', opacity: avail ? 1 : 0.75, outlineOffset: '2px' } },
           opts.book ? null : h('span', { 'aria-hidden': 'true', style: { flex: 'none', width: 18, height: 18, borderRadius: '50%', border: '2px solid ' + (on ? TEAL : '#cfcfcf'), background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
             on ? h('span', { style: { width: 8, height: 8, borderRadius: '50%', background: TEAL } }) : null),
@@ -3906,23 +3906,23 @@ class Component extends DCLogic {
       // book configurator: the question is its own page — the options, always open
       if (opts.book) return h('div', { key: key, 'data-cfgkey': key, 'data-cfgans': selected ? '1' : '0', 'data-cfgph': isPh0 ? '1' : '0', 'data-cfgcur': typeof curText === 'string' ? curText : '' },
         note ? h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.55, marginBottom: 12 } }, String(note).charAt(0).toUpperCase() + String(note).slice(1)) : null,
-        remark ? h('div', { style: { fontSize: 12, color: MUT, lineHeight: 1.55, background: ALT, borderRadius: 8, padding: '9px 12px', marginBottom: 14 } }, remark) : null,
+        remark ? h('div', { style: { fontSize: 12, color: MUT, lineHeight: 1.55, background: ALT, borderRadius: 0, padding: '9px 12px', marginBottom: 14 } }, remark) : null,
         items.some(it => it.na) && items.every(it => it.na || it.avail === false)
-          ? h('div', { style: { display: 'inline-flex', alignItems: 'center', gap: 10, border: '1px dashed ' + HAIR, borderRadius: 12, background: ALT, padding: '13px 16px', fontSize: 13.5, fontWeight: 500, color: FAINT } }, 'Not Available')
+          ? h('div', { style: { display: 'inline-flex', alignItems: 'center', gap: 10, border: '1px dashed ' + HAIR, borderRadius: 0, background: ALT, padding: '13px 16px', fontSize: 13.5, fontWeight: 500, color: FAINT } }, 'Not Available')
           : h('div', { role: 'radiogroup', 'aria-label': fieldLabel, style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(max(130px,calc((100% - 24px) / 3)),1fr))', gap: 12 } }, cards));
       // the open question is lifted out as a raised card; the others dim slightly so it's clear
       // which question is being answered
       const anyOpen = this.state.ddOpen != null;
       return h('div', { key: key, 'data-cfgkey': key, 'data-cfgsel': (selected || optionalQ) ? '1' : '0', 'data-cfgans': selected ? '1' : '0', className: open ? 'pk-q-open' : undefined,
         style: open
-          ? { padding: '16px 18px 18px', margin: '8px -18px', border: '1px solid rgba(229,34,32,.22)', borderRadius: 14, background: '#fff', position: 'relative', zIndex: 3,
+          ? { padding: '16px 18px 18px', margin: '8px -18px', border: '1px solid rgba(229,34,32,.22)', borderRadius: 0, background: '#fff', position: 'relative', zIndex: 3,
               boxShadow: '0 18px 44px rgba(33,33,33,.14), 0 3px 10px rgba(33,33,33,.06)', animation: 'pkPop .32s cubic-bezier(.2,.9,.3,1.15)' }
           : { padding: '16px 0', borderTop: '1px solid ' + LINE, opacity: anyOpen ? 0.5 : 1, transition: 'opacity .2s ease' } },
         // the collapsed control: field label (+ note) on the left, current value + chevron on the
         // right of the SAME row; click anywhere on the row to open the option list.
         h('div', { className: 'pk-ddctl', onClick: e => { e.stopPropagation(); toggle(); }, tabIndex: 0, role: 'combobox', 'aria-haspopup': 'listbox', 'aria-expanded': open ? 'true' : 'false', 'aria-label': fieldLabel + (isPh0 ? ' (not selected)' : ': ' + curText),
           onKeyDown: e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); e.stopPropagation(); toggle(); } else if (e.key === 'ArrowDown' && !open) { e.preventDefault(); e.stopPropagation(); this.setState({ ddOpen: key }); } else if (e.key === 'Escape' && open) { e.preventDefault(); e.stopPropagation(); close(); } },
-          style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, cursor: 'pointer', padding: '4px 6px', margin: '0 -6px', borderRadius: 8 } },
+          style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, cursor: 'pointer', padding: '4px 6px', margin: '0 -6px', borderRadius: 0 } },
           h('div', { style: { flex: '1 1 auto', minWidth: 0 } },
             h('div', { style: { fontSize: 13.5, fontWeight: 600 } }, fieldLabel),
             note ? h('div', { style: { fontSize: 11.5, color: FAINT, lineHeight: 1.5, marginTop: 3 } }, String(note).charAt(0).toUpperCase() + String(note).slice(1)) : null),
@@ -3930,7 +3930,7 @@ class Component extends DCLogic {
             h('span', { style: { fontSize: 14, fontWeight: selected ? 600 : 400, color: selected ? INK : '#6f6f6f', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, curText),
             h('span', { 'aria-hidden': 'true', style: { flex: 'none', color: MUT, fontSize: 10, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .12s' } }, '▼'))),
         open ? h('div', { style: { marginTop: 12, animation: 'pkReveal .28s ease-out both' } },
-          remark ? h('div', { style: { fontSize: 11.5, color: MUT, lineHeight: 1.55, background: ALT, borderRadius: 8, padding: '9px 12px', marginBottom: 12 } }, remark) : null,
+          remark ? h('div', { style: { fontSize: 11.5, color: MUT, lineHeight: 1.55, background: ALT, borderRadius: 0, padding: '9px 12px', marginBottom: 12 } }, remark) : null,
           h('div', { role: 'radiogroup', 'aria-label': fieldLabel, style: { display: 'grid', gridTemplateColumns: withImg ? 'repeat(auto-fill,minmax(140px,1fr))' : 'repeat(auto-fill,minmax(200px,1fr))', gap: 12 } }, cards)) : null);
     };
     // custom-size dimension fields: the H/W pairs shown when Size = "Other (Custom Size)".
@@ -4010,7 +4010,7 @@ class Component extends DCLogic {
             const pick = () => { this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) })); adv(def.key); };
             return h('div', { key: val, onClick: pick, tabIndex: 0, role: 'button', 'aria-pressed': on ? 'true' : 'false', 'aria-label': label + ': ' + (optLabel[val] || val),
               onKeyDown: e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); pick(); } },
-              style: { border: '2px solid ' + (on ? TEAL : HAIR), borderRadius: 8, overflow: 'hidden', cursor: 'pointer', background: '#fff' } },
+              style: { border: '2px solid ' + (on ? TEAL : HAIR), borderRadius: 0, overflow: 'hidden', cursor: 'pointer', background: '#fff' } },
               h('img', { src: window.__asset(base + val + '.jpg'), alt: val, loading: 'lazy', style: { width: '100%', display: 'block', aspectRatio: '1 / 1', objectFit: 'contain', background: '#fff' } }),
               h('div', { style: { textAlign: 'center', fontSize: 11, color: on ? TEAL : MUT, fontWeight: on ? 600 : 400, padding: '3px 0', borderTop: '1px solid ' + LINE } }, optLabel[val] || val)); })));
     };
@@ -4032,7 +4032,7 @@ class Component extends DCLogic {
         null); // the range lives in the box's placeholder only
       const bothFilled = hv != null && hv !== '' && wv != null && wv !== '';
       const confirmBtn = !opts.book && DIM_KEYS[wk] ? h('button', { type: 'button', disabled: !bothFilled || bad, onClick: e => { e.preventDefault(); if (bothFilled && !bad) this.setState({ sizeConfirmed: true, ddOpen: null }); },
-        style: { marginTop: 8, background: bothFilled && !bad ? TEAL : '#e9ecef', color: bothFilled && !bad ? '#fff' : MUT, border: 'none', borderRadius: 8, padding: '10px 22px', font: '600 13.5px Montserrat,sans-serif', cursor: bothFilled && !bad ? 'pointer' : 'not-allowed' } }, 'Confirm size') : null;
+        style: { marginTop: 8, background: bothFilled && !bad ? TEAL : '#e9ecef', color: bothFilled && !bad ? '#fff' : MUT, border: 'none', borderRadius: 0, padding: '10px 22px', font: '600 13.5px Montserrat,sans-serif', cursor: bothFilled && !bad ? 'pointer' : 'not-allowed' } }, 'Confirm size') : null;
       const inputs = h('div', null,
         h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12, maxWidth: 420 } }, box(hDef, 'Height (mm)'), box(wDef, 'Width (mm)')),
         bad ? h('div', { style: { fontSize: 12, color: TEAL, marginTop: 6 } }, 'Width must be greater than height') : null, confirmBtn);
@@ -4063,7 +4063,7 @@ class Component extends DCLogic {
       const bothFilled = widthHK && cfg[widthHK] != null && cfg[widthHK] !== '' && cfg[def.key] != null && cfg[def.key] !== '';
       const confirmBtn = widthHK && !opts.book ? h('button', { type: 'button', disabled: !bothFilled,
         onClick: e => { e.preventDefault(); e.stopPropagation(); if (bothFilled) this.setState({ sizeConfirmed: true, ddOpen: null }); },
-        style: { marginTop: 4, alignSelf: 'flex-start', background: bothFilled ? TEAL : '#e9ecef', color: bothFilled ? '#fff' : MUT, border: 'none', borderRadius: 8, padding: '10px 22px', fontSize: 13.5, fontWeight: 600, cursor: bothFilled ? 'pointer' : 'not-allowed', font: '600 13.5px Montserrat,sans-serif' } }, 'Confirm size') : null;
+        style: { marginTop: 4, alignSelf: 'flex-start', background: bothFilled ? TEAL : '#e9ecef', color: bothFilled ? '#fff' : MUT, border: 'none', borderRadius: 0, padding: '10px 22px', fontSize: 13.5, fontWeight: 600, cursor: bothFilled ? 'pointer' : 'not-allowed', font: '600 13.5px Montserrat,sans-serif' } }, 'Confirm size') : null;
       return h('div', { key: def.key, style: rowStyle },
         labelCell(niceLabel(def.label, def.key), null),
         ctrlWrap(h('div', { style: { display: 'flex', flexDirection: 'column', gap: 5 } },
@@ -4190,21 +4190,21 @@ class Component extends DCLogic {
     const nDone = bookDone ? flat.length : flat.filter(e => seen[e.key]).length, pct = Math.round(nDone / flat.length * 100);
     const bar = h('div', { style: { height: 6, background: '#f1f2f4', borderRadius: 3, overflow: 'hidden', marginBottom: 6 } },
       h('div', { style: { width: pct + '%', height: '100%', background: TEAL, borderRadius: 3, transition: 'width .35s ease' } }));
-    const shell = kids => h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 14, padding: '20px 22px 22px', background: '#fff' } }, kids);
+    const shell = kids => h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: '20px 22px 22px', background: '#fff' } }, kids);
     if (bookDone) {
       return shell([
-        h('div', { key: 'nav', style: { display: 'flex', marginBottom: 18 } }, h('button', { type: 'button', onClick: () => goTo(flat.length - 1, -1), style: { font: '600 14px Montserrat,sans-serif', color: INK, background: '#fff', border: '1px solid ' + HAIR, borderRadius: 8, padding: '11px 20px', cursor: 'pointer' } }, '← Back')),
+        h('div', { key: 'nav', style: { display: 'flex', marginBottom: 18 } }, h('button', { type: 'button', onClick: () => goTo(flat.length - 1, -1), style: { font: '600 14px Montserrat,sans-serif', color: INK, background: '#fff', border: '1px solid ' + HAIR, borderRadius: 0, padding: '11px 20px', cursor: 'pointer' } }, '← Back')),
         bar,
         h('div', { key: 'dn', style: { animation: 'pkFlip .45s cubic-bezier(.2,.8,.2,1) both', transformOrigin: 'left center' } },
           // (user, 2026-09-30) the finished page is the Summary: the selections, with the price and time beside it
           h('div', { style: { fontSize: 18, fontWeight: 600, letterSpacing: '-.01em', color: INK, borderBottom: '2px solid ' + TEAL, paddingBottom: 8, margin: '18px 0 14px', display: 'inline-block' } }, 'Summary'),
-          h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden' } },
+          h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden' } },
             flat.map((e, i) => { const p = e.n.props || {}, fd = (fields.find(x => x.def.key === e.key) || {}).def || {}, c = this.pkV();
               const v = fd.widget === 'foilColours' ? this.foilSlots(c).map(k => c[k]).filter(Boolean).join(', ') : (p['data-cfgcur'] || (s.cfg || {})[e.key] || '—');
               return h('div', { key: e.key, style: { display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderTop: i ? '1px solid ' + LINE : 'none', fontSize: 13.5 } },
                 h('span', { style: { flex: '0 0 40%', color: MUT } }, labelOf(e.key)),
                 h('span', { style: { flex: 1, fontWeight: 500, color: answered(e) ? INK : TEAL } }, answered(e) ? String(v) : 'Please select'),
-                h('span', { role: 'button', tabIndex: 0, 'aria-label': 'Change ' + labelOf(e.key), title: 'Change', onClick: () => goTo(i, -1), onKeyDown: ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); goTo(i, -1); } }, style: { flex: 'none', display: 'inline-grid', placeItems: 'center', width: 30, height: 30, borderRadius: 8, color: MUT, cursor: 'pointer' } },
+                h('span', { role: 'button', tabIndex: 0, 'aria-label': 'Change ' + labelOf(e.key), title: 'Change', onClick: () => goTo(i, -1), onKeyDown: ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); goTo(i, -1); } }, style: { flex: 'none', display: 'inline-grid', placeItems: 'center', width: 30, height: 30, borderRadius: 0, color: MUT, cursor: 'pointer' } },
                   h('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true },
                     h('path', { d: 'M12 20h9' }), h('path', { d: 'M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z' })))); })))]);
     }
@@ -4215,13 +4215,13 @@ class Component extends DCLogic {
     // (user, 2026-09-30) Back on top (kept in place, hidden on the first question); Confirm sits under the bar, level with the question
     return shell([
       h('div', { key: 'nav', style: { display: 'flex', alignItems: 'center', marginBottom: 18 } },
-        h('button', { type: 'button', onClick: () => { if (idx > 0) goTo(idx - 1, -1); }, 'aria-hidden': idx > 0 ? undefined : 'true', tabIndex: idx > 0 ? 0 : -1, style: { visibility: idx > 0 ? 'visible' : 'hidden', font: '600 14px Montserrat,sans-serif', color: INK, background: '#fff', border: '1px solid ' + HAIR, borderRadius: 8, padding: '11px 20px', cursor: 'pointer' } }, '← Back')),
+        h('button', { type: 'button', onClick: () => { if (idx > 0) goTo(idx - 1, -1); }, 'aria-hidden': idx > 0 ? undefined : 'true', tabIndex: idx > 0 ? 0 : -1, style: { visibility: idx > 0 ? 'visible' : 'hidden', font: '600 14px Montserrat,sans-serif', color: INK, background: '#fff', border: '1px solid ' + HAIR, borderRadius: 0, padding: '11px 20px', cursor: 'pointer' } }, '← Back')),
       bar,
       h('div', { key: 'gap', style: { height: 18 } }), // (user, 2026-09-30) no 'Question N of M' line — the bar shows progress
       h('div', { key: 'pg-' + cur.key, style: { animation: ((s.bookDir || 1) < 0 ? 'pkFlipBack' : 'pkFlip') + ' .45s cubic-bezier(.2,.8,.2,1) both', transformOrigin: (s.bookDir || 1) < 0 ? 'right center' : 'left center' } },
         h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 6 } },
           h('div', { style: { fontSize: 22, fontWeight: 600, letterSpacing: '-.01em', lineHeight: 1.3, minWidth: 0 } }, qText),
-          h('button', { type: 'button', disabled: !ok, onClick: next, style: { flex: 'none', font: '600 14px Montserrat,sans-serif', color: '#fff', background: ok ? TEAL : '#e3a09f', border: 'none', borderRadius: 8, padding: '12px 28px', cursor: ok ? 'pointer' : 'not-allowed' } }, last ? 'Confirm & finish' : 'Confirm')),
+          h('button', { type: 'button', disabled: !ok, onClick: next, style: { flex: 'none', font: '600 14px Montserrat,sans-serif', color: '#fff', background: ok ? TEAL : '#e3a09f', border: 'none', borderRadius: 0, padding: '12px 28px', cursor: ok ? 'pointer' : 'not-allowed' } }, last ? 'Confirm & finish' : 'Confirm')),
         qDesc ? h('div', { style: { fontSize: 14, color: MUT, lineHeight: 1.6, marginBottom: 18 } }, qDesc) : null,
         cur.n)
       ]);
@@ -4294,14 +4294,14 @@ class Component extends DCLogic {
     const PKI = window.PK_IMAGES, file = PKI && prod && PKI.products[prod.id];
     const img = file
       ? h('img', { className: 'pk-cfgb-img', src: window.__asset(PKI.base + file), alt: NAME + ' printed by Printoka', fetchpriority: 'high',
-          style: { height: 190, width: 'auto', maxWidth: '100%', display: 'block', borderRadius: /\.jpe?g$/i.test(file) ? 12 : 0, filter: 'drop-shadow(0 18px 30px rgba(0,0,0,.28))' } })
-      : h('div', { className: 'pk-cfgb-img', style: { width: 250, borderRadius: 12, overflow: 'hidden', filter: 'drop-shadow(0 18px 30px rgba(0,0,0,.28))' } }, this.art(prod ? prod.name : 'card'));
+          style: { height: 190, width: 'auto', maxWidth: '100%', display: 'block', borderRadius: 0, filter: 'drop-shadow(0 18px 30px rgba(0,0,0,.28))' } })
+      : h('div', { className: 'pk-cfgb-img', style: { width: 250, borderRadius: 0, overflow: 'hidden', filter: 'drop-shadow(0 18px 30px rgba(0,0,0,.28))' } }, this.art(prod ? prod.name : 'card'));
     const benefits = [['Schedule your delivery', 'Door-to-door, nationwide'], ['Satisfaction guaranteed', 'Quality you can rely on'], ['Exclusive member pricing', 'Save 5–15% as a member']];
     return h('section', { 'aria-label': NAME + ' printing', style: { background: bg, color: '#fff', overflow: 'hidden', textShadow: '0 1px 2px rgba(0,0,0,.12)' } },
       h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '30px 20px', display: 'flex', flexWrap: 'wrap', gap: 28, alignItems: 'center', minHeight: 216 } },
         h('div', { style: { flex: '0 0 auto', maxWidth: '100%' } }, img),
         h('div', { style: { flex: '1 1 300px', minWidth: 0 } },
-          h('h1', { style: { margin: 0, display: 'flex', flexDirection: 'column', lineHeight: 1.08, fontWeight: 400 } },
+          h('h1', { className: 'pk-nobar', style: { margin: 0, display: 'flex', flexDirection: 'column', lineHeight: 1.08, fontWeight: 400 } },
             h('span', { className: 'pk-cfgb-sm', style: { fontSize: 26 } }, 'Print Your'),
             h('span', { className: 'pk-cfgb-lg', style: { fontSize: 40, fontWeight: 700, letterSpacing: '-.01em' } }, NAME),
             h('span', { className: 'pk-cfgb-md', style: { fontSize: 30, fontWeight: 500 } }, 'Online Now!')),
@@ -4343,7 +4343,7 @@ class Component extends DCLogic {
       h('h2', { style: { margin: '0 0 6px', fontSize: 20, fontWeight: 600, letterSpacing: '-.01em' } }, NAME + ' Templates'),
       h('p', { style: { fontSize: 14, color: MUT, margin: '0 auto 22px', maxWidth: '64ch' } }, 'Design on our print-ready template, then remove the guides before you upload.'),
       cat ? h('div', { style: { display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 10, marginBottom: 6 } },
-        cat.folds.slice(0, 8).map(f => h('a', { key: f.id, href, 'data-go': go, style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: 100, padding: 6, border: '1px solid ' + HAIR, borderRadius: 8, textDecoration: 'none', color: INK } },
+        cat.folds.slice(0, 8).map(f => h('a', { key: f.id, href, 'data-go': go, style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: 100, padding: 6, border: '1px solid ' + HAIR, borderRadius: 0, textDecoration: 'none', color: INK } },
           f.image ? h('img', { src: f.image, alt: f.name, loading: 'lazy', style: { width: 80, height: 80, objectFit: 'contain' } }) : null,
           h('span', { style: { fontSize: 12.5, fontWeight: 600 } }, f.name)))) : null,
       h('div', { style: { display: 'flex', justifyContent: 'center', marginTop: 24 } },
@@ -4399,7 +4399,7 @@ class Component extends DCLogic {
         h('p', { style: { fontSize: 14, color: MUT, lineHeight: 1.85, maxWidth: '78ch' } }, 'Printoka prices ' + NAME0 + ' exactly from the same impression-run engine our production floor uses, so the number you see when you configure is the number on your quotation, at checkout and on the invoice.' + (axisList ? ' Set ' + axisList + ' and more — every option is priced live.' : '')),
         h('div', { style: { marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10 } },
           [['How long does printing take?', 'Standard orders ship in 3 working days after your artwork is approved by prepress.'], ['What is the minimum order?', q0 ? ('The minimum order for ' + NAME0 + ' is ' + q0.moq.toLocaleString() + ' pcs; larger runs bring the per-piece price down.') : 'Minimum order varies by product and is shown in the configurator.'], ['Do members pay less?', 'Yes. Bronze saves 5%, Silver 8%, Gold 10% and Platinum 15%, applied automatically at checkout.']]
-            .map((qq, i) => h('div', { key: i, style: { border: '1px solid ' + HAIR, borderRadius: 10, padding: '13px 15px' } },
+            .map((qq, i) => h('div', { key: i, style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: '13px 15px' } },
               h('div', { style: { fontSize: 13.5, fontWeight: 500 } }, qq[0]),
               h('div', { style: { fontSize: 13, color: MUT, marginTop: 5, lineHeight: 1.6 } }, qq[1])))),
         h('div', { style: { fontSize: 11.5, color: FAINT, marginTop: 14 } }, 'FAQPage + Product + Offer structured data emitted server-side'));
@@ -4576,13 +4576,13 @@ class Component extends DCLogic {
     const onFiles = fl => { if (fl && fl[0]) this.analyzeArtwork(fl[0]); };
     const job = this.state.awJob, jobIt = this.awJobItem();
     const target = job ? this.awTarget() : (prod ? this.artworkTarget() : null);
-    const panel = kids => h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', background: '#fff' } }, kids);
-    const title = h('h1', { style: { margin: '2px 0 18px', fontSize: 28, fontWeight: 600, letterSpacing: '-.02em' } }, 'Upload artwork' + (job && jobIt ? ' — ' + jobIt.name + (job.slot ? ' (artwork ' + (job.slot + 1) + ')' : '') : NAME ? ' — ' + NAME : ''));
+    const panel = kids => h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden', background: '#fff' } }, kids);
+    const title = h('h1', { style: { margin: '2px 0 18px', fontSize: 28, fontWeight: 500, letterSpacing: '-.02em' } }, 'Upload artwork' + (job && jobIt ? ' — ' + jobIt.name + (job.slot ? ' (artwork ' + (job.slot + 1) + ')' : '') : NAME ? ' — ' + NAME : ''));
     if (!aw) {
       const sim = job ? (target ? { svg: this.awSizeBox(target), label: '' } : null) : prod ? (() => { try { return this.sizeSim(); } catch (e) { return null; } })() : null;
       const drop = h('label', { key: 'd', htmlFor: 'aw-input',
         onDragOver: e => { e.preventDefault(); }, onDrop: e => { e.preventDefault(); onFiles(e.dataTransfer.files); },
-        style: { display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 300, border: '2px dashed ' + HAIR, borderRadius: 12, background: ALT, padding: '40px 24px', textAlign: 'center', cursor: 'pointer' } },
+        style: { display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 300, border: '2px dashed ' + HAIR, borderRadius: 0, background: ALT, padding: '40px 24px', textAlign: 'center', cursor: 'pointer' } },
         h('input', { id: 'aw-input', type: 'file', accept: '.pdf,.jpg,.jpeg,.png,.ai,.eps,.tif,.tiff,.zip', style: { display: 'none' }, onChange: e => onFiles(e.target.files) }),
         h('img', { src: window.__asset('assets/icons/upload-artwork.svg'), alt: '', style: { height: 44, width: 'auto', display: 'block', margin: '0 auto 14px' } }),
         h('div', { style: { fontSize: 16, fontWeight: 600, marginBottom: 6 } }, 'Drop your artwork here'),
@@ -4609,8 +4609,8 @@ class Component extends DCLogic {
             h('span', { style: { flex: 'none' } }, (aw.sizeMB < 10 ? aw.sizeMB.toFixed(1) : Math.round(aw.sizeMB)) + ' MB'))]),
         // report
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
-          h('div', { style: { background: banner[0], color: banner[1], borderRadius: 10, padding: '13px 16px', fontSize: 14, fontWeight: 600 } }, banner[2]),
-          h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden' } },
+          h('div', { style: { background: banner[0], color: banner[1], borderRadius: 0, padding: '13px 16px', fontSize: 14, fontWeight: 600 } }, banner[2]),
+          h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden' } },
             checks.map((c, i) => h('div', { key: i, style: { display: 'flex', gap: 12, padding: '13px 16px', borderTop: i ? '1px solid ' + LINE : 'none', background: c.s === 'fail' ? '#fdf6f6' : '#fff' } },
               dot(c.s),
               h('div', { style: { minWidth: 0, flex: 1 } },
@@ -4618,18 +4618,18 @@ class Component extends DCLogic {
                 h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.6, marginTop: 3 } }, c.d)))),
             analyzing ? h('div', { style: { padding: '13px 16px', borderTop: '1px solid ' + LINE, fontSize: 12.5, color: FAINT } }, 'Running remaining checks…') : null),
           !analyzing ? h('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap' } },
-            job ? h('button', { type: 'button', disabled: !!this.state.awSaving, onClick: () => this.setState({ awAgree: true }), style: { font: '600 14px Montserrat,sans-serif', color: '#fff', background: TEAL, border: 'none', borderRadius: 8, padding: '12px 24px', cursor: 'pointer', opacity: this.state.awSaving ? .6 : 1 } }, this.state.awSaving ? 'Saving…' : 'Use this artwork')
+            job ? h('button', { type: 'button', disabled: !!this.state.awSaving, onClick: () => this.setState({ awAgree: true }), style: { font: '600 14px Montserrat,sans-serif', color: '#fff', background: TEAL, border: 'none', borderRadius: 0, padding: '12px 24px', cursor: 'pointer', opacity: this.state.awSaving ? .6 : 1 } }, this.state.awSaving ? 'Saving…' : 'Use this artwork')
               : this.btn(fails ? 'Continue anyway →' : 'Continue to cart →', 'teal', 'cart', { justifyContent: 'center' }),
-            h('label', { htmlFor: 'aw-reinput', style: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, border: '1px solid ' + HAIR, borderRadius: 8, padding: '11px 20px', fontSize: 13.5, fontWeight: 600, color: INK, cursor: 'pointer' } },
+            h('label', { htmlFor: 'aw-reinput', style: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, border: '1px solid ' + HAIR, borderRadius: 0, padding: '11px 20px', fontSize: 13.5, fontWeight: 600, color: INK, cursor: 'pointer' } },
               h('input', { id: 'aw-reinput', type: 'file', accept: '.pdf,.jpg,.jpeg,.png,.ai,.eps,.tif,.tiff,.zip', style: { display: 'none' }, onChange: e => onFiles(e.target.files) }), 'Replace file')) : null)),
       this.state.awAgree ? h('div', { onClick: () => this.setState({ awAgree: false }), style: { position: 'fixed', inset: 0, zIndex: 98, background: 'rgba(15,20,25,.5)', display: 'grid', placeItems: 'center', padding: 16 } },
-        h('div', { onClick: e => e.stopPropagation(), role: 'alertdialog', 'aria-modal': 'true', 'aria-label': 'Confirm artwork', style: { background: '#fff', borderRadius: 12, maxWidth: 440, width: '100%', padding: '22px 24px', boxShadow: '0 18px 50px rgba(0,0,0,.25)' } },
+        h('div', { onClick: e => e.stopPropagation(), role: 'alertdialog', 'aria-modal': 'true', 'aria-label': 'Confirm artwork', style: { background: '#fff', borderRadius: 0, maxWidth: 440, width: '100%', padding: '22px 24px', boxShadow: '0 18px 50px rgba(0,0,0,.25)' } },
           h('div', { style: { fontSize: 17, fontWeight: 700, marginBottom: 8 } }, 'Confirm your artwork'),
           h('div', { style: { fontSize: 13.5, color: INK, lineHeight: 1.6, marginBottom: 6 } }, 'I confirm this artwork is finalised. I understand it cannot be changed after my order is submitted.'),
           h('div', { style: { fontSize: 12.5, color: MUT, marginBottom: 18, wordBreak: 'break-word' } }, aw.name),
           h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
-            h('button', { type: 'button', onClick: () => this.setState({ awAgree: false }), style: { font: '600 13.5px Montserrat,sans-serif', background: '#fff', color: INK, border: '1px solid ' + HAIR, borderRadius: 8, padding: '10px 18px', cursor: 'pointer' } }, 'Cancel'),
-            h('button', { type: 'button', onClick: () => this.awUseForJob(), style: { font: '600 13.5px Montserrat,sans-serif', background: TEAL, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', cursor: 'pointer' } }, 'I agree')))) : null);
+            h('button', { type: 'button', onClick: () => this.setState({ awAgree: false }), style: { font: '600 13.5px Montserrat,sans-serif', background: '#fff', color: INK, border: '1px solid ' + HAIR, borderRadius: 0, padding: '10px 18px', cursor: 'pointer' } }, 'Cancel'),
+            h('button', { type: 'button', onClick: () => this.awUseForJob(), style: { font: '600 13.5px Montserrat,sans-serif', background: TEAL, color: '#fff', border: 'none', borderRadius: 0, padding: '10px 20px', cursor: 'pointer' } }, 'I agree')))) : null);
   }
 
   // ===== CART =====
@@ -4640,7 +4640,7 @@ class Component extends DCLogic {
     const t = this.cartTotals();
     const page = kids => h('div', { style: { background: '#f5f6f8', margin: '-10px 0 0', padding: '36px 20px 60px' } }, h('div', { style: { maxWidth: 1180, margin: '0 auto' } }, kids));
     const box = (kids, extra) => h('div', { style: Object.assign({ background: '#fff', border: '1px solid #e6e8eb', padding: '26px 24px' }, extra || {}) }, kids);
-    const title = text => [h('div', { key: 'bar', style: { width: 24, height: 3, background: TEAL, marginBottom: 12 } }), h('h1', { key: 'h', style: { margin: '0 0 18px', fontSize: 30, fontWeight: 500, letterSpacing: '-.01em' } }, text)];
+    const title = text => [h('h1', { key: 'h', style: { margin: '0 0 18px', fontSize: 30, fontWeight: 500, letterSpacing: '-.01em' } }, text)];
     const link = (label, on, color) => h('span', { role: 'button', tabIndex: 0, onClick: on, onKeyDown: e => { if (e.key === 'Enter') on(); }, style: { fontSize: 14, color: color || '#2f7fd1', textDecoration: 'underline', cursor: 'pointer' } }, label);
     const icon = (d, on, label) => h('span', { role: 'button', tabIndex: 0, 'aria-label': label, title: label, onClick: on, onKeyDown: e => { if (e.key === 'Enter') on(); }, style: { display: 'inline-grid', placeItems: 'center', cursor: 'pointer', color: MUT } },
       h('svg', { width: 17, height: 17, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true }, d.map((p, k) => h('path', { key: k, d: p }))));
@@ -4730,13 +4730,13 @@ class Component extends DCLogic {
     const u = this.state.user;
     if (u && !this.state.addresses && !this._coAddrLoad) { this._coAddrLoad = true; this.loadAccount(); }
     const step = !u ? 1 : Math.max(1, Math.min(3, this.state.coStep || 1));
-    const inp = { font: '400 14px Montserrat,sans-serif', padding: '11px 13px', border: '1px solid #eaeaea', borderRadius: 8, width: '100%', color: INK, background: '#fff' };
+    const inp = { font: '400 14px Montserrat,sans-serif', padding: '11px 13px', border: '1px solid #eaeaea', borderRadius: 0, width: '100%', color: INK, background: '#fff' };
     const val = (k, d) => this.state[k] != null ? this.state[k] : (d == null ? '' : d);
     const field = (label, key, def, ph, extra) => h('label', { key, style: Object.assign({ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, fontWeight: 600, color: MUT }, extra || {}) }, label,
       h('input', { value: val(key, def), placeholder: ph || '', readOnly: key === 'coEmail', onChange: e => this.setState({ [key]: e.target.value, coErr: null }), style: Object.assign({}, inp, key === 'coEmail' ? { background: ALT, color: MUT } : {}) }));
-    const redBtn = (label, onClick, extra) => h('button', { type: 'button', onClick, style: Object.assign({ font: '600 14px Montserrat,sans-serif', background: TEAL, color: '#fff', border: 'none', borderRadius: 8, padding: '12px 26px', cursor: 'pointer' }, extra || {}) }, label);
+    const redBtn = (label, onClick, extra) => h('button', { type: 'button', onClick, style: Object.assign({ font: '600 14px Montserrat,sans-serif', background: TEAL, color: '#fff', border: 'none', borderRadius: 0, padding: '12px 26px', cursor: 'pointer' }, extra || {}) }, label);
     const choice = (on, title, sub, onClick) => h('div', { role: 'button', tabIndex: 0, onClick, onKeyDown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } },
-      style: { border: '1px solid ' + (on ? TEAL : HAIR), background: on ? '#fdf2f2' : '#fff', borderRadius: 10, padding: '13px 14px', cursor: 'pointer', height: '100%' } },
+      style: { border: '1px solid ' + (on ? TEAL : HAIR), background: on ? '#fdf2f2' : '#fff', borderRadius: 0, padding: '13px 14px', cursor: 'pointer', height: '100%' } },
       h('div', { style: { fontSize: 13.5, fontWeight: 600, display: 'flex', gap: 8, alignItems: 'center', color: on ? TEAL : INK } },
         h('span', { style: { height: 14, width: 14, borderRadius: '50%', border: '1px solid ' + (on ? TEAL : '#cfd3d8'), background: on ? TEAL : '#fff', boxShadow: on ? 'inset 0 0 0 3px #fff' : 'none', flex: 'none' } }), title),
       sub ? h('div', { style: { fontSize: 12, color: MUT, marginTop: 5, lineHeight: 1.5 } }, sub) : null);
@@ -4760,7 +4760,7 @@ class Component extends DCLogic {
     const s1 = !u
       ? h('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap' } },
           redBtn('Log in', () => toAuth('login')),
-          h('button', { type: 'button', onClick: () => toAuth('register'), style: { font: '600 14px Montserrat,sans-serif', background: '#fff', color: TEAL, border: '1px solid ' + HAIR, borderRadius: 8, padding: '12px 26px', cursor: 'pointer' } }, 'Sign up'))
+          h('button', { type: 'button', onClick: () => toAuth('register'), style: { font: '600 14px Montserrat,sans-serif', background: '#fff', color: TEAL, border: '1px solid ' + HAIR, borderRadius: 0, padding: '12px 26px', cursor: 'pointer' } }, 'Sign up'))
       : h('div', null,
           // name · email · phone on one row; Company runs the full width underneath (user, 2026-09-30)
           h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 12 } },
@@ -4850,15 +4850,14 @@ class Component extends DCLogic {
       this.setState({ coTermsOpen: true, orderErr: null });
     };
     const termsPopup = this.state.coTermsOpen ? h('div', { key: 'tc', onClick: () => this.setState({ coTermsOpen: false }), style: { position: 'fixed', inset: 0, zIndex: 98, background: 'rgba(15,20,25,.5)', display: 'grid', placeItems: 'center', padding: 16 } },
-      h('div', { onClick: e => e.stopPropagation(), role: 'alertdialog', 'aria-modal': 'true', 'aria-label': 'Terms and Conditions', style: { background: '#fff', borderRadius: 12, maxWidth: 560, width: '100%', padding: '22px 24px', boxShadow: '0 18px 50px rgba(0,0,0,.25)' } },
+      h('div', { onClick: e => e.stopPropagation(), role: 'alertdialog', 'aria-modal': 'true', 'aria-label': 'Terms and Conditions', style: { background: '#fff', borderRadius: 0, maxWidth: 560, width: '100%', padding: '22px 24px', boxShadow: '0 18px 50px rgba(0,0,0,.25)' } },
         h('div', { style: { fontSize: 17, fontWeight: 700, marginBottom: 10 } }, 'Before we place your order'),
         notices,
         h('div', { style: { fontSize: 13.5, color: INK, lineHeight: 1.6, marginBottom: 20, paddingTop: 14, borderTop: '1px solid ' + LINE } }, 'I confirm that I have read and understood all the ', h('a', { href: '/terms/', target: '_blank', rel: 'noopener', style: { color: '#2f7fd1' } }, 'Terms and Conditions'), ', and I agree on the terms and conditions above.'),
         h('div', { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
-          h('button', { type: 'button', onClick: () => this.setState({ coTermsOpen: false }), style: { font: '600 13.5px Montserrat,sans-serif', background: '#fff', color: INK, border: '1px solid ' + HAIR, borderRadius: 8, padding: '10px 18px', cursor: 'pointer' } }, 'Cancel'),
-          h('button', { type: 'button', onClick: () => { this.setState({ coTermsOpen: false }); this.placeOrder(); }, style: { font: '600 13.5px Montserrat,sans-serif', background: TEAL, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', cursor: 'pointer' } }, 'I agree · Place order')))) : null;
+          h('button', { type: 'button', onClick: () => this.setState({ coTermsOpen: false }), style: { font: '600 13.5px Montserrat,sans-serif', background: '#fff', color: INK, border: '1px solid ' + HAIR, borderRadius: 0, padding: '10px 18px', cursor: 'pointer' } }, 'Cancel'),
+          h('button', { type: 'button', onClick: () => { this.setState({ coTermsOpen: false }); this.placeOrder(); }, style: { font: '600 13.5px Montserrat,sans-serif', background: TEAL, color: '#fff', border: 'none', borderRadius: 0, padding: '10px 20px', cursor: 'pointer' } }, 'I agree · Place order')))) : null;
     return h('div', { style: { background: '#f5f6f8', margin: '-10px 0 0', padding: '36px 20px 60px' } }, h('div', { style: { maxWidth: 1180, margin: '0 auto' } },
-      h('div', { style: { width: 24, height: 3, background: TEAL, marginBottom: 12 } }),
       h('h1', { style: { margin: '0 0 ' + (cq ? 6 : 20) + 'px', fontSize: 30, fontWeight: 500, letterSpacing: '-.01em' } }, 'Checkout'),
       cq ? h('div', { style: { fontSize: 14, color: MUT, marginBottom: 20 } }, 'Quotation ' + cq.id + ' · ' + cqItem.name + ' · ' + cqItem.qty.toLocaleString() + ' pcs') : null,
       h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 340px', gap: 24, alignItems: 'start' } },
@@ -4873,7 +4872,7 @@ class Component extends DCLogic {
               [['Subtotal', this.money(t.subtotal)], [this.tier() + ' member −' + this.tierPct() + '%', '−' + this.money(t.memberDiscount), TEAL], t.couponCode ? ['Code ' + t.couponCode + ' −' + t.couponOffLabel, '−' + this.money(t.couponDiscount), TEAL] : null, cq ? null : [this.taxLabel(), this.money(t.tax)], ['Shipping', cq ? 'Included' : ful === 'pickup' ? 'Free' : this.money(t.shipping)]].filter(Boolean).filter(r => !(cq && /member/.test(r[0])))
                 .map((r, i) => h('div', { key: i, style: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, lineHeight: 1.5, color: r[2] || MUT } }, h('span', { style: { flex: '1 1 auto', minWidth: 0 } }, r[0]), h('span', { style: { flex: 'none', fontWeight: 500, whiteSpace: 'nowrap', color: r[2] || INK } }, r[1])))),
             avail > 0 ? h('label', { key: 'cr', 'data-go': 'set:coCredit:' + (!this.state.coCredit), style: { display: 'flex', alignItems: 'center', gap: 9, fontSize: 12.5, color: MUT, marginTop: 12, cursor: 'pointer' } },
-              h('span', { style: { height: 16, width: 28, borderRadius: 9, background: this.state.coCredit ? TEAL : '#eaeaea', position: 'relative', flex: 'none' } },
+              h('span', { style: { height: 16, width: 28, borderRadius: 0, background: this.state.coCredit ? TEAL : '#eaeaea', position: 'relative', flex: 'none' } },
                 h('span', { style: { position: 'absolute', top: 2, left: this.state.coCredit ? 14 : 2, height: 12, width: 12, borderRadius: '50%', background: '#fff' } })),
               'Use credit balance (' + this.money(avail) + ' available)') : null,
             applied > 0 ? h('div', { key: 'ca', style: { display: 'flex', justifyContent: 'space-between', fontSize: 13, color: TEAL, marginTop: 8 } }, h('span', null, 'Credit applied'), h('span', null, '−' + this.money(applied))) : null,
@@ -4882,10 +4881,10 @@ class Component extends DCLogic {
               h('span', { style: { fontSize: 25, fontWeight: 600, color: TEAL } }, this.money(due))),
             missingArt ? h('div', { key: 'm', style: { fontSize: 12.5, color: '#c0392b', marginTop: 10 } }, 'Upload the artwork for ' + (missingArt > 1 ? missingArt + ' jobs' : 'your job') + ' first. ', h('span', { 'data-go': 'cart', style: { color: TEAL, fontWeight: 600, cursor: 'pointer' } }, 'Go to cart')) : null,
             h('div', { key: 'd', style: { marginTop: 14, display: 'flex', flexDirection: 'column', gap: 9 } },
-              h('button', { type: 'button', onClick: place, 'aria-disabled': !canPlace, style: { font: '600 14.5px Montserrat,sans-serif', background: TEAL, color: '#fff', border: 'none', borderRadius: 8, padding: '13px 16px', cursor: canPlace ? 'pointer' : 'not-allowed', opacity: canPlace || this.state.placing ? 1 : .55 } },
+              h('button', { type: 'button', onClick: place, 'aria-disabled': !canPlace, style: { font: '600 14.5px Montserrat,sans-serif', background: TEAL, color: '#fff', border: 'none', borderRadius: 0, padding: '13px 16px', cursor: canPlace ? 'pointer' : 'not-allowed', opacity: canPlace || this.state.placing ? 1 : .55 } },
                 this.state.placing ? 'Placing…' : 'Place order · ' + this.money(due)),
               this.state.orderErr ? h('div', { role: 'alert', style: { fontSize: 12.5, color: '#c0392b', lineHeight: 1.5 } }, this.state.orderErr) : null,
-              cq ? h('span', { role: 'button', tabIndex: 0, onClick: () => { this.setState({ coQuote: null, cTab: 'Quotations' }); this.go('dash'); }, style: { display: 'flex', justifyContent: 'center', borderRadius: 8, padding: '11px 20px', fontSize: 14, fontWeight: 600, color: TEAL, border: '1px solid #eaeaea', cursor: 'pointer' } }, 'Back to my quotations')
+              cq ? h('span', { role: 'button', tabIndex: 0, onClick: () => { this.setState({ coQuote: null, cTab: 'Quotations' }); this.go('dash'); }, style: { display: 'flex', justifyContent: 'center', borderRadius: 0, padding: '11px 20px', fontSize: 14, fontWeight: 600, color: TEAL, border: '1px solid #eaeaea', cursor: 'pointer' } }, 'Back to my quotations')
                 : this.btn('Back to cart', 'ghost', 'cart', { justifyContent: 'center' })),
           ]))),
       termsPopup));
@@ -4905,7 +4904,7 @@ class Component extends DCLogic {
           return h('span', { key: t, 'data-go': 'set:blogTag:' + t, style: { fontSize: 12.5, borderRadius: 999, padding: '6px 13px', border: '1px solid ' + (on ? TEAL : HAIR), background: on ? TEAL : '#fff', color: on ? '#fff' : MUT, fontWeight: 500, cursor: 'pointer' } }, t + ' · ' + n); })),
       posts.length === 0 ? h('div', { style: { padding: 40, textAlign: 'center', color: FAINT, fontSize: 14 } }, 'Loading articles…') :
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 18 } },
-        list.map(p => h('div', { key: p.slug, 'data-go': 'blog:' + p.slug, style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', background: '#fff', display: 'flex', flexDirection: 'column', cursor: 'pointer' } },
+        list.map(p => h('div', { key: p.slug, 'data-go': 'blog:' + p.slug, style: { border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden', background: '#fff', display: 'flex', flexDirection: 'column', cursor: 'pointer' } },
           p.hero ? h('div', { style: { aspectRatio: '16 / 9', background: '#f4f5f6', overflow: 'hidden' } }, h('img', { src: window.__asset(p.hero.replace(/^\//, '')), alt: p.title, loading: 'lazy', style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } }))
             : h('div', { style: { aspectRatio: '16 / 9', background: 'linear-gradient(120deg,#fdf2f2,#FAFAFA)' } }),
           h('div', { style: { padding: 16, display: 'flex', flexDirection: 'column', gap: 7, flex: 1 } },
@@ -4928,12 +4927,12 @@ class Component extends DCLogic {
         h('span', { 'data-go': 'home', style: { color: TEAL, cursor: 'pointer' } }, 'Home'), ' › ',
         h('span', { 'data-go': 'learn', style: { color: TEAL, cursor: 'pointer' } }, 'Learning Hub'), ' › ', a.tag),
       h('div', { style: { fontSize: 11, fontWeight: 600, letterSpacing: '.07em', textTransform: 'uppercase', color: TEAL, marginBottom: 8 } }, a.tag),
-      h('h1', { style: { fontSize: 34, fontWeight: 600, lineHeight: 1.15, letterSpacing: '-.02em', margin: '0 0 10px' } }, a.title),
+      h('h1', { style: { fontSize: 34, fontWeight: 500, lineHeight: 1.15, letterSpacing: '-.02em', margin: '0 0 10px' } }, a.title),
       h('div', { style: { fontSize: 12.5, color: FAINT, marginBottom: 22, borderBottom: '1px solid ' + HAIR, paddingBottom: 18 } }, 'By Printoka · ' + (a.date ? new Date(a.date + 'T12:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '') + ((a.categories || []).length > 1 ? ' · ' + a.categories.join(', ') : '')),
-      a.hero ? h('img', { src: window.__asset(a.hero.replace(/^\//, '')), alt: a.title, style: { width: '100%', height: 'auto', display: 'block', borderRadius: 10, margin: '0 0 26px' } }) : null,
+      a.hero ? h('img', { src: window.__asset(a.hero.replace(/^\//, '')), alt: a.title, style: { width: '100%', height: 'auto', display: 'block', borderRadius: 0, margin: '0 0 26px' } }) : null,
       a.html ? h('div', { className: 'pk-prose', dangerouslySetInnerHTML: { __html: a.html } })
       : a.body ? h('div', { className: 'pk-prose' }, this.mdToNodes(a.body))
-        : h('div', { style: { border: '1px dashed ' + HAIR, borderRadius: 10, padding: 20, background: ALT, color: MUT, fontSize: 14, lineHeight: 1.7 } },
+        : h('div', { style: { border: '1px dashed ' + HAIR, borderRadius: 0, padding: 20, background: ALT, color: MUT, fontSize: 14, lineHeight: 1.7 } },
             h('p', { style: { margin: '0 0 8px' } }, a.excerpt),
             h('p', { style: { margin: 0, fontSize: 12.5, color: FAINT } }, 'The full text of this article is being migrated from printoka.com — run ', h('code', { style: { background: '#fff', padding: '1px 5px', borderRadius: 4 } }, 'node web/content/migrate-blog.mjs'), ' to import it.')),
       h('div', { style: { marginTop: 30, paddingTop: 20, borderTop: '1px solid ' + HAIR, display: 'flex', gap: 10, flexWrap: 'wrap' } },
@@ -4949,7 +4948,7 @@ class Component extends DCLogic {
     return h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px 0' } },
       this.head('Save up to 15% on every order', 'Your tier is set by your spend over the last 12 months. Higher tiers save you more on every job.',
         [this.btn(u ? 'Go to dashboard' : 'Register free', 'amber', 'dash')]),
-      h('div', { style: { marginTop: 22, border: '1px solid ' + TEAL, borderRadius: 14, padding: 20, background: '#fdf2f2' } },
+      h('div', { style: { marginTop: 22, border: '1px solid ' + TEAL, borderRadius: 0, padding: 20, background: '#fdf2f2' } },
         h('div', { style: { display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center' } },
           h('div', { style: { flex: '1 1 340px', minWidth: 0 } },
             h('div', { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: '.08em', textTransform: 'uppercase', color: TEAL } }, 'Where you are'),
@@ -4959,7 +4958,7 @@ class Component extends DCLogic {
             h('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: MUT, marginTop: 8 } },
               h('span', null, this.money(spend) + ' of ' + this.money(plat) + ' trailing spend'), h('span', null, this.tier() === 'Platinum' ? 'Top tier reached' : this.money(toPlat) + ' to Platinum'))),
           h('div', { style: { flex: '0 0 260px', display: 'flex', flexDirection: 'column', gap: 9, fontSize: 12.5 } },
-            h('div', { style: { background: '#fff5e2', color: '#a1660a', borderRadius: 8, padding: '11px 13px', lineHeight: 1.55 } }, 'Inactivity watch: 41 days without an order. At 90 days you drop one tier. Re-upgrade is automatic.'),
+            h('div', { style: { background: '#fff5e2', color: '#a1660a', borderRadius: 0, padding: '11px 13px', lineHeight: 1.55 } }, 'Inactivity watch: 41 days without an order. At 90 days you drop one tier. Re-upgrade is automatic.'),
             this.btn('Refer a friend · earn ' + this.money(150), 'ghost', 'membership', { justifyContent: 'center' })))),
       h('div', { style: { marginTop: 22 } },
         this.table(['Tier', 'Trailing 12-month spend', 'Discount', 'Benefits', 'Status'],
@@ -5047,7 +5046,7 @@ class Component extends DCLogic {
         ])))),
       this.guidesSection(),
       this.faqSection(),
-      h('div', { key: 'c', style: { marginTop: 24, border: '1px solid ' + HAIR, borderRadius: 12, padding: 20, background: ALT, display: 'flex', flexWrap: 'wrap', gap: 20, justifyContent: 'space-between' } },
+      h('div', { key: 'c', style: { marginTop: 24, border: '1px solid ' + HAIR, borderRadius: 0, padding: 20, background: ALT, display: 'flex', flexWrap: 'wrap', gap: 20, justifyContent: 'space-between' } },
         [['WhatsApp', '+60 14 969 0799'], ['Email', 'print@printoka.com'], ['Hours', 'Mon–Fri 9am–6pm (MYT)']].map((r, i) =>
           h('div', { key: i }, h('div', { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: FAINT } }, r[0]), h('div', { style: { fontSize: 14, fontWeight: 600, marginTop: 4 } }, r[1])))),
     ]);
@@ -5068,10 +5067,10 @@ class Component extends DCLogic {
   // ===== CUSTOMIZED PRINTING SOLUTIONS (original /customized-printing-solutions) =====
   s_solutions() {
     return this.pageWrap([
-      h('h1', { key: 'h', style: { margin: '10px 0 30px', textAlign: 'center', fontSize: 28, fontWeight: 500, letterSpacing: '-.01em' } }, 'Get a Quotation for your Customized Print Job Now'),
+      h('h1', { className: 'pk-bar-c', key: 'h', style: { margin: '10px 0 30px', textAlign: 'center', fontSize: 28, fontWeight: 500, letterSpacing: '-.01em' } }, 'Get a Quotation for your Customized Print Job Now'),
       h('div', { key: 'cards', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: 20 } },
         CUSTOM_QUOTE_FORMS.map(fm => h('button', { key: fm.id, type: 'button', onClick: () => this.openCustomQuote(fm.id),
-          style: { background: '#fff', border: '1px solid ' + HAIR, borderRadius: 10, padding: '26px 18px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, cursor: 'pointer', font: 'inherit', color: INK } },
+          style: { background: '#fff', border: '1px solid ' + HAIR, borderRadius: 0, padding: '26px 18px 22px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, cursor: 'pointer', font: 'inherit', color: INK } },
           h('img', { src: window.__asset('assets/home/' + fm.img), alt: fm.card, loading: 'lazy', style: { height: 170, width: '100%', objectFit: 'contain', display: 'block' } }),
           h('span', { style: { fontSize: 16, fontWeight: 500 } }, fm.card),
           h('span', { style: { background: TEAL, color: '#fff', fontSize: 14, fontWeight: 500, padding: '10px 20px', borderRadius: 3 } }, 'Request Custom Quote')))),
@@ -5160,14 +5159,14 @@ class Component extends DCLogic {
       h('h2', { style: { margin: '0 0 16px', fontSize: 20, fontWeight: 600, letterSpacing: '-.01em' } }, 'Guides for Closing Artwork'),
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(240px,1fr))', gap: 16 } },
         ARTWORK_GUIDES.map((g, i) => h('button', { key: i, type: 'button', onClick: () => this.setState({ guidePdf: g }),
-          style: { textAlign: 'left', background: '#fff', border: '1px solid ' + HAIR, borderRadius: 12, padding: 18, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 8, font: 'inherit', color: INK } },
-          h('span', { style: { height: 40, width: 40, borderRadius: 10, background: '#fdf2f2', display: 'grid', placeItems: 'center' } }, this.dashIcon('file', TEAL, 20)),
+          style: { textAlign: 'left', background: '#fff', border: '1px solid ' + HAIR, borderRadius: 0, padding: 18, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 8, font: 'inherit', color: INK } },
+          h('span', { style: { height: 40, width: 40, borderRadius: 0, background: '#fdf2f2', display: 'grid', placeItems: 'center' } }, this.dashIcon('file', TEAL, 20)),
           h('span', { style: { fontSize: 15, fontWeight: 600, lineHeight: 1.35 } }, g[0]),
           h('span', { style: { fontSize: 13, color: MUT, lineHeight: 1.6 } }, g[1]),
           h('span', { style: { fontSize: 13.5, color: TEAL, fontWeight: 600, marginTop: 'auto' } }, 'Read More')))),
       open ? h('div', { role: 'dialog', 'aria-modal': 'true', 'aria-label': open[0], onClick: () => this.setState({ guidePdf: null }),
           style: { position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,.55)', display: 'grid', placeItems: 'center', padding: 20 } },
-        h('div', { onClick: e => e.stopPropagation(), style: { background: '#fff', borderRadius: 12, width: 'min(920px,100%)', height: 'min(88vh,1100px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' } },
+        h('div', { onClick: e => e.stopPropagation(), style: { background: '#fff', borderRadius: 0, width: 'min(920px,100%)', height: 'min(88vh,1100px)', display: 'flex', flexDirection: 'column', overflow: 'hidden' } },
           h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: '1px solid ' + HAIR } },
             h('span', { style: { fontSize: 15, fontWeight: 600, flex: 1 } }, open[0]),
             h('a', { href: window.__asset(open[2]), target: '_blank', rel: 'noopener', style: { fontSize: 13, fontWeight: 600, color: TEAL, textDecoration: 'none' } }, 'Open PDF'),
@@ -5185,7 +5184,7 @@ class Component extends DCLogic {
         const open = this.state['faqOpen_' + c.id];
         return h('div', { key: c.id, style: { marginBottom: 22 } },
           h('div', { style: { fontSize: 16, fontWeight: 600, marginBottom: 10 } }, c.title),
-          h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', background: '#fff' } },
+          h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden', background: '#fff' } },
             c.questions.map((qa, i) => h('div', { key: i, style: { borderTop: i ? '1px solid ' + LINE : 'none' } },
               h('div', { onClick: () => this.setState({ ['faqOpen_' + c.id]: open === i ? null : i }), style: { display: 'flex', gap: 12, alignItems: 'flex-start', padding: '14px 16px', cursor: 'pointer', fontWeight: 600, fontSize: 14 } },
                 h('span', { style: { flex: 1 } }, qa.q),
@@ -5211,7 +5210,7 @@ class Component extends DCLogic {
       h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '40px 20px 20px', display: 'flex', flexWrap: 'wrap', gap: '32px 64px', alignItems: 'flex-start' } },
         active ? h('div', { key: 'm', style: { flex: '1 1 560px', minWidth: 0 } },
           h('div', { style: { fontSize: 15, fontWeight: 600, marginBottom: 6 } }, 'Templates Download'),
-          h('h1', { style: { fontSize: 30, fontWeight: 600, letterSpacing: '-.01em', margin: '0 0 14px' } }, active.title),
+          h('h1', { style: { fontSize: 30, fontWeight: 500, letterSpacing: '-.01em', margin: '0 0 14px' } }, active.title),
           desc ? h('p', { style: { fontSize: 15, color: MUT, lineHeight: 1.75, margin: '0 0 20px', whiteSpace: 'pre-line' } }, desc) : null,
           active.notice ? h('div', { style: { display: 'flex', gap: 14, alignItems: 'flex-start', background: 'rgba(229,34,32,.05)', padding: '16px 18px', marginBottom: 30 } },
             h('img', { src: window.__asset('assets/icons/filetype/warning.svg'), alt: '', width: 28, height: 28, style: { flex: 'none' } }),
@@ -5242,7 +5241,6 @@ class Component extends DCLogic {
     if (T === undefined && typeof fetch === 'function' && !this._termsLoading) { this._termsLoading = true; fetch('/api/content/terms').then(r => r.json()).then(d => this.setState({ terms: d.terms || null })).catch(() => this.setState({ terms: null })); }
     return h('div', { style: { background: '#f5f6f8', margin: '-10px 0 0', padding: '36px 20px 60px' } },
       h('div', { style: { maxWidth: 980, margin: '0 auto', background: '#fff', border: '1px solid #e6e8eb', padding: '32px 36px 40px' } },
-        h('div', { style: { width: 24, height: 3, background: TEAL, marginBottom: 12 } }),
         h('h1', { style: { margin: '0 0 20px', fontSize: 32, fontWeight: 500, letterSpacing: '-.01em' } }, 'Terms & Conditions'),
         !T ? h('div', { style: { color: FAINT, fontSize: 14 } }, T === null ? 'The terms could not be loaded.' : 'Loading…')
         : h('div', { style: { fontSize: 14.5, color: '#444', lineHeight: 1.75 } },
@@ -5267,16 +5265,16 @@ class Component extends DCLogic {
     const order = Q.reduce((a, s) => a.concat(s[1].map(q => q[0])), []);
     const openK = this.state.qfOpen;
     const next = k => { const i = order.indexOf(k); const n = order.slice(i + 1).find(x => !String(val(x) || (x === 'File' ? this.state.qfFileName || '' : '')).trim()); this.setState({ qfOpen: n || null }); };
-    const inp = { font: '400 14px Montserrat,sans-serif', border: '1px solid ' + HAIR, borderRadius: 8, padding: '11px 13px', width: '100%', background: '#fff' };
+    const inp = { font: '400 14px Montserrat,sans-serif', border: '1px solid ' + HAIR, borderRadius: 0, padding: '11px 13px', width: '100%', background: '#fff' };
     const row = ([k, label, req, type]) => {
       const open = openK === k, v = type === 'file' ? (this.state.qfFileName || '') : String(val(k) || '');
       const shown = type === 'price' && v ? v : v;
       const ctl = type === 'area' ? h('textarea', { autoFocus: true, rows: 4, value: v, onChange: e => set(k, e.target.value), placeholder: 'Anything that helps us price it: finishing, deadline, delivery…', style: Object.assign({}, inp, { resize: 'vertical' }) })
-        : type === 'file' ? h('label', { style: { display: 'inline-flex', alignItems: 'center', font: '600 13.5px Montserrat,sans-serif', padding: '10px 18px', borderRadius: 8, background: TEAL, color: '#fff', cursor: 'pointer', alignSelf: 'flex-start' } }, v ? 'Change file' : 'Upload',
+        : type === 'file' ? h('label', { style: { display: 'inline-flex', alignItems: 'center', font: '600 13.5px Montserrat,sans-serif', padding: '10px 18px', borderRadius: 0, background: TEAL, color: '#fff', cursor: 'pointer', alignSelf: 'flex-start' } }, v ? 'Change file' : 'Upload',
             h('input', { type: 'file', style: { display: 'none' }, onChange: e => { const f0 = e.target.files[0]; e.target.value = ''; if (!f0) return; const rd = new FileReader(); rd.onload = () => this.setState({ qfFile: rd.result, qfFileName: f0.name }); rd.readAsDataURL(f0); } }))
         : h('input', { autoFocus: true, type: type === 'email' ? 'email' : type === 'tel' ? 'tel' : type === 'number' ? 'number' : 'text', value: v, onChange: e => set(k, e.target.value), onKeyDown: e => { if (e.key === 'Enter') next(k); },
             placeholder: type === 'price' ? 'e.g. RM 500, or around RM 1 per piece' : '', style: inp });
-      return h('div', { key: k, style: open ? { padding: '16px 18px 18px', margin: '8px -18px', border: '1px solid rgba(229,34,32,.22)', borderRadius: 14, background: '#fff', boxShadow: '0 18px 44px rgba(33,33,33,.14)', position: 'relative', zIndex: 2 } : { padding: '16px 0', borderTop: '1px solid ' + LINE } },
+      return h('div', { key: k, style: open ? { padding: '16px 18px 18px', margin: '8px -18px', border: '1px solid rgba(229,34,32,.22)', borderRadius: 0, background: '#fff', boxShadow: '0 18px 44px rgba(33,33,33,.14)', position: 'relative', zIndex: 2 } : { padding: '16px 0', borderTop: '1px solid ' + LINE } },
         h('div', { onClick: () => this.setState({ qfOpen: open ? null : k }), role: 'button', tabIndex: 0, 'aria-expanded': open ? 'true' : 'false', style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, cursor: 'pointer' } },
           h('span', { style: { fontSize: 13.5, fontWeight: 600 } }, label, req ? h('span', { style: { color: TEAL } }, ' *') : null),
           h('span', { style: { display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 } },
@@ -5295,10 +5293,10 @@ class Component extends DCLogic {
           h('div', { key: 'a', style: { fontSize: 20, fontWeight: 600, marginBottom: 10 } }, 'We have received your quotation request.'),
           h('div', { key: 'b', style: { fontSize: 14.5, color: MUT, lineHeight: 1.8, marginBottom: 16 } }, 'Your Quotation ticket is ', h('b', { style: { color: TEAL } }, sent.id), '. Please allow us some time to check and revert.'),
           h('div', { key: 'c', style: { display: 'flex', gap: 10, flexWrap: 'wrap' } },
-            h('span', { onClick: () => { this.setState({ cTab: 'Quotations' }); this.go(this.state.user ? 'dash' : 'auth'); }, style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 14, padding: '11px 22px', borderRadius: 8, cursor: 'pointer' } }, 'My Quotations'),
-            h('span', { onClick: again, style: { border: '1px solid ' + HAIR, color: TEAL, fontWeight: 600, fontSize: 14, padding: '11px 22px', borderRadius: 8, cursor: 'pointer' } }, 'I have another item to print'))
-        ]) : h('div', { style: { display: 'flex', flexDirection: 'column', border: '1px solid ' + HAIR, borderRadius: 14, padding: '6px 20px 20px', background: '#fff' } },
-          this.state.quoteErr ? h('div', { key: 'e', style: { fontSize: 12.5, color: '#c0392b', background: '#fdecec', border: '1px solid #f5c8c7', borderRadius: 6, padding: '9px 11px', marginTop: 14 } }, this.state.quoteErr) : null,
+            h('span', { onClick: () => { this.setState({ cTab: 'Quotations' }); this.go(this.state.user ? 'dash' : 'auth'); }, style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 14, padding: '11px 22px', borderRadius: 0, cursor: 'pointer' } }, 'My Quotations'),
+            h('span', { onClick: again, style: { border: '1px solid ' + HAIR, color: TEAL, fontWeight: 600, fontSize: 14, padding: '11px 22px', borderRadius: 0, cursor: 'pointer' } }, 'I have another item to print'))
+        ]) : h('div', { style: { display: 'flex', flexDirection: 'column', border: '1px solid ' + HAIR, borderRadius: 0, padding: '6px 20px 20px', background: '#fff' } },
+          this.state.quoteErr ? h('div', { key: 'e', style: { fontSize: 12.5, color: '#c0392b', background: '#fdecec', border: '1px solid #f5c8c7', borderRadius: 0, padding: '9px 11px', marginTop: 14 } }, this.state.quoteErr) : null,
           Q.map(s => h('div', { key: s[0], style: { display: 'flex', flexDirection: 'column' } }, secHead(s[0]), s[1].map(row))),
           h('div', { key: 'b', style: { marginTop: 18 } }, this.btn(this.state.quoteBusy ? 'Sending…' : 'Submit', 'amber', 'doquote'))),
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
@@ -5310,7 +5308,7 @@ class Component extends DCLogic {
               h('span', { onClick: e => { e.stopPropagation(); this.chatToggle(true); }, style: { cursor: 'pointer' } }, h('b', null, 'Web Chat'), ' · chat with us now'))]),
           this.card([
             h('div', { key: 'a', style: { fontSize: 14, fontWeight: 600, marginBottom: 12 } }, 'Check My Quotations Status'),
-            h('span', { key: 'b', onClick: () => { this.setState({ cTab: 'Quotations' }); this.go(this.state.user ? 'dash' : 'auth'); }, style: { display: 'block', textAlign: 'center', border: '1px solid ' + HAIR, color: TEAL, fontWeight: 600, fontSize: 14, padding: '11px', borderRadius: 8, cursor: 'pointer' } }, 'My Quotations')]))));
+            h('span', { key: 'b', onClick: () => { this.setState({ cTab: 'Quotations' }); this.go(this.state.user ? 'dash' : 'auth'); }, style: { display: 'block', textAlign: 'center', border: '1px solid ' + HAIR, color: TEAL, fontWeight: 600, fontSize: 14, padding: '11px', borderRadius: 0, cursor: 'pointer' } }, 'My Quotations')]))));
   }
 
   // ===== CUSTOMER DASHBOARD =====
@@ -5327,11 +5325,11 @@ class Component extends DCLogic {
     const cinvs = this.state.custInvoices || [];
     const credit = this.state.credit || { balance: 0, ledger: [] };
     const MONTHS = ['APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP'];
-    const stitle = t => h('h1', { key: 'h', style: { fontSize: 30, fontWeight: 700, letterSpacing: '-.02em', margin: '2px 0 6px' } }, t);
+    const stitle = t => h('h1', { key: 'h', style: { fontSize: 30, fontWeight: 500, letterSpacing: '-.02em', margin: '2px 0 6px' } }, t);
     let content;
 
     if (tab === 'Dashboard') {
-      const heroCard = (label, value, extra, grad, icon) => h('div', { style: { position: 'relative', overflow: 'hidden', borderRadius: 12, padding: '20px 22px', color: '#fff', background: grad, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', minHeight: 96 } },
+      const heroCard = (label, value, extra, grad, icon) => h('div', { style: { position: 'relative', overflow: 'hidden', borderRadius: 0, padding: '20px 22px', color: '#fff', background: grad, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', minHeight: 96 } },
         h('div', null, h('div', { style: { fontWeight: 700, fontSize: 14 } }, label), h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 } }, h('span', { style: { fontSize: 32, fontWeight: 800, letterSpacing: '-.02em' } }, value), extra)),
         h('div', { style: { height: 52, width: 52, borderRadius: '50%', background: 'rgba(255,255,255,.18)', display: 'grid', placeItems: 'center', flex: 'none' } }, this.dashIcon(icon, '#fff', 24)));
       const links = [['My Orders', 'Orders', 'file'], ['My Quotations', 'Quotations', 'edit-3'], ['My Invoices', 'Invoices', 'file'], ['Sales Missions', 'Sales Missions', 'clock'], ['Transactions', 'Transactions', 'dollar-sign'], ['Artwork Gallery', 'Artwork', 'layers'], ['Coupons', 'Coupons', 'check']];
@@ -5341,14 +5339,14 @@ class Component extends DCLogic {
       const thisMonth = sales[sales.length - 1] || 0;
       content = [
         h('div', { key: 'top', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 16 } },
-          h('div', { style: { background: '#fff', borderRadius: 12, border: '1px solid ' + HAIR, padding: 18, display: 'flex', gap: 14, alignItems: 'center' } },
+          h('div', { style: { background: '#fff', borderRadius: 0, border: '1px solid ' + HAIR, padding: 18, display: 'flex', gap: 14, alignItems: 'center' } },
             h('span', { style: { height: 52, width: 52, borderRadius: '50%', border: '1px solid ' + HAIR, display: 'grid', placeItems: 'center', flex: 'none', color: MUT, fontWeight: 700 } }, (u.name || '?').slice(0, 1)),
             h('div', null, h('div', { style: { fontWeight: 700 } }, u.name), h('div', { style: { fontSize: 12.5, color: MUT } }, u.email),
               h('div', { style: { display: 'flex', gap: 14, marginTop: 8 } }, h('span', { 'data-go': 'set:cTab:Account', style: { fontSize: 12.5, color: '#2f7fd1', fontWeight: 600, cursor: 'pointer' } }, 'Account information'), h('span', { 'data-go': 'set:cTab:Addresses', style: { fontSize: 12.5, color: '#2f7fd1', fontWeight: 600, cursor: 'pointer' } }, 'Address Book')))),
           h('span', { 'data-go': 'set:cTab:Sales Missions', style: { cursor: 'pointer' } }, heroCard('Sales Missions', this.tierPct() + '%', null, 'linear-gradient(120deg,#12B3A6,#1aa6c4)', 'clock')),
           heroCard('Balance (' + this.currency() + ')', this.money(credit.balance || 0).replace(this.currency() + ' ', ''), h('span', { onClick: () => this.setState({ tu_open: true }), style: { display: 'inline-flex', alignItems: 'center', gap: 5, background: '#fff', color: INK, fontWeight: 700, fontSize: 12.5, borderRadius: 999, padding: '5px 12px', cursor: 'pointer' } }, '+ Top up'), 'linear-gradient(120deg,#E52220,#F0662E)', 'dollar-sign')),
         h('div', { key: 'main', style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 300px', gap: 16, alignItems: 'start' } },
-          h('div', { style: { background: '#fff', borderRadius: 12, border: '1px solid ' + HAIR, overflow: 'hidden' } },
+          h('div', { style: { background: '#fff', borderRadius: 0, border: '1px solid ' + HAIR, overflow: 'hidden' } },
             h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 1, background: HAIR } },
               this.statCard('Orders', String(orders.filter(o => o.status !== 'completed').length), { icon: 'file', accent: 'red', dot: orders.length > 0, go: 'set:cTab:Orders' }),
               this.statCard('Quotes', String(quotes.filter(q => q.status === 'issued' || q.status === 'reviewed').length), { icon: 'edit-3', accent: 'teal', go: 'set:cTab:Quotations' }),
@@ -5357,7 +5355,7 @@ class Component extends DCLogic {
               h('div', { style: { display: 'flex', alignItems: 'center', gap: 10 } }, h('span', { style: { fontSize: 13, fontWeight: 600, color: MUT } }, 'Current Month Sales')),
               h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, margin: '4px 0 2px' } }, h('span', { style: { fontSize: 26, fontWeight: 700 } }, this.money(thisMonth)), this.metricBadge('+17%'), h('span', { style: { fontSize: 12, color: FAINT } }, 'vs last month')),
               h('div', { style: { marginTop: 10 } }, this.lineChart(MONTHS, sales, { h: 300 })))),
-          h('div', { style: { background: '#fff', borderRadius: 12, border: '1px solid ' + HAIR, padding: 16 } },
+          h('div', { style: { background: '#fff', borderRadius: 0, border: '1px solid ' + HAIR, padding: 16 } },
             h('div', { style: { fontSize: 13, fontWeight: 700, marginBottom: 10 } }, 'Links'),
             h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } },
               links.map(l => h('span', { key: l[0], 'data-go': 'set:cTab:' + l[1], style: { display: 'flex', alignItems: 'center', gap: 10, padding: '7px 4px', cursor: 'pointer', fontSize: 13.5 } },
@@ -5428,13 +5426,13 @@ class Component extends DCLogic {
         bar(Math.round(spend / maxT * 100)),
         h('div', { style: { fontSize: 12.5, color: INK, marginTop: 10 } }, 'Target ' + TIERS.filter(t => spend >= t[1]).length + ' / ' + TIERS.length));
       content = [stitle('Sales Missions'),
-        h('div', { key: 'ov', style: { background: '#fff', borderRadius: 8, padding: '22px 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 24, alignItems: 'center' } },
+        h('div', { key: 'ov', style: { background: '#fff', borderRadius: 0, padding: '22px 24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 24, alignItems: 'center' } },
           h('div', { style: { display: 'flex', gap: 16, alignItems: 'center' } }, medal(u.tier, 56), h('div', null, label('Current Tier'), big(tierName))),
           h('div', { style: sep }, label('Current Sales (' + this.currency() + ')'), big(spend.toLocaleString())),
           h('div', { style: sep }, label('Current discount'), big(this.tierPct() + '%')),
           h('div', { style: sep }, track)),
         // the tiers: one card, two columns, divided by hairlines
-        h('div', { key: 'tiers', style: { background: '#fff', borderRadius: 8, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(max(320px,40%),1fr))', overflow: 'hidden' } },
+        h('div', { key: 'tiers', style: { background: '#fff', borderRadius: 0, display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(max(320px,40%),1fr))', overflow: 'hidden' } },
           TIERS.map(t => { const pct = Math.min(100, Math.round(spend / t[1] * 100)); return h('div', { key: t[0], style: { padding: '22px 24px', display: 'flex', gap: 22, boxShadow: '1px 1px 0 ' + HAIR } },
             medal(t[0]),
             h('div', { style: { flex: 1, minWidth: 0 } }, h('div', { style: { fontWeight: 600, fontSize: 14, marginBottom: 8 } }, t[0]),
@@ -5459,7 +5457,7 @@ class Component extends DCLogic {
     } else if (tab === 'Artwork') {
       // (user, 2026-09-29) the original printoka.com Artwork Storage: every artwork uploaded with us, ready to reorder
       content = [stitle('Artwork Storage'),
-        h('div', { key: 'g', style: { background: '#fff', border: '1px solid ' + HAIR, borderRadius: 12, padding: 18 } }, this.agPanel('manage'))];
+        h('div', { key: 'g', style: { background: '#fff', border: '1px solid ' + HAIR, borderRadius: 0, padding: 18 } }, this.agPanel('manage'))];
     } else if (tab === 'Coupons') {
       const cps = u.coupons || [];
       content = [stitle('My Coupons'), cps.length
@@ -5468,27 +5466,27 @@ class Component extends DCLogic {
     } else if (tab === 'Account') {
       const first = this.state.pf_first != null ? this.state.pf_first : (u.name || '').split(' ')[0];
       const last = this.state.pf_last != null ? this.state.pf_last : (u.name || '').split(' ').slice(1).join(' ');
-      const inp = { font: '400 14px Montserrat,sans-serif', padding: '11px 13px', border: '1px solid ' + HAIR, borderRadius: 8, width: '100%', background: '#fff' };
+      const inp = { font: '400 14px Montserrat,sans-serif', padding: '11px 13px', border: '1px solid ' + HAIR, borderRadius: 0, width: '100%', background: '#fff' };
       const lbl = (t, req) => h('div', { style: { fontSize: 13, color: MUT, marginBottom: 6 } }, t, req ? h('span', { style: { color: '#E52220' } }, ' *') : null);
       content = [stitle('Account Information'),
-        h('div', { key: 'f', style: { background: '#fff', border: '1px solid ' + HAIR, borderRadius: 12, padding: 24, maxWidth: 720 } },
+        h('div', { key: 'f', style: { background: '#fff', border: '1px solid ' + HAIR, borderRadius: 0, padding: 24, maxWidth: 720 } },
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 } },
             h('div', null, lbl('First Name', true), h('input', { value: first, onChange: e => this.setField('pf_first', e.target.value), style: inp })),
             h('div', null, lbl('Last Name', true), h('input', { value: last, onChange: e => this.setField('pf_last', e.target.value), style: inp }))),
           h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 } },
             h('div', null, lbl('Mobile', true), h('input', { value: this.state.pf_phone != null ? this.state.pf_phone : (u.phone || ''), onChange: e => this.setField('pf_phone', e.target.value), style: inp })),
             h('div', null, lbl('Email Address', true), h('input', { value: u.email, disabled: true, style: Object.assign({}, inp, { background: ALT, color: MUT }) }))),
-          h('div', { style: { marginBottom: 16 } }, lbl('Password'), h('span', { onClick: () => this.setState({ pw_open: true }), style: { display: 'inline-block', border: '1px solid ' + HAIR, borderRadius: 8, padding: '9px 16px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' } }, 'Change Password')),
+          h('div', { style: { marginBottom: 16 } }, lbl('Password'), h('span', { onClick: () => this.setState({ pw_open: true }), style: { display: 'inline-block', border: '1px solid ' + HAIR, borderRadius: 0, padding: '9px 16px', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' } }, 'Change Password')),
           h('label', { style: { display: 'flex', gap: 9, alignItems: 'center', fontSize: 13, color: MUT, marginBottom: 16, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: !!this.state.pf_news, onChange: e => this.setField('pf_news', e.target.checked) }), 'Subscribe to our Newsletter'),
           this.state.pf_msg ? h('div', { style: { fontSize: 12.5, color: '#3d8b40', marginBottom: 10 } }, this.state.pf_msg) : null,
-          h('span', { onClick: () => this.submitProfile(), style: { display: 'block', textAlign: 'center', background: '#E52220', color: '#fff', fontWeight: 600, fontSize: 15, padding: '13px', borderRadius: 8, cursor: this.state.pf_busy ? 'wait' : 'pointer' } }, this.state.pf_busy ? 'Saving…' : 'Submit'))];
+          h('span', { onClick: () => this.submitProfile(), style: { display: 'block', textAlign: 'center', background: '#E52220', color: '#fff', fontWeight: 600, fontSize: 15, padding: '13px', borderRadius: 0, cursor: this.state.pf_busy ? 'wait' : 'pointer' } }, this.state.pf_busy ? 'Saving…' : 'Submit'))];
     } else { // Addresses
       content = [stitle('Address Book'),
         h('div', { key: 'add', style: { marginBottom: 4 } }, h('span', { 'data-go': this.state.addingAddr ? 'set:addingAddr:' : 'set:addingAddr:1', style: { fontSize: 13.5, color: '#E52220', fontWeight: 600, cursor: 'pointer' } }, this.state.addingAddr ? 'Cancel' : '+ Add address')),
-        this.state.addingAddr ? h('div', { key: 'form', style: { background: '#fff', border: '1px solid ' + HAIR, borderRadius: 12, padding: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 } },
-          [['adLabel', 'Label (Home/Office)'], ['adLine1', 'Address line 1'], ['adLine2', 'Address line 2'], ['adPostcode', 'Postcode'], ['adCity', 'City'], ['adState', 'State']].map(f => h('input', { key: f[0], placeholder: f[1], value: this.state[f[0]] || '', onChange: e => this.setField(f[0], e.target.value), style: { font: '400 13px Montserrat,sans-serif', padding: '9px 11px', border: '1px solid ' + HAIR, borderRadius: 7 } })),
-          h('span', { 'data-go': 'addraddsave', style: { gridColumn: '1 / -1', background: '#E52220', color: '#fff', fontWeight: 600, fontSize: 13, padding: '10px', borderRadius: 8, textAlign: 'center', cursor: 'pointer' } }, 'Save address')) : null,
-        (this.state.addresses || []).length ? h('div', { key: 'list', style: { background: '#fff', border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden' } },
+        this.state.addingAddr ? h('div', { key: 'form', style: { background: '#fff', border: '1px solid ' + HAIR, borderRadius: 0, padding: 16, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 } },
+          [['adLabel', 'Label (Home/Office)'], ['adLine1', 'Address line 1'], ['adLine2', 'Address line 2'], ['adPostcode', 'Postcode'], ['adCity', 'City'], ['adState', 'State']].map(f => h('input', { key: f[0], placeholder: f[1], value: this.state[f[0]] || '', onChange: e => this.setField(f[0], e.target.value), style: { font: '400 13px Montserrat,sans-serif', padding: '9px 11px', border: '1px solid ' + HAIR, borderRadius: 0 } })),
+          h('span', { 'data-go': 'addraddsave', style: { gridColumn: '1 / -1', background: '#E52220', color: '#fff', fontWeight: 600, fontSize: 13, padding: '10px', borderRadius: 0, textAlign: 'center', cursor: 'pointer' } }, 'Save address')) : null,
+        (this.state.addresses || []).length ? h('div', { key: 'list', style: { background: '#fff', border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden' } },
           this.state.addresses.map((a, i) => h('div', { key: a.id, style: { display: 'grid', gridTemplateColumns: '1fr 1.4fr 1fr auto', gap: 14, padding: '16px 18px', borderTop: i ? '1px solid ' + LINE : 'none', alignItems: 'start', fontSize: 13.5 } },
             h('div', { style: { fontWeight: 600 } }, a.name || a.label, a.isDefault ? h('span', { style: { marginLeft: 6 } }, this.pillDot('Default', 'teal')) : null),
             h('div', { style: { color: MUT, lineHeight: 1.6 } }, [a.line1, a.line2, a.postcode + ' ' + a.city, a.state, ({ MY: 'Malaysia', SG: 'Singapore', BN: 'Brunei' })[a.country] || a.country].filter(Boolean).join(', ')),
@@ -5496,7 +5494,7 @@ class Component extends DCLogic {
             h('div', { style: { display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' } },
               !a.isDefault ? h('span', { 'data-go': 'addrdefault:' + a.id, style: { color: '#2f7fd1', fontWeight: 600, cursor: 'pointer', fontSize: 12.5 } }, 'Set default') : null,
               h('span', { 'data-go': 'addrdel:' + a.id, style: { color: '#c0392b', fontWeight: 600, cursor: 'pointer', fontSize: 12.5 } }, 'Delete'))))) :
-          h('div', { key: 'e', style: { background: '#fff', border: '1px dashed ' + HAIR, borderRadius: 12, padding: 30, textAlign: 'center', color: FAINT } }, 'No saved addresses yet.')];
+          h('div', { key: 'e', style: { background: '#fff', border: '1px dashed ' + HAIR, borderRadius: 0, padding: 30, textAlign: 'center', color: FAINT } }, 'No saved addresses yet.')];
     }
     // just signed up → show the member promo code they were issued, above whatever tab is open
     if (this.state.welcomeCoupon) content = [h('div', { key: 'welcome', style: { marginBottom: 6 } },
@@ -5543,9 +5541,9 @@ class Component extends DCLogic {
     const STAGES = ['Order received', 'Prepress check', 'In production', 'Shipped', 'Delivered'];
     const lookup = h('div', { key: 'lk', style: { display: 'flex', gap: 8, flexWrap: 'wrap', maxWidth: 460, marginBottom: 22 } },
       h('input', { placeholder: 'Order number (e.g. K7M2Q9XA)', value: this.state.trackInput != null ? this.state.trackInput : (this.state.order ? this.state.order.id : ''),
-        onChange: e => this.setField('trackInput', e.target.value), style: { flex: 1, minWidth: 200, font: '400 14px Montserrat,sans-serif', padding: '11px 13px', border: '1px solid #eaeaea', borderRadius: 8 } }),
+        onChange: e => this.setField('trackInput', e.target.value), style: { flex: 1, minWidth: 200, font: '400 14px Montserrat,sans-serif', padding: '11px 13px', border: '1px solid #eaeaea', borderRadius: 0 } }),
       h('span', { onClick: () => this.trackLookup(this.state.trackInput != null ? this.state.trackInput : (this.state.order ? this.state.order.id : '')),
-        style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 14, padding: '11px 20px', borderRadius: 8, cursor: 'pointer' } }, 'Track'));
+        style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 14, padding: '11px 20px', borderRadius: 0, cursor: 'pointer' } }, 'Track'));
     if (!o) return h('div', { style: { maxWidth: 900, margin: '0 auto', padding: '10px 20px 0' } },
       this.head('Track your order', 'Enter your order number to see live production status — customer-friendly labels on top of the real pipeline the floor uses.'),
       lookup,
@@ -5588,7 +5586,7 @@ class Component extends DCLogic {
     const own = this.userType() === 'customer' && o.userId === (this.state.user || {}).id;
     return h('div', { style: { background: '#f5f6f8', margin: '-10px 0 0', padding: '36px 20px 60px' } }, h('div', { style: { maxWidth: 1080, margin: '0 auto' } },
       h('div', { style: { display: 'flex', alignItems: 'flex-end', gap: 14, flexWrap: 'wrap', marginBottom: 20 } },
-        h('div', { style: { flex: '1 1 300px' } }, h('div', { style: { width: 24, height: 3, background: TEAL, marginBottom: 12 } }), h('h1', { style: { margin: 0, fontSize: 30, fontWeight: 500, letterSpacing: '-.01em' } }, 'Order ' + o.id)),
+        h('div', { style: { flex: '1 1 300px' } }, h('h1', { style: { margin: 0, fontSize: 30, fontWeight: 500, letterSpacing: '-.01em' } }, 'Order ' + o.id)),
         h('div', { style: { display: 'flex', gap: 9, flexWrap: 'wrap' } }, paid ? this.btn('Invoice', 'ghost', 'doc:invoice:' + o.id) : null, this.btn('Order slip', 'ghost', 'doc:slip:' + o.id), this.btn('Contact support', 'teal', 'crm'))),
       own ? null : lookup,
       h('div', { key: 't', style: { border: '1px solid #e6e8eb', background: '#fff', padding: '22px 24px', marginBottom: 16 } },
@@ -5601,10 +5599,10 @@ class Component extends DCLogic {
         !paid ? this.orderPayPanel(o) : null,
         // shipped to the customer: they confirm it arrived (completes the delivery)
         this.userType() === 'customer' && o.userId === (this.state.user || {}).id && jobs.some(j => j.status === 'dispatched' && (j.destination || {}).type === 'customer')
-          ? h('div', { style: { marginTop: 16, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: '#e6f4ea', borderRadius: 8, padding: '11px 13px' } },
+          ? h('div', { style: { marginTop: 16, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', background: '#e6f4ea', borderRadius: 0, padding: '11px 13px' } },
             h('span', { style: { fontSize: 13, color: '#1f5e2a', flex: 1 } }, 'Your order is on its way. Let us know once it arrives.'),
             h('span', { onClick: () => fetch('/api/orders/' + o.id + '/received', { method: 'POST', headers: this.authHeaders() }).then(r => r.json()).then(d => { if (d.order) this.setState({ trackOrder: d.order }); }).catch(() => {}),
-              style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13.5, padding: '10px 18px', borderRadius: 8, cursor: 'pointer' } }, 'I’ve received my order')) : null),
+              style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13.5, padding: '10px 18px', borderRadius: 0, cursor: 'pointer' } }, 'I’ve received my order')) : null),
       // (user, 2026-09-30) several jobs in one order: a tab per job (Job 1 … Job 10), one job shown at a time
       jobs.length > 1 ? h('div', { key: 'tabs', role: 'tablist', style: { display: 'flex', gap: 4, flexWrap: 'wrap', borderBottom: '1px solid #e6e8eb', marginBottom: 16 } },
         jobs.map((j, i) => { const on = jobTab === i;
@@ -5645,8 +5643,8 @@ class Component extends DCLogic {
     const u = this.state.user || {};
     const mine = (this.userType() === 'customer' && o.userId === u.id) || (u.type === 'outlet' && !!o.outlet && o.outlet === u.outlet); if (!mine || !j) return null;
     const refresh = d => { if (onDone) return onDone(d); if (d && d.order) this.setState({ trackOrder: d.order }); else this.trackLookup(o.id); };
-    const btn = (label, onClick) => h('span', { onClick, style: { alignSelf: 'flex-start', background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13.5, padding: '10px 18px', borderRadius: 8, cursor: 'pointer' } }, label);
-    const panel = kids => h('div', { style: { marginTop: 6, border: '1px solid ' + HAIR, borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10, background: '#fffaf5' } }, kids);
+    const btn = (label, onClick) => h('span', { onClick, style: { alignSelf: 'flex-start', background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13.5, padding: '10px 18px', borderRadius: 0, cursor: 'pointer' } }, label);
+    const panel = kids => h('div', { style: { marginTop: 6, border: '1px solid ' + HAIR, borderRadius: 0, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10, background: '#fffaf5' } }, kids);
     if (j.status === 'prepress_issue' && j.approvalRequest) {
       const ar = j.approvalRequest, f = ar.file;
       const open = () => fetch('/api/orders/' + o.id + '/amended/' + j.id + '/' + f.id, { headers: this.authHeaders() }).then(r => r.ok ? r.blob() : null).then(b => { if (b && typeof window !== 'undefined') window.open(URL.createObjectURL(b), '_blank'); });
@@ -5663,7 +5661,7 @@ class Component extends DCLogic {
         rd.readAsDataURL(f0); };
       return panel([h('b', { key: 't', style: { fontSize: 13.5 } }, 'We need a new artwork file'),
         h('div', { key: 'm', style: { fontSize: 13, lineHeight: 1.65 } }, (j.reason || 'Our prepress team found an issue with this file.') + (j.suggestion ? ' Suggested correction: ' + j.suggestion : '')),
-        h('label', { key: 'u', style: { alignSelf: 'flex-start', background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13.5, padding: '10px 18px', borderRadius: 8, cursor: 'pointer' } }, 'Upload new artwork', h('input', { type: 'file', style: { display: 'none' }, onChange: up }))]);
+        h('label', { key: 'u', style: { alignSelf: 'flex-start', background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13.5, padding: '10px 18px', borderRadius: 0, cursor: 'pointer' } }, 'Upload new artwork', h('input', { type: 'file', style: { display: 'none' }, onChange: up }))]);
     }
     return null;
   }
@@ -5684,8 +5682,8 @@ class Component extends DCLogic {
     const activeJobs = jobs.filter(j => ['prepress', 'scheduler'].indexOf(j.queue) >= 0).length;
     const incoming = jobs.filter(j => j.status === 'logistics').length;
     const delivery = jobs.filter(j => j.status === 'dispatched').length;
-    const sectionTitle = t => h('h1', { style: { fontSize: 30, fontWeight: 700, letterSpacing: '-.02em', margin: '4px 0 6px' } }, t);
-    const card = (children, extra) => h('div', { style: Object.assign({ background: '#fff', borderRadius: 12, border: '1px solid ' + HAIR }, extra || {}) }, children);
+    const sectionTitle = t => h('h1', { style: { fontSize: 30, fontWeight: 500, letterSpacing: '-.02em', margin: '4px 0 6px' } }, t);
+    const card = (children, extra) => h('div', { style: Object.assign({ background: '#fff', borderRadius: 0, border: '1px solid ' + HAIR }, extra || {}) }, children);
     const salesLink = h('span', { 'data-go': 'set:sTab:Sales performance', style: { fontSize: 14, fontWeight: 600, color: '#E52220', cursor: 'pointer' } }, 'Sales performance ›');
 
     let content;
@@ -5811,8 +5809,8 @@ class Component extends DCLogic {
   decQuoteBar() {
     const qid = this.state.decQuote; if (!qid) return null;
     const q = (this.state.quotesList || []).find(x => x.id === qid); if (!q) return null;
-    const inp = { font: '400 13px Montserrat,sans-serif', padding: '9px 11px', border: '1px solid ' + HAIR, borderRadius: 8, flex: 1, minWidth: 160 };
-    return h('div', { style: { border: '1px solid #d99100', background: '#fffaf0', borderRadius: 12, padding: 16 } },
+    const inp = { font: '400 13px Montserrat,sans-serif', padding: '9px 11px', border: '1px solid ' + HAIR, borderRadius: 0, flex: 1, minWidth: 160 };
+    return h('div', { style: { border: '1px solid #d99100', background: '#fffaf0', borderRadius: 0, padding: 16 } },
       h('div', { style: { fontSize: 13.5, fontWeight: 600, marginBottom: 4 } }, 'Record ' + ((q.customer && q.customer.name) || 'the customer') + '’s decision on ' + qid),
       h('div', { style: { fontSize: 12.5, color: MUT, marginBottom: 10 } }, (q.requirement && q.requirement.product) + (q.price != null ? ' · ' + this.rm(q.price) : '')),
       h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' } },
@@ -5825,19 +5823,19 @@ class Component extends DCLogic {
   // outlet: sign up a walk-in customer + file a quote request to the scheduler
   walkinBuilder() {
     if (!this.state.wk_open) return null;
-    const inp = { font: '400 13px Montserrat,sans-serif', padding: '9px 11px', border: '1px solid ' + HAIR, borderRadius: 7, width: '100%' };
+    const inp = { font: '400 13px Montserrat,sans-serif', padding: '9px 11px', border: '1px solid ' + HAIR, borderRadius: 0, width: '100%' };
     const done = this.state.wk_done;
-    if (done) return h('div', { key: 'wkd', style: { border: '1px solid ' + TEAL, borderRadius: 12, padding: 18, background: '#f2fbf4', marginTop: 20 } },
+    if (done) return h('div', { key: 'wkd', style: { border: '1px solid ' + TEAL, borderRadius: 0, padding: 18, background: '#f2fbf4', marginTop: 20 } },
       h('div', { style: { fontSize: 14, fontWeight: 600, marginBottom: 8 } }, '✅ Quote request ' + done.quote.id + ' sent to the Scheduler'),
       h('div', { style: { fontSize: 13, color: MUT, lineHeight: 1.7 } },
         'Customer ', h('b', null, done.quote.customer.name), ' · ', done.quote.requirement.product, done.quote.requirement.qty ? ' × ' + done.quote.requirement.qty : '',
-        done.createdAccount ? h('div', { style: { marginTop: 8, padding: '10px 12px', background: '#fff', border: '1px dashed ' + HAIR, borderRadius: 8 } },
+        done.createdAccount ? h('div', { style: { marginTop: 8, padding: '10px 12px', background: '#fff', border: '1px dashed ' + HAIR, borderRadius: 0 } },
           'New account created for the customer: ', h('b', null, done.customer.email), ' · temporary password ', h('b', { style: { fontFamily: 'ui-monospace,Menlo,monospace' } }, done.tempPassword), h('div', { style: { fontSize: 12, color: FAINT, marginTop: 3 } }, 'Share this so they can log in to view the quote once the Scheduler prices it. They can reset it anytime.'))
           : h('div', { style: { marginTop: 6, fontSize: 12.5, color: MUT } }, 'Linked to their existing account.')),
       h('div', { style: { marginTop: 12, display: 'flex', gap: 10 } },
-        h('span', { onClick: () => this.setState({ wk_done: null }), style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13, padding: '9px 16px', borderRadius: 8, cursor: 'pointer' } }, 'New walk-in quote'),
-        h('span', { onClick: () => this.setState({ wk_open: false, wk_done: null }), style: { border: '1px solid ' + HAIR, color: MUT, fontWeight: 600, fontSize: 13, padding: '9px 16px', borderRadius: 8, cursor: 'pointer' } }, 'Done')));
-    return h('div', { key: 'wk', style: { border: '1px solid ' + TEAL, borderRadius: 12, padding: 18, background: '#fdf7f7', marginTop: 20 } },
+        h('span', { onClick: () => this.setState({ wk_done: null }), style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13, padding: '9px 16px', borderRadius: 0, cursor: 'pointer' } }, 'New walk-in quote'),
+        h('span', { onClick: () => this.setState({ wk_open: false, wk_done: null }), style: { border: '1px solid ' + HAIR, color: MUT, fontWeight: 600, fontSize: 13, padding: '9px 16px', borderRadius: 0, cursor: 'pointer' } }, 'Done')));
+    return h('div', { key: 'wk', style: { border: '1px solid ' + TEAL, borderRadius: 0, padding: 18, background: '#fdf7f7', marginTop: 20 } },
       h('div', { style: { fontSize: 15, fontWeight: 600, marginBottom: 4 } }, 'New walk-in quote'),
       h('p', { style: { margin: '0 0 12px', fontSize: 12.5, color: MUT, lineHeight: 1.6 } }, 'Collect the customer’s details (this creates their account) and what they need. It’s filed to the Scheduler to price — the customer and this outlet are notified when the quote is ready.'),
       h('div', { style: { fontSize: 11, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: FAINT, marginBottom: 7 } }, 'Customer'),
@@ -5854,7 +5852,7 @@ class Component extends DCLogic {
         h('input', { placeholder: 'Finishing', value: this.state.wk_finishing || '', onChange: e => this.setField('wk_finishing', e.target.value), style: inp })),
       h('textarea', { placeholder: 'Remarks / deadline / notes', value: this.state.wk_remarks || '', onChange: e => this.setField('wk_remarks', e.target.value), style: Object.assign({}, inp, { minHeight: 70, resize: 'vertical', marginBottom: 8, fontFamily: 'inherit' }) }),
       this.state.wk_err ? h('div', { style: { fontSize: 12, color: '#c0392b', marginBottom: 8 } }, this.state.wk_err) : null,
-      h('span', { onClick: () => this.submitWalkinQuote(), style: { display: 'inline-block', background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13, padding: '10px 18px', borderRadius: 8, cursor: this.state.wk_busy ? 'wait' : 'pointer' } }, this.state.wk_busy ? 'Filing…' : 'Create account & send to Scheduler'));
+      h('span', { onClick: () => this.submitWalkinQuote(), style: { display: 'inline-block', background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13, padding: '10px 18px', borderRadius: 0, cursor: this.state.wk_busy ? 'wait' : 'pointer' } }, this.state.wk_busy ? 'Filing…' : 'Create account & send to Scheduler'));
   }
   // outlet: this outlet's quotes, with follow-up flags + record-decision controls
   outletQuoteBoard() {
@@ -5862,27 +5860,27 @@ class Component extends DCLogic {
     const now = Date.now();
     const followUp = q => q.status === 'reviewed' && q.viewedAt && (now - Date.parse(q.viewedAt) > 24 * 3600e3);
     const STAT = { requested: ['Awaiting Scheduler', 'warn'], issued: ['Sent — awaiting customer', 'teal'], reviewed: ['Reviewed by customer', 'amber'], amendment: ['Amendment → Scheduler', 'warn'], declined: ['Declined', 'neutral'], accepted: ['Converted to order', 'ok'] };
-    const inp = { font: '400 13px Montserrat,sans-serif', padding: '8px 10px', border: '1px solid ' + HAIR, borderRadius: 7 };
+    const inp = { font: '400 13px Montserrat,sans-serif', padding: '8px 10px', border: '1px solid ' + HAIR, borderRadius: 0 };
     return h('div', { key: 'oqb', style: { marginTop: 26 } },
       h('div', { style: { fontSize: 17, fontWeight: 600, marginBottom: 6 } }, 'Walk-in quotes', qlist.filter(followUp).length ? h('span', { style: { marginLeft: 8, background: '#d99100', color: '#fff', fontSize: 12, fontWeight: 700, borderRadius: 999, padding: '1px 9px' } }, qlist.filter(followUp).length + ' follow-up') : null),
       h('p', { style: { margin: '0 0 14px', fontSize: 13.5, color: MUT, lineHeight: 1.7, maxWidth: '82ch' } }, 'Quotes you filed for walk-in customers. Once the customer has reviewed a quote and taken no action for a day, follow up and record their decision — proceed converts it to an order; amendment sends it back to the Scheduler.'),
-      qlist.length === 0 ? h('div', { style: { border: '1px dashed ' + HAIR, borderRadius: 12, padding: 24, textAlign: 'center', color: FAINT, fontSize: 13 } }, 'No walk-in quotes yet.') :
+      qlist.length === 0 ? h('div', { style: { border: '1px dashed ' + HAIR, borderRadius: 0, padding: 24, textAlign: 'center', color: FAINT, fontSize: 13 } }, 'No walk-in quotes yet.') :
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } }, qlist.map(q => {
         const st = STAT[q.status] || [q.status, 'neutral']; const fu = followUp(q); const dec = this.state['dec_' + q.id];
-        return h('div', { key: q.id, style: { border: '1px solid ' + (fu ? '#d99100' : HAIR), borderRadius: 12, padding: 14, background: '#fff' } },
+        return h('div', { key: q.id, style: { border: '1px solid ' + (fu ? '#d99100' : HAIR), borderRadius: 0, padding: 14, background: '#fff' } },
           h('div', { style: { display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'baseline', flexWrap: 'wrap', marginBottom: 6 } },
             h('div', null, h('span', { style: { font: '600 12px ui-monospace,Menlo,monospace', color: TEAL, marginRight: 8 } }, q.id), h('span', { style: { fontSize: 14, fontWeight: 600 } }, (q.requirement && q.requirement.product) || 'Custom job'), h('span', { style: { fontSize: 12.5, color: MUT } }, ' · ' + ((q.customer && q.customer.name) || 'Customer'))),
             h('span', { style: { display: 'flex', gap: 6, alignItems: 'center' } }, fu ? this.chip('Follow up due', 'warn') : null, this.chip(st[0], st[1]))),
           h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.6, marginBottom: 8 } }, [q.requirement && q.requirement.qty && 'Qty ' + q.requirement.qty, q.price != null ? 'Quoted ' + this.rm(q.price) : null, q.leadDays ? q.leadDays + ' days' : null].filter(Boolean).join(' · ') + (q.orderId ? ' · order ' + q.orderId : '') + (q.remarks ? ' · remark: ' + q.remarks : '')),
           (q.status === 'issued' || q.status === 'reviewed') ? (dec ? h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', borderTop: '1px solid ' + LINE, paddingTop: 10 } },
               h('span', { style: { fontSize: 12.5, color: MUT } }, 'Record decision:'),
-              h('span', { onClick: () => this.quoteDecision(q.id, 'proceed'), style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 12.5, padding: '7px 12px', borderRadius: 7, cursor: 'pointer' } }, 'Proceed → order'),
+              h('span', { onClick: () => this.quoteDecision(q.id, 'proceed'), style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 12.5, padding: '7px 12px', borderRadius: 0, cursor: 'pointer' } }, 'Proceed → order'),
               h('input', { placeholder: 'Amendment / notes', value: this.state['decnote_' + q.id] || '', onChange: e => this.setField('decnote_' + q.id, e.target.value), style: Object.assign({}, inp, { flex: 1, minWidth: 140 }) }),
-              h('span', { onClick: () => this.quoteDecision(q.id, 'amend', this.state['decnote_' + q.id]), style: { border: '1px solid #d99100', color: '#a1660a', fontWeight: 600, fontSize: 12.5, padding: '7px 12px', borderRadius: 7, cursor: 'pointer' } }, 'Amend → Scheduler'),
-              h('span', { onClick: () => this.quoteDecision(q.id, 'not_proceed', this.state['decnote_' + q.id]), style: { border: '1px solid ' + HAIR, color: MUT, fontWeight: 600, fontSize: 12.5, padding: '7px 12px', borderRadius: 7, cursor: 'pointer' } }, 'Not proceeding'),
+              h('span', { onClick: () => this.quoteDecision(q.id, 'amend', this.state['decnote_' + q.id]), style: { border: '1px solid #d99100', color: '#a1660a', fontWeight: 600, fontSize: 12.5, padding: '7px 12px', borderRadius: 0, cursor: 'pointer' } }, 'Amend → Scheduler'),
+              h('span', { onClick: () => this.quoteDecision(q.id, 'not_proceed', this.state['decnote_' + q.id]), style: { border: '1px solid ' + HAIR, color: MUT, fontWeight: 600, fontSize: 12.5, padding: '7px 12px', borderRadius: 0, cursor: 'pointer' } }, 'Not proceeding'),
               h('span', { onClick: () => this.setState({ ['dec_' + q.id]: null }), style: { color: FAINT, fontSize: 16, cursor: 'pointer', marginLeft: 'auto' } }, '×'))
             : h('div', { style: { display: 'flex', gap: 10, alignItems: 'center' } },
-              h('span', { onClick: () => this.setState({ ['dec_' + q.id]: 1 }), style: { background: fu ? '#d99100' : '#fff', color: fu ? '#fff' : TEAL, border: '1px solid ' + (fu ? '#d99100' : HAIR), fontWeight: 600, fontSize: 12.5, padding: '8px 14px', borderRadius: 8, cursor: 'pointer' } }, fu ? 'Follow up now' : 'Record customer decision'),
+              h('span', { onClick: () => this.setState({ ['dec_' + q.id]: 1 }), style: { background: fu ? '#d99100' : '#fff', color: fu ? '#fff' : TEAL, border: '1px solid ' + (fu ? '#d99100' : HAIR), fontWeight: 600, fontSize: 12.5, padding: '8px 14px', borderRadius: 0, cursor: 'pointer' } }, fu ? 'Follow up now' : 'Record customer decision'),
               h('span', { onClick: () => this.openDoc(q.id, 'quote'), style: { fontSize: 12.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, 'View quote PDF')))
             : h('div', { style: { fontSize: 12.5, color: MUT } }, q.status === 'accepted' ? '✅ Converted to order ' + q.orderId : q.status === 'amendment' ? 'Sent back to Scheduler for re-pricing.' : q.status === 'declined' ? 'Customer declined.' : 'Awaiting the Scheduler to price this.'));
       })));
@@ -5890,12 +5888,12 @@ class Component extends DCLogic {
 
   dialog(title, rows, note) {
     return h('div', { key: 'dlg', 'data-go': '_closeDialog', style: { position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(15,42,53,.42)', display: 'grid', placeItems: 'center', padding: 20 } },
-      h('div', { style: { background: '#fff', borderRadius: 14, maxWidth: 520, width: '100%', boxShadow: '0 24px 60px rgba(33,33,33,.30)', overflow: 'hidden' } },
+      h('div', { style: { background: '#fff', borderRadius: 0, maxWidth: 520, width: '100%', boxShadow: '0 24px 60px rgba(33,33,33,.30)', overflow: 'hidden' } },
         h('div', { style: { padding: '18px 20px', borderBottom: '1px solid ' + HAIR, display: 'flex', alignItems: 'center', gap: 10 } },
           h('span', { style: { fontSize: 15, fontWeight: 600 } }, title),
           h('span', { style: { marginLeft: 'auto', color: FAINT, fontSize: 18 } }, '×')),
         h('div', { style: { padding: '8px 12px 12px' } },
-          rows.map((r, i) => h('div', { key: i, style: { padding: '11px 10px', borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 3 } },
+          rows.map((r, i) => h('div', { key: i, style: { padding: '11px 10px', borderRadius: 0, display: 'flex', flexDirection: 'column', gap: 3 } },
             h('span', { style: { fontSize: 13.5, fontWeight: 500 } }, r[0]),
             h('span', { style: { fontSize: 12, color: MUT } }, r[1])))),
         note && h('div', { style: { padding: '12px 20px 18px', fontSize: 11.5, color: FAINT, borderTop: '1px solid ' + LINE } }, note)));
@@ -5942,12 +5940,12 @@ class Component extends DCLogic {
   // Scheduler prices the walk-in quote requests that outlets file, and re-prices amendments
   schedulerQuotePanel() {
     const qlist = (this.state.quotesList || []).filter(q => q.status === 'requested' || q.status === 'amendment');
-    const qinp = { font: '400 13px Montserrat,sans-serif', padding: '8px 10px', border: '1px solid ' + HAIR, borderRadius: 7, width: '100%' };
+    const qinp = { font: '400 13px Montserrat,sans-serif', padding: '8px 10px', border: '1px solid ' + HAIR, borderRadius: 0, width: '100%' };
     return h('div', { key: 'sq', style: { marginTop: 26 } },
       h('div', { style: { fontSize: 17, fontWeight: 600, marginBottom: 6 } }, 'Walk-in quote requests', qlist.length ? h('span', { style: { marginLeft: 8, background: TEAL, color: '#fff', fontSize: 12, fontWeight: 700, borderRadius: 999, padding: '1px 9px' } }, qlist.length) : null),
       h('p', { style: { margin: '0 0 14px', fontSize: 13.5, color: MUT, lineHeight: 1.7, maxWidth: '82ch' } }, 'Requests filed by outlets on behalf of walk-in customers. Price each one and issue it — the quote is sent straight to the customer’s account, and the originating outlet is notified. Amendment requests reappear here for re-pricing.'),
-      qlist.length === 0 ? h('div', { style: { border: '1px dashed ' + HAIR, borderRadius: 12, padding: 24, textAlign: 'center', color: FAINT, fontSize: 13 } }, 'No quote requests waiting.') :
-      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } }, qlist.map(q => h('div', { key: q.id, style: { border: '1px solid ' + (q.status === 'amendment' ? '#d99100' : HAIR), borderRadius: 12, padding: 14, background: '#fff' } },
+      qlist.length === 0 ? h('div', { style: { border: '1px dashed ' + HAIR, borderRadius: 0, padding: 24, textAlign: 'center', color: FAINT, fontSize: 13 } }, 'No quote requests waiting.') :
+      h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } }, qlist.map(q => h('div', { key: q.id, style: { border: '1px solid ' + (q.status === 'amendment' ? '#d99100' : HAIR), borderRadius: 0, padding: 14, background: '#fff' } },
         h('div', { style: { display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'baseline', flexWrap: 'wrap', marginBottom: 6 } },
           h('div', null, h('span', { style: { font: '600 12px ui-monospace,Menlo,monospace', color: TEAL, marginRight: 8 } }, q.id), h('span', { style: { fontSize: 14, fontWeight: 600 } }, (q.requirement && q.requirement.product) || 'Custom job'), h('span', { style: { fontSize: 12.5, color: MUT } }, ' · ' + ((q.customer && q.customer.name) || 'Customer') + (q.outlet ? ' · ' + q.outlet : ''))),
           this.chip(q.status === 'amendment' ? 'Amendment' : 'New request', q.status === 'amendment' ? 'warn' : 'teal')),
@@ -5956,7 +5954,7 @@ class Component extends DCLogic {
           h('input', { type: 'number', placeholder: 'Price (RM)', value: this.state['qp_' + q.id + '_price'] || '', onChange: e => this.setField('qp_' + q.id + '_price', e.target.value), style: Object.assign({}, qinp, { maxWidth: 130 }) }),
           h('input', { type: 'number', placeholder: 'Lead days', value: this.state['qp_' + q.id + '_lead'] || '', onChange: e => this.setField('qp_' + q.id + '_lead', e.target.value), style: Object.assign({}, qinp, { maxWidth: 110 }) }),
           h('input', { placeholder: 'Note (optional)', value: this.state['qp_' + q.id + '_note'] || '', onChange: e => this.setField('qp_' + q.id + '_note', e.target.value), style: Object.assign({}, qinp, { flex: 1, minWidth: 140 }) }),
-          h('span', { onClick: () => this.quotePrice(q.id), style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13, padding: '9px 16px', borderRadius: 8, cursor: 'pointer' } }, q.status === 'amendment' ? 'Re-issue' : 'Issue & send to customer'))))));
+          h('span', { onClick: () => this.quotePrice(q.id), style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13, padding: '9px 16px', borderRadius: 0, cursor: 'pointer' } }, q.status === 'amendment' ? 'Re-issue' : 'Issue & send to customer'))))));
   }
   // Scheduler's outsourcing workflow: request quotes → compare → award a PO to the best vendor
   schedulerOutsourcePanel(jobs) {
@@ -5965,23 +5963,23 @@ class Component extends DCLogic {
     return h('div', { key: 'out', style: { marginTop: 26 } },
       h('div', { style: { fontSize: 17, fontWeight: 600, marginBottom: 6 } }, 'Outsourcing — request quotes & award a PO'),
       h('p', { style: { margin: '0 0 14px', fontSize: 13.5, color: MUT, lineHeight: 1.7, maxWidth: '82ch' } }, 'Send a job to vendors, compare their price and lead time, and award a Purchase Order to the best (never by relationship — by cost, time and logistics). The winning vendor prints a shipping label to deliver to the outlet or customer.'),
-      relevant.length === 0 ? h('div', { style: { border: '1px dashed ' + HAIR, borderRadius: 12, padding: 28, textAlign: 'center', color: FAINT, fontSize: 13 } }, 'No jobs available to outsource right now.') :
+      relevant.length === 0 ? h('div', { style: { border: '1px dashed ' + HAIR, borderRadius: 0, padding: 28, textAlign: 'center', color: FAINT, fontSize: 13 } }, 'No jobs available to outsource right now.') :
       h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } }, relevant.map(j => {
         const o = j.outsource;
         const best = o && o.vendors.filter(v => v.submittedAt).sort((a, b) => a.price - b.price)[0];
-        return h('div', { key: j.id, style: { border: '1px solid ' + HAIR, borderRadius: 12, padding: 16, background: '#fff' } },
+        return h('div', { key: j.id, style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: 16, background: '#fff' } },
           h('div', { style: { display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'baseline', flexWrap: 'wrap', marginBottom: 8 } },
             h('div', null, h('span', { style: { font: '600 12px ui-monospace,Menlo,monospace', color: TEAL, marginRight: 8 } }, j.id), h('span', { style: { fontSize: 14, fontWeight: 600 } }, j.product), h('span', { style: { fontSize: 12.5, color: MUT } }, ' · qty ' + (j.qty || 0).toLocaleString() + ' · for ' + j.customer)),
             o ? this.chip(o.awardedTo ? 'Awarded' : (o.status === 'quotes_received' ? 'Quotes received' : o.status === 'partly_received' ? 'Partly received' : 'Requested'), o.awardedTo ? 'ok' : 'warn') : this.chip('In-house or outsource', 'neutral')),
-          !o ? h('span', { onClick: () => this.opsRequestQuotes(j.id, vendors.map(v => v.id)), style: { display: 'inline-block', background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13, padding: '9px 16px', borderRadius: 8, cursor: 'pointer' } }, 'Request vendor quotes' + (vendors.length ? ' (' + vendors.length + ')' : ''))
+          !o ? h('span', { onClick: () => this.opsRequestQuotes(j.id, vendors.map(v => v.id)), style: { display: 'inline-block', background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13, padding: '9px 16px', borderRadius: 0, cursor: 'pointer' } }, 'Request vendor quotes' + (vendors.length ? ' (' + vendors.length + ')' : ''))
           : o.awardedTo ? h('div', { style: { fontSize: 13, color: INK } }, 'Awarded to ', h('b', null, (o.vendors.find(v => v.vendorId === o.awardedTo) || {}).vendorName), ' · PO ', h('b', null, o.po), ' · vendor is printing the shipping label.')
-          : h('div', { style: { border: '1px solid ' + LINE, borderRadius: 8, overflow: 'hidden' } },
+          : h('div', { style: { border: '1px solid ' + LINE, borderRadius: 0, overflow: 'hidden' } },
               h('div', { style: { display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 90px', gap: 8, padding: '8px 12px', background: ALT, fontSize: 11, fontWeight: 600, letterSpacing: '.05em', textTransform: 'uppercase', color: FAINT } }, h('span', null, 'Vendor'), h('span', null, 'Price'), h('span', null, 'Lead time'), h('span', null, '')),
               o.vendors.map(v => h('div', { key: v.vendorId, style: { display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 90px', gap: 8, padding: '9px 12px', borderTop: '1px solid ' + LINE, alignItems: 'center', background: best && v.vendorId === best.vendorId ? '#f2fbf4' : '#fff' } },
                 h('span', { style: { fontSize: 13, fontWeight: 500 } }, v.vendorName, best && v.vendorId === best.vendorId ? h('span', { style: { fontSize: 10.5, color: '#63AA02', fontWeight: 700, marginLeft: 6 } }, 'BEST') : null),
                 h('span', { style: { fontSize: 13 } }, v.submittedAt ? this.money(v.price) : h('span', { style: { color: FAINT } }, 'awaiting…')),
                 h('span', { style: { fontSize: 13, color: MUT } }, v.submittedAt ? v.leadDays + ' days' : '—'),
-                v.submittedAt ? h('span', { onClick: () => this.opsAward(j.id, v.vendorId), style: { fontSize: 12, fontWeight: 600, color: '#fff', background: TEAL, borderRadius: 7, padding: '6px 0', textAlign: 'center', cursor: 'pointer' } }, 'Award') : h('span', null)))));
+                v.submittedAt ? h('span', { onClick: () => this.opsAward(j.id, v.vendorId), style: { fontSize: 12, fontWeight: 600, color: '#fff', background: TEAL, borderRadius: 0, padding: '6px 0', textAlign: 'center', cursor: 'pointer' } }, 'Award') : h('span', null)))));
       })));
   }
 
@@ -6009,7 +6007,7 @@ class Component extends DCLogic {
     const nav = [['Rollup'], ['Prepress', String(n('prepress'))], ['Scheduler', String(n('scheduler'))], ['Logistics', String(n('logistics'))], ['Done', String(n('done'))]];
     const tiles = [['Intake', 'outlet', 'outlet'], ['Prepress', 'prepress', 'prepress'], ['Scheduler', 'scheduler', 'production'], ['Logistics', 'logistics', 'logistics'], ['Done', 'done', null]];
     const kpis = h('div', { key: 'k', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 14, marginBottom: 4 } },
-      tiles.map(d => h('div', { key: d[1], 'data-go': d[2] || undefined, style: { border: '1px solid ' + HAIR, borderRadius: 12, padding: 16, background: '#fff', cursor: d[2] ? 'pointer' : 'default' } },
+      tiles.map(d => h('div', { key: d[1], 'data-go': d[2] || undefined, style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: 16, background: '#fff', cursor: d[2] ? 'pointer' : 'default' } },
         h('div', { style: { fontSize: 11.5, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: FAINT } }, d[0]),
         h('div', { style: { fontSize: 30, fontWeight: 600, letterSpacing: '-.02em', margin: '6px 0 2px', color: INK } }, String(n(d[1]))),
         h('div', { style: { fontSize: 12.5, color: MUT } }, 'jobs'))));
@@ -6039,7 +6037,7 @@ class Component extends DCLogic {
     return h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '10px 20px 0' } },
       this.head('Chat inbox', 'Conversations from the website chat. Reply here and the customer sees it straight away.'),
       h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(260px,340px) minmax(0,1fr)', gap: 16, marginTop: 18, alignItems: 'start' } },
-        h('div', { style: { border: '1px solid ' + HAIR, background: '#fff', borderRadius: 10, overflow: 'hidden' } },
+        h('div', { style: { border: '1px solid ' + HAIR, background: '#fff', borderRadius: 0, overflow: 'hidden' } },
           threads.length ? threads.map((x, i) => h('div', { key: x.id, onClick: () => { this.setState({ crmOpen: x.id, crmThread: null }); this.crmLoad(x.id); },
             style: { padding: '13px 14px', borderTop: i ? '1px solid ' + LINE : 'none', background: this.state.crmOpen === x.id ? '#fdf6f6' : '#fff', borderLeft: '3px solid ' + (this.state.crmOpen === x.id ? TEAL : 'transparent'), cursor: 'pointer' } },
             h('div', { style: { display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' } },
@@ -6049,19 +6047,19 @@ class Component extends DCLogic {
               h('div', { style: { flex: 1, fontSize: 12.5, color: MUT, lineHeight: 1.5, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, x.last ? (x.last.from === 'staff' ? 'You: ' : '') + x.last.text : ''),
               x.unreadStaff ? h('span', { style: { background: TEAL, color: '#fff', fontSize: 11, fontWeight: 700, borderRadius: 999, padding: '1px 7px' } }, x.unreadStaff) : x.status === 'closed' ? this.chip('Closed', 'neutral') : null)))
             : h('div', { style: { padding: 18, fontSize: 13, color: FAINT } }, 'No conversations yet.')),
-        h('div', { style: { border: '1px solid ' + HAIR, background: '#fff', borderRadius: 10, display: 'flex', flexDirection: 'column', minHeight: 420 } },
+        h('div', { style: { border: '1px solid ' + HAIR, background: '#fff', borderRadius: 0, display: 'flex', flexDirection: 'column', minHeight: 420 } },
           !t ? h('div', { style: { padding: 24, fontSize: 13, color: FAINT } }, threads.length ? 'Choose a conversation.' : 'When a customer starts a chat on the website it appears here.') : [
             h('div', { key: 'h', style: { display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', padding: '12px 14px', borderBottom: '1px solid ' + HAIR } },
               h('span', { style: { fontSize: 14, fontWeight: 600, marginRight: 'auto' } }, t.name + ' · ' + t.email),
               t.status === 'open' ? h('span', { onClick: () => post('/api/chat/inbox/' + t.id + '/close').then(d => { if (d.thread) this.setState({ crmThread: d.thread }); this.crmLoad(); }), style: { fontSize: 12.5, fontWeight: 600, color: MUT, cursor: 'pointer' } }, 'Close conversation') : this.chip('Closed', 'neutral')),
             h('div', { key: 'm', style: { padding: 14, display: 'flex', flexDirection: 'column', gap: 10, background: ALT, flex: 1, overflowY: 'auto', maxHeight: 460 } },
-              t.messages.map((m, i) => h('div', { key: i, style: { alignSelf: m.from === 'staff' ? 'flex-end' : 'flex-start', maxWidth: '82%', background: m.from === 'staff' ? TEAL : '#fff', color: m.from === 'staff' ? '#fff' : INK, border: '1px solid ' + (m.from === 'staff' ? TEAL : HAIR), borderRadius: 10, padding: '9px 12px' } },
+              t.messages.map((m, i) => h('div', { key: i, style: { alignSelf: m.from === 'staff' ? 'flex-end' : 'flex-start', maxWidth: '82%', background: m.from === 'staff' ? TEAL : '#fff', color: m.from === 'staff' ? '#fff' : INK, border: '1px solid ' + (m.from === 'staff' ? TEAL : HAIR), borderRadius: 0, padding: '9px 12px' } },
                 h('div', { style: { fontSize: 11, fontWeight: 600, marginBottom: 3, color: m.from === 'staff' ? 'rgba(255,255,255,.9)' : FAINT } }, m.by + ' · ' + new Date(m.at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })),
                 h('div', { style: { fontSize: 13, lineHeight: 1.55, whiteSpace: 'pre-wrap' } }, m.text)))),
             h('div', { key: 'r', style: { padding: 12, borderTop: '1px solid ' + HAIR, display: 'flex', gap: 10, alignItems: 'flex-end' } },
               h('textarea', { rows: 2, value: this.state.crmReply || '', placeholder: 'Reply to ' + t.name + '…', onChange: e => this.setState({ crmReply: e.target.value }), onKeyDown: e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } },
-                style: { flex: 1, font: '400 13.5px Montserrat,sans-serif', border: '1px solid ' + HAIR, borderRadius: 8, padding: '10px 12px', resize: 'vertical' } }),
-              h('span', { onClick: send, style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13.5, padding: '11px 18px', borderRadius: 8, cursor: 'pointer' } }, 'Send'))])));
+                style: { flex: 1, font: '400 13.5px Montserrat,sans-serif', border: '1px solid ' + HAIR, borderRadius: 0, padding: '10px 12px', resize: 'vertical' } }),
+              h('span', { onClick: send, style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13.5, padding: '11px 18px', borderRadius: 0, cursor: 'pointer' } }, 'Send'))])));
   }
 
   // web chat bubble on every storefront page (replaces the WhatsApp-only tab): name + email for a guest, then chat live
@@ -6086,17 +6084,17 @@ class Component extends DCLogic {
   webChat() {
     const open = this.state.chatOpen, t = this.state.chatThread, u = this.state.user;
     const tab = h('button', { type: 'button', onClick: e => { e.stopPropagation(); this.chatToggle(!open); }, 'aria-expanded': open ? 'true' : 'false', 'aria-label': 'Chat with Printoka',
-      style: { position: 'fixed', right: 0, bottom: 0, zIndex: 70, display: 'flex', alignItems: 'center', gap: 8, background: open ? TEAL : '#fff', color: open ? '#fff' : TEAL, border: '1px solid ' + (open ? TEAL : HAIR), borderBottom: 'none', borderRadius: '6px 6px 0 0', padding: '8px 20px', boxShadow: '0 -2px 14px rgba(33,33,33,.10)', font: '600 14px Montserrat,sans-serif', cursor: 'pointer' } },
+      style: { position: 'fixed', right: 0, bottom: 0, zIndex: 70, display: 'flex', alignItems: 'center', gap: 8, background: open ? TEAL : '#fff', color: open ? '#fff' : TEAL, border: '1px solid ' + (open ? TEAL : HAIR), borderBottom: 'none', borderRadius: 0, padding: '8px 20px', boxShadow: '0 -2px 14px rgba(33,33,33,.10)', font: '600 14px Montserrat,sans-serif', cursor: 'pointer' } },
       open ? 'Close chat' : 'Chat', t && t.unreadVisitor && !open ? h('span', { style: { background: TEAL, color: '#fff', borderRadius: 999, fontSize: 11, padding: '1px 7px' } }, t.unreadVisitor) : null);
     if (!open) return tab;
     const guest = !t && !(u && u.type === 'customer');
-    const inp = { font: '400 13.5px Montserrat,sans-serif', border: '1px solid ' + HAIR, borderRadius: 8, padding: '9px 11px', width: '100%' };
+    const inp = { font: '400 13.5px Montserrat,sans-serif', border: '1px solid ' + HAIR, borderRadius: 0, padding: '9px 11px', width: '100%' };
     return h('div', { onClick: e => e.stopPropagation() }, tab,
-      h('div', { role: 'dialog', 'aria-label': 'Web chat', style: { position: 'fixed', right: 16, bottom: 46, zIndex: 71, width: 'min(360px, calc(100vw - 32px))', height: 'min(480px, calc(100vh - 120px))', background: '#fff', border: '1px solid ' + HAIR, borderRadius: 14, boxShadow: '0 18px 44px rgba(33,33,33,.18)', display: 'flex', flexDirection: 'column', overflow: 'hidden' } },
+      h('div', { role: 'dialog', 'aria-label': 'Web chat', style: { position: 'fixed', right: 16, bottom: 46, zIndex: 71, width: 'min(360px, calc(100vw - 32px))', height: 'min(480px, calc(100vh - 120px))', background: '#fff', border: '1px solid ' + HAIR, borderRadius: 0, boxShadow: '0 18px 44px rgba(33,33,33,.18)', display: 'flex', flexDirection: 'column', overflow: 'hidden' } },
         h('div', { style: { background: TEAL, color: '#fff', padding: '14px 16px' } }, h('div', { style: { fontWeight: 700, fontSize: 15 } }, 'Chat with Printoka'), h('div', { style: { fontSize: 12, opacity: .9, marginTop: 2 } }, 'We usually reply within a few minutes, 9am–6pm MYT.')),
         h('div', { style: { flex: 1, overflowY: 'auto', padding: 14, display: 'flex', flexDirection: 'column', gap: 9, background: ALT } },
-          h('div', { style: { alignSelf: 'flex-start', maxWidth: '85%', background: '#fff', border: '1px solid ' + HAIR, borderRadius: 10, padding: '9px 12px', fontSize: 13, lineHeight: 1.55 } }, 'Hi there! How can we help with your printing today?'),
-          (t ? t.messages : []).map((m, i) => h('div', { key: i, style: { alignSelf: m.from === 'visitor' ? 'flex-end' : 'flex-start', maxWidth: '85%', background: m.from === 'visitor' ? TEAL : '#fff', color: m.from === 'visitor' ? '#fff' : INK, border: '1px solid ' + (m.from === 'visitor' ? TEAL : HAIR), borderRadius: 10, padding: '9px 12px', fontSize: 13, lineHeight: 1.55, whiteSpace: 'pre-wrap' } },
+          h('div', { style: { alignSelf: 'flex-start', maxWidth: '85%', background: '#fff', border: '1px solid ' + HAIR, borderRadius: 0, padding: '9px 12px', fontSize: 13, lineHeight: 1.55 } }, 'Hi there! How can we help with your printing today?'),
+          (t ? t.messages : []).map((m, i) => h('div', { key: i, style: { alignSelf: m.from === 'visitor' ? 'flex-end' : 'flex-start', maxWidth: '85%', background: m.from === 'visitor' ? TEAL : '#fff', color: m.from === 'visitor' ? '#fff' : INK, border: '1px solid ' + (m.from === 'visitor' ? TEAL : HAIR), borderRadius: 0, padding: '9px 12px', fontSize: 13, lineHeight: 1.55, whiteSpace: 'pre-wrap' } },
             m.from === 'staff' ? h('div', { style: { fontSize: 11, fontWeight: 600, color: FAINT, marginBottom: 2 } }, m.by) : null, m.text))),
         h('div', { style: { padding: 12, borderTop: '1px solid ' + HAIR, display: 'flex', flexDirection: 'column', gap: 8 } },
           guest ? h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 } },
@@ -6105,12 +6103,12 @@ class Component extends DCLogic {
           this.state.chatErr ? h('div', { style: { fontSize: 12, color: '#c0392b' } }, this.state.chatErr) : null,
           h('div', { style: { display: 'flex', gap: 8, alignItems: 'flex-end' } },
             h('textarea', { rows: 2, placeholder: 'Type your message…', value: this.state.chatText || '', onChange: e => this.setState({ chatText: e.target.value }), onKeyDown: e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.chatSend(); } }, style: Object.assign({}, inp, { resize: 'none', flex: 1 }) }),
-            h('span', { onClick: () => this.chatSend(), role: 'button', tabIndex: 0, style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13.5, padding: '10px 16px', borderRadius: 8, cursor: 'pointer' } }, 'Send')),
+            h('span', { onClick: () => this.chatSend(), role: 'button', tabIndex: 0, style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13.5, padding: '10px 16px', borderRadius: 0, cursor: 'pointer' } }, 'Send')),
           h('a', { href: 'https://wa.me/60149690799', target: '_blank', rel: 'noopener noreferrer', style: { fontSize: 12, color: MUT, textDecoration: 'none' } }, 'Prefer WhatsApp? +60 14 969 0799'))));
   }
   // the red "Need something customized?" banner — replaces "Need something off-catalogue?" (user, 2026-09-28)
   customizedBanner() {
-    return h('section', { key: 'custom-banner', style: { position: 'relative', overflow: 'hidden', background: TEAL, borderRadius: 6, margin: '28px 0 0', padding: '26px 38px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' } },
+    return h('section', { key: 'custom-banner', style: { position: 'relative', overflow: 'hidden', background: TEAL, borderRadius: 0, margin: '28px 0 0', padding: '26px 38px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' } },
       h('span', { 'aria-hidden': 'true', style: { position: 'absolute', left: 40, top: -60, width: 190, height: 190, borderRadius: '50%', border: '28px solid rgba(0,0,0,.07)' } }),
       h('span', { style: { position: 'relative', color: '#fff', fontSize: 26, fontWeight: 500 } }, 'Need something customized?'),
       h('a', { href: 'https://wa.me/60149690799', target: '_blank', rel: 'noopener noreferrer', style: { position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 10, background: '#fff', color: INK, fontSize: 14.5, fontWeight: 500, padding: '12px 26px', borderRadius: 4, textDecoration: 'none' } },
@@ -6172,13 +6170,13 @@ class Component extends DCLogic {
     const clist = this.pkProducts()
       .filter(p => !admQ || this.catName(p.id).toLowerCase().indexOf(admQ) >= 0 || p.name.toLowerCase().indexOf(admQ) >= 0)
       .sort((a, b) => this.catName(a.id).localeCompare(this.catName(b.id)));
-    const inp = { font: '400 13px Montserrat,sans-serif', padding: '7px 9px', border: '1px solid ' + HAIR, borderRadius: 6, background: '#fff', width: '100%' };
+    const inp = { font: '400 13px Montserrat,sans-serif', padding: '7px 9px', border: '1px solid ' + HAIR, borderRadius: 0, background: '#fff', width: '100%' };
     P.catalogue = [
       h('p', { key: 'i', style: { fontSize: 13, color: MUT, lineHeight: 1.6, margin: '0 0 12px', maxWidth: '80ch' } },
         'Rename any product for the storefront and assign it a category. Names here are ', h('b', { style: { color: INK } }, 'display-only'), ' — the pricing calculator still resolves by the underlying product, so “Offset Printing Booklets” prices exactly as “Booklet — Litho”. Changes save instantly and show across the site.'),
       h('input', { key: 'q', placeholder: 'Search ' + this.pkProducts().length + ' products…', value: this.state.admQ || '',
         onChange: e => this.setState({ admQ: e.target.value }), style: Object.assign({}, inp, { maxWidth: 320, marginBottom: 14 }) }),
-      h('div', { key: 'tbl', style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden' } },
+      h('div', { key: 'tbl', style: { border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden' } },
         h('div', { style: { display: 'grid', gridTemplateColumns: '1.3fr 1.3fr 1fr 70px', gap: 12, padding: '10px 14px', background: ALT, fontSize: 11, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: FAINT } },
           h('span', null, 'Calculator product'), h('span', null, 'Display name (website)'), h('span', null, 'Category'), h('span', { style: { textAlign: 'center' } }, 'Hidden')),
         clist.map((p, i) => {
@@ -6338,7 +6336,7 @@ class Component extends DCLogic {
     const p = (txt) => h('p', { key: 'd', style: { fontSize: 13.5, color: MUT, lineHeight: 1.7, margin: '0 0 12px', maxWidth: '82ch' } }, txt);
     const stub = (desc, bullets) => [p(desc),
       bullets ? h('ul', { key: 'b', style: { margin: '0 0 12px', paddingLeft: 20, color: MUT, fontSize: 13, lineHeight: 1.9 } }, bullets.map((b, i) => h('li', { key: i }, b))) : null,
-      h('div', { key: 's', style: { fontSize: 12, color: FAINT, border: '1px dashed ' + HAIR, borderRadius: 8, padding: '10px 12px', background: ALT } }, 'Scaffolded to match the WordPress feature — this section’s data layer is planned; the editor is on the build queue.')];
+      h('div', { key: 's', style: { fontSize: 12, color: FAINT, border: '1px dashed ' + HAIR, borderRadius: 0, padding: '10px 12px', background: ALT } }, 'Scaffolded to match the WordPress feature — this section’s data layer is planned; the editor is on the build queue.')];
     P.orders = [p('Every order placed on the storefront, flowing into the production pipeline. Click an order to open it — artworks, billing & shipping, payment proof, customer history, invoice and order slip. ' + orders.length + ' order(s) on record.'),
       this.table(['Order', 'Customer', 'Items', 'Total', 'Payment', 'Status', ''],
         orders.length ? orders.slice(0, 40).map(o => [
@@ -6364,7 +6362,7 @@ class Component extends DCLogic {
     P.wallet = [p('Customer credit balances — the TeraWallet replacement. Total outstanding credit liability: ' + M(custs.reduce((s, c) => s + (c.creditBalance || 0), 0)) + '.'),
       this.table(['Customer', 'Email', 'Credit balance'], custs.filter(c => (c.creditBalance || 0) > 0).length ? custs.filter(c => (c.creditBalance || 0) > 0).map(c => [c.name, c.email, M(c.creditBalance)]) : [['No credit issued yet', '', '']], ['26%', null, '140px'])];
     P.seo = [p('Programmatic SEO — ' + posts.length + ' blog articles plus 479 city/service landing pages, all in the sitemap with the original printoka.com URL structure preserved.'),
-      h('div', { key: 'b', style: { display: 'flex', gap: 10, flexWrap: 'wrap' } }, h('a', { href: '/sitemap.xml', target: '_blank', style: { fontSize: 13, fontWeight: 600, color: TEAL, border: '1px solid ' + HAIR, borderRadius: 8, padding: '10px 16px', textDecoration: 'none' } }, 'Open sitemap.xml'), this.btn('View blog', 'ghost', 'learn'))];
+      h('div', { key: 'b', style: { display: 'flex', gap: 10, flexWrap: 'wrap' } }, h('a', { href: '/sitemap.xml', target: '_blank', style: { fontSize: 13, fontWeight: 600, color: TEAL, border: '1px solid ' + HAIR, borderRadius: 0, padding: '10px 16px', textDecoration: 'none' } }, 'Open sitemap.xml'), this.btn('View blog', 'ghost', 'learn'))];
     P.audit = [p('Every destructive or financial change is logged with actor, timestamp and detail.'),
       this.table(['When', 'Actor', 'Role', 'Action', 'Detail'],
         alog.length ? alog.slice().reverse().slice(0, 30).map(e => [(e.ts || '').slice(0, 16).replace('T', ' '), e.actor, (e.role || '').replace(/_/g, ' '), (e.action || '').replace(/_/g, ' '), e.note || '']) : [['—', 'No activity yet', '', '', '']],
@@ -6374,15 +6372,15 @@ class Component extends DCLogic {
       arts.length ? this.table(['Artwork file', 'Customer', 'Product', 'Order', 'Uploaded'],
         arts.slice(0, 60).map(a => [h('span', { style: { fontFamily: 'ui-monospace,Menlo,monospace', fontSize: 12 } }, a[0]), a[1], a[2], h('span', { style: { color: TEAL, fontWeight: 600 } }, a[3]), a[4]]),
         [null, '160px', '160px', '150px', '110px'])
-        : h('div', { key: 'e', style: { border: '1px dashed ' + HAIR, borderRadius: 10, padding: 26, textAlign: 'center', color: FAINT, fontSize: 13 } }, 'No artworks uploaded yet — they appear here as customers place orders with files.')];
+        : h('div', { key: 'e', style: { border: '1px dashed ' + HAIR, borderRadius: 0, padding: 26, textAlign: 'center', color: FAINT, fontSize: 13 } }, 'No artworks uploaded yet — they appear here as customers place orders with files.')];
     const qlist = this.state.quotesList || [];
-    const qinp = { font: '400 13px Montserrat,sans-serif', padding: '8px 10px', border: '1px solid ' + HAIR, borderRadius: 7, width: '100%' };
+    const qinp = { font: '400 13px Montserrat,sans-serif', padding: '8px 10px', border: '1px solid ' + HAIR, borderRadius: 0, width: '100%' };
     const linkAct = (label, on) => h('span', { onClick: on, style: { fontSize: 12.5, fontWeight: 600, color: TEAL, cursor: 'pointer' } }, label);
     P.quotes = [
       h('div', { key: 'h', style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' } },
         p('Custom quotes — both customer requests (price & issue them) and quotes you prepare manually for a customer. An issued quote can be accepted & paid (creating an order) or sent back for changes.'),
-        h('span', { onClick: () => this.setState({ mq_new: !this.state.mq_new }), style: { flex: 'none', background: this.state.mq_new ? '#fff' : TEAL, color: this.state.mq_new ? MUT : '#fff', border: '1px solid ' + (this.state.mq_new ? HAIR : TEAL), fontWeight: 600, fontSize: 13, padding: '9px 16px', borderRadius: 8, cursor: 'pointer' } }, this.state.mq_new ? 'Cancel' : '＋ New custom quote')),
-      this.state.mq_new ? h('div', { key: 'form', style: { border: '1px solid ' + TEAL, borderRadius: 12, padding: 16, background: '#fdf7f7', marginBottom: 4 } },
+        h('span', { onClick: () => this.setState({ mq_new: !this.state.mq_new }), style: { flex: 'none', background: this.state.mq_new ? '#fff' : TEAL, color: this.state.mq_new ? MUT : '#fff', border: '1px solid ' + (this.state.mq_new ? HAIR : TEAL), fontWeight: 600, fontSize: 13, padding: '9px 16px', borderRadius: 0, cursor: 'pointer' } }, this.state.mq_new ? 'Cancel' : '＋ New custom quote')),
+      this.state.mq_new ? h('div', { key: 'form', style: { border: '1px solid ' + TEAL, borderRadius: 0, padding: 16, background: '#fdf7f7', marginBottom: 4 } },
         h('div', { style: { fontSize: 13.5, fontWeight: 600, marginBottom: 10 } }, 'Prepare a quote for a customer'),
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 8, marginBottom: 8 } },
           h('input', { placeholder: 'Customer name', value: this.state.mq_custName || '', onChange: e => this.setField('mq_custName', e.target.value), style: qinp }),
@@ -6395,9 +6393,9 @@ class Component extends DCLogic {
         h('textarea', { placeholder: 'Quote data — full spec breakdown, itemised pricing, terms (appears on the quote PDF)', value: this.state.mq_data || '', onChange: e => this.setField('mq_data', e.target.value), style: Object.assign({}, qinp, { minHeight: 120, resize: 'vertical', marginBottom: 8, fontFamily: 'inherit' }) }),
         h('input', { placeholder: 'Internal remarks (staff only)', value: this.state.mq_remarks || '', onChange: e => this.setField('mq_remarks', e.target.value), style: Object.assign({}, qinp, { marginBottom: 8 }) }),
         this.state.mq_err ? h('div', { style: { fontSize: 12, color: '#c0392b', marginBottom: 8 } }, this.state.mq_err) : null,
-        h('span', { onClick: () => this.submitManualQuote(), style: { display: 'inline-block', background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13, padding: '10px 18px', borderRadius: 8, cursor: this.state.mq_busy ? 'wait' : 'pointer' } }, this.state.mq_busy ? 'Saving…' : 'Issue quote')) : null,
-      qlist.length === 0 ? h('div', { key: 'e', style: { border: '1px dashed ' + HAIR, borderRadius: 10, padding: 28, textAlign: 'center', color: FAINT } }, 'No custom quotes yet.') :
-      h('div', { key: 'l', style: { display: 'flex', flexDirection: 'column', gap: 12 } }, qlist.map(q => h('div', { key: q.id, style: { border: '1px solid ' + HAIR, borderRadius: 12, padding: 14, background: '#fff' } },
+        h('span', { onClick: () => this.submitManualQuote(), style: { display: 'inline-block', background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13, padding: '10px 18px', borderRadius: 0, cursor: this.state.mq_busy ? 'wait' : 'pointer' } }, this.state.mq_busy ? 'Saving…' : 'Issue quote')) : null,
+      qlist.length === 0 ? h('div', { key: 'e', style: { border: '1px dashed ' + HAIR, borderRadius: 0, padding: 28, textAlign: 'center', color: FAINT } }, 'No custom quotes yet.') :
+      h('div', { key: 'l', style: { display: 'flex', flexDirection: 'column', gap: 12 } }, qlist.map(q => h('div', { key: q.id, style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: 14, background: '#fff' } },
         h('div', { style: { display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'baseline', flexWrap: 'wrap', marginBottom: 6 } },
           h('div', null, h('span', { style: { font: '600 12px ui-monospace,Menlo,monospace', color: TEAL, marginRight: 8 } }, q.id), h('span', { style: { fontSize: 14, fontWeight: 600 } }, (q.requirement && q.requirement.product) || 'Custom job'), h('span', { style: { fontSize: 12.5, color: MUT } }, ' · ' + ((q.customer && q.customer.name) || 'Guest') + (q.manual ? ' · manual' : ''))),
           this.chip({ requested: 'Needs pricing', issued: 'Issued · RM ' + q.price, quoted: 'Quoted · RM ' + q.price, accepted: 'Accepted', rejected: 'Changes requested' }[q.status] || q.status, q.status === 'requested' ? 'warn' : q.status === 'accepted' ? 'ok' : 'neutral')),
@@ -6407,7 +6405,7 @@ class Component extends DCLogic {
             h('input', { type: 'number', placeholder: 'Price (RM)', value: this.state['qp_' + q.id + '_price'] || '', onChange: e => this.setField('qp_' + q.id + '_price', e.target.value), style: Object.assign({}, qinp, { maxWidth: 130 }) }),
             h('input', { type: 'number', placeholder: 'Lead days', value: this.state['qp_' + q.id + '_lead'] || '', onChange: e => this.setField('qp_' + q.id + '_lead', e.target.value), style: Object.assign({}, qinp, { maxWidth: 110 }) }),
             h('input', { placeholder: 'Note (optional)', value: this.state['qp_' + q.id + '_note'] || '', onChange: e => this.setField('qp_' + q.id + '_note', e.target.value), style: Object.assign({}, qinp, { flex: 1, minWidth: 140 }) }),
-            h('span', { onClick: () => this.quotePrice(q.id), style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13, padding: '9px 16px', borderRadius: 8, cursor: 'pointer' } }, 'Issue quote'))
+            h('span', { onClick: () => this.quotePrice(q.id), style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13, padding: '9px 16px', borderRadius: 0, cursor: 'pointer' } }, 'Issue quote'))
             : h('span', { style: { fontSize: 12.5, color: MUT, flex: 1 } }, q.status === 'issued' || q.status === 'quoted' ? 'Issued at RM ' + q.price + (q.leadDays ? ' · ' + q.leadDays + ' days' : '') + ' — awaiting the customer.' : q.orderId ? 'Accepted → order ' + q.orderId : 'Customer requested changes.'),
           linkAct('View PDF →', () => this.openDoc(q.id, 'quote')))))),
     ];
@@ -6416,8 +6414,8 @@ class Component extends DCLogic {
     P.custinvoice = [
       h('div', { key: 'h', style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' } },
         p('Invoices prepared manually by admin or outlet and issued to a customer (independent of the storefront order flow). Set the status, add a description and issue a printable PDF. ' + cinvs.length + ' invoice(s).'),
-        h('span', { onClick: () => this.setState({ ci_new: !this.state.ci_new }), style: { flex: 'none', background: this.state.ci_new ? '#fff' : TEAL, color: this.state.ci_new ? MUT : '#fff', border: '1px solid ' + (this.state.ci_new ? HAIR : TEAL), fontWeight: 600, fontSize: 13, padding: '9px 16px', borderRadius: 8, cursor: 'pointer' } }, this.state.ci_new ? 'Cancel' : '＋ New custom invoice')),
-      this.state.ci_new ? h('div', { key: 'form', style: { border: '1px solid ' + TEAL, borderRadius: 12, padding: 16, background: '#fdf7f7', marginBottom: 4 } },
+        h('span', { onClick: () => this.setState({ ci_new: !this.state.ci_new }), style: { flex: 'none', background: this.state.ci_new ? '#fff' : TEAL, color: this.state.ci_new ? MUT : '#fff', border: '1px solid ' + (this.state.ci_new ? HAIR : TEAL), fontWeight: 600, fontSize: 13, padding: '9px 16px', borderRadius: 0, cursor: 'pointer' } }, this.state.ci_new ? 'Cancel' : '＋ New custom invoice')),
+      this.state.ci_new ? h('div', { key: 'form', style: { border: '1px solid ' + TEAL, borderRadius: 0, padding: 16, background: '#fdf7f7', marginBottom: 4 } },
         h('div', { style: { fontSize: 13.5, fontWeight: 600, marginBottom: 10 } }, 'Prepare an invoice for a customer'),
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(150px,1fr))', gap: 8, marginBottom: 8 } },
           h('input', { placeholder: 'Invoice number', value: this.state.ci_number || '', onChange: e => this.setField('ci_number', e.target.value), style: qinp }),
@@ -6430,13 +6428,13 @@ class Component extends DCLogic {
           h('input', { placeholder: 'Order ID (optional)', value: this.state.ci_orderId || '', onChange: e => this.setField('ci_orderId', e.target.value), style: qinp })),
         h('textarea', { placeholder: 'Invoice description — full spec, quantity, price (appears on the invoice PDF)', value: this.state.ci_desc || '', onChange: e => this.setField('ci_desc', e.target.value), style: Object.assign({}, qinp, { minHeight: 110, resize: 'vertical', marginBottom: 8, fontFamily: 'inherit' }) }),
         this.state.ci_err ? h('div', { style: { fontSize: 12, color: '#c0392b', marginBottom: 8 } }, this.state.ci_err) : null,
-        h('span', { onClick: () => this.submitCustomInvoice(), style: { display: 'inline-block', background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13, padding: '10px 18px', borderRadius: 8, cursor: this.state.ci_busy ? 'wait' : 'pointer' } }, this.state.ci_busy ? 'Saving…' : 'Issue invoice')) : null,
-      cinvs.length === 0 ? h('div', { key: 'e', style: { border: '1px dashed ' + HAIR, borderRadius: 10, padding: 28, textAlign: 'center', color: FAINT } }, 'No custom invoices yet.') :
+        h('span', { onClick: () => this.submitCustomInvoice(), style: { display: 'inline-block', background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13, padding: '10px 18px', borderRadius: 0, cursor: this.state.ci_busy ? 'wait' : 'pointer' } }, this.state.ci_busy ? 'Saving…' : 'Issue invoice')) : null,
+      cinvs.length === 0 ? h('div', { key: 'e', style: { border: '1px dashed ' + HAIR, borderRadius: 0, padding: 28, textAlign: 'center', color: FAINT } }, 'No custom invoices yet.') :
       this.table(['Invoice', 'Customer', 'Status', 'Price', 'Prepared by', 'Date', ''],
         cinvs.map(inv => [
           h('span', { style: { fontFamily: 'ui-monospace,Menlo,monospace', fontSize: 12, fontWeight: 600 } }, inv.number || inv.id),
           inv.userName || '—',
-          h('select', { value: inv.status, onChange: e => this.setCustomInvoiceStatus(inv.id, e.target.value), style: { font: '600 11.5px Montserrat,sans-serif', padding: '4px 6px', borderRadius: 6, border: '1px solid ' + HAIR, color: inv.status === 'paid' ? '#63AA02' : inv.status === 'cancelled' ? '#6c757d' : '#a1660a' } }, ['unpaid', 'paid', 'cancelled'].map(s => h('option', { key: s, value: s }, s[0].toUpperCase() + s.slice(1)))),
+          h('select', { value: inv.status, onChange: e => this.setCustomInvoiceStatus(inv.id, e.target.value), style: { font: '600 11.5px Montserrat,sans-serif', padding: '4px 6px', borderRadius: 0, border: '1px solid ' + HAIR, color: inv.status === 'paid' ? '#63AA02' : inv.status === 'cancelled' ? '#6c757d' : '#a1660a' } }, ['unpaid', 'paid', 'cancelled'].map(s => h('option', { key: s, value: s }, s[0].toUpperCase() + s.slice(1)))),
           this.rm(inv.price), (inv.createdBy && inv.createdBy.name) || '—', (inv.date || '').slice(0, 10),
           linkAct('View PDF →', () => this.openDoc(inv.id, 'custominvoice'))]),
         ['150px', null, '110px', '100px', '140px', '100px', '90px'])];
@@ -6449,7 +6447,7 @@ class Component extends DCLogic {
     const media = this.state.media || [];
     P.media = [p('Media library — the image assets shipped with the storefront (product photos + brand/UI icons). ' + media.length + ' file(s). Product photos and the original site media are served from the same asset pipeline.'),
       media.length ? h('div', { key: 'g', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(130px,1fr))', gap: 12 } },
-        media.slice(0, 60).map((m, i) => h('div', { key: i, style: { border: '1px solid ' + HAIR, borderRadius: 10, overflow: 'hidden', background: '#fff' } },
+        media.slice(0, 60).map((m, i) => h('div', { key: i, style: { border: '1px solid ' + HAIR, borderRadius: 0, overflow: 'hidden', background: '#fff' } },
           h('div', { style: { height: 90, background: ALT, display: 'grid', placeItems: 'center', overflow: 'hidden' } }, h('img', { src: window.__asset(m.file), alt: '', style: { maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' } })),
           h('div', { style: { padding: '7px 9px', fontSize: 11, color: MUT, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, m.name))))
         : h('div', { key: 'e', style: { color: FAINT, fontSize: 13 } }, 'Loading media…')];
@@ -6465,7 +6463,7 @@ class Component extends DCLogic {
     P.faqs = [p('Support FAQ — migrated verbatim from printoka.com/support. ' + faqs.length + ' topics · ' + faqs.reduce((s, c) => s + c.questions.length, 0) + ' questions. Shown on the storefront Support page.'),
       h('div', { key: 'b', style: { marginBottom: 12 } }, this.btn('View on site →', 'ghost', 'support')),
       h('div', { key: 'l', style: { display: 'flex', flexDirection: 'column', gap: 16 } }, faqs.map(c =>
-        h('div', { key: c.id, style: { border: '1px solid ' + HAIR, borderRadius: 10, background: '#fff', overflow: 'hidden' } },
+        h('div', { key: c.id, style: { border: '1px solid ' + HAIR, borderRadius: 0, background: '#fff', overflow: 'hidden' } },
           h('div', { style: { padding: '10px 14px', background: ALT, fontSize: 13.5, fontWeight: 600, borderBottom: '1px solid ' + HAIR } }, c.title, h('span', { style: { color: FAINT, fontWeight: 400, marginLeft: 8 } }, c.questions.length + ' questions')),
           c.questions.map((qa, i) => h('div', { key: i, style: { padding: '10px 14px', borderTop: i ? '1px solid ' + LINE : 'none' } },
             h('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 3 } }, qa.q),
@@ -6489,17 +6487,17 @@ class Component extends DCLogic {
         outbox.length ? this.table(['When', 'Email', 'To', 'Subject'],
           outbox.slice(0, 30).map(e => [(e.ts || '').slice(0, 16).replace('T', ' '), e.template, e.to, e.subject]),
           ['140px', '180px', '180px', null])
-          : h('div', { style: { border: '1px dashed ' + HAIR, borderRadius: 10, padding: 22, textAlign: 'center', color: FAINT, fontSize: 13 } }, 'No emails sent yet — place an order, top up a wallet or issue a quote to see them here.'))];
+          : h('div', { style: { border: '1px dashed ' + HAIR, borderRadius: 0, padding: 22, textAlign: 'center', color: FAINT, fontSize: 13 } }, 'No emails sent yet — place an order, top up a wallet or issue a quote to see them here.'))];
     P.settings = (() => {
       const a = (this.state.settings && this.state.settings.announcement) || {};
       const val = (k, d) => { const s = this.state['ann_' + k]; return s != null ? s : (a[k] != null ? a[k] : d); };
-      const inp = { font: '400 13.5px Montserrat,sans-serif', padding: '10px 12px', border: '1px solid ' + HAIR, borderRadius: 8, width: '100%' };
+      const inp = { font: '400 13.5px Montserrat,sans-serif', padding: '10px 12px', border: '1px solid ' + HAIR, borderRadius: 0, width: '100%' };
       const lbl = t => h('div', { style: { fontSize: 12.5, fontWeight: 600, marginBottom: 6 } }, t);
       const routes = ['membership', 'category', 'contact', 'learn', 'about'];
       return [p('The storefront announcement bar shown site-wide (above the header). Edit it here — changes are saved and go live for every visitor immediately.'),
         h('div', { key: 'prev', style: { marginBottom: 16 } },
           h('div', { style: { fontSize: 11, fontWeight: 700, letterSpacing: '.06em', textTransform: 'uppercase', color: FAINT, marginBottom: 6 } }, 'Live preview'),
-          val('hidden', false) ? h('div', { style: { fontSize: 13, color: FAINT, fontStyle: 'italic', border: '1px dashed ' + HAIR, borderRadius: 8, padding: 14 } }, 'The announcement bar is currently hidden.') :
+          val('hidden', false) ? h('div', { style: { fontSize: 13, color: FAINT, fontStyle: 'italic', border: '1px dashed ' + HAIR, borderRadius: 0, padding: 14 } }, 'The announcement bar is currently hidden.') :
           h('div', { style: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '10px 20px', padding: '12px 16px', borderRadius: 4, color: '#fff', fontSize: 14, backgroundImage: 'linear-gradient(90deg,#FF9A2E,#F02B29)' } },
             h('div', { style: { flex: '1 1 auto', minWidth: 0, lineHeight: 1.35 } }, val('text', '')),
             h('span', { style: { fontWeight: 600, whiteSpace: 'nowrap' } }, val('cta', 'Find out more') + ' →'))),
@@ -6511,14 +6509,14 @@ class Component extends DCLogic {
           h('label', { style: { display: 'flex', gap: 9, alignItems: 'center', fontSize: 13, color: MUT, cursor: 'pointer' } },
             h('input', { type: 'checkbox', checked: !!val('hidden', false), onChange: e => this.setField('ann_hidden', e.target.checked) }), 'Hide the announcement bar'),
           this.state.setMsg ? h('div', { style: { fontSize: 12.5, color: '#3d8b40' } }, this.state.setMsg) : null,
-          h('span', { onClick: () => this.saveSettings({ announcement: { text: val('text', ''), cta: val('cta', ''), link: val('link', 'membership'), hidden: !!val('hidden', false) } }), style: { alignSelf: 'flex-start', background: TEAL, color: '#fff', fontWeight: 600, fontSize: 14, padding: '11px 24px', borderRadius: 8, cursor: this.state.setBusy ? 'wait' : 'pointer' } }, this.state.setBusy ? 'Saving…' : 'Save & publish'))];
+          h('span', { onClick: () => this.saveSettings({ announcement: { text: val('text', ''), cta: val('cta', ''), link: val('link', 'membership'), hidden: !!val('hidden', false) } }), style: { alignSelf: 'flex-start', background: TEAL, color: '#fff', fontWeight: 600, fontSize: 14, padding: '11px 24px', borderRadius: 0, cursor: this.state.setBusy ? 'wait' : 'pointer' } }, this.state.setBusy ? 'Saving…' : 'Save & publish'))];
     })();
     P.theme = this.settingsForm('theme', [['primary', 'Brand primary colour'], ['heroTitle', 'Homepage hero title'], ['heroSub', 'Homepage hero subtitle', 'textarea']], 'Branding shown across the storefront — the primary colour, and the homepage hero copy.');
     P.storeset = this.settingsForm('store', [['name', 'Store name'], ['supportEmail', 'Support email'], ['supportPhone', 'Support phone / WhatsApp'], ['countries', 'Countries served'], ['currency', 'Base currency']], 'General store settings (WooCommerce “Settings” equivalent) — identity, contact and the markets you serve.');
     const ob = this.state.emailOutbox || [];
     P.scheduled = [p('Scheduled & sent emails — the live outbox for every automated Follow-Up email. ' + ob.length + ' in the recent queue.'),
       ob.length ? this.table(['When', 'Email', 'Recipient', 'Subject'], ob.slice(0, 40).map(e => [(e.ts || '').slice(0, 16).replace('T', ' '), e.template, e.to, e.subject]), ['150px', '180px', '190px', null])
-        : h('div', { key: 'e', style: { border: '1px dashed ' + HAIR, borderRadius: 10, padding: 22, textAlign: 'center', color: FAINT, fontSize: 13 } }, 'Nothing scheduled yet — automated emails appear here as events fire.')];
+        : h('div', { key: 'e', style: { border: '1px dashed ' + HAIR, borderRadius: 0, padding: 22, textAlign: 'center', color: FAINT, fontSize: 13 } }, 'Nothing scheduled yet — automated emails appear here as events fire.')];
     const byTier = {}; (custs || []).forEach(c => { byTier[c.tier || 'Standard'] = (byTier[c.tier || 'Standard'] || 0) + 1; });
     P.mailing = [p('Mailing lists — customer segments you can target with campaigns and broadcasts. ' + custs.length + ' subscriber(s) total.'),
       this.table(['List', 'Segment rule', 'Subscribers'],
@@ -6547,35 +6545,35 @@ class Component extends DCLogic {
     const identity = { title: vname, sub: 'Vendor / Hub' };
     const tabs = ['Dashboard', 'Quote requests', 'Awarded jobs'];
     const tab = tabs.indexOf(this.state.sTab) >= 0 ? this.state.sTab : 'Dashboard';
-    const inp = { font: '400 13px Montserrat,sans-serif', padding: '9px 11px', border: '1px solid ' + HAIR, borderRadius: 7, width: '100%' };
+    const inp = { font: '400 13px Montserrat,sans-serif', padding: '9px 11px', border: '1px solid ' + HAIR, borderRadius: 0, width: '100%' };
     const cards = [
       ['Quote requests', pending, 'edit-3', 'teal', 'awaiting your price', pending ? 'New' : null, pending > 0],
       ['Quotes submitted', requests.filter(j => mine(j).submittedAt).length, 'check', 'orange', 'awaiting decision'],
       ['Awarded jobs', awarded.length, 'box', 'red', 'print & ship'],
     ];
-    const sectionTitle = (t, s) => h('div', { key: 't', style: { marginBottom: 6 } }, h('h1', { style: { fontSize: 26, fontWeight: 700, letterSpacing: '-.02em', margin: '2px 0 4px' } }, t), s ? h('p', { style: { margin: 0, fontSize: 13.5, color: MUT, maxWidth: '82ch', lineHeight: 1.65 } }, s) : null);
-    const requestsGrid = requests.length === 0 ? h('div', { key: 'e', style: { border: '1px dashed ' + HAIR, borderRadius: 12, padding: 34, textAlign: 'center', color: FAINT, background: '#fff' } }, 'No open quote requests right now.') :
+    const sectionTitle = (t, s) => h('div', { key: 't', style: { marginBottom: 6 } }, h('h1', { style: { fontSize: 26, fontWeight: 500, letterSpacing: '-.02em', margin: '2px 0 4px' } }, t), s ? h('p', { style: { margin: 0, fontSize: 13.5, color: MUT, maxWidth: '82ch', lineHeight: 1.65 } }, s) : null);
+    const requestsGrid = requests.length === 0 ? h('div', { key: 'e', style: { border: '1px dashed ' + HAIR, borderRadius: 0, padding: 34, textAlign: 'center', color: FAINT, background: '#fff' } }, 'No open quote requests right now.') :
       h('div', { key: 'r', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 16 } },
         requests.map(j => { const me = mine(j); const submitted = !!me.submittedAt;
-          return h('div', { key: j.id, style: { border: '1px solid ' + HAIR, borderRadius: 12, padding: 16, background: '#fff', display: 'flex', flexDirection: 'column', gap: 10 } },
+          return h('div', { key: j.id, style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: 16, background: '#fff', display: 'flex', flexDirection: 'column', gap: 10 } },
             h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' } },
               h('span', { style: { font: '600 12px ui-monospace,Menlo,monospace', color: TEAL } }, j.id),
               this.chip(submitted ? 'Quote submitted' : 'Awaiting your quote', submitted ? 'ok' : 'warn')),
             h('div', { style: { fontSize: 14.5, fontWeight: 600 } }, j.product),
             h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.55 } }, j.spec + ' · qty ' + (j.qty || 0).toLocaleString()),
             h('div', { style: { fontSize: 12, color: FAINT } }, 'Deliver to: ' + (j.fulfillmentOutlet || 'KL Damansara Outlet') + ' · for ' + j.customer),
-            submitted ? h('div', { style: { fontSize: 13, color: INK, background: ALT, borderRadius: 8, padding: '10px 12px' } }, 'Your quote: ', h('b', null, this.money(me.price)), ' · ' + me.leadDays + ' days lead time — locked, awaiting the Scheduler’s decision.')
+            submitted ? h('div', { style: { fontSize: 13, color: INK, background: ALT, borderRadius: 0, padding: '10px 12px' } }, 'Your quote: ', h('b', null, this.money(me.price)), ' · ' + me.leadDays + ' days lead time — locked, awaiting the Scheduler’s decision.')
               : h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
                 h('div', { style: { display: 'flex', gap: 8 } },
                   h('input', { type: 'number', placeholder: 'Price (RM)', value: this.state['vq_' + j.id + '_price'] || '', onChange: e => this.setField('vq_' + j.id + '_price', e.target.value), style: inp }),
                   h('input', { type: 'number', placeholder: 'Lead days', value: this.state['vq_' + j.id + '_lead'] || '', onChange: e => this.setField('vq_' + j.id + '_lead', e.target.value), style: inp })),
                 h('input', { placeholder: 'Note (optional)', value: this.state['vq_' + j.id + '_note'] || '', onChange: e => this.setField('vq_' + j.id + '_note', e.target.value), style: inp }),
-                h('span', { onClick: () => this.vendorSubmitQuote(j.id), style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13, padding: '10px', borderRadius: 8, textAlign: 'center', cursor: 'pointer' } }, 'Submit quote')));
+                h('span', { onClick: () => this.vendorSubmitQuote(j.id), style: { background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13, padding: '10px', borderRadius: 0, textAlign: 'center', cursor: 'pointer' } }, 'Submit quote')));
         }));
-    const awardedGrid = awarded.length === 0 ? h('div', { key: 'ae', style: { border: '1px dashed ' + HAIR, borderRadius: 12, padding: 34, textAlign: 'center', color: FAINT, background: '#fff' } }, 'No awarded jobs yet — win a quote and it appears here to print & ship.') :
+    const awardedGrid = awarded.length === 0 ? h('div', { key: 'ae', style: { border: '1px dashed ' + HAIR, borderRadius: 0, padding: 34, textAlign: 'center', color: FAINT, background: '#fff' } }, 'No awarded jobs yet — win a quote and it appears here to print & ship.') :
       h('div', { key: 'awg', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(320px,1fr))', gap: 16 } },
         awarded.map(j => { const L = j.outsource.label || {};
-          return h('div', { key: j.id, style: { border: '2px solid ' + INK, borderRadius: 12, overflow: 'hidden', background: '#fff' } },
+          return h('div', { key: j.id, style: { border: '2px solid ' + INK, borderRadius: 0, overflow: 'hidden', background: '#fff' } },
             h('div', { style: { background: INK, color: '#fff', padding: '10px 14px', display: 'flex', justifyContent: 'space-between', fontSize: 12 } }, h('span', null, 'SHIPPING LABEL'), h('span', { style: { fontFamily: 'ui-monospace,Menlo,monospace' } }, L.id || '')),
             h('div', { style: { padding: 16, display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13 } },
               h('div', { style: { fontSize: 16, fontWeight: 700 } }, L.dest || 'Destination outlet'),
@@ -6583,7 +6581,7 @@ class Component extends DCLogic {
               h('div', { style: { color: MUT } }, L.product + ' · qty ' + (L.qty || j.qty)),
               h('div', { style: { marginTop: 6, paddingTop: 8, borderTop: '1px dashed ' + HAIR, display: 'flex', justifyContent: 'space-between', fontSize: 12, color: FAINT } }, h('span', null, 'PO ' + (L.po || j.outsource.po)), h('span', null, 'Order ' + j.orderId)),
               h('div', { style: { marginTop: 4, height: 34, background: 'repeating-linear-gradient(90deg,#111 0 2px,#fff 2px 4px,#111 4px 5px,#fff 5px 9px)' } }),
-              h('span', { onClick: () => { if (typeof window !== 'undefined') window.print(); }, style: { marginTop: 8, background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13, padding: '9px', borderRadius: 8, textAlign: 'center', cursor: 'pointer' } }, 'Print label')));
+              h('span', { onClick: () => { if (typeof window !== 'undefined') window.print(); }, style: { marginTop: 8, background: TEAL, color: '#fff', fontWeight: 600, fontSize: 13, padding: '9px', borderRadius: 0, textAlign: 'center', cursor: 'pointer' } }, 'Print label')));
         }));
     const content = tab === 'Dashboard' ? this.opsDashTab(cards, 'Jobs won')
       : tab === 'Quote requests' ? [sectionTitle('Quote requests', 'The Scheduler sends you jobs to quote. Reply with your price and lead time to the destination — if you win, print the shipping label and stick it on the parcel.'), requestsGrid]

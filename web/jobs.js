@@ -16,14 +16,14 @@
   const C = window.PKComponent; if (!C) return;
   const P = C.prototype;
 
-  const inp = { font: '400 13.5px Montserrat,sans-serif', padding: '9px 12px', border: '1px solid ' + HAIR, borderRadius: 8, width: '100%', background: '#fff' };
+  const inp = { font: '400 13.5px Montserrat,sans-serif', padding: '9px 12px', border: '1px solid ' + HAIR, borderRadius: 0, width: '100%', background: '#fff' };
   const Btn = (label, onClick, kind, disabled, title) => h('button', { type: 'button', title: title || undefined, disabled: !!disabled, onClick: disabled ? undefined : onClick,
-    style: { font: '600 13px Montserrat,sans-serif', padding: kind === 'block' ? '14px 16px' : '9px 16px', borderRadius: 8, width: kind === 'block' ? '100%' : undefined, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? .5 : 1,
+    style: { font: '500 13px Montserrat,sans-serif', padding: kind === 'block' ? '14px 16px' : '9px 16px', borderRadius: 0, width: kind === 'block' ? '100%' : undefined, cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? .5 : 1,
       border: '1px solid ' + (kind === 'primary' ? TEAL : '#d9d9d9'), background: kind === 'primary' ? TEAL : '#fff', color: kind === 'primary' ? '#fff' : INK } }, label);
   const FG = (label, control, req, hint) => h('label', { style: { display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, fontWeight: 600, color: INK } }, h('span', null, label, req ? h('span', { style: { color: TEAL } }, ' *') : null), hint ? h('span', { style: { fontSize: 12.5, fontWeight: 400, color: MUT } }, hint) : null, control);
   const when = ts => { if (!ts) return '—'; const d = new Date(ts); return d.toLocaleDateString('en-GB').replace(/\//g, '-') + ' ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).toLowerCase(); };
   const dmy = ts => { if (!ts) return '—'; const d = new Date(ts); return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear(); };
-  const alertBox = (text, tone) => h('div', { style: { display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13, lineHeight: 1.55, borderRadius: 8, padding: '11px 13px', background: tone === 'ok' ? '#e6f4ea' : tone === 'bad' ? '#fdecec' : '#fff8e6', color: tone === 'ok' ? '#1f5e2a' : tone === 'bad' ? '#8c1c13' : '#8a4b00', border: '1px solid ' + (tone === 'ok' ? '#cfe8d4' : tone === 'bad' ? '#f5c8c7' : '#f3e2b8') } }, h('span', { style: { fontWeight: 700 } }, tone === 'ok' ? '✓' : '!'), h('span', null, text));
+  const alertBox = (text, tone) => h('div', { style: { display: 'flex', gap: 10, alignItems: 'flex-start', fontSize: 13, lineHeight: 1.55, borderRadius: 0, padding: '11px 13px', background: tone === 'ok' ? '#e6f4ea' : tone === 'bad' ? '#fdecec' : '#fff8e6', color: tone === 'ok' ? '#1f5e2a' : tone === 'bad' ? '#8c1c13' : '#8a4b00', border: '1px solid ' + (tone === 'ok' ? '#cfe8d4' : tone === 'bad' ? '#f5c8c7' : '#f3e2b8') } }, h('span', { style: { fontWeight: 700 } }, tone === 'ok' ? '✓' : '!'), h('span', null, text));
   const link = (text, onClick) => h('span', { onClick, style: { color: TEAL, fontWeight: 700, cursor: 'pointer' } }, text);
   const muted = t => h('p', { style: { margin: 0, fontSize: 13, color: MUT, lineHeight: 1.6 } }, t);
   // original +job_status pill: the status colour as a dot
@@ -112,7 +112,7 @@
       const prog = (j.progress && j.progress[G[0]]) || {}; const canTick = admin || G[2].indexOf(role) >= 0;
       main.push(this.acC(G[0] === 'inhouse' ? 'In-house progress form' : G[0] === 'hub' ? 'Hub progress form' : 'Logistics status update', [
         canTick ? null : muted('View only — updated by the ' + ({ inhouse: 'production floor', hub: 'hub team', logistics: 'logistics team' })[G[0]] + '.'),
-        G[1].map(s => { const v = prog[s[0]]; return h('label', { key: s[0], style: { display: 'flex', gap: 12, alignItems: 'center', border: '1px solid ' + (v ? '#cfe8d4' : HAIR), background: v ? '#f3faf5' : '#fff', borderRadius: 10, padding: '11px 13px', cursor: canTick ? 'pointer' : 'default' } },
+        G[1].map(s => { const v = prog[s[0]]; return h('label', { key: s[0], style: { display: 'flex', gap: 12, alignItems: 'center', border: '1px solid ' + (v ? '#cfe8d4' : HAIR), background: v ? '#f3faf5' : '#fff', borderRadius: 0, padding: '11px 13px', cursor: canTick ? 'pointer' : 'default' } },
           h('input', { type: 'checkbox', checked: !!v, disabled: !canTick, onChange: e => this.opsStep(id, G[0], s[0], e.target.checked), style: { width: 18, height: 18 } }),
           h('span', { style: { flex: 1, fontWeight: 600 } }, s[1]), v ? h('span', { style: { fontSize: 12, color: FAINT } }, v.by + ' · ' + when(v.at)) : null); })]));
     }
@@ -121,7 +121,7 @@
       pr.draft.approvedAt ? alertBox('Draft approved by ' + pr.draft.approvedBy + ' on ' + when(pr.draft.approvedAt) + '. The printer may proceed with printing.', 'ok')
         : pr.draft.rejectedAt ? alertBox('Draft rejected: ' + pr.draft.rejectReason + ' — waiting for the printer to upload a new draft.', 'bad')
         : alertBox('Draft Pending Approval — uploaded ' + when(pr.draft.at) + ' by ' + pr.draft.by + '.'),
-      h('div', { key: 'f', style: { background: ALT, borderRadius: 6, padding: 12 } }, link('📄 ' + pr.draft.file.name, () => this.jDownload('/api/jobs/' + id + '/files/' + pr.draft.file.id, pr.draft.file.name))),
+      h('div', { key: 'f', style: { background: ALT, borderRadius: 0, padding: 12 } }, link('📄 ' + pr.draft.file.name, () => this.jDownload('/api/jobs/' + id + '/files/' + pr.draft.file.id, pr.draft.file.name))),
       pr.canApproveDraft && approver ? h('div', { key: 'b', style: { display: 'flex', gap: 8 } },
         Btn('Approve draft', () => this.jPost('/api/jobs/' + id + '/draft', { decision: 'approve' }, 'Draft approved — the printer has been told to start printing.'), 'primary'),
         Btn('Reject', () => this.setState({ acForm: {}, acModal: { title: 'Reject draft', body: () => [FG('What should the printer change?', h('textarea', { rows: 6, value: this.acF('reason'), onChange: e => this.acSetF('reason', e.target.value), style: Object.assign({}, inp, { resize: 'vertical' }) }), 1),
@@ -150,7 +150,7 @@
     main.push(this.acC('Job details', [
       h('b', { key: 'p' }, j.product), this.acSpec((pr.job && pr.job.spec) || j.spec),
       this.acDL([['Quantity', (j.qty || 0).toLocaleString()], ['Deadline', j.deadline ? when(j.deadline) : '—'], ['Machine', j.machine], ['Deliver to', j.destination ? (j.destination.name || j.destination.type) : '—'], ['Final destination', j.finalDestination ? (j.finalDestination.name || j.finalDestination.type) : '—'], j.instructions ? ['Instructions', j.instructions] : null]),
-      (pr.job && pr.job.artworks && pr.job.artworks.length) ? h('div', { key: 'a', style: { background: ALT, borderRadius: 6, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 } }, h('b', { style: { fontSize: 12.5 } }, 'Artworks'),
+      (pr.job && pr.job.artworks && pr.job.artworks.length) ? h('div', { key: 'a', style: { background: ALT, borderRadius: 0, padding: 12, display: 'flex', flexDirection: 'column', gap: 8 } }, h('b', { style: { fontSize: 12.5 } }, 'Artworks'),
         pr.job.artworks.map((a, i) => a.id && !isHub ? h('span', { key: i }, link('📄 ' + a.name, () => this.openOrderFile(a.orderId, a))) : h('span', { key: i, style: { color: MUT } }, '📄 ' + a.name))) : null]));
     if ((j.shipments || []).length) main.push(this.acC('Delivery', this.acDL(j.shipments.map(s => ['Leg ' + s.leg, (s.from || '') + ' → ' + ((s.to && (s.to.name || s.to.type)) || '') + ' · ' + (s.courier || 'courier') + (s.tracking ? ' · ' + s.tracking : '') + ' · ' + when(s.at) + (s.receivedAt ? ' · received' : ' · in transit')]))));
     // aside
@@ -227,7 +227,7 @@
   };
   // confirm every detail before the quote goes out: it cannot be changed after submission
   P.vQuoteConfirm = function (id, p, q) {
-    const J = p.job || {}; const box = { display: 'flex', flexDirection: 'column', gap: 10, border: '1px solid ' + HAIR, borderRadius: 10, padding: 14 };
+    const J = p.job || {}; const box = { display: 'flex', flexDirection: 'column', gap: 10, border: '1px solid ' + HAIR, borderRadius: 0, padding: 14 };
     const send = () => { this.setState({ qSending: true });
       return this.jPost('/api/jobs/' + id + '/vendor-quote', { amount: q.amt, unitPrice: q.unit, leadDays: q.lead, remarks: q.rem, documentData: q.docData || undefined, documentName: q.docData ? q.docName : undefined }, 'Quote submitted.',
         () => this.setState({ acModal: null, acForm: {}, acView: null, sTab: 'Dashboard' })).then(() => this.setState({ qSending: false })); };
@@ -327,7 +327,7 @@
     const st = (this.acGet('v_stmt', '/api/vendor/statement') || {}).statement;
     if (!st) return [h('div', { key: 'l', style: { color: FAINT } }, 'Loading…')];
     const next = st.nextRun ? new Date(st.nextRun + 'T12:00:00') : null;
-    return [h('h1', { key: 't', style: { fontSize: 34, fontWeight: 600, margin: '6px 0 0' } }, 'Statement of Account'),
+    return [h('h1', { key: 't', style: { fontSize: 34, fontWeight: 500, margin: '6px 0 0' } }, 'Statement of Account'),
       this.pTiles ? this.pTiles([
         { label: 'Purchases (credit)', value: 'RM ' + st.totalCredit.toFixed(2), icon: 'file', color: 'teal' },
         { label: 'Payments (debit)', value: 'RM ' + st.totalDebit.toFixed(2), icon: 'check', color: 'teal' },
@@ -370,7 +370,7 @@
       h('div', { style: { fontSize: 15, fontWeight: 600 } }, 'Printer quotes'),
       pq.printers.length ? this.dataCard([{ label: 'Printer' }, { label: 'Weight (kg)' }, { label: 'Amount (RM)', right: true }, { label: 'Document' }, { label: 'Status' }], pq.printers.map(p => [p.vendorName, p.weight || '—', p.amount != null ? Number(p.amount).toFixed(2) : '—',
         p.document ? link(p.document.name, () => this.jDownload('/api/quotes/' + q.id + '/printer-quotes/' + p.vendorId + '/document', p.document.name)) : '—', this.pillDot(p.submittedAt ? 'Quote submitted' : 'Pending quote', p.submittedAt ? 'ok' : 'warn')]), { minWidth: 560 }) : null,
-      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(210px,1fr))', gap: 8 } }, vendors.filter(v => asked.indexOf(v.id) < 0).map(v => h('label', { key: v.id, style: { display: 'flex', gap: 8, alignItems: 'center', border: '1px solid ' + HAIR, borderRadius: 8, padding: '8px 10px', fontSize: 13, cursor: 'pointer' } },
+      h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(210px,1fr))', gap: 8 } }, vendors.filter(v => asked.indexOf(v.id) < 0).map(v => h('label', { key: v.id, style: { display: 'flex', gap: 8, alignItems: 'center', border: '1px solid ' + HAIR, borderRadius: 0, padding: '8px 10px', fontSize: 13, cursor: 'pointer' } },
         h('input', { type: 'checkbox', checked: picked.indexOf(v.id) >= 0, onChange: () => setF('pqv', picked.indexOf(v.id) >= 0 ? picked.filter(x => x !== v.id) : picked.concat([v.id])) }), v.name))),
       h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' } },
         h('select', { value: F.pqHub || pq.hub || '', onChange: e => setF('pqHub', e.target.value), style: Object.assign({}, inp, { maxWidth: 260 }) }, [h('option', { key: '', value: '' }, 'Deliver to hub…')].concat((cfg.hubs || []).map(x => h('option', { key: x.id, value: x.id }, x.name)))),

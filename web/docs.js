@@ -313,8 +313,8 @@
     ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', title);
     ov.style.cssText = 'position:fixed;inset:0;z-index:200;background:rgba(15,20,25,.6);display:flex;flex-direction:column;font:14px Montserrat,sans-serif';
     ov.innerHTML = '<div style="display:flex;align-items:center;gap:10px;padding:12px 18px;background:#fff;border-bottom:1px solid #eaeaea"><b style="font-size:16px" data-t></b><span style="flex:1"></span>' +
-      '<button data-dl disabled style="font:600 13.5px Montserrat,sans-serif;padding:9px 16px;border-radius:8px;border:1px solid #E52220;background:#E52220;color:#fff;cursor:pointer">Download PDF</button>' +
-      '<button data-x style="font:600 13.5px Montserrat,sans-serif;padding:9px 16px;border-radius:8px;border:1px solid #d9d9d9;background:#fff;cursor:pointer">Close</button></div>' +
+      '<button data-dl disabled style="font:600 13.5px Montserrat,sans-serif;padding:9px 16px;border-radius:0;border:1px solid #E52220;background:#E52220;color:#fff;cursor:pointer">Download PDF</button>' +
+      '<button data-x style="font:600 13.5px Montserrat,sans-serif;padding:9px 16px;border-radius:0;border:1px solid #d9d9d9;background:#fff;cursor:pointer">Close</button></div>' +
       '<div data-body style="flex:1;overflow:auto;padding:20px;display:flex;flex-direction:column;align-items:center;gap:16px"><p style="color:#fff">Preparing the PDF…</p></div>';
     ov.querySelector('[data-t]').textContent = title;
     const close = () => ov.remove();
@@ -418,15 +418,15 @@
     const staff = this.userType() !== 'customer' && this.userType() !== 'guest';
     const sect = (t, node, extra) => h('div', { key: t, style: Object.assign({ marginBottom: 16 }, extra || {}) }, h('div', { style: { fontSize: 11, fontWeight: 700, letterSpacing: '.07em', textTransform: 'uppercase', color: FAINT, marginBottom: 8 } }, t), node);
     const hist = (o && o.customerHistory) || { totalOrders: 0, totalRevenue: 0, avgOrderValue: 0 };
-    const btn = (label, on, primary, busy) => h('span', { onClick: busy ? undefined : on, style: { fontSize: 12.5, fontWeight: 600, color: primary ? '#fff' : TEAL, background: primary ? TEAL : '#fff', border: '1px solid ' + (primary ? TEAL : HAIR), borderRadius: 7, padding: '7px 12px', cursor: busy ? 'wait' : 'pointer', whiteSpace: 'nowrap' } }, busy ? 'Preparing…' : label);
+    const btn = (label, on, primary, busy) => h('span', { onClick: busy ? undefined : on, style: { fontSize: 12.5, fontWeight: 600, color: primary ? '#fff' : TEAL, background: primary ? TEAL : '#fff', border: '1px solid ' + (primary ? TEAL : HAIR), borderRadius: 0, padding: '7px 12px', cursor: busy ? 'wait' : 'pointer', whiteSpace: 'nowrap' } }, busy ? 'Preparing…' : label);
     const files = (o && o.files) || [];
-    const fileChip = f => h('span', { key: f.id, onClick: () => this.openOrderFile(o.id, f), title: 'Download ' + f.name, style: { display: 'inline-flex', alignItems: 'center', gap: 5, background: CHIP, color: TEAL, fontSize: 11.5, fontWeight: 600, borderRadius: 6, padding: '4px 8px', cursor: 'pointer' } }, '⬇ ' + f.name + ' · ' + Math.max(1, Math.round(f.size / 1024)) + ' KB');
-    const upload = (kind, line, label) => h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, color: MUT, border: '1px dashed ' + HAIR, borderRadius: 6, padding: '4px 9px', cursor: 'pointer' } },
+    const fileChip = f => h('span', { key: f.id, onClick: () => this.openOrderFile(o.id, f), title: 'Download ' + f.name, style: { display: 'inline-flex', alignItems: 'center', gap: 5, background: CHIP, color: TEAL, fontSize: 11.5, fontWeight: 600, borderRadius: 0, padding: '4px 8px', cursor: 'pointer' } }, '⬇ ' + f.name + ' · ' + Math.max(1, Math.round(f.size / 1024)) + ' KB');
+    const upload = (kind, line, label) => h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 600, color: MUT, border: '1px dashed ' + HAIR, borderRadius: 0, padding: '4px 9px', cursor: 'pointer' } },
       this.state.upBusy === kind + line ? 'Uploading…' : label, h('input', { type: 'file', accept: kind === 'proof' ? 'image/*,application/pdf' : '.pdf,.ai,.eps,.psd,.tif,.tiff,.jpg,.jpeg,.png,.svg,.cdr,.indd,.zip', style: { display: 'none' }, onChange: e => { this.uploadOrderFile(o.id, kind, line, e.target.files[0]); e.target.value = ''; } }));
     const priceRows = o ? [['Subtotal', this.rm(o.subtotal)], o.memberDiscount ? ['Member discount', '− ' + this.rm(o.memberDiscount)] : null, o.couponDiscount ? ['Discount code ' + (o.coupon || ''), '− ' + this.rm(o.couponDiscount)] : null, o.creditApplied ? ['Credit applied', '− ' + this.rm(o.creditApplied)] : null, [this.taxLabel ? 'SST' : 'Tax', this.rm(o.tax)], ['Delivery', this.rm(o.shipping)]].filter(Boolean) : [];
     return h('div', { key: 'ord', onClick: close, style: { position: 'fixed', inset: 0, zIndex: 92, background: 'rgba(15,20,25,.5)', display: 'grid', placeItems: 'start center', padding: 16, overflow: 'auto' } },
-      h('div', { onClick: e => e.stopPropagation(), role: 'dialog', 'aria-label': 'Order ' + this.state.ordViewId, style: { background: '#fff', borderRadius: 14, maxWidth: 960, width: '100%', margin: '10px 0', boxShadow: '0 24px 60px rgba(33,33,33,.3)' } },
-        h('div', { style: { padding: '14px 22px', borderBottom: '1px solid ' + HAIR, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', position: 'sticky', top: 0, background: '#fff', borderRadius: '14px 14px 0 0', zIndex: 1 } },
+      h('div', { onClick: e => e.stopPropagation(), role: 'dialog', 'aria-label': 'Order ' + this.state.ordViewId, style: { background: '#fff', borderRadius: 0, maxWidth: 960, width: '100%', margin: '10px 0', boxShadow: '0 24px 60px rgba(33,33,33,.3)' } },
+        h('div', { style: { padding: '14px 22px', borderBottom: '1px solid ' + HAIR, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', position: 'sticky', top: 0, background: '#fff', borderRadius: 0, zIndex: 1 } },
           h('span', { style: { font: '600 13px ui-monospace,Menlo,monospace', color: TEAL } }, this.state.ordViewId),
           o ? this.chip(paid ? 'Paid' : 'Payment pending', paid ? 'ok' : 'warn') : null,
           o && o.progressLabel ? this.chip(o.progressLabel, 'neutral') : null,
@@ -437,7 +437,7 @@
             o && staff ? btn('⬇ Download order', () => this.downloadOrder(o.id), true, this.state.dlBusy === o.id) : null,
             (o && !paid && staff) ? btn('Validate payment', () => this.validateOrder(o.id), true) : null,
             h('span', { onClick: close, style: { color: FAINT, fontSize: 22, cursor: 'pointer', lineHeight: 1 } }, '×'))),
-        this.state.dlMsg ? h('div', { style: { margin: '12px 22px 0', fontSize: 12.5, borderRadius: 8, padding: '9px 12px', background: this.state.dlMsg.ok ? '#e6f4ea' : '#fdecec', color: this.state.dlMsg.ok ? '#1f5e2a' : '#8c1c13' } }, this.state.dlMsg.text) : null,
+        this.state.dlMsg ? h('div', { style: { margin: '12px 22px 0', fontSize: 12.5, borderRadius: 0, padding: '9px 12px', background: this.state.dlMsg.ok ? '#e6f4ea' : '#fdecec', color: this.state.dlMsg.ok ? '#1f5e2a' : '#8c1c13' } }, this.state.dlMsg.text) : null,
         !o ? h('div', { style: { padding: 50, textAlign: 'center', color: FAINT } }, o === false ? 'Could not load the order.' : 'Loading…') :
         h('div', { style: { padding: 22 } },
           // 1 · billing · shipping · payment proof · price — first
@@ -465,7 +465,7 @@
           // 3 · order lines + artworks (real files)
           sect('Order details & artworks', h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
             (o.items || []).map((it, i) => { const af = files.filter(f => f.kind === 'artwork' && f.line === i + 1); const named = (it.artworks || []).filter(a => !/^pending-upload/.test(a) && !af.some(f => f.name === a));
-              return h('div', { key: i, style: { border: '1px solid ' + HAIR, borderRadius: 10, padding: 13, display: 'flex', gap: 12 } },
+              return h('div', { key: i, style: { border: '1px solid ' + HAIR, borderRadius: 0, padding: 13, display: 'flex', gap: 12 } },
                 h('div', { style: { flex: '0 0 60px' } }, this.art(it.product)),
                 h('div', { style: { flex: 1, minWidth: 0 } },
                   h('div', { style: { display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' } },
@@ -475,7 +475,7 @@
                   h('div', { style: { fontSize: 12, color: FAINT, marginTop: 4 } }, 'Qty ' + (it.qty || 0).toLocaleString() + ' · unit ' + this.rm(it.unitPrice) + ((o.jobIds || [])[i] ? ' · job ' + o.jobIds[i] : '')),
                   h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8, alignItems: 'center' } },
                     af.map(fileChip),
-                    named.map((a, k) => h('span', { key: 'n' + k, title: 'Named on the order — file not uploaded', style: { fontSize: 11.5, color: FAINT, border: '1px solid ' + LINE, borderRadius: 6, padding: '4px 8px' } }, '📎 ' + a)),
+                    named.map((a, k) => h('span', { key: 'n' + k, title: 'Named on the order — file not uploaded', style: { fontSize: 11.5, color: FAINT, border: '1px solid ' + LINE, borderRadius: 0, padding: '4px 8px' } }, '📎 ' + a)),
                     !af.length && !named.length ? h('span', { style: { fontSize: 11.5, color: '#a1660a' } }, 'No artwork yet') : null,
                     upload('artwork', i + 1, '＋ Upload artwork')))); }))))));
   };
