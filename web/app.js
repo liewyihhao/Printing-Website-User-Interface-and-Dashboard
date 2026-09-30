@@ -398,7 +398,8 @@ function niceLabel(raw, key) {
 // (user, 2026-09-29) the N-in-1 package reads as artworks: "2 In 1 (2 Designs)" / "2in1" → "2 artworks",
 // "2 IN 1 (5% Off)" → "2 artworks (5% Off)", "Normal (1 Design)" → "Normal". Display only — the priced value is unchanged.
 const cleanOpt = v => {
-  const s = String(v == null ? '' : v).replace(/^-\s*(.*?)\s*-$/, '$1').trim();
+  // (user, 2026-09-30) "Rectangle/Square" reads "Rectangle / Square" so it can wrap (display only)
+  const s = String(v == null ? '' : v).replace(/^-\s*(.*?)\s*-$/, '$1').trim().replace(/([A-Za-z])\/([A-Za-z])/g, '$1 / $2');
   const m = s.match(/^(\d+)\s*in\s*1\b\s*(?:\(\d+\s*designs?\))?\s*(.*)$/i);
   if (m) return m[1] + ' artworks' + (m[2] ? ' ' + m[2] : '');
   return /^normal \(1 design\)$/i.test(s) ? 'Normal' : s;
@@ -3838,7 +3839,7 @@ class Component extends DCLogic {
             h('span', { 'aria-hidden': 'true', style: { flex: 'none', width: 16, height: 16, borderRadius: '50%', border: '2px solid ' + (on ? TEAL : '#cfcfcf'), background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
               on ? h('span', { style: { width: 7, height: 7, borderRadius: '50%', background: TEAL } }) : null),
             h('span', { style: { display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 } },
-              h('span', { style: { fontSize: 12.5, fontWeight: 500, lineHeight: 1.3, color: avail ? INK : FAINT, textDecoration: avail ? 'none' : 'line-through' } }, it.label),
+              h('span', { style: { fontSize: 12.5, fontWeight: 500, lineHeight: 1.3, overflowWrap: 'anywhere', color: avail ? INK : FAINT, textDecoration: avail ? 'none' : 'line-through' } }, it.label),
               it.desc ? h('span', { style: { fontSize: 11, color: MUT, lineHeight: 1.4 } }, it.desc) : null,
               avail ? null : h('span', { style: { fontSize: 11, color: '#bdbdbd' } }, 'Not available'))));
         return h(avail ? 'button' : 'div', {
@@ -3853,7 +3854,7 @@ class Component extends DCLogic {
           h('span', { 'aria-hidden': 'true', style: { flex: 'none', width: 18, height: 18, borderRadius: '50%', border: '2px solid ' + (on ? TEAL : '#cfcfcf'), background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
             on ? h('span', { style: { width: 8, height: 8, borderRadius: '50%', background: TEAL } }) : null),
           h('span', { style: { display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 } },
-            h('span', { style: { fontSize: 13.5, fontWeight: 500, lineHeight: 1.3, color: avail ? INK : FAINT, textDecoration: avail ? 'none' : 'line-through' } }, it.label),
+            h('span', { style: { fontSize: 13.5, fontWeight: 500, lineHeight: 1.3, overflowWrap: 'anywhere', color: avail ? INK : FAINT, textDecoration: avail ? 'none' : 'line-through' } }, it.label),
             it.desc ? h('span', { style: { fontSize: 11.5, color: MUT, lineHeight: 1.4 } }, it.desc) : null,
             avail ? null : h('span', { style: { fontSize: 11.5, fontWeight: 400, color: '#bdbdbd' } }, 'Not available')));
       }) : [];
