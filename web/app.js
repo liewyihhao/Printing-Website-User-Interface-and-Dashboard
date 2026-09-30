@@ -185,6 +185,13 @@ const CFG_OVERRIDES = {
     priceSub: { sheet_size: STICKER_KISS_SHEETS.reduce((m, v) => (m[v] = 'A3+', m), {}) },
   },
   'Label Sticker — Letterpress (Hot Stamping)': { hide: ['sample_proof', 'inc_printmethod'] },
+  // (2026-09-30, Excard live walk) the bunting stands' display-only values: shown as fixed values, price-neutral
+  'Bunting — Gear X Stand': { addFields: [
+    { key: 'size', label: 'Size', options: ['6ft x 2ft'], section: 'General', neutral: true, first: true },
+    { key: 'finishing', label: 'Finishing', options: ['Come with 4 eyelet'], section: 'General', neutral: true },
+  ] },
+  'Bunting — Round Base Stand': { addFields: [{ key: 'finishing', label: 'Finishing', options: ['Come With PVC Pipe'], section: 'General', neutral: true }] },
+  'Bunting — Tripod Stand': { addFields: [{ key: 'finishing', label: 'Finishing', options: ['Come With PVC Pipe'], section: 'General', neutral: true }] },
   'Business Card': {
     priceBase: bcPriceBase,
     // Excard's Business Card has no area inputs; the foil colour is a swatch picker (hs_colours widget)
@@ -691,6 +698,31 @@ class Component extends DCLogic {
     });
     return base.filter(k => fixed.indexOf(k) < 0).concat(add.filter(k => base.indexOf(k) < 0));
   }
+  // (2026-09-30) Excard parity harness: what the configurator shows for a product + answers, without touching
+  // the screen — every question with its options (after every rule), compulsory / fixed, the value used, the
+  // quantity list and the price. Read by the comparison script in the browser; changes nothing.
+  parityDump(pid, answers, qty) {
+    const o = Object.create(this);
+    o.state = Object.assign({}, this.state, { prodId: pid, cfg: Object.assign({}, answers || {}), qty: qty || this.state.qty || 1, qtyChosen: !!qty });
+    o._ovCache = null; o._ovDyn = null; o._plCache = this._plCache;
+    const ov = o.cfgOv(), ph = ov.placeholder || [], cfg = o.pkV(), val = x => Array.isArray(x) ? x[0] : x;
+    let list = []; try { list = o.pkFields(); } catch (e) {}
+    const fields = list.map(({ def, options }) => {
+      let opts = (options || []).map(val);
+      const oo = ov.optionsOverride && ov.optionsOverride[def.key];
+      if (oo) { try { const a = typeof oo === 'function' ? oo(cfg, options) : oo; if (a && a.length) opts = a.map(val); } catch (e) {} }
+      const vo = (ov.validOpt || {})[def.key];
+      if (vo) { const k = opts.filter(v => { try { return vo(cfg, v); } catch (e) { return true; } }); if (k.length) opts = k; }
+      const hideW = ov.hideWhen && ov.hideWhen[def.key];
+      return { key: def.key, label: niceLabel((ov.label && ov.label[def.key]) || def.label, def.key), type: def.type || (def.widget ? 'widget' : 'select'),
+        options: opts, compulsory: opts.length > 1 && ph.indexOf(def.key) >= 0, fixed: opts.length === 1 ? opts[0] : null, value: cfg[def.key], min: def.min, max: def.max,
+        hidden: hideW ? (() => { try { return !!hideW(cfg); } catch (e) { return false; } })() : false };
+    }).filter(f => !f.hidden);
+    const q = o.pkQtyObj(pid); let qty2 = (q && q.options ? q.options.slice() : []);
+    if (ov.qtyFilter) qty2 = qty2.filter(n => { try { return ov.qtyFilter(cfg, n); } catch (e) { return true; } });
+    let price = null; try { const r = o.pkQuote(); price = r && r.ok ? Math.round(r.gross * 100) / 100 : (r && r.message) || null; } catch (e) { price = String(e.message || e); }
+    return { fields, qty: qty2, price, cfg };
+  }
   pkQtyObj(id) {
     const E = this.pkEngine(); if (!E) return null;
     const pid = id != null ? id : (this.state.prodId != null ? this.state.prodId : 1);
@@ -924,7 +956,8 @@ class Component extends DCLogic {
       const node = { def: af, options: (af.options || null) };
       const depKey = af.after || (af.showWhen && (af.showWhen.field || (af.showWhen.all && af.showWhen.all[0] && af.showWhen.all[0].field)));
       let at = depKey ? list.findIndex(x => x.def.key === depKey) : -1;
-      if (at >= 0) { let j = at + 1; while (j < list.length && list[j].def.__added) j++; list.splice(j, 0, Object.assign(node, { def: Object.assign({ __added: true }, af) })); }
+      if (af.first) list.unshift(Object.assign(node, { def: Object.assign({ __added: true }, af) }));   // e.g. a fixed Size Excard shows first
+      else if (at >= 0) { let j = at + 1; while (j < list.length && list[j].def.__added) j++; list.splice(j, 0, Object.assign(node, { def: Object.assign({ __added: true }, af) })); }
       else list.push(Object.assign(node, { def: Object.assign({ __added: true }, af) }));
     });
     // (user, 2026-09-28) every "custom" answer opens the input it needs, on every product: a custom / other size →
@@ -1074,6 +1107,7 @@ class Component extends DCLogic {
   // ---------- storefront catalogue: display-name overrides + categories ----------
   // The pricing engine keeps its internal ids/names; the site shows these names.
   componentDidMount() {
+    if (typeof window !== 'undefined') window.__pkApp = this; // read by the Excard parity harness (parityDump)
     if (typeof fetch === 'function')
       fetch('/api/catalogue').then(r => r.json()).then(d => { if (d && d.overrides) this.setState({ catOverrides: d.overrides }); }).catch(() => {});
     // captured Excard live price tables → EXCARD_PRICES (drives priceBase). forceUpdate so any
