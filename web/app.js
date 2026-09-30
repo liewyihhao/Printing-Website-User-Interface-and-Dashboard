@@ -245,7 +245,80 @@ const PL_EXCLUDE = { 1: true };
 const STK_4CW = ['Transparent OPP', 'Brown Craft Paper', 'Matte Silver Polyester', 'Bright Silver Polyester', 'Removable Transparent OPP'];
 const STK_DS8 = ['330mm x 482mm', '297mm x 210mm', '210mm x 148mm', '148mm x 148mm', '111mm x 148mm', '89mm x 148mm', '112mm x 98mm', '74mm x 98mm'];
 const STK_DS3 = STK_DS8.slice(0, 3);
+const STK_SHEETS = [1, 2, 3, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 200, 300, 400, 500];
 const STK_QTY = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 6000, 7000, 8000, 9000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000, 60000, 70000, 80000, 90000, 100000, 150000, 200000, 250000, 300000, 350000, 400000, 450000, 500000, 600000, 700000, 800000, 900000, 1000000];
+// Label Sticker (Digital) price from live Excard CASH (2026-10-01 samples; see excard_parity_checklist).
+// Rectangle/Square = the engine's exact per-material size × qty lookup. Every other cut type is priced on top of it:
+//  · Round / Standard Shape = rectangle + Excard's shape surcharge (Mirror Kote round / shape tables − rectangle),
+//    the same surcharge on every material (Synthetic Round 50mm × 400: model 86.20, Excard 85.90)
+//  · Custom Die-Cut = rectangle × die-cut factor (sampled 50×50 and 100×100 Mirror Kote)
+//  · Kiss Cut = rectangle at the delivery sheet size + kiss-cut surcharge (Excard prices one sticker per sheet)
+//  · No Cut / Multiple Dieline = the engine's captured tables (verified), No Cut extended down to 10 pcs
+//  · Waste Removal = qty surcharge; 1C and 4C & White = ratios to 4C; Cutting Method and Delivery Sheet Size are free
+const stkLog = (pts, q) => { pts = pts.slice().sort((a, b) => a[0] - b[0]); if (q <= pts[0][0]) return pts[0][1]; const n = pts.length;
+  if (q >= pts[n - 1][0]) return pts[n - 1][1];
+  for (let i = 1; i < n; i++) if (q <= pts[i][0]) { const t = Math.log(q / pts[i - 1][0]) / Math.log(pts[i][0] / pts[i - 1][0]); return pts[i - 1][1] + t * (pts[i][1] - pts[i - 1][1]); }
+  return pts[n - 1][1]; };
+const STK_CUSTOM_F = [[100, 1.467], [400, 1.488], [1000, 1.44], [5000, 1.247]];
+const STK_WASTE = [[100, 10.9], [400, 12.1], [1000, 13.05], [5000, 25.4]];
+const STK_1C = [[400, 0.9026], [1000, 0.8542]];
+const STK_4CW_F = [[400, 1.1737], [1000, 1.2335], [5000, 1.264]];
+function stkEngine() { const E = typeof window !== 'undefined' && window.PricingEngine; const p = E && E.DATA.products.find(x => x.id === 60); return p ? { E, p } : null; }
+function stkRect(paper, h, w, q, finishing) {
+  const X = stkEngine(); if (!X) return null;
+  try { const r = X.E.localQuote(X.p, { type: 'Sticker', category: 'Rectangle/Square', height: String(h), width: String(w), paper, colour: '4C', finishing: finishing || 'Not Required', package: 'Normal' }, q); return r && isFinite(r.printoka_cash) ? r.printoka_cash : null; } catch (e) { return null; }
+}
+// Mirror Kote shape table (round by diameter, standard shape by h×w) at a qty, interpolated by area between sizes
+const STK_SHAPE_EXTRA = { '50x50': [[400, 56.65]] };   // live 2026-10-01 (Round 50 = Standard Shape 50×50)
+function stkShapeDelta(rows, sizeOf, area, q) {
+  const bySize = {}; rows.forEach(r => { const k = sizeOf(r); (bySize[k] = bySize[k] || []).push([r.qty, r.cash]); });
+  Object.keys(STK_SHAPE_EXTRA).forEach(k => { if (bySize[k]) bySize[k] = bySize[k].concat(STK_SHAPE_EXTRA[k]); });
+  const pts = Object.keys(bySize).map(k => { const [h, w] = k.split('x').map(Number); const rm = stkRect('Mirror Kote', h, w, q); return rm == null ? null : [h * w, stkLog(bySize[k], q) - rm]; }).filter(Boolean).sort((a, b) => a[0] - b[0]);
+  if (!pts.length) return 0;
+  if (area <= pts[0][0]) return pts[0][1]; if (area >= pts[pts.length - 1][0]) return pts[pts.length - 1][1];
+  for (let i = 1; i < pts.length; i++) if (area <= pts[i][0]) { const t = (area - pts[i - 1][0]) / (pts[i][0] - pts[i - 1][0]); return pts[i - 1][1] + t * (pts[i][1] - pts[i - 1][1]); }
+  return 0;
+}
+function stkKissDelta(area, q) {
+  const lin = (a, b) => a[1] + (area - 7252) * (b[1] - a[1]) / (21904 - 7252);
+  const d100 = lin([0, 37.05], [0, 39.81]), d1000 = lin([0, 65.79], [0, 120.51]);
+  const d5000 = 235.37 * d1000 / (65.79 + (16428 - 7252) * (120.51 - 65.79) / (21904 - 7252));
+  if (q > 5000) return d5000 + (q - 5000) * (d5000 - d1000) / 4000;
+  return stkLog([[100, d100], [1000, d1000], [5000, d5000]], q);
+}
+function stkPriceBase(cfg, q) {
+  const X = stkEngine(); if (!X) return null;
+  const cat = cfg.category, paper = cfg.paper;
+  if (!paper || paper === 'Warranty Sticker' || cat === 'Multiple Dieline') return null;   // engine tables (verified)
+  const N = BC_PKG_N[cfg.package] || 1, fin = cfg.finishing || 'Not Required';
+  let base = null;
+  if (cat === 'No Cut') {
+    const eng = n => { try { return X.E.localQuote(X.p, { type: 'Sticker', category: 'No Cut', paper, colour: '4C', finishing: 'Not Required', package: 'Normal' }, n).printoka_cash; } catch (e) { return null; } };
+    const e50 = eng(50); if (e50 == null) return null;
+    base = q >= 50 ? eng(q) : stkLog([[10, 44.65 * e50 / 101.25], [50, e50]], q);   // Mirror Kote: 10 pcs 44.65, 50 pcs 101.25
+  } else {
+    let h = +cfg.height, w = +cfg.width;
+    if (cat === 'Round') { h = w = +cfg.diameter; }
+    if (cat === 'Kiss Cut') { const m = String(cfg.sheet_size || '').match(/(\d+)mm x (\d+)mm/); if (!m) return null; h = +m[1]; w = +m[2]; }
+    if (!(h > 0 && w > 0)) return null;
+    const rect = stkRect(paper, h, w, q, fin); if (rect == null) return null;
+    const plain = stkRect(paper, h, w, q, 'Not Required');
+    // lamination and waste removal cost more on dearer materials (Synthetic ≈ ×1.3 of Mirror Kote): × (price ratio)^0.4
+    const extraF = paper === 'Mirror Kote' ? 1 : Math.pow(plain / (stkRect('Mirror Kote', h, w, q) || plain), 0.4);
+    const lam = (rect - plain) * extraF;
+    if (cat === 'Round') base = plain + stkShapeDelta((X.E.DATA.sticker_categories || {}).round || [], r => r.d + 'x' + r.d, h * w, q);
+    else if (cat === 'Standard Shape') base = plain + stkShapeDelta((X.E.DATA.sticker_categories || {}).standard_shape || [], r => r.h + 'x' + r.w, h * w, q);
+    else if (cat === 'Custom Die-Cut') base = plain * stkLog(STK_CUSTOM_F, q);
+    else if (cat === 'Kiss Cut') base = plain + stkKissDelta(h * w, q);
+    else base = plain;                                                   // Rectangle/Square
+    if (cfg.colour === '1C') base *= stkLog(STK_1C, q);
+    if (cfg.colour === '4C & White') base *= stkLog(STK_4CW_F, q);
+    base += lam;
+    if (/^required/i.test(String(cfg.waste_removal || '')) && ['Round', 'Custom Die-Cut', 'Standard Shape'].indexOf(cat) >= 0)
+      base += (q > 5000 ? 25.4 + (q - 5000) * (25.4 - 13.05) / 4000 : stkLog(STK_WASTE, q)) * extraF;
+  }
+  return base == null || !isFinite(base) ? null : Math.round(base * N * 100) / 100;
+}
 function stkLams(paper) {
   const all = ['Not Required', 'Matte Laminate (Front)', 'Gloss Laminate (Front)', 'Gloss Water Based Varnish', 'UV Varnish', 'Soft Touch Laminate (Front)'];
   if (paper === 'Mirror Kote') return all;
@@ -301,7 +374,9 @@ const CFG_OVERRIDES = {
     // Excard asks only these with "Please Select"; Cut Type, Print Colour, Lamination, Cutting Method,
     // Waste Removal and the die-cut Delivery Sheet Size come preset
     placeholderExact: ['paper', 'ink_colour', 'sheet_size', 'quantity'],
-    qtyOptions: STK_QTY,
+    // Multiple Dieline counts sheets: Excard's list for A3+, ×2 for A4, ×4 for A5
+    qtyOptions: cfg => cfg.category !== 'Multiple Dieline' ? STK_QTY : STK_SHEETS.map(n => n * ({ 'A4': 2, 'A5': 4 }[cfg.sheet_size] || 1)),
+    priceBase: stkPriceBase,
     // Kiss Cut is priced by quantity only; its sheet sizes are passed to the engine as its default sheet
     priceSub: { sheet_size: STICKER_KISS_SHEETS.reduce((m, v) => (m[v] = 'A3+', m), {}), colour: { '4C & White': '4C' } },
   },
