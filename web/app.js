@@ -3825,7 +3825,9 @@ class Component extends DCLogic {
       if (opts.book) return h('div', { key: key, 'data-cfgkey': key, 'data-cfgans': selected ? '1' : '0', 'data-cfgph': isPh0 ? '1' : '0', 'data-cfgcur': typeof curText === 'string' ? curText : '' },
         note ? h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.55, marginBottom: 12 } }, String(note).charAt(0).toUpperCase() + String(note).slice(1)) : null,
         remark ? h('div', { style: { fontSize: 12, color: MUT, lineHeight: 1.55, background: ALT, borderRadius: 8, padding: '9px 12px', marginBottom: 14 } }, remark) : null,
-        h('div', { role: 'radiogroup', 'aria-label': fieldLabel, style: { display: 'grid', gridTemplateColumns: withImg ? 'repeat(auto-fill,minmax(130px,1fr))' : 'repeat(auto-fill,minmax(200px,1fr))', gap: 12 } }, cards));
+        items.some(it => it.na) && items.every(it => it.na || it.avail === false)
+          ? h('div', { style: { display: 'inline-flex', alignItems: 'center', gap: 10, border: '1px dashed ' + HAIR, borderRadius: 12, background: ALT, padding: '13px 16px', fontSize: 13.5, fontWeight: 500, color: FAINT } }, 'Not available for this option')
+          : h('div', { role: 'radiogroup', 'aria-label': fieldLabel, style: { display: 'grid', gridTemplateColumns: withImg ? 'repeat(auto-fill,minmax(130px,1fr))' : 'repeat(auto-fill,minmax(200px,1fr))', gap: 12 } }, cards));
       // the open question is lifted out as a raised card; the others dim slightly so it's clear
       // which question is being answered
       const anyOpen = this.state.ddOpen != null;
@@ -3892,6 +3894,10 @@ class Component extends DCLogic {
       const uv = this.state.cfg[def.key];
       const selected = isPh ? !isPh0 : (uv != null && uv !== '');
       if (opts.book && !isPh0) curText = bookOptLabel(curText, isPrintQ);
+      // (user, 2026-09-30) when the only choice left is the 'not required' one, the finishing can't be had with
+      // the current spec: say so plainly instead of offering 'No Required' as if it were a choice
+      const liveOpts = items.filter(it => it.avail !== false);
+      if (liveOpts.length && liveOpts.every(it => isNoneOpt(it.val))) { liveOpts.forEach(it => { it.na = true; it.label = 'Not available for this option'; }); if (!isPh0) curText = 'Not available for this option'; }
       return cardGroup(def.key, label, curText, isPh0, note, remark, items, selected, !isPh && dispOptions.some(isNoneOpt));
     };
     // quantity, straight from the engine's per-product model (moq / options)
