@@ -5144,8 +5144,21 @@ class Component extends DCLogic {
     const atOutlet = !!(dest && dest.type === 'outlet');
     if (atOutlet) STAGES.splice(3, 2, 'On the way to the outlet', 'Ready to collect', 'Collected');
     const OUTLET_STAGE = { dispatched: 3, ready_collect: 4, completed: 5 };
-    const stageOf = s => !atOutlet ? this.trackStage(s) : OUTLET_STAGE[s] != null ? OUTLET_STAGE[s] : Math.min(this.trackStage(s), 2);
-    const cur = jobs.length ? Math.min.apply(null, jobs.map(j => stageOf(j.status))) : 0;
+    // (user, 2026-09-30) an order is split into jobs and each job is tracked on its own: every job card carries its
+    // own timeline, from its own status and destination (collect at an outlet, or delivered)
+    const jobStages = j => ((j.finalDestination || dest || {}).type === 'outlet')
+      ? ['Order received', 'Prepress check', 'In production', 'On the way to the outlet', 'Ready to collect', 'Collected']
+      : ['Order received', 'Prepress check', 'In production', 'Shipped', 'Delivered'];
+    const jobStage = j => ((j.finalDestination || dest || {}).type === 'outlet')
+      ? (OUTLET_STAGE[j.status] != null ? OUTLET_STAGE[j.status] : Math.min(this.trackStage(j.status), 2))
+      : this.trackStage(j.status);
+    const timeline = j => { const ST = jobStages(j), cur = jobStage(j);
+      return h('div', { style: { display: 'flex', gap: 0, flexWrap: 'wrap', margin: '4px 0 18px' } },
+        ST.map((s, i) => h('div', { key: i, style: { flex: '1 1 110px', display: 'flex', flexDirection: 'column', gap: 8 } },
+          h('div', { style: { display: 'flex', alignItems: 'center' } },
+            h('span', { style: { height: 14, width: 14, borderRadius: '50%', flex: 'none', background: i > cur ? '#eaeaea' : (i === cur ? AMBER : TEAL) } }),
+            i < ST.length - 1 && h('span', { style: { flex: 1, height: 2, background: i < cur ? TEAL : '#eaeaea' } })),
+          h('div', { style: { fontSize: 12.5, fontWeight: i === cur ? 600 : 500, color: i > cur ? FAINT : INK, paddingRight: 8 } }, s)))); };
     // the customer's own words for each job (the internal department statuses stay inside Printoka)
     const custLabel = j => {
       const s = j.status, toOutlet = (j.finalDestination || {}).type === 'outlet';
@@ -5165,13 +5178,7 @@ class Component extends DCLogic {
         h('div', { style: { display: 'flex', gap: 9, flexWrap: 'wrap' } }, paid ? this.btn('Invoice', 'ghost', 'doc:invoice:' + o.id) : null, this.btn('Order slip', 'ghost', 'doc:slip:' + o.id), this.btn('Contact support', 'teal', 'crm'))),
       own ? null : lookup,
       h('div', { key: 't', style: { border: '1px solid #e6e8eb', background: '#fff', padding: '22px 24px', marginBottom: 16 } },
-        h('div', { style: { fontSize: 12.5, fontWeight: 600, marginBottom: 16 } }, 'Status timeline'),
-        h('div', { style: { display: 'flex', gap: 0, flexWrap: 'wrap' } },
-          STAGES.map((s, i) => h('div', { key: i, style: { flex: '1 1 120px', display: 'flex', flexDirection: 'column', gap: 8 } },
-            h('div', { style: { display: 'flex', alignItems: 'center' } },
-              h('span', { style: { height: 14, width: 14, borderRadius: '50%', flex: 'none', background: i > cur ? '#eaeaea' : (i === cur ? AMBER : TEAL) } }),
-              i < STAGES.length - 1 && h('span', { style: { flex: 1, height: 2, background: i < cur ? TEAL : '#eaeaea' } })),
-            h('div', { style: { fontSize: 12.5, fontWeight: i === cur ? 600 : 500, color: i > cur ? FAINT : INK } }, s)))),
+        h('div', { style: { fontSize: 14, color: MUT } }, jobs.length + (jobs.length === 1 ? ' job' : ' jobs') + ' in this order · each job is tracked below'),
         // (user, 2026-09-29) "Collect at:" / "Delivering to:" on its own line, then the name, then the address
         dest ? h('div', { style: { marginTop: 16, fontSize: 14, color: INK, lineHeight: 1.6 } },
           h('div', { style: { fontWeight: 600 } }, atOutlet ? 'Collect at:' : 'Delivering to:'),
@@ -5196,6 +5203,7 @@ class Component extends DCLogic {
             h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 14 } },
               h('div', null, h('div', { style: { fontSize: 12.5, color: FAINT } }, j.id), h('div', { style: { fontSize: 20, fontWeight: 500, marginTop: 2 } }, j.product)),
               h('span', { style: { marginLeft: 'auto' } }, this.chip(custLabel(j), j.status === 'completed' ? 'ok' : (j.status === 'rejected' ? 'bad' : 'teal')))),
+            timeline(j),
             h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(110px,150px) minmax(0,1fr)', gap: 22, alignItems: 'start' } },
               h('div', null, this.art((this.pkProducts().find(p => p.name === j.product) || {}).name || j.product)),
               h('div', null,

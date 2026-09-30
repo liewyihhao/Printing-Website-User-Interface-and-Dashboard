@@ -74,7 +74,8 @@
   const openJob = (c, j) => c.acOpen({ kind: 'job', id: j.id });
   // one table for every list: job, product, customer, due, status
   P.pTable = function (key, title, jobs, extra) {
-    const list = jobs.slice().sort((a, b) => { const da = a.deadline ? Date.parse(a.deadline) : Infinity, db = b.deadline ? Date.parse(b.deadline) : Infinity; if (da !== db) return da - db; return (Date.parse(a.paymentValidatedAt || 0) || Infinity) - (Date.parse(b.paymentValidatedAt || 0) || Infinity); });
+    // newest first, so a job that just came in is at the top (user, 2026-09-30); jobs of one order stay together in line order
+    const list = jobs.slice().sort((a, b) => (Date.parse(b.createdAt || 0) || 0) - (Date.parse(a.createdAt || 0) || 0) || String(a.id).localeCompare(String(b.id)));
     // "Handled by": who took the job in the department it is in now
     const handler = j => { const dq = j.queue || ({ intake: 'prepress', prepress: 'prepress', prepress_issue: 'prepress', escalated: 'prepress', rejected: 'prepress', artwork_ready: 'prepress', scheduling: 'scheduler', to_outsource: 'scheduler', to_inhouse: 'scheduler', printing: 'scheduler', outsourcing: 'scheduler' })[j.status] || 'logistics'; return (j.owner || {})[dq] || '—'; };
     return this.acList({ key, title, action: extra, cols: ['Date', 'Job', 'Product', 'Customer', 'Days', 'Handled by', 'Status'],
