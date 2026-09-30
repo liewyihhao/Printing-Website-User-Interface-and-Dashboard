@@ -3984,7 +3984,7 @@ class Component extends DCLogic {
         h('span', { style: { fontSize: 12.5, fontWeight: 600 } }, lbl),
         h('input', { type: 'number', min: d.min != null ? d.min : undefined, max: d.max != null ? d.max : undefined, value: cfg[d.key] || '', placeholder: range(d) || 'mm', 'aria-label': lbl,
           onChange: e => set(d.key, e.target.value), style: Object.assign({}, selStyle, { font: '400 14px Montserrat,sans-serif' }) }),
-        range(d) ? h('span', { style: { fontSize: 11.5, color: FAINT } }, range(d)) : null);
+        null); // the range lives in the box's placeholder only
       const bothFilled = hv != null && hv !== '' && wv != null && wv !== '';
       const confirmBtn = !opts.book && DIM_KEYS[wk] ? h('button', { type: 'button', disabled: !bothFilled || bad, onClick: e => { e.preventDefault(); if (bothFilled && !bad) this.setState({ sizeConfirmed: true, ddOpen: null }); },
         style: { marginTop: 8, background: bothFilled && !bad ? TEAL : '#e9ecef', color: bothFilled && !bad ? '#fff' : MUT, border: 'none', borderRadius: 8, padding: '10px 22px', font: '600 13.5px Montserrat,sans-serif', cursor: bothFilled && !bad ? 'pointer' : 'not-allowed' } }, 'Confirm size') : null;
@@ -4059,7 +4059,7 @@ class Component extends DCLogic {
   bookQuestion(key, label, NAME) {
     const k = (String(key) + ' ' + String(label || '')).toLowerCase(), n = NAME || 'your print';
     const Q = [
-      [/^hw_/, 'What size do you need?', 'Height and width, in millimetres.'],
+      [/^hw_/, 'What size do you need?', ''],
       [/cut type/, 'Which cut would you like?', 'How each sticker is cut from the sheet.'],
       [/categor|product type/, 'Which type of ' + n + ' would you like?', 'Each type has its own sizes and finishes.'],
       [/shape/, 'Which shape would you like?', ''],
