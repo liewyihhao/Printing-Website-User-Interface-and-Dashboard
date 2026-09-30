@@ -226,7 +226,7 @@ function page(slug, origin, opts) {
     const scale = 120 / maxDim;
     S.push(sec('sizes', '<h2>Our supported ' + esc(name) + ' sizes</h2>' + (parsed.some(p => optImg(f.sizeKey, p.s, f.id)) ? '' : '<p class="pk-scale-note">Shown to scale.</p>') + '<div class="pk-grid pk-sizes">'
       + parsed.map(p => '<div class="pk-size"><div class="pk-size-box">' + (optImg(f.sizeKey, p.s, f.id) ? '<img src="' + esc(optImg(f.sizeKey, p.s, f.id)) + '" alt="' + esc(p.s + ' ' + name) + '" loading="lazy">' : p.d ? '<span style="width:' + (p.d.w * scale).toFixed(1) + 'px;height:' + (p.d.h * scale).toFixed(1) + 'px"></span>' : '<span class="pk-size-na"></span>') + '</div><div class="pk-size-l">' + esc(p.s) + '</div></div>').join('')
-      + '</div><a class="pk-btn" href="' + esc(configUrl) + '">Configure your ' + esc(name) + '</a>'));
+      + '</div><div class="pk-cta"><a class="pk-btn" href="' + esc(configUrl) + '">Configure your ' + esc(name) + '</a></div>'));
   }
   // materials (weight bars)
   if (f.materials.length) {
@@ -254,7 +254,7 @@ function page(slug, origin, opts) {
     + '<div class="pk-wa-img" role="img" aria-label="Printoka customer service"></div></section>');
   S.push('<section id="faq" class="pk-faq-sec"><h2>' + esc(name) + ' printing FAQ</h2><div class="pk-faq">'
     + c.faq.map((q, i) => '<details class="pk-faq-item"' + (i === 0 ? ' open' : '') + '><summary>' + esc(q[0]) + '<span class="pk-faq-ch" aria-hidden="true">▾</span></summary><div class="pk-faq-a">' + esc(q[1]) + '</div></details>').join('')
-    + '</div><a class="pk-btn" href="/contact">Ask a question</a></section>');
+    + '</div><div class="pk-cta"><a class="pk-btn" href="/contact">Ask a question</a></div></section>');
 
   // header — a faithful static replica of the app's runtime.js chrome (logo, red Products
   // button, search, locale, login, cart, country), so the SEO page matches the storefront.
@@ -344,7 +344,7 @@ function css() {
     '.pk-hero-benefits{flex:0 1 320px;display:flex;flex-direction:column;gap:14px}',
     '.pk-hb-h{font-weight:700;font-size:15px}.pk-hb-c{font-size:13px;color:rgba(255,255,255,.92);padding-left:14px;position:relative;margin-top:2px;line-height:1.5}.pk-hb-c:before{content:"";position:absolute;left:0;top:8px;width:5px;height:5px;border-radius:50%;background:#fff}',
     // buttons
-    '.pk-btn{display:inline-block;background:' + T.brand + ';color:#fff;font-weight:600;font-size:14px;padding:11px 20px;border-radius:8px}.pk-btn:hover{background:' + T.brandDark + ';color:#fff}.pk-btn-lg{padding:13px 26px;font-size:14px}.pk-btn-sm{padding:9px 14px;font-size:12.5px;margin-top:auto}',
+    '.pk-btn{display:inline-block;background:' + T.brand + ';color:#fff;font-weight:600;font-size:14px;padding:11px 20px;border-radius:8px}.pk-btn:hover{background:' + T.brandDark + ';color:#fff}.pk-btn{text-align:center}.pk-btn-lg{padding:13px 26px;font-size:14px}.pk-btn-sm{padding:9px 14px;font-size:12.5px;margin-top:auto}',
     // why printoka (light band, six icon benefits)
     '.pk-why{background:' + T.alt + '}.pk-why-in{max-width:1180px;margin:0 auto;padding:44px 20px;text-align:center}.pk-why h2{font-size:22px;font-weight:600;letter-spacing:-.01em;margin:0 0 8px}.pk-why-sub{font-size:14px;color:' + T.muted + ';margin:0 auto 30px;max-width:64ch}',
     '.pk-why-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:22px}.pk-why-i{display:flex;flex-direction:column;align-items:center;gap:10px}',
@@ -380,7 +380,7 @@ function css() {
     '.pk-faq-sec{text-align:center}.pk-faq-sec h2{font-size:20px;font-weight:600;letter-spacing:-.01em;margin:0 0 6px}.pk-faq{max-width:900px;margin:0 auto;text-align:left;border-top:1px solid ' + T.line + '}',
     '.pk-faq-item{border-bottom:1px solid ' + T.line + '}.pk-faq-item summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:17px 2px;font-size:14.5px;font-weight:600;color:' + T.ink + '}.pk-faq-item summary::-webkit-details-marker{display:none}',
     '.pk-faq-ch{flex:none;color:' + T.brand + ';font-size:13px;transition:transform .15s}.pk-faq-item[open] .pk-faq-ch{transform:rotate(180deg)}',
-    '.pk-faq-a{padding:0 2px 18px;font-size:13.5px;color:' + T.muted + ';line-height:1.75}.pk-faq-sec .pk-btn{margin-top:20px}',
+    '.pk-faq-a{padding:0 2px 18px;font-size:13.5px;color:' + T.muted + ';line-height:1.75}.pk-cta{display:flex;justify-content:center;margin-top:32px}',
     // footer (matches app footer)
     '@media(max-width:760px){.pk-search{order:5;flex:1 1 100%}}',
   ].join('');

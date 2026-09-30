@@ -1451,7 +1451,8 @@ class Component extends DCLogic {
       h('div', { onClick: e => e.stopPropagation(), role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Announcement', style: { position: 'relative', maxWidth: 460, width: '100%', borderRadius: 16, overflow: 'hidden', boxShadow: '0 24px 60px rgba(33,33,33,.35)', background: 'linear-gradient(135deg,#FF9A2E,#F02B29)', color: '#fff' } },
         h('span', { onClick: close, role: 'button', tabIndex: 0, 'aria-label': 'Close announcement', onKeyDown: e => { if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); close(); } }, style: { position: 'absolute', top: 12, right: 14, fontSize: 22, lineHeight: 1, cursor: 'pointer', color: 'rgba(255,255,255,.9)' } }, '×'),
         h('div', { style: { padding: '30px 28px 26px', textAlign: 'center' } },
-          h('img', { src: window.__asset('assets/icons/cropped-favicon-192x192.png'), alt: '', style: { height: 48, width: 48, borderRadius: 12, background: '#fff', marginBottom: 14 } }),
+          // (user, 2026-09-30) the full printoka logo with its wordmark, knocked out to white on the red — no white tile behind it
+          h('img', { src: window.__asset('assets/icons/logo.png'), alt: 'Printoka', style: { height: 40, width: 'auto', display: 'block', margin: '0 auto 16px', filter: 'brightness(0) invert(1)' } }),
           h('div', { style: { fontSize: 12, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', opacity: .85, marginBottom: 10 } }, 'Announcement'),
           h('div', { style: { fontSize: 17, fontWeight: 600, lineHeight: 1.5, marginBottom: 20 } }, a.text),
           h('span', { onClick: goCta, style: { display: 'inline-block', background: '#fff', color: '#E52220', fontWeight: 700, fontSize: 14.5, padding: '11px 26px', borderRadius: 999, cursor: 'pointer' } }, (a.cta || 'Find out more') + ' →'),
@@ -2237,7 +2238,8 @@ class Component extends DCLogic {
 
   btn(label, kind, go, extra) {
     const st = { display: 'inline-flex', alignItems: 'center', gap: 8, borderRadius: 8, padding: '11px 20px', fontSize: 14, fontWeight: 600, border: '1px solid transparent', cursor: 'pointer', fontFamily: 'Montserrat,sans-serif', whiteSpace: 'nowrap' };
-    if (kind === 'amber') Object.assign(st, { background: AMBER, color: '#3a2c00' });
+    // (user, 2026-09-30) every solid button is the brand red — the old orange "amber" buttons included
+    if (kind === 'amber') Object.assign(st, { background: TEAL, color: '#fff' });
     else if (kind === 'teal') Object.assign(st, { background: TEAL, color: '#fff' });
     else Object.assign(st, { background: '#fff', color: TEAL, borderColor: '#eaeaea' });
     return h('span', { 'data-go': go || 'product', style: Object.assign(st, extra || {}) }, label);
