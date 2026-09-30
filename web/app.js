@@ -3836,7 +3836,7 @@ class Component extends DCLogic {
           it.img ? h('img', { src: it.img, alt: '', loading: 'lazy', style: { width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', display: 'block', background: '#fff', borderBottom: '1px solid ' + LINE, filter: avail ? 'none' : 'grayscale(1)' } })
             : h('div', { 'aria-hidden': 'true', style: { width: '100%', aspectRatio: '4 / 3', background: ALT, borderBottom: '1px solid ' + LINE, display: 'grid', placeItems: 'center', color: FAINT, fontSize: 12, fontWeight: 600, padding: 8, textAlign: 'center' } }, it.label),
           h('span', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 11px' } },
-            h('span', { 'aria-hidden': 'true', style: { flex: 'none', width: 16, height: 16, borderRadius: '50%', border: '2px solid ' + (on ? TEAL : '#cfcfcf'), background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+            opts.book ? null : h('span', { 'aria-hidden': 'true', style: { flex: 'none', width: 16, height: 16, borderRadius: '50%', border: '2px solid ' + (on ? TEAL : '#cfcfcf'), background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
               on ? h('span', { style: { width: 7, height: 7, borderRadius: '50%', background: TEAL } }) : null),
             h('span', { style: { display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 } },
               h('span', { style: { fontSize: 12.5, fontWeight: 500, lineHeight: 1.3, overflowWrap: 'anywhere', color: avail ? INK : FAINT, textDecoration: avail ? 'none' : 'line-through' } }, it.label),
@@ -3851,7 +3851,7 @@ class Component extends DCLogic {
           style: { display: 'flex', alignItems: 'center', gap: 11, textAlign: 'left', width: '100%', font: 'inherit',
             border: '1px solid ' + (on ? TEAL : HAIR), borderRadius: 12, background: on ? '#fdf2f2' : (avail ? '#fff' : ALT),
             padding: '13px 14px', cursor: avail ? 'pointer' : 'default', opacity: avail ? 1 : 0.75, outlineOffset: '2px' } },
-          h('span', { 'aria-hidden': 'true', style: { flex: 'none', width: 18, height: 18, borderRadius: '50%', border: '2px solid ' + (on ? TEAL : '#cfcfcf'), background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+          opts.book ? null : h('span', { 'aria-hidden': 'true', style: { flex: 'none', width: 18, height: 18, borderRadius: '50%', border: '2px solid ' + (on ? TEAL : '#cfcfcf'), background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
             on ? h('span', { style: { width: 8, height: 8, borderRadius: '50%', background: TEAL } }) : null),
           h('span', { style: { display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 } },
             h('span', { style: { fontSize: 13.5, fontWeight: 500, lineHeight: 1.3, overflowWrap: 'anywhere', color: avail ? INK : FAINT, textDecoration: avail ? 'none' : 'line-through' } }, it.label),
@@ -3864,7 +3864,7 @@ class Component extends DCLogic {
         remark ? h('div', { style: { fontSize: 12, color: MUT, lineHeight: 1.55, background: ALT, borderRadius: 8, padding: '9px 12px', marginBottom: 14 } }, remark) : null,
         items.some(it => it.na) && items.every(it => it.na || it.avail === false)
           ? h('div', { style: { display: 'inline-flex', alignItems: 'center', gap: 10, border: '1px dashed ' + HAIR, borderRadius: 12, background: ALT, padding: '13px 16px', fontSize: 13.5, fontWeight: 500, color: FAINT } }, 'Not Available')
-          : h('div', { role: 'radiogroup', 'aria-label': fieldLabel, style: { display: 'grid', gridTemplateColumns: withImg ? 'repeat(auto-fill,minmax(130px,1fr))' : 'repeat(auto-fill,minmax(200px,1fr))', gap: 12 } }, cards));
+          : h('div', { role: 'radiogroup', 'aria-label': fieldLabel, style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(max(130px,calc((100% - 24px) / 3)),1fr))', gap: 12 } }, cards));
       // the open question is lifted out as a raised card; the others dim slightly so it's clear
       // which question is being answered
       const anyOpen = this.state.ddOpen != null;
@@ -3926,13 +3926,13 @@ class Component extends DCLogic {
       const reliable = validVals.length > 0 && validVals.every(v => dispSet[v]);
       const fk = def.key + ' ' + (def.label || ''), isPrintQ = /print|colou?r/i.test(fk) && !/stamp|foil|emboss/i.test(fk), isMatQ = /paper|material|stock/i.test(fk);
       const items = dispOptions.map(v => { const val = Array.isArray(v) ? v[0] : v;
-        return { val: val, label: opts.book ? bookOptLabel(cleanOpt(optLabel[val] || val), isPrintQ) : cleanOpt(optLabel[val] || val), desc: opts.book && isMatQ ? matDesc(val) : null, on: chosen === val, avail: reliable ? !!availSet[val] : true, img: pkOptImg(def.key, val),
+        return { val: val, label: opts.book ? bookOptLabel(cleanOpt(optLabel[val] || val), isPrintQ).replace(/\s*\(2 sides? coated\)/i, '') : cleanOpt(optLabel[val] || val), desc: null, on: chosen === val, avail: reliable ? !!availSet[val] : true, img: pkOptImg(def.key, val),
           onPick: () => this.setState(st => Object.assign({ cfg: Object.assign({}, st.cfg, { [def.key]: val }) }, isSizeField ? { sizeConfirmed: false } : {})) }; });
       // "selected" = the customer set this field explicitly (placeholder chosen, or a value in
       // state.cfg); an untouched default is NOT selected, so it reads lighter.
       const uv = this.state.cfg[def.key];
       const selected = isPh ? !isPh0 : (uv != null && uv !== '');
-      if (opts.book && !isPh0) curText = bookOptLabel(curText, isPrintQ);
+      if (opts.book && !isPh0) curText = bookOptLabel(curText, isPrintQ).replace(/\s*\(2 sides? coated\)/i, '');
       // (user, 2026-09-30) when the only choice left is the 'not required' one, the finishing can't be had with
       // the current spec: say so plainly instead of offering 'No Required' as if it were a choice
       const liveOpts = items.filter(it => it.avail !== false);
