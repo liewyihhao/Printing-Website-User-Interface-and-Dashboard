@@ -465,6 +465,7 @@ class Component extends DCLogic {
     if (v.indexOf('addrdel:') === 0) return this.addressDelete(v.slice(8));
     if (v.indexOf('addrdefault:') === 0) return this.addressDefault(v.slice(12));
     // SEO landing page (e.g. footer "Online Printing Malaysia")
+    if (v.indexOf('dl:') === 0) { const sl = v.slice(3); if (typeof window !== 'undefined') window.scrollTo(0, 0); this.pushUrl('/download/' + sl + '/'); return this.setState({ route: 'downloads', dlCat: sl, dlFold: null, megaOpen: false }); }
     if (v.indexOf('seo:') === 0) { const slug = v.slice(4); this.pushUrl('/' + slug); return this.seoOpen(slug, 'my'); }
     // footer "Guides for Closing Artwork" → Support page, scrolled to the guides
     if (v === 'guides') { this.pushUrl('/support'); this.go('support'); setTimeout(() => { try { const el = document.getElementById('guides-for-closing-artwork'); if (el) el.scrollIntoView({ block: 'start' }); } catch (e) {} }, 60); return; }
@@ -1355,7 +1356,7 @@ class Component extends DCLogic {
   loadStaffOrders() { if (typeof fetch !== 'function' || !this.authToken()) return; fetch('/api/orders', { headers: this.authHeaders() }).then(r => r.ok ? r.json() : null).then(d => { if (d) this.setState({ staffOrders: d.orders || [] }); }).catch(() => {}); }
   loadSettings() { if (typeof fetch !== 'function') return; fetch('/api/settings').then(r => r.json()).then(d => { if (d && d.settings) this.setState({ settings: d.settings }); }).catch(() => {}); }
   loadFaq() { if (typeof fetch !== 'function' || this.state.faq) return; fetch('/api/content/faq').then(r => r.json()).then(d => this.setState({ faq: d.faq || [] })).catch(() => {}); }
-  loadDownloads() { if (typeof fetch !== 'function' || this.state.downloads) return; fetch('/api/content/downloads').then(r => r.json()).then(d => this.setState({ downloads: d.downloads || [] })).catch(() => {}); }
+  loadDownloads() { if (typeof fetch !== 'function' || this.state.downloads || this._dlLoading) return; this._dlLoading = true; fetch('/api/content/downloads').then(r => r.json()).then(d => this.setState({ downloads: d.downloads || [] })).catch(() => {}); }
   loadMedia() { if (typeof fetch !== 'function' || this.state.media) return; fetch('/api/content/media').then(r => r.json()).then(d => this.setState({ media: d.media || [] })).catch(() => {}); }
   saveSettings(patch, tag) {
     this.setState({ setBusy: tag || true });
@@ -1901,6 +1902,7 @@ class Component extends DCLogic {
     // named top-level routes (so the SSR header/footer links resolve in the SPA)
     const NAMED = { cart: 'cart', checkout: 'checkout', auth: 'auth', search: 'search', learn: 'learn', 'learning-hub': 'learn', membership: 'membership', contact: 'contact', about: 'about', 'about-us': 'about', support: 'support', downloads: 'downloads', partners: 'partners', terms: 'terms', track: 'track', artwork: 'artwork', 'customized-printing-solutions': 'solutions' };
     // packaging: library landing at /packaging, configurator/quote/die-lines as their own sub-URLs
+    if (segs[0] === 'download' || (segs[0] === 'downloads' && segs[1])) return this.setState({ route: 'downloads', dlCat: segs[1] || null, dlFold: null });
     if (segs[0] === 'packaging') return this.setState({ route: 'packaging', pkTab: segs[1] || 'library' });
     if (segs[0] === 'account' && (segs[1] === 'reset-password' || segs[1] === 'lost-password')) {
       const qs = new URLSearchParams(window.location.search);
@@ -4068,20 +4070,37 @@ class Component extends DCLogic {
   // search engines + the Product Spec / Artwork Spec / Templates / FAQ tabs.
   // Below the configurator: just the product's Templates (spec / description / FAQ live on the
   // SEO page now; artwork spec belongs with the Upload & Check Artwork flow).
+  // which Templates Download category (web/content/downloads.json, the original /download/<slug>/)
+  // belongs to a product — matched on the product name, most specific first
+  dlSlugFor(name) {
+    const n = String(name || '').toLowerCase();
+    const MAP = [[/business card|name card/, 'business-card'], [/burger/, 'burger-box'], [/cup sleeve/, 'cup-sleeve'], [/drink carrier/, 'drink-carrier'], [/food tray/, 'food-tray'],
+      [/large food box/, 'large-food-box'], [/food box/, 'small-food-box'], [/gift box/, 'gift-boxes'], [/hand fan/, 'hand-fan'], [/button badge|badge/, 'button-badges'],
+      [/car (window )?sticker|car decal/, 'car-window-stickers'], [/computer form|ncr|payslip/, 'computer-forms'], [/letterhead/, 'letterheads'], [/money packet|ang ?pow|red packet/, 'money-packets'],
+      [/paper bag/, 'paper-bags'], [/presentation folder/, 'presentation-folder'], [/ticket|voucher|coupon/, 'tickets-and-vouchers'], [/wall calend/, 'wall-calender'],
+      [/hard ?stand/, 'hard-stand-calender'], [/soft ?stand|desk calend|table calend/, 'soft-stand-table-calender'], [/hard ?cover booklet/, 'hardcover-booklets'], [/perfect bind/, 'perfect-binding-booklets'],
+      [/saddle|booklet|catalogue|catalog|magazine/, 'saddle-stitched-booklets'], [/key ?card/, 'key-card-holders'], [/folded card/, 'folded-cards'],
+      [/greeting|invitation|postcard|non.?folded card/, 'greeting-and-invitation-cards'], [/flyer|loose sheet/, 'non-folded-loose-sheets'], [/brochure|leaflet|folded/, 'brochures-and-leaflets'],
+      [/notepad|note pad|business document/, 'business-documents']];
+    const hit = MAP.find(m => m[0].test(n));
+    return hit ? hit[1] : null;
+  }
+  // (user, 2026-09-30) the product's Templates section sends people to the Templates Download page
+  // (the original printoka.com/download/<product>/) instead of listing template files here
   productDetails(prod, NAME) {
-    const sizeField = this.pkFields().find(f => /size/i.test(f.def.key) && f.options && f.options.length);
-    const sizes = sizeField ? sizeField.options.filter(s => !/other|custom/i.test(s)) : [];
-    const slug = prod ? (this.catOverride(prod.id).slug || 'product') : 'product';
-    return h('section', { style: { borderTop: '1px solid ' + HAIR, marginTop: 44, paddingTop: 34 } },
+    this.loadDownloads();
+    const slug = this.dlSlugFor(NAME);
+    const cat = slug && (this.state.downloads || []).find(c => c.slug === slug && c.folds && c.folds.length);
+    const go = cat ? 'dl:' + cat.slug : 'downloads', href = cat ? '/download/' + cat.slug + '/' : '/downloads';
+    return h('section', { style: { borderTop: '1px solid ' + HAIR, marginTop: 44, paddingTop: 34, textAlign: 'center' } },
       h('h2', { style: { margin: '0 0 6px', fontSize: 20, fontWeight: 600, letterSpacing: '-.01em' } }, NAME + ' Templates'),
-      h('p', { style: { fontSize: 13.5, color: MUT, margin: '0 0 18px', maxWidth: '82ch' } }, 'Download a print-ready template for your size, design on it, and remove the guides before you submit. Every template has trim, +3 mm bleed and the safe area marked.'),
-      sizes.length ? h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', maxWidth: 620 } },
-        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 90px 90px 78px', gap: 8, padding: '10px 14px', background: ALT, fontSize: 11, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: FAINT } },
-          h('span', null, 'Size'), h('span', { style: { textAlign: 'center' } }, 'Illustrator'), h('span', { style: { textAlign: 'center' } }, 'Photoshop'), h('span', { style: { textAlign: 'center' } }, 'PDF')),
-        sizes.map((sz, i) => h('div', { key: i, style: { display: 'grid', gridTemplateColumns: '1fr 90px 90px 78px', gap: 8, padding: '10px 14px', borderTop: '1px solid ' + LINE, alignItems: 'center' } },
-          h('span', { style: { fontSize: 13, fontWeight: 500 } }, sz, h('span', { style: { color: FAINT, fontWeight: 400 } }, ' · +3 mm bleed')),
-          ['.ai', '.psd', '.pdf'].map((ext, j) => h('a', { key: j, href: 'templates/' + slug + '/' + sz.replace(/[^a-z0-9]+/gi, '-').toLowerCase() + ext, style: { textAlign: 'center', fontSize: 12, fontWeight: 600, color: TEAL, border: '1px solid ' + HAIR, borderRadius: 6, padding: '6px 0', textDecoration: 'none' } }, ['AI', 'PSD', 'PDF'][j]))))) : h('p', { style: { fontSize: 13, color: FAINT } }, 'Templates for this product are supplied on request.'),
-      h('div', { style: { fontSize: 11.5, color: FAINT, marginTop: 12, lineHeight: 1.6 } }, 'Need a size that is not listed? Ask us and we will send you the template.'));
+      h('p', { style: { fontSize: 14, color: MUT, margin: '0 auto 22px', maxWidth: '64ch' } }, 'Design on our print-ready template, then remove the guides before you upload.'),
+      cat ? h('div', { style: { display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 10, marginBottom: 6 } },
+        cat.folds.slice(0, 8).map(f => h('a', { key: f.id, href, 'data-go': go, style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: 100, padding: 6, border: '1px solid ' + HAIR, borderRadius: 8, textDecoration: 'none', color: INK } },
+          f.image ? h('img', { src: f.image, alt: f.name, loading: 'lazy', style: { width: 80, height: 80, objectFit: 'contain' } }) : null,
+          h('span', { style: { fontSize: 12.5, fontWeight: 600 } }, f.name)))) : null,
+      h('div', { style: { display: 'flex', justifyContent: 'center', marginTop: 24 } },
+        this.btn('Download templates', 'teal', go, { padding: '12px 26px' })));
   }
 
   // SEO copy generator — real, product-specific sentences built from the live catalogue
@@ -4123,22 +4142,7 @@ class Component extends DCLogic {
       h('h3', { style: { fontSize: 20, fontWeight: 600, margin: '0 0 6px' } }, 'Artwork Specification'),
       h('p', { style: { fontSize: 13.5, color: MUT, margin: '0 0 16px' } }, 'How to set up print-ready artwork for ' + NAME0 + ' so it prints exactly as you expect.'),
       kv([['File format', 'Print-ready PDF preferred. AI, EPS, or high-resolution PNG/TIFF also accepted.'], ['Resolution', '300 dpi at 100% size. Vector art stays sharp.'], ['Colour mode', 'CMYK for accurate print colour (RGB is converted and can shift).'], ['Bleed', '3 mm on every side. Extend your background into the bleed.'], ['Safe margin', 'Keep text and logos at least 3 to 5 mm inside the trim.'], ['Fonts', 'Outline or embed all fonts before exporting.'], ['Spot UV / foil', 'Supply a separate 100% black mask layer, named for the finishing process.']]));
-    if (t === 'templates') {
-      const prodT = this.pkProduct();
-      const sizeField = this.pkFields().find(f => /size/i.test(f.def.key) && f.options && f.options.length);
-      const sizes = sizeField ? sizeField.options.filter(s => !/other|custom/i.test(s)) : [];
-      const slug = prodT ? (this.catOverride(prodT.id).slug || 'product') : 'product';
-      return h('div', null,
-        h('h3', { style: { fontSize: 20, fontWeight: 600, margin: '0 0 6px' } }, 'Templates & Downloads — ' + (prodT ? this.catName(prodT.id) : '')),
-        h('p', { style: { fontSize: 13.5, color: MUT, margin: '0 0 16px' } }, 'Download a print-ready template for your size, set up your artwork on it, and remove the guides before submitting. Every template already has trim, +3 mm bleed and safe area marked.'),
-        sizes.length ? h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden' } },
-          h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 110px 110px 90px', gap: 8, padding: '10px 14px', background: ALT, fontSize: 11, fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: FAINT } },
-            h('span', null, 'Size'), h('span', { style: { textAlign: 'center' } }, 'Illustrator'), h('span', { style: { textAlign: 'center' } }, 'Photoshop'), h('span', { style: { textAlign: 'center' } }, 'PDF')),
-          sizes.map((sz, i) => h('div', { key: i, style: { display: 'grid', gridTemplateColumns: '1fr 110px 110px 90px', gap: 8, padding: '10px 14px', borderTop: '1px solid ' + LINE, alignItems: 'center' } },
-            h('span', { style: { fontSize: 13, fontWeight: 500 } }, sz, h('span', { style: { color: FAINT, fontWeight: 400 } }, ' · +3 mm bleed')),
-            ['.ai', '.psd', '.pdf'].map((ext, j) => h('a', { key: j, href: 'templates/' + slug + '/' + sz.replace(/[^a-z0-9]+/gi, '-').toLowerCase() + ext, style: { textAlign: 'center', fontSize: 12, fontWeight: 600, color: TEAL, border: '1px solid ' + HAIR, borderRadius: 6, padding: '6px 0', textDecoration: 'none' } }, ['AI', 'PSD', 'PDF'][j]))))) : h('p', { style: { fontSize: 13, color: FAINT } }, 'Templates for this product are supplied on request.'),
-        h('div', { style: { fontSize: 11.5, color: FAINT, marginTop: 12, lineHeight: 1.6 } }, 'Need a size that is not listed? Ask us and we will send you the template.'));
-    }
+    if (t === 'templates') return this.productDetails(this.pkProduct(), NAME0);
     if (t === 'about') {
       const axes0 = this.pkFields().filter(f => f.options && f.options.length && !/category/i.test(f.def.key));
       const axisList = axes0.slice(0, 5).map(f => f.def.label.toLowerCase()).join(', ');
@@ -4872,30 +4876,46 @@ class Component extends DCLogic {
   }
   // ===== TEMPLATE DOWNLOADS (migrated from printoka.com/download) =====
   s_downloads() {
-    const dls = this.state.downloads;
-    if (!dls) return this.pageWrap([this.head('Template downloads', 'Loading…')]);
+    // Templates Download — laid out like the original printoka.com/download/<product>/ page
+    // (single-download.php): title, description, "Take Note" card, template tiles (codes like
+    // HFS001), a Size / Download table (Illustrator · Photoshop · PDF), category sidebar on the right.
+    const all = this.state.downloads;
+    if (!all) this.loadDownloads();
+    if (!all) return this.pageWrap([h('p', { key: 'l', style: { color: MUT, fontSize: 14, padding: '40px 0' } }, 'Loading templates…')]);
+    const dls = all.filter(c => c.title && c.folds && c.folds.length);
     const active = dls.find(c => c.slug === this.state.dlCat) || dls[0];
-    return this.pageWrap([
-      this.head('Template downloads', 'Print-ready templates for standard-size products. Download, design to the guidelines, and remove the guide layer before you submit.'),
-      h('div', { key: 'g', style: { display: 'grid', gridTemplateColumns: '220px minmax(0,1fr)', gap: 22, marginTop: 22, alignItems: 'start' } },
-        h('aside', { style: { border: '1px solid ' + HAIR, borderRadius: 12, background: '#fff', padding: 8, position: 'sticky', top: 16, maxHeight: '80vh', overflow: 'auto' } },
-          dls.map(c => { const on = active && c.slug === active.slug;
-            return h('div', { key: c.slug, 'data-go': 'set:dlCat:' + c.slug, style: { padding: '9px 12px', borderRadius: 8, fontSize: 13, fontWeight: on ? 600 : 400, color: on ? '#E52220' : MUT, background: on ? '#fdeceb' : 'transparent', cursor: 'pointer' } }, c.title); })),
-        active ? h('div', null,
-          h('h2', { style: { fontSize: 22, fontWeight: 700, margin: '0 0 8px' } }, active.title),
-          active.description ? h('p', { style: { margin: '0 0 12px', fontSize: 13.5, color: MUT, lineHeight: 1.7, whiteSpace: 'pre-wrap' } }, active.description) : null,
-          active.notice ? h('div', { style: { display: 'flex', gap: 10, background: '#fff7e6', border: '1px solid #f0d9a0', borderRadius: 10, padding: '12px 14px', marginBottom: 16 } },
-            h('span', { style: { flex: 'none', fontSize: 16 } }, '⚠'), h('div', null, h('div', { style: { fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: '#a1660a', marginBottom: 2 } }, active.notice.label), h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.6 } }, active.notice.body))) : null,
-          active.folds.map((f, fi) => h('div', { key: fi, style: { marginBottom: 22 } },
-            h('div', { style: { fontSize: 15, fontWeight: 600, marginBottom: 10 } }, f.name),
-            f.rows.length ? h('div', { style: { border: '1px solid ' + HAIR, borderRadius: 12, overflow: 'hidden', background: '#fff' } },
-              f.rows.map((r, ri) => h('div', { key: ri, style: { display: 'grid', gridTemplateColumns: 'minmax(120px,220px) 1fr', gap: 14, padding: '12px 16px', borderTop: ri ? '1px solid ' + LINE : 'none', alignItems: 'center' } },
-                h('div', null, h('div', { style: { fontSize: 13.5, fontWeight: 500 } }, r.size || '—'), r.dims ? h('div', { style: { fontSize: 12, color: FAINT } }, r.dims) : null),
-                h('div', { style: { display: 'flex', gap: 16, flexWrap: 'wrap' } }, r.files.length ? r.files.map((fl, li) =>
-                  h('a', { key: li, href: fl.url, target: '_blank', rel: 'noopener', style: { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 13.5, fontWeight: 600, color: '#E52220', textDecoration: 'none' } }, this.dashIcon('file', '#E52220', 15), fl.label)) : h('span', { style: { fontSize: 12.5, color: FAINT } }, 'No file'))))) :
-              h('div', { style: { border: '1px dashed ' + HAIR, borderRadius: 10, padding: 18, color: FAINT, fontSize: 13 } }, 'No downloadable templates for this variation yet.'))),
-        ) : null),
-    ]);
+    const fold = active && (active.folds.find(f => f.id === this.state.dlFold) || active.folds[0]);
+    const up = { fontSize: 11, fontWeight: 600, letterSpacing: '.1em', textTransform: 'uppercase', color: '#4a4a4a' };
+    const ICON = { Illustrator: 'ai', Photoshop: 'ps', PDF: 'pdf' };
+    const desc = active && active.description ? active.description.replace(/\r/g, '').replace(/\n{2,}/g, '\n\n').trim() : '';
+    return h('div', { style: { borderTop: '1px solid ' + HAIR } },
+      h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '40px 20px 20px', display: 'flex', flexWrap: 'wrap', gap: '32px 64px', alignItems: 'flex-start' } },
+        active ? h('div', { key: 'm', style: { flex: '1 1 560px', minWidth: 0 } },
+          h('div', { style: { fontSize: 15, fontWeight: 600, marginBottom: 6 } }, 'Templates Download'),
+          h('h1', { style: { fontSize: 30, fontWeight: 600, letterSpacing: '-.01em', margin: '0 0 14px' } }, active.title),
+          desc ? h('p', { style: { fontSize: 15, color: MUT, lineHeight: 1.75, margin: '0 0 20px', whiteSpace: 'pre-line' } }, desc) : null,
+          active.notice ? h('div', { style: { display: 'flex', gap: 14, alignItems: 'flex-start', background: 'rgba(229,34,32,.05)', padding: '16px 18px', marginBottom: 30 } },
+            h('img', { src: window.__asset('assets/icons/filetype/warning.svg'), alt: '', width: 28, height: 28, style: { flex: 'none' } }),
+            h('div', null, h('div', { style: Object.assign({}, up, { marginBottom: 4 }) }, active.notice.label), h('div', { style: { fontSize: 14, color: MUT, lineHeight: 1.65 } }, active.notice.body))) : null,
+          h('div', { style: { fontSize: 17, fontWeight: 600, margin: '0 0 14px' } }, active.variant || active.title),
+          h('div', { role: 'tablist', style: { display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 30 } },
+            active.folds.map(f => { const on = fold && f.id === fold.id;
+              return h('div', { key: f.id, role: 'tab', 'aria-selected': on ? 'true' : 'false', tabIndex: 0, onClick: () => this.setState({ dlFold: f.id }), onKeyDown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.setState({ dlFold: f.id }); } },
+                style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: 6, width: 100, border: '2px solid ' + (on ? TEAL : 'transparent'), cursor: 'pointer', textAlign: 'center' } },
+                f.image ? h('img', { src: f.image, alt: f.name, loading: 'lazy', style: { width: 80, height: 80, objectFit: 'contain' } }) : h('div', { style: { width: 80, height: 80, background: ALT } }),
+                h('div', { style: { fontSize: 13, fontWeight: 600, color: '#000', lineHeight: 1.3 } }, f.name)); })),
+          fold ? h('div', { key: 'dl' },
+            h('div', { style: { fontSize: 17, fontWeight: 600, margin: '0 0 14px' } }, 'Downloads for ' + fold.name),
+            h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,2fr)', gap: 12, padding: '0 8px 8px' } }, h('div', { style: up }, 'Size (mm)'), h('div', { style: up }, 'Download')),
+            fold.rows.map((r, ri) => h('div', { key: ri, style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,2fr)', gap: 12, padding: '12px 8px', background: ri % 2 ? '#fff' : '#fafafa', alignItems: 'center' } },
+              h('div', null, h('div', { style: { fontSize: 15 } }, r.size || '—'), r.dims ? h('div', { style: { fontSize: 13, color: MUT } }, r.dims) : null),
+              h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '8px 36px' } }, (r.files || []).map((fl, li) =>
+                h('a', { key: li, href: fl.url, target: '_blank', rel: 'noopener', style: { display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 15, color: '#38b', textDecoration: 'underline' } },
+                  ICON[fl.label] ? h('img', { src: window.__asset('assets/icons/filetype/' + ICON[fl.label] + '.svg'), alt: '', width: 24, height: 24 }) : null, fl.label)))))) : null) : null,
+        h('aside', { key: 's', style: { flex: '0 1 260px', minWidth: 200 } },
+          h('div', { style: Object.assign({}, up, { marginBottom: 12 }) }, 'Templates Download'),
+          h('nav', { 'aria-label': 'Template categories' }, dls.map(c => { const on = active && c.slug === active.slug;
+            return h('a', { key: c.slug, href: '/download/' + c.slug + '/', 'data-go': 'dl:' + c.slug, style: { display: 'block', padding: '9px 0 9px 12px', borderLeft: '2px solid ' + (on ? TEAL : 'transparent'), fontSize: 14.5, fontWeight: on ? 600 : 400, color: on ? TEAL : '#212121', textDecoration: 'none' } }, c.title); })))));
   }
   // Terms & Conditions — the original printoka.com wording (web/content/terms.json, served by /api/content/terms)
   s_terms() {
