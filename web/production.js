@@ -474,7 +474,9 @@
       return this.acC('Incoming job', [
         this.acDL([['From',((j.outsource && (j.outsource.vendors || []).find(v => v.vendorId === j.outsource.awardedTo)) || {}).vendorName || 'Printer'],
           ['Delivery company', pd.company || '—'], ['Tracking number', (pd.tracking || []).join(', ') || '—'],
-          pd.document ? ['Delivery order', link(pd.document.name, () => this.jDownload('/api/jobs/' + id + '/files/' + pd.document.id, pd.document.name))] : null]),
+          pd.document ? ['Delivery order', link(pd.document.name, () => this.jDownload('/api/jobs/' + id + '/files/' + pd.document.id, pd.document.name))] : null,
+          // (user, 2026-09-30) the printer uploads its invoice; logistics sees it here for payment (paid in the Friday run)
+          ['Printer invoice', pr.printerInvoice ? link('📄 ' + pr.printerInvoice.name + (pr.printerInvoice.amount ? ' · RM ' + Number(pr.printerInvoice.amount).toFixed(2) : ''), () => this.jDownload('/api/jobs/' + id + '/files/' + pr.printerInvoice.id, pr.printerInvoice.name)) : h('span', { style: { color: '#c71917' } }, 'Not uploaded by the printer yet')]]),
         acts.receive ? h('div', { key: 'b' }, Btn('Received', () => act('receive', {}, 'Received.'), 'primary', !acts.receive.enabled)) : null]);
     }
     // Completed Jobs (in-house) start here, at the print-label page — no Received page
