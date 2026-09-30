@@ -172,7 +172,8 @@
     const desc = (lines ? lines.map(l => Array.isArray(l) ? l[0] + ': ' + l[1] : String(l)) : String(req.quoteData || q.spec || '').split('\n'))
       .map(s => s.trim()).filter(s => s && !/^(quantity|qty)\b/i.test(s));
     if (req.notes || q.notes) desc.push('Remarks: ' + (req.notes || q.notes));
-    if (q.leadDays) desc.push('Production time: ' + q.leadDays + ' working days');
+    if (q.leadDays) desc.push('Production time: ' + q.leadDays + (Number(q.leadDays) === 1 ? ' working day' : ' working days'));
+    if (q.totals && q.totals.tax) desc.push('Total includes ' + (q.totals.taxLabel || 'SST') + ': ' + RM(q.totals.tax));
     const price = q.price != null ? Number(q.price) : null;
     doc.setProperties({ title: 'Quotation ' + q.id, subject: 'Printoka quotation', author: 'Yushan Corporation Sdn Bhd (Printoka)', creator: 'Printoka' });
     await drawTemplate(doc, 'quote');
@@ -197,8 +198,9 @@
     if (price != null) { if (qty) doc.text(RM(price / qty), 171, y0 + 3.4, { align: 'right' }); doc.text(RM(price), 196, y0 + 3.4, { align: 'right' }); }
     // totals: shipping · coupon discount · member discount · total
     const Y = [217.7, 222.4, 226.9, 231.7].map(v => v + 3.9);
-    doc.text('-', 194.5, Y[0], { align: 'right' }); doc.text('-', 194.5, Y[1], { align: 'right' }); doc.text('-', 194.5, Y[2], { align: 'right' });
-    doc.setFont(FONT, 'bold'); doc.setFontSize(8); doc.text(price != null ? RM(price) : 'To be quoted', 194.5, Y[3], { align: 'right' });
+    const T = q.totals || null;
+    doc.text(T && T.shipping ? RM(T.shipping) : '-', 194.5, Y[0], { align: 'right' }); doc.text('-', 194.5, Y[1], { align: 'right' }); doc.text(T && T.member ? '-' + RM(T.member) : '-', 194.5, Y[2], { align: 'right' });
+    doc.setFont(FONT, 'bold'); doc.setFontSize(8); doc.text(T ? RM(T.total) : price != null ? RM(price) : 'To be quoted', 194.5, Y[3], { align: 'right' });
     return doc;
   };
 

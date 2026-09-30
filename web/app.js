@@ -1270,6 +1270,47 @@ class Component extends DCLogic {
         h('div', { style: { fontSize: 12.5, color: MUT, lineHeight: 1.6 } }, (!cp.multiUse && cp.usedAt) ? 'Used' + (cp.orderId ? ' on order ' + cp.orderId : '') + '.'
           : 'For orders of RM ' + (cp.minSpend || 0).toLocaleString() + ' or more · ' + (cp.multiUse ? 'no expiry · use it as many times as you like' : 'new sign-up offer · one-time use') + ' · all products. Enter it in your cart.')));
   }
+  // (user, 2026-09-30) "Download Quotation" in the configurator: the original quotation PDF for this configuration.
+  // The customer is signed in (the configurator needs it) and must have an address — asked once if missing.
+  configQuotation() {
+    if (!this.state.user) return this.go('auth');
+    const go = list => { const a = (list || []).find(x => x.isDefault) || (list || [])[0]; if (!a) return this.setState({ qtAddr: true, qtErr: null }); this.makeConfigQuote(a); };
+    fetch('/api/account/addresses', { headers: this.authHeaders() }).then(r => r.json()).then(d => { this.setState({ addresses: d.addresses || [] }); go(d.addresses); }).catch(() => go(this.state.addresses));
+  }
+  makeConfigQuote(a) {
+    const prod = this.pkProduct(), q = this.pkQuote(), p = this.price(); if (!prod || !q || !q.ok) return;
+    const u = this.state.user || {}; let lines = []; try { lines = this.pkOrderSpec().lines || []; } catch (e) {}
+    const taxRate = this.taxRate(), tax = p.net * taxRate, ship = this.shipFee(p.net);
+    const id = 'Q-' + this.newJobCode().slice(0, 8).toUpperCase();
+    const qo = { id, createdAt: new Date().toISOString(), product: this.catName(prod.id), qty: this.state.qty, specLines: lines, leadDays: this.procDays(), price: p.gross,
+      customer: { name: u.name, company: u.company, email: u.email, phone: u.phone, line1: a.line1, line2: a.line2, postcode: a.postcode, city: a.city, state: a.state },
+      totals: { shipping: ship, member: p.disc, tax, taxLabel: this.taxLabel(), total: p.net + tax + ship } };
+    this.setState({ qtBusy: true });
+    Promise.resolve(this.buildQuotePdf(qo)).then(doc => { doc.save('Printoka-Quotation-' + id + '.pdf'); this.setState({ qtBusy: false }); }).catch(() => this.setState({ qtBusy: false }));
+  }
+  // the one-time address form (saved to the address book), then the quotation downloads
+  quoteAddrModal() {
+    if (!this.state.qtAddr) return null;
+    const close = () => this.setState({ qtAddr: false, qtErr: null });
+    const f = (k, ph, full) => h('input', { key: k, placeholder: ph, value: this.state[k] || '', onChange: e => this.setState({ [k]: e.target.value }), 'aria-label': ph,
+      style: { gridColumn: full ? '1 / -1' : 'auto', font: '400 14px Montserrat,sans-serif', padding: '12px 14px', border: '1px solid #e6e8eb', width: '100%', boxSizing: 'border-box' } });
+    const save = () => {
+      const a = { label: 'Address 1', line1: (this.state.qtL1 || '').trim(), line2: (this.state.qtL2 || '').trim(), postcode: (this.state.qtPc || '').trim(), city: (this.state.qtCity || '').trim(), state: (this.state.qtSt || '').trim(), country: this.cc() };
+      if (!a.line1 || !a.postcode || !a.city) return this.setState({ qtErr: 'Please fill in the address, postcode and city.' });
+      this.setState({ qtErr: null, qtSaving: true });
+      fetch('/api/account/addresses', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify(a) })
+        .then(r => r.json()).then(d => { const list = d.addresses || []; this.setState({ addresses: list, qtAddr: false, qtSaving: false, qtL1: '', qtL2: '', qtPc: '', qtCity: '', qtSt: '' }); this.makeConfigQuote(list[list.length - 1] || a); })
+        .catch(() => this.setState({ qtSaving: false, qtErr: 'Could not save the address — check your connection.' }));
+    };
+    return h('div', { key: 'qta', onClick: close, style: { position: 'fixed', inset: 0, zIndex: 98, background: 'rgba(15,20,25,.5)', display: 'grid', placeItems: 'center', padding: 16 } },
+      h('div', { onClick: e => e.stopPropagation(), role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Your address', style: { background: '#fff', border: '1px solid #e6e8eb', maxWidth: 480, width: '100%', padding: '26px 24px' } },
+        h('div', { style: { width: 24, height: 3, background: TEAL, marginBottom: 12 } }),
+        h('div', { style: { fontSize: 22, fontWeight: 500, marginBottom: 6 } }, 'Your address'),
+        h('div', { style: { fontSize: 13.5, color: MUT, marginBottom: 16 } }, 'Your quotation is addressed to you.'),
+        h('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 } }, f('qtL1', 'Address', true), f('qtL2', 'Address line 2 (optional)', true), f('qtPc', 'Postcode'), f('qtCity', 'City'), f('qtSt', 'State', true)),
+        this.state.qtErr ? h('div', { role: 'alert', style: { fontSize: 12.5, color: '#c0392b', marginTop: 10 } }, this.state.qtErr) : null,
+        h('span', { role: 'button', tabIndex: 0, onClick: save, onKeyDown: e => { if (e.key === 'Enter') save(); }, style: { display: 'block', textAlign: 'center', background: '#c9191b', color: '#fff', fontSize: 16, fontWeight: 500, padding: '14px 16px', cursor: 'pointer', marginTop: 18, opacity: this.state.qtSaving ? .6 : 1 } }, this.state.qtSaving ? 'Saving…' : 'Save & download quotation')));
+  }
   downloadQuotation() {
     // a cart-level quotation mirrors the price the configurator/checkout/invoice all read
     if (typeof window !== 'undefined') window.print();
@@ -4206,47 +4247,41 @@ class Component extends DCLogic {
       h('div', { className: 'pk-cfg-grid', style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 352px', gap: 28, alignItems: 'start' } },
         h('div', null, this.cfgBook(groups, NAME)),
         h('div', { style: { position: 'sticky', top: 122, display: 'flex', flexDirection: 'column', gap: 14 } },
-          this.card([
-            h('div', { key: 'h', style: { fontSize: 18, fontWeight: 600, letterSpacing: '-.01em', color: INK, borderBottom: '2px solid ' + TEAL, paddingBottom: 8, marginBottom: 12, display: 'inline-block' } }, this._bookDoneNow ? 'Price' : 'Summary'),
-            // live spec summary, straight from the current configuration (not repeated once the book is finished)
-            this._bookDoneNow ? null : (() => { let lines = []; try { lines = (this.pkOrderSpec().lines || []); } catch (e) {} return lines.length
-              ? h('div', { key: 'spec', style: { display: 'flex', flexDirection: 'column', gap: 8 } },
-                  lines.map((l, i) => h('div', { key: i, style: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 14, fontSize: 12.5, lineHeight: 1.5 } },
-                    h('span', { style: { color: FAINT, flex: '0 0 auto' } }, l[0]), h('span', { style: { color: INK, fontWeight: 500, textAlign: 'right' } }, l[1]))))
-              : null; })(),
-            // order quantity + production time
-            h('div', { key: 'qp', style: Object.assign({ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 12.5 }, this._bookDoneNow ? {} : { borderTop: '1px solid ' + LINE, paddingTop: 12, marginTop: 12 }) },
-              [this._bookDoneNow ? null : ['Order Quantity', qtyChosen ? s.qty.toLocaleString() + ' pcs' : 'Please select'], ['Production time', this.procDays() != null ? (this.procDays() + (this.procDays() === 1 ? ' working day' : ' working days')) : '3 working days']]
-                .filter(Boolean).map((r, i) => h('div', { key: i, style: { display: 'flex', justifyContent: 'space-between', gap: 12, lineHeight: 1.5 } }, h('span', { style: { color: FAINT } }, r[0]), h('span', { style: { color: INK, fontWeight: 500 } }, r[1])))),
-            // price
-            quoteOnly
-              ? h('div', { key: 'pr', style: { borderTop: '1px solid ' + LINE, paddingTop: 14, marginTop: 12 } }, h('span', { style: { fontSize: 22, fontWeight: 600, color: TEAL } }, 'Price on request'))
-              : (ready
-                  ? (() => {
-                      // same arithmetic as cartTotals(): tax on the discounted price, flat shipping on top
-                      const taxRate = this.taxRate(), tax = p.net * taxRate, ship = this.shipFee(p.net);
-                      return h('div', { key: 'pr', style: { borderTop: '1px solid ' + LINE, paddingTop: 12, marginTop: 12, display: 'flex', flexDirection: 'column', gap: 7 } },
-                        [['Subtotal', this.money(p.gross), MUT], [this.tier() + ' member −' + this.tierPct() + '%', '−' + this.money(p.disc), TEAL], taxRate ? [this.taxLabel(), this.money(tax), MUT] : null, ['Est. shipping', this.money(ship), MUT]].filter(Boolean)
-                          .map((r, i) => h('div', { key: i, style: { display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 12.5, lineHeight: 1.5, color: r[2] } }, h('span', null, r[0]), h('span', { style: { fontWeight: 500, color: r[2] === TEAL ? TEAL : INK } }, r[1]))),
-                        h('div', { style: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, borderTop: '1px solid ' + LINE, paddingTop: 11, marginTop: 4 } },
-                          h('span', { style: { fontSize: 15, fontWeight: 600 } }, 'Total'),
-                          h('span', { style: { fontSize: 30, fontWeight: 600, letterSpacing: '-.02em', color: TEAL } }, this.money(p.net + tax + ship))),
-                        h('div', { style: { fontSize: 11.5, color: FAINT } }, this.currency() + ' ' + (p.unit * this.fx()).toFixed(3) + ' per piece before ' + (taxRate ? 'tax & ' : '') + 'shipping'));
-                    })()
-                  : h('div', { key: 'pr', style: { borderTop: '1px solid ' + LINE, paddingTop: 14, marginTop: 12, fontSize: 20, fontWeight: 600, color: MUT } }, 'Select your options')),
-            // actions
-            h('div', { key: 'e', style: { display: 'flex', flexDirection: 'column', gap: 9, marginTop: 16 } },
-              (quoteOnly || ready)
-                ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 9 } },
-                    this.btn(quoteOnly ? 'Request a quote' : 'Add to cart', 'amber', quoteOnly ? 'contact' : 'addcart', { justifyContent: 'center' }),
-                    this.btn('Buy now', 'teal', quoteOnly ? 'contact' : 'addcart', { justifyContent: 'center' }),
-                    this.btn('Download quotation (PDF)', 'ghost', 'product', { justifyContent: 'center' }))
-                : h('span', { style: { textAlign: 'center', background: '#f1f3f5', color: MUT, fontWeight: 600, fontSize: 13.5, padding: '12px', borderRadius: 8 } }, 'Select your options to continue')),
-          ]),
+          // (user, 2026-09-30) styled like the cart's Summary box; Add to cart + Download Quotation only, no unit price
+          (() => {
+            const row = (l, v, color) => h('div', { key: l, style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: 12, padding: '7px 0', fontSize: 14, lineHeight: 1.45 } },
+              h('span', { style: { color: color || MUT } }, l), h('span', { style: { color: color || INK, textAlign: 'right' } }, v));
+            const pt = this.procDays() != null ? (this.procDays() + (this.procDays() === 1 ? ' working day' : ' working days')) : '3 working days';
+            let lines = []; if (!this._bookDoneNow) { try { lines = this.pkOrderSpec().lines || []; } catch (e) {} }
+            const taxRate = this.taxRate(), tax = ready ? p.net * taxRate : 0, ship = ready ? this.shipFee(p.net) : 0;
+            const cta = { display: 'block', textAlign: 'center', background: '#c9191b', color: '#fff', fontSize: 16, fontWeight: 500, padding: '15px 16px', cursor: 'pointer', boxShadow: '0 2px 6px rgba(201,25,27,.25)' };
+            return h('div', { key: 'sum', style: { background: '#fff', border: '1px solid #e6e8eb', padding: '26px 24px' } },
+              h('div', { style: { width: 24, height: 3, background: TEAL, marginBottom: 12 } }),
+              h('div', { style: { fontSize: 24, fontWeight: 500, letterSpacing: '-.01em', marginBottom: 14 } }, this._bookDoneNow ? 'Price' : 'Summary'),
+              lines.length ? h('div', { style: { borderBottom: '1px solid #e6e8eb', paddingBottom: 8, marginBottom: 8 } }, lines.map(l => row(l[0], l[1]))) : null,
+              this._bookDoneNow ? null : row('Order Quantity', qtyChosen ? s.qty.toLocaleString() + ' pcs' : 'Please select'),
+              row('Production time', pt),
+              quoteOnly ? h('div', { style: { borderTop: '1px solid #e6e8eb', marginTop: 8, paddingTop: 12, fontSize: 18, fontWeight: 600, color: INK } }, 'Price on request')
+                : ready ? h('div', { style: { borderTop: '1px solid #e6e8eb', marginTop: 8, paddingTop: 6 } },
+                    row('Subtotal', this.money(p.gross)),
+                    p.disc ? row(this.tier() + ' member −' + this.tierPct() + '%', '−' + this.money(p.disc), TEAL) : null,
+                    taxRate ? row(this.taxLabel(), this.money(tax)) : null,
+                    row('Est. shipping', this.money(ship)),
+                    h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: 12, padding: '12px 0 4px', alignItems: 'baseline', borderTop: '1px solid #e6e8eb', marginTop: 6 } },
+                      h('span', { style: { color: MUT, fontSize: 14.5 } }, 'Total'), h('span', { style: { fontSize: 20, fontWeight: 600, color: INK } }, this.money(p.net + tax + ship))))
+                  : null,
+              h('div', { style: { marginTop: 20 } },
+                quoteOnly ? h('span', { role: 'button', tabIndex: 0, 'data-go': 'contact', style: cta }, 'Request a quote')
+                  : ready ? h('span', { role: 'button', tabIndex: 0, 'data-go': 'addcart', style: cta }, 'Add to cart')
+                  : h('span', { style: Object.assign({}, cta, { background: '#f1f3f5', color: MUT, boxShadow: 'none', cursor: 'default', fontSize: 14.5 }) }, 'Select your options to continue')),
+              ready && !quoteOnly ? h('div', { style: { textAlign: 'center', marginTop: 18 } },
+                h('span', { role: 'button', tabIndex: 0, onClick: () => this.configQuotation(), onKeyDown: e => { if (e.key === 'Enter') this.configQuotation(); }, style: { fontSize: 14, color: TEAL, textDecoration: 'underline', cursor: 'pointer' } }, this.state.qtBusy ? 'Preparing quotation…' : 'Download Quotation')) : null);
+          })(),
           // (user, 2026-09-30) artwork is uploaded from the cart (per job), not from the configurator
           null)),
       this.customizedBanner(),
-      this.productDetails(prod, NAME)));
+      this.productDetails(prod, NAME)),
+      this.quoteAddrModal());
   }
   // product banner over the configurator: the product's original photo, "Print Your {name}
   // Online Now!", three benefits. Background = one of the three logo gradients, picked at random
