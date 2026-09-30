@@ -655,19 +655,24 @@ function rejectQuote(qid, reason, actor) {
   q.status = 'rejected'; q.rejectReason = reason || ''; q.history.push({ ts: now(), actor: actor || 'customer', action: 'rejected', note: reason || '' });
   save(); return { quote: q };
 }
-function acceptQuote(qid, actor) {
+// opts (the customer's checkout, user 2026-09-30): { payment: { method }, fulfillment, shipTo, customer } — without
+// opts (the outlet accepting at the counter) the order is taken as paid, as before
+function acceptQuote(qid, actor, opts) {
   const q = quote(qid); if (!q) return { error: 'quote not found' };
   if (q.status !== 'issued' && q.status !== 'reviewed') return { error: 'only an issued quote can be accepted' };
   const qty = Number(q.requirement.qty) || 1;
+  const co = opts || null;
+  const PAY = { ipay88: 1, card_test: 1, bank_transfer: 1, wallet: 1 };
+  if (co && !(co.payment && PAY[co.payment.method])) return { error: 'Choose how you would like to pay.' };
   const o = createOrder({
-    userId: q.userId, customer: q.customer,
+    userId: q.userId, customer: co && co.customer ? Object.assign({}, q.customer, co.customer) : q.customer,
     // the quote's configurator answers travel with the order (the order details = the configurator summary)
     items: [{ productId: q.requirement.productId != null ? q.requirement.productId : null, product: q.requirement.product || 'Custom quote', spec: q.requirement.quoteData || [q.requirement.size, q.requirement.material, q.requirement.finishing].filter(Boolean).join(' · '),
       specLines: q.requirement.specLines ? q.requirement.specLines.concat(q.requirement.notes ? [['Remarks', q.requirement.notes]] : []) : null, productionTime: q.leadDays ? q.leadDays + (q.leadDays === 1 ? ' working day' : ' working days') : null,
       qty, unitPrice: q.price / qty, lineTotal: q.price, artworks: q.artworkFile ? [q.artworkFile] : [] }],
-    subtotal: q.price, memberDiscount: 0, tax: 0, shipping: 0, total: q.price, payment: { method: 'card_test' }, fromQuote: qid,
-    fulfillment: q.delivery && q.delivery.method === 'delivery' ? { method: 'delivery' } : q.delivery && q.delivery.method === 'pickup' ? { method: 'pickup', outlet: (q.delivery.outlet && q.delivery.outlet.id) || q.outlet } : undefined,
-    shipTo: q.delivery && q.delivery.method === 'delivery' && q.delivery.address ? q.delivery.address : undefined,
+    subtotal: q.price, memberDiscount: 0, tax: 0, shipping: 0, total: q.price, payment: { method: co ? co.payment.method : 'card_test' }, fromQuote: qid,
+    fulfillment: co && co.fulfillment ? co.fulfillment : q.delivery && q.delivery.method === 'delivery' ? { method: 'delivery' } : q.delivery && q.delivery.method === 'pickup' ? { method: 'pickup', outlet: (q.delivery.outlet && q.delivery.outlet.id) || q.outlet } : undefined,
+    shipTo: co && co.fulfillment ? (co.shipTo || undefined) : q.delivery && q.delivery.method === 'delivery' && q.delivery.address ? q.delivery.address : undefined,
   });
   q.status = 'accepted'; q.orderId = o.id; q.decision = 'proceed'; q.history.push({ ts: now(), actor: actor || 'customer', action: 'accepted', note: 'Order ' + o.id });
   // customer converted the quote to an order → the originating outlet is notified (prepress already notified by createOrder)

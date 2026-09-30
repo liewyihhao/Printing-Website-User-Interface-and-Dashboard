@@ -1247,8 +1247,9 @@ class Component extends DCLogic {
   }
   setField(k, v) { this.setState({ [k]: v }); }
   placeOrder() {
-    const cart = this.state.cart || []; if (!cart.length) return;
-    const t = this.cartTotals();
+    const cq = this.state.coQuote; // an accepted quotation checking out (user, 2026-09-30)
+    const cart = cq ? [{}] : (this.state.cart || []); if (!cart.length) return;
+    const t = cq ? { total: Number(cq.price || 0) } : this.cartTotals();
     const u = this.state.user || {};
     const v = (k, d) => this.state[k] != null ? this.state[k] : (d == null ? '' : d);
     const who = { name: v('coName', u.name), email: u.email || '', phone: v('coPhone', u.phone), company: v('coCompany', u.company) };
@@ -1273,8 +1274,12 @@ class Component extends DCLogic {
       subtotal: t.subtotal, memberDiscount: t.memberDiscount, coupon: t.couponCode, couponDiscount: t.couponDiscount, tax: t.tax, shipping: t.shipping, total: t.total, creditApplied, tier: this.tier(),
     };
     this.setState({ placing: true, orderErr: null });
-    fetch('/api/orders', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify(body) })
+    // a quotation: the quote becomes the order at its quoted price, with the details, delivery and payment chosen here
+    const url = cq ? '/api/quotes/' + encodeURIComponent(cq.id) + '/accept' : '/api/orders';
+    const send = cq ? { customer: body.customer, fulfillment: body.fulfillment, shipTo: body.shipTo, payment: body.payment } : body;
+    fetch(url, { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify(send) })
       .then(r => r.json()).then(d => {
+        if (d && d.order && cq) { this.setState({ order: d.order, placing: false, coQuote: null, coStep: 1, coPay: null, route: 'track', trackInput: d.order.id, trackOrder: null }); if (typeof window !== 'undefined') window.scrollTo(0, 0); this.trackLookup(d.order.id); this.loadUserOrders(); this.loadQuotes(); this.loadAccount(); return; }
         if (d && d.order) { this.setState({ order: d.order, placing: false, cart: [], coupon: null, cartCoupon: '', couponMsg: null, coStep: 1, coPay: null }); this.saveCart([]); if (typeof window !== 'undefined') window.scrollTo(0, 0); this.setState({ route: 'track', trackInput: d.order.id, trackOrder: null }); this.trackLookup(d.order.id); this.loadUserOrders(); this.loadAccount();
           fetch('/api/auth/me', { headers: this.authHeaders() }).then(r => r.ok ? r.json() : null).then(m => { if (m && m.customer) this.setState({ user: m.customer }); }).catch(() => {}); }
         else this.setState({ placing: false, orderErr: (d && d.error) || 'Could not place the order.' });
@@ -1587,9 +1592,20 @@ class Component extends DCLogic {
     fetch('/api/quotes/' + qid + '/price', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify(body) })
       .then(r => r.json()).then(() => this.loadQuotes()).catch(() => {});
   }
+  // (user, 2026-09-30) "Accept & pay" goes through the checkout like any order: details → delivery → payment.
+  // The quote's delivery choice (pickup at an outlet / delivery) is filled in; the order is made on Place order.
   quoteAccept(qid) {
-    fetch('/api/quotes/' + qid + '/accept', { method: 'POST', headers: this.authHeaders() })
-      .then(r => r.json()).then(d => { if (d.order) { this.setState({ order: d.order, route: 'track', trackInput: d.order.id, trackOrder: null }); this.trackLookup(d.order.id); this.loadUserOrders(); this.loadQuotes(); if (typeof window !== 'undefined') window.scrollTo(0, 0); } }).catch(() => {});
+    const q = (this.state.quotesList || []).find(x => x.id === qid);
+    const open = qq => {
+      if (!qq) return;
+      const dv = qq.delivery || null;
+      const pre = dv && dv.method === 'pickup' ? { coFulfil: 'pickup', coOutlet: (dv.outlet && dv.outlet.id) || qq.outlet || '' } : { coFulfil: 'delivery' };
+      this.setState(Object.assign({ coQuote: qq, coStep: 1, coPay: null, orderErr: null }, pre));
+      if (typeof window !== 'undefined') window.scrollTo(0, 0);
+      this.go('checkout');
+    };
+    if (q) return open(q);
+    fetch('/api/quotes/' + encodeURIComponent(qid), { headers: this.authHeaders() }).then(r => r.json()).then(d => open(d.quote)).catch(() => {});
   }
   quoteReject(qid) { fetch('/api/quotes/' + qid + '/reject', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify({ reason: 'Customer requested changes' }) }).then(r => r.json()).then(() => this.loadQuotes()).catch(() => {}); }
   // ---------- printable documents: invoice / order slip / custom invoice / custom quote ----------
@@ -4369,7 +4385,7 @@ class Component extends DCLogic {
           (() => { const miss = this.cartMissingArt ? this.cartMissingArt() : 0;
             return h('div', { key: 'go', style: { marginTop: 22 } },
               miss ? h('div', { style: { fontSize: 13, color: '#c0392b', marginBottom: 10 } }, 'Upload the artwork for ' + (miss > 1 ? miss + ' jobs' : 'your job') + ' to continue.') : null,
-              h('span', { role: 'button', tabIndex: 0, 'aria-disabled': !!miss, onClick: () => { if (!miss) this.go('checkout'); }, style: { display: 'block', textAlign: 'center', background: '#c9191b', color: '#fff', fontSize: 16, fontWeight: 500, padding: '15px 16px', cursor: miss ? 'not-allowed' : 'pointer', opacity: miss ? .45 : 1, boxShadow: '0 2px 6px rgba(201,25,27,.25)' } }, 'Checkout')); })(),
+              h('span', { role: 'button', tabIndex: 0, 'aria-disabled': !!miss, onClick: () => { if (!miss) { this.setState({ coQuote: null }); this.go('checkout'); } }, style: { display: 'block', textAlign: 'center', background: '#c9191b', color: '#fff', fontSize: 16, fontWeight: 500, padding: '15px 16px', cursor: miss ? 'not-allowed' : 'pointer', opacity: miss ? .45 : 1, boxShadow: '0 2px 6px rgba(201,25,27,.25)' } }, 'Checkout')); })(),
           h('div', { key: 'q', style: { textAlign: 'center', marginTop: 20 } }, link('Download Quotation', () => this.downloadQuotation(), TEAL))]))));
   }
 
@@ -4379,7 +4395,11 @@ class Component extends DCLogic {
   //   2 Delivery: Delivery (address book or a new address) · Pickup (an outlet) · Direct to Customer (receiver + address)
   //   3 Payment: iPay88 · Manual Bank Transfer · Stripe, the Terms & Conditions, and a red Place order button
   s_checkout() {
-    const cart = this.state.cart || [], t = this.cartTotals();
+    // (user, 2026-09-30) an accepted quotation checks out like the cart: one job at the quoted price (no extra tax / shipping)
+    const cq = this.state.coQuote;
+    const cqItem = cq ? { name: (cq.requirement && cq.requirement.product) || 'Custom quote', qty: Number((cq.requirement && cq.requirement.qty) || 1), lineTotal: Number(cq.price || 0), artworks: [true] } : null;
+    const cart = cq ? [cqItem] : (this.state.cart || []);
+    const t = cq ? { subtotal: cqItem.lineTotal, memberDiscount: 0, couponCode: null, couponDiscount: 0, tax: 0, shipping: 0, total: cqItem.lineTotal } : this.cartTotals();
     if (!cart.length) return h('div', { style: { maxWidth: 700, margin: '0 auto', padding: '10px 20px 0' } },
       this.head('Checkout', 'Your cart is empty.'), this.btn('Browse products →', 'teal', 'category'));
     const u = this.state.user;
@@ -4494,7 +4514,7 @@ class Component extends DCLogic {
     // ---- order summary + place order
     const applied = 0, avail = 0;
     const due = t.total;
-    const missingArt = this.cartMissingArt ? this.cartMissingArt() : 0;
+    const missingArt = cq ? 0 : (this.cartMissingArt ? this.cartMissingArt() : 0);
     const canPlace = step === 3 && !!pay && !missingArt && !this.state.placing;
     const place = () => {
       if (this.state.placing) return;
@@ -4514,7 +4534,8 @@ class Component extends DCLogic {
           h('button', { type: 'button', onClick: () => { this.setState({ coTermsOpen: false }); this.placeOrder(); }, style: { font: '600 13.5px Montserrat,sans-serif', background: TEAL, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 20px', cursor: 'pointer' } }, 'I agree · Place order')))) : null;
     return h('div', { style: { background: '#f5f6f8', margin: '-10px 0 0', padding: '36px 20px 60px' } }, h('div', { style: { maxWidth: 1180, margin: '0 auto' } },
       h('div', { style: { width: 24, height: 3, background: TEAL, marginBottom: 12 } }),
-      h('h1', { style: { margin: '0 0 20px', fontSize: 30, fontWeight: 500, letterSpacing: '-.01em' } }, 'Checkout'),
+      h('h1', { style: { margin: '0 0 ' + (cq ? 6 : 20) + 'px', fontSize: 30, fontWeight: 500, letterSpacing: '-.01em' } }, 'Checkout'),
+      cq ? h('div', { style: { fontSize: 14, color: MUT, marginBottom: 20 } }, 'Quotation ' + cq.id + ' · ' + cqItem.name + ' · ' + cqItem.qty.toLocaleString() + ' pcs') : null,
       h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 340px', gap: 24, alignItems: 'start' } },
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: 14 } },
           section(1, 'Your details', s1, u ? [who.name, u.email, who.phone, who.company].filter(Boolean).join(' · ') : null),
@@ -4524,7 +4545,7 @@ class Component extends DCLogic {
           this.card([
             h('div', { key: 'a', style: { fontSize: 12.5, fontWeight: 600, marginBottom: 12 } }, cart.length + ' job' + (cart.length > 1 ? 's' : '') + ' in this order'),
             h('div', { key: 'b', style: { display: 'flex', flexDirection: 'column', gap: 9, fontSize: 13 } },
-              [['Subtotal', this.money(t.subtotal)], [this.tier() + ' member −' + this.tierPct() + '%', '−' + this.money(t.memberDiscount), TEAL], t.couponCode ? ['Code ' + t.couponCode + ' −' + t.couponOffLabel, '−' + this.money(t.couponDiscount), TEAL] : null, [this.taxLabel(), this.money(t.tax)], ['Shipping', ful === 'pickup' ? 'Free' : this.money(t.shipping)]].filter(Boolean)
+              [['Subtotal', this.money(t.subtotal)], [this.tier() + ' member −' + this.tierPct() + '%', '−' + this.money(t.memberDiscount), TEAL], t.couponCode ? ['Code ' + t.couponCode + ' −' + t.couponOffLabel, '−' + this.money(t.couponDiscount), TEAL] : null, cq ? null : [this.taxLabel(), this.money(t.tax)], ['Shipping', cq ? 'Included' : ful === 'pickup' ? 'Free' : this.money(t.shipping)]].filter(Boolean).filter(r => !(cq && /member/.test(r[0])))
                 .map((r, i) => h('div', { key: i, style: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, lineHeight: 1.5, color: r[2] || MUT } }, h('span', { style: { flex: '1 1 auto', minWidth: 0 } }, r[0]), h('span', { style: { flex: 'none', fontWeight: 500, whiteSpace: 'nowrap', color: r[2] || INK } }, r[1])))),
             avail > 0 ? h('label', { key: 'cr', 'data-go': 'set:coCredit:' + (!this.state.coCredit), style: { display: 'flex', alignItems: 'center', gap: 9, fontSize: 12.5, color: MUT, marginTop: 12, cursor: 'pointer' } },
               h('span', { style: { height: 16, width: 28, borderRadius: 9, background: this.state.coCredit ? TEAL : '#eaeaea', position: 'relative', flex: 'none' } },
@@ -4539,7 +4560,8 @@ class Component extends DCLogic {
               h('button', { type: 'button', onClick: place, 'aria-disabled': !canPlace, style: { font: '600 14.5px Montserrat,sans-serif', background: TEAL, color: '#fff', border: 'none', borderRadius: 8, padding: '13px 16px', cursor: canPlace ? 'pointer' : 'not-allowed', opacity: canPlace || this.state.placing ? 1 : .55 } },
                 this.state.placing ? 'Placing…' : 'Place order · ' + this.money(due)),
               this.state.orderErr ? h('div', { role: 'alert', style: { fontSize: 12.5, color: '#c0392b', lineHeight: 1.5 } }, this.state.orderErr) : null,
-              this.btn('Back to cart', 'ghost', 'cart', { justifyContent: 'center' })),
+              cq ? h('span', { role: 'button', tabIndex: 0, onClick: () => { this.setState({ coQuote: null, cTab: 'Quotations' }); this.go('dash'); }, style: { display: 'flex', justifyContent: 'center', borderRadius: 8, padding: '11px 20px', fontSize: 14, fontWeight: 600, color: TEAL, border: '1px solid #eaeaea', cursor: 'pointer' } }, 'Back to my quotations')
+                : this.btn('Back to cart', 'ghost', 'cart', { justifyContent: 'center' })),
           ]))),
       termsPopup));
   }

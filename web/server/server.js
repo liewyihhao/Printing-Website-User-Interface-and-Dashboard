@@ -542,7 +542,7 @@ async function api(req, res, pathname, query) {
     const c = body.customer || {};
     if (!String(body.product || '').trim()) return send(res, 400, { error: 'Please tell us what you are looking to print.' });
     if (!String(body.priceExpectation || '').trim()) return send(res, 400, { error: 'Please tell us your price expectation for this job.' });
-    if (!me && (!String(c.name || '').trim() || !/S+@S+.S+/.test(String(c.email || '')))) return send(res, 400, { error: 'Please fill in your name and email so we can send you the quote.' });
+    if (!me && (!String(c.name || '').trim() || !/\S+@\S+\.\S+/.test(String(c.email || '')))) return send(res, 400, { error: 'Please fill in your name and email so we can send you the quote.' });
     const q = store.createQuote(body, me);
     if (body.artworkData) { const aw = outlet.saveQuoteArtwork(q, { artworkData: body.artworkData, artworkFileName: body.artworkName }, me || { name: c.name || 'customer' }); if (aw && aw.error) return send(res, 400, aw); q.artworkFile = aw ? aw.file : null; store.save(); }
     return send(res, 200, { ok: true, quote: q });
@@ -630,7 +630,17 @@ async function api(req, res, pathname, query) {
     return send(res, 404, { error: 'unknown outlet route' });
   }
   if (seg[0] === 'quotes' && seg[2] === 'accept' && req.method === 'POST') {
-    const me = store.sessionCustomer(token); const r = store.acceptQuote(seg[1], me ? me.email : 'customer'); if (r.order) { outlet.onAccepted(r.quote, store.order(r.order.id)); ops.onOrderCreated(r.order); } return send(res, r.error ? 400 : 200, r.quote ? Object.assign({}, r, { quote: pubQuote(r.quote, me) }) : r);
+    // (user, 2026-09-30) Accept & pay goes through the checkout: the customer's details, delivery and payment come with it
+    const me = store.sessionCustomer(token); const b = await readBody(req);
+    const co = b && b.payment ? { payment: b.payment, fulfillment: b.fulfillment || null, shipTo: b.shipTo || null, customer: b.customer || null } : null;
+    const q0 = store.quote(seg[1]);
+    if (co && co.payment.method === 'wallet' && me && q0 && store.getCredit(me.id).balance + 0.001 < Number(q0.price || 0)) return send(res, 400, { error: 'Your wallet balance is not enough for this order. Top up your wallet or choose another payment method.' });
+    const r = store.acceptQuote(seg[1], me ? me.email : 'customer', co);
+    if (r.order) {
+      if (co && co.payment.method === 'wallet' && me) store.creditEntry(me.id, { reason: 'ORDER_PAYMENT', amount: -r.order.total, actor: 'customer', orderId: r.order.id });
+      outlet.onAccepted(r.quote, store.order(r.order.id)); ops.onOrderCreated(r.order);
+    }
+    return send(res, r.error ? 400 : 200, r.quote ? Object.assign({}, r, { quote: pubQuote(r.quote, me) }) : r);
   }
   if (seg[0] === 'quotes' && seg[2] === 'reject' && req.method === 'POST') {
     const b = await readBody(req); const me = store.sessionCustomer(token); const r = store.rejectQuote(seg[1], b.reason, me ? me.email : 'customer'); return send(res, r.error ? 400 : 200, r.quote ? Object.assign({}, r, { quote: pubQuote(r.quote, me) }) : r);
