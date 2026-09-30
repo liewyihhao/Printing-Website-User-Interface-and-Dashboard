@@ -83,7 +83,7 @@
   P.sessionEnded = function () {
     const u = this.state.user || {}, t = u.type;
     const portal = t === 'vendor' ? 'printer' : t === 'hub' ? 'hub' : t === 'outlet' ? 'outlet' : t === 'admin' ? 'admin' : (t && t !== 'customer') ? 'production' : 'member';
-    try { localStorage.removeItem('pk_token'); } catch (e) {}
+    this.clearAuthToken();
     this.setState({ user: null, ops: null });
     this.openPortal(portal);
     this.setState({ authErr: 'Your login has ended. Please log in again.' });

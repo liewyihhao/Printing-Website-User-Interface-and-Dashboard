@@ -250,6 +250,12 @@ async function api(req, res, pathname, query) {
     return send(res, r.error ? 401 : 200, r);
   }
   if (seg[0] === 'auth' && seg[1] === 'logout' && req.method === 'POST') { store.logout(token); return send(res, 200, { ok: true }); }
+  // a new browser tab that picked up the last login gets its own session for the same user, so logging out in one
+  // tab never logs out another (user, 2026-09-30: several users in one browser, one per tab)
+  if (seg[0] === 'auth' && seg[1] === 'fork' && req.method === 'POST') {
+    const fm = store.sessionCustomer(token); if (!fm) return send(res, 401, { error: 'not signed in' });
+    return send(res, 200, { token: store.newSession(fm.id) });
+  }
   if (seg[0] === 'auth' && seg[1] === 'me') {
     const c = store.sessionCustomer(token);
     return c ? send(res, 200, { customer: c }) : send(res, 401, { error: 'not signed in' });

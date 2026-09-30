@@ -1298,12 +1298,37 @@ class Component extends DCLogic {
   }
 
   // ---------- authentication (real accounts + sessions) ----------
-  authToken() { try { return localStorage.getItem('pk_token') || ''; } catch (e) { return ''; } }
+  // (user, 2026-09-30) several users can be logged in in one browser: each TAB keeps its own login (sessionStorage).
+  // A new tab starts with the most recent login (localStorage); logging in or out in a tab changes only that tab.
+  authToken() {
+    try {
+      let t = sessionStorage.getItem('pk_token');
+      if (t === '-') return '';                       // this tab was logged out: stay logged out
+      if (!t) { t = localStorage.getItem('pk_token') || ''; if (t) { sessionStorage.setItem('pk_token', t); this._inheritedToken = true; } }
+      return t || '';
+    } catch (e) { try { return localStorage.getItem('pk_token') || ''; } catch (e2) { return ''; } }
+  }
+  setAuthToken(t) { try { sessionStorage.setItem('pk_token', t); localStorage.setItem('pk_token', t); } catch (e) {} }
+  clearAuthToken() {
+    try {
+      const t = sessionStorage.getItem('pk_token');
+      sessionStorage.setItem('pk_token', '-');
+      if (!t || t === '-' || localStorage.getItem('pk_token') === t) localStorage.removeItem('pk_token');
+    } catch (e) { try { localStorage.removeItem('pk_token'); } catch (e2) {} }
+  }
   authHeaders() { const t = this.authToken(); return t ? { 'x-token': t } : {}; }
   authLoad() {
     if (typeof fetch !== 'function' || !this.authToken()) return;
+    // a tab that picked up another tab's login first gets its own session for that user, so logging out here
+    // never logs the other tab out
+    if (this._inheritedToken) {
+      this._inheritedToken = false;
+      return fetch('/api/auth/fork', { method: 'POST', headers: this.authHeaders() }).then(r => r.ok ? r.json() : null)
+        .then(d => { if (d && d.token) { try { sessionStorage.setItem('pk_token', d.token); } catch (e) {} } this.authLoad(); })
+        .catch(() => this.authLoad());
+    }
     // a login the server no longer knows is cleared, so the page shows the login instead of empty dashboards
-    fetch('/api/auth/me', { headers: this.authHeaders() }).then(r => { if (r.status === 401) { try { localStorage.removeItem('pk_token'); } catch (e) {} } return r.ok ? r.json() : null; }).then(d => {
+    fetch('/api/auth/me', { headers: this.authHeaders() }).then(r => { if (r.status === 401) this.clearAuthToken(); return r.ok ? r.json() : null; }).then(d => {
       this.setState({ authChecked: true });
       if (!d || !d.customer) return;
       const c = d.customer; this.setState({ user: c }); this.loadAccount(); this.loadNotifications();
@@ -1460,7 +1485,7 @@ class Component extends DCLogic {
             h('span', { onClick: () => this.submitNewUser(), style: { alignSelf: 'flex-start', background: '#E52220', color: '#fff', fontWeight: 600, fontSize: 14, padding: '11px 26px', borderRadius: 999, cursor: this.state.nu_busy ? 'wait' : 'pointer' } }, this.state.nu_busy ? 'Creating…' : 'Create user')))));
   }
   authSetSession(d) {
-    try { localStorage.setItem('pk_token', d.token); } catch (e) {}
+    this.setAuthToken(d.token);
     // return to the page that sent the customer to sign in (e.g. the custom quote page), else their home
     const home = (d.customer && d.customer.type === 'customer' && this.state.afterAuth) || this.homeFor(d.customer);
     if (this.state.afterAuth) this.setState({ afterAuth: null });
@@ -1755,7 +1780,7 @@ class Component extends DCLogic {
   }
   logout() {
     fetch('/api/auth/logout', { method: 'POST', headers: this.authHeaders() }).catch(() => {});
-    try { localStorage.removeItem('pk_token'); } catch (e) {}
+    this.clearAuthToken();   // logs out this tab only; other tabs keep their own login
     this.setState({ user: null, userOrders: null }); this.go('home');
   }
   loadUserOrders() {

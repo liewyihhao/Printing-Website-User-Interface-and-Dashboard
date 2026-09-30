@@ -27,9 +27,9 @@
   const origRender = P.renderScreen;
   P.renderScreen = function () {
     const el = origRender.call(this);
-    let back = null; try { back = localStorage.getItem('pk_admin_return'); } catch (e) {}
+    let back = null; try { back = sessionStorage.getItem('pk_admin_return'); } catch (e) {}
     if (!back || !this.state.user) return el;
-    const ret = () => { try { localStorage.setItem('pk_token', back); localStorage.removeItem('pk_admin_return'); } catch (e) {} window.location.href = '/'; };
+    const ret = () => { this.setAuthToken(back); try { sessionStorage.removeItem('pk_admin_return'); } catch (e) {} window.location.href = '/'; };
     return h('div', null, h('div', { style: { background: '#fff8e6', borderBottom: '1px solid #f3e2b8', color: '#8a4b00', fontSize: 13, padding: '8px 16px', display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' } },
       'You are viewing the site as ', h('b', null, this.state.user.name + ' (' + this.state.user.email + ')'), h('span', { onClick: ret, style: { fontWeight: 700, textDecoration: 'underline', cursor: 'pointer' } }, 'Return to admin')), el);
   };
@@ -197,7 +197,7 @@
     const E = this.state.acEdit || { name: c.name, email: c.email, phone: c.phone || '', company: c.company || '', tier: c.tier || 'Standard', creditTerms: !!c.creditTerms };
     const setE = (k, v) => this.setState({ acEdit: Object.assign({}, E, { [k]: v }) });
     const save = body => this.aFetch('/api/admin/customers/' + c.id, body).then(d => { if (this.aMsg(d, 'Customer saved.')) { this.setState({ acEdit: null }); this.loadAdmin(); } });
-    const loginAs = () => this.aFetch('/api/admin/customers/' + c.id + '/login-as', {}).then(d => { if (!this.aMsg(d)) return; try { localStorage.setItem('pk_admin_return', this.authToken()); localStorage.setItem('pk_token', d.token); } catch (e) {} window.location.href = '/'; });
+    const loginAs = () => this.aFetch('/api/admin/customers/' + c.id + '/login-as', {}).then(d => { if (!this.aMsg(d)) return; try { sessionStorage.setItem('pk_admin_return', this.authToken()); } catch (e) {} this.setAuthToken(d.token); window.location.href = '/'; });
     return box([
       h('div', { key: 'h', style: { display: 'flex', gap: 10, alignItems: 'center' } }, h('b', { style: { fontSize: 16 } }, c.name), this.chip(c.tier, 'neutral'), h('span', { style: { marginLeft: 'auto', fontSize: 18, cursor: 'pointer', color: FAINT }, onClick: () => this.setState({ acSel: null }) }, '×')),
       grid([F('Name', h('input', { value: E.name, onChange: e => setE('name', e.target.value), style: inp })), F('Email', h('input', { value: E.email, onChange: e => setE('email', e.target.value), style: inp })), F('Phone', h('input', { value: E.phone, onChange: e => setE('phone', e.target.value), style: inp })), F('Company', h('input', { value: E.company, onChange: e => setE('company', e.target.value), style: inp })),
