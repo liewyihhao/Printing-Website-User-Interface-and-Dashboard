@@ -1102,7 +1102,17 @@ class Component extends DCLogic {
 
   // ---------- cart + checkout + orders (storefront commerce loop) ----------
   loadCart() {
-    try { const c = JSON.parse(localStorage.getItem('pk_cart') || '[]'); if (Array.isArray(c) && c.length) this.setState({ cart: c }); } catch (e) {}
+    try {
+      const c = JSON.parse(localStorage.getItem('pk_cart') || '[]');
+      if (Array.isArray(c) && c.length) { const cart = c.map(it => it.jobCode ? it : Object.assign({}, it, { jobCode: this.newJobCode() })); this.setState({ cart }); this.saveCart(cart); }
+    } catch (e) {}
+  }
+  // a job's system code, made when it goes into the cart — as the original printoka.com did (generate_job_id: 12 random
+  // hex characters, e.g. c61fb8312e49); it travels with the job onto the order
+  newJobCode() {
+    const b = new Uint8Array(6);
+    try { crypto.getRandomValues(b); } catch (e) { for (let i = 0; i < 6; i++) b[i] = Math.floor(Math.random() * 256); }
+    return Array.prototype.map.call(b, x => ('0' + x.toString(16)).slice(-2)).join('');
   }
   saveCart(cart) { try { localStorage.setItem('pk_cart', JSON.stringify(cart || [])); } catch (e) {} }
   // Full human-readable spec for the current configuration. Walks the *rendered* fields
@@ -1150,7 +1160,7 @@ class Component extends DCLogic {
     const { short, lines } = this.pkOrderSpec();
     // the configurator summary travels with the order: every option, quantity and production time
     const pd = this.cfgOv().processDays, productionTime = pd != null ? pd + (pd === 1 ? ' working day' : ' working days') : '3 working days';
-    const item = { productId: prod.id, name: this.catName(prod.id), spec: short, specLines: lines, productionTime, qty: this.state.qty || 1, unitPrice: q.gross / (this.state.qty || 1), lineTotal: q.gross };
+    const item = { jobCode: this.newJobCode(), productId: prod.id, name: this.catName(prod.id), spec: short, specLines: lines, productionTime, qty: this.state.qty || 1, unitPrice: q.gross / (this.state.qty || 1), lineTotal: q.gross };
     const cart = (this.state.cart || []).concat([item]);
     this.setState({ cart }); this.saveCart(cart); this.go('cart');
   }
@@ -1163,7 +1173,7 @@ class Component extends DCLogic {
   }
   removeFromCart(i) { const cart = (this.state.cart || []).filter((_, idx) => idx !== i); this.setState({ cart }); this.saveCart(cart); }
   rmCart(i) { return this.removeFromCart(i); }
-  dupCart(i) { const cart = (this.state.cart || []); const it = cart[i]; if (!it) return; const next = cart.slice(0, i + 1).concat([Object.assign({}, it)], cart.slice(i + 1)); this.setState({ cart: next }); this.saveCart(next); }
+  dupCart(i) { const cart = (this.state.cart || []); const it = cart[i]; if (!it) return; const next = cart.slice(0, i + 1).concat([Object.assign({}, it, { jobCode: this.newJobCode() })], cart.slice(i + 1)); this.setState({ cart: next }); this.saveCart(next); }
   // member promo code (issued at sign-up): checked against the signed-in account by the server;
   // once accepted it is applied in cartTotals while the cart meets its minimum spend.
   applyCoupon() {
@@ -1258,7 +1268,7 @@ class Component extends DCLogic {
       fulfillment: { method, address: addrText, addressId: method === 'delivery' && picked ? picked.id : null, outlet: outlet ? outlet.id : '', outletName: outlet ? outlet.name : '', receiver: method === 'direct' ? { name: shipTo.name, phone: shipTo.phone } : null },
       shipTo,
       payment: { method: this.state.coPay },
-      items: cart.map(it => ({ productId: it.productId, product: it.name, spec: it.spec, specLines: it.specLines || null, productionTime: it.productionTime || null, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal,
+      items: cart.map(it => ({ jobCode: it.jobCode || null, productId: it.productId, product: it.name, spec: it.spec, specLines: it.specLines || null, productionTime: it.productionTime || null, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal,
         artworkRefs: (it.artworks || []).filter(Boolean).map(a => ({ id: a.id })) })),
       subtotal: t.subtotal, memberDiscount: t.memberDiscount, coupon: t.couponCode, couponDiscount: t.couponDiscount, tax: t.tax, shipping: t.shipping, total: t.total, creditApplied, tier: this.tier(),
     };
@@ -1276,7 +1286,7 @@ class Component extends DCLogic {
     const lib = {}; (this.state.agList || []).forEach(a => { lib[a.id] = a; });
     const items = (o.items || []).map((it, i) => {
       const refs = (o.files || []).filter(f => f.kind === 'artwork' && (f.line || 1) === i + 1 && f.libraryId).map(f => ({ id: f.libraryId, name: f.name }));
-      return { productId: it.productId, name: it.product, spec: it.spec, specLines: it.specLines || null, productionTime: it.productionTime || null, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal, artworks: refs };
+      return { jobCode: this.newJobCode(), productId: it.productId, name: it.product, spec: it.spec, specLines: it.specLines || null, productionTime: it.productionTime || null, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal, artworks: refs };
     });
     const cart = (this.state.cart || []).concat(items);
     this.setState({ cart }); this.saveCart(cart); this.agLoad(true); this.go('cart');
@@ -4284,7 +4294,7 @@ class Component extends DCLogic {
       return h('div', { key: i, style: { borderTop: '1px solid #e6e8eb', padding: '26px 0 24px' } },
         h('div', null,
           h('div', null,
-            h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: 10, fontSize: 12.5, color: FAINT, cursor: 'pointer' } }, check(sel[i], on => setSel(i, on), 'Select ' + it.name), 'Job ' + (i + 1)),
+            h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: 10, fontSize: 12.5, color: FAINT, cursor: 'pointer' } }, check(sel[i], on => setSel(i, on), 'Select ' + it.name), it.jobCode || ''),
             h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0 16px' } },
               h('span', { style: { fontSize: 21, fontWeight: 500 } }, it.name),
               icon(PENCIL, () => openProd(it.productId), 'Edit'),
@@ -4382,9 +4392,10 @@ class Component extends DCLogic {
           redBtn('Log in', () => toAuth('login')),
           h('button', { type: 'button', onClick: () => toAuth('register'), style: { font: '600 14px Montserrat,sans-serif', background: '#fff', color: TEAL, border: '1px solid ' + HAIR, borderRadius: 8, padding: '12px 26px', cursor: 'pointer' } }, 'Sign up'))
       : h('div', null,
+          // name · email · phone on one row; Company runs the full width underneath (user, 2026-09-30)
           h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 12 } },
             field('Full name *', 'coName', u.name, 'Your name'), field('Email', 'coEmail', u.email),
-            field('Phone *', 'coPhone', u.phone, '+60…'), field('Company (optional)', 'coCompany', u.company, 'Company Sdn Bhd')),
+            field('Phone *', 'coPhone', u.phone, '+60…'), field('Company (optional)', 'coCompany', u.company, 'Company Sdn Bhd', { gridColumn: '1 / -1' })),
           err, h('div', { style: { marginTop: 16 } }, redBtn('Continue', () => {
             if (!String(who.name || '').trim() || !String(who.phone || '').trim()) return this.setState({ coErr: 'Please enter your name and phone number.' });
             goStep(2);
@@ -5183,7 +5194,7 @@ class Component extends DCLogic {
             h('span', { style: { color: MUT } }, label), h('span', { style: { color: INK, fontWeight: strong ? 600 : 400 } }, value));
           return h('div', { key: i, style: { border: '1px solid #e6e8eb', background: '#fff', padding: '22px 24px' } },
             h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 14 } },
-              h('div', null, h('div', { style: { fontSize: 12.5, color: FAINT } }, 'Job ' + (i + 1) + ' · ' + j.id), h('div', { style: { fontSize: 20, fontWeight: 500, marginTop: 2 } }, j.product)),
+              h('div', null, h('div', { style: { fontSize: 12.5, color: FAINT } }, j.id), h('div', { style: { fontSize: 20, fontWeight: 500, marginTop: 2 } }, j.product)),
               h('span', { style: { marginLeft: 'auto' } }, this.chip(custLabel(j), j.status === 'completed' ? 'ok' : (j.status === 'rejected' ? 'bad' : 'teal')))),
             h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(110px,150px) minmax(0,1fr)', gap: 22, alignItems: 'start' } },
               h('div', null, this.art((this.pkProducts().find(p => p.name === j.product) || {}).name || j.product)),

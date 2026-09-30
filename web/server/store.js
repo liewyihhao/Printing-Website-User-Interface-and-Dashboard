@@ -305,6 +305,8 @@ function createOrder(body) {
   const cust = body.customer || {};
   const items = (body.items || []).map((it, i) => ({
     lineNo: i + 1, productId: it.productId, product: productName(it.product || it.name), spec: it.spec || '',
+    // the job code made when the item went into the cart (12 hex characters, as on the original printoka.com)
+    jobCode: /^[0-9a-f]{12}$/.test(String(it.jobCode || '')) ? String(it.jobCode) : crypto.randomBytes(6).toString('hex'),
     // the configurator's labelled summary lines ([label, value]) — shown as-is on the production job page
     specLines: Array.isArray(it.specLines) ? it.specLines.slice(0, 40).filter(l => Array.isArray(l) && l.length >= 2).map(l => [String(l[0]).slice(0, 60), String(l[1]).slice(0, 200)]) : null,
     productionTime: it.productionTime ? String(it.productionTime).slice(0, 40) : null,
@@ -321,7 +323,7 @@ function createOrder(body) {
   items.forEach(it => {
     const jid = oid + '-' + it.lineNo;   // every job carries the order number
     const j = {
-      id: jid, orderId: oid, channel: 'online', customer: cust.name || 'Online customer',
+      id: jid, orderId: oid, jobCode: it.jobCode, channel: 'online', customer: cust.name || 'Online customer',
       product: it.product, spec: it.spec, specLines: it.specLines, productionTime: it.productionTime, qty: it.qty, price: it.lineTotal, status: 'intake',
       paymentValidated: paid, paymentValidatedAt: paid ? now() : null, creditTerms: method === 'credit_term',
       artwork: { file: (it.artworks && it.artworks[0]) || it.artworkFile || 'pending-upload.pdf', checkStatus: 'pending' }, artworkMatches: true,
