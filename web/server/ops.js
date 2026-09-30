@@ -32,6 +32,11 @@ const DEFAULT_CONFIG = {
     { id: 'Miri', name: 'Miri Outlet (own facility)', address: 'Lot 1565, Piasau Industrial Estate, 98000 Miri, Sarawak', hub: 'HUB-MIRI', pickup: true },
   ],
   machines: ['Digital press 1', 'Digital press 2', 'Offset press', 'Large-format printer', 'Sticker / label cutter', 'Finishing line'],
+  // (user, 2026-09-30) in-house printing is sent to a production hub, then to one of its divisions
+  productionHubs: [
+    { id: 'PROD-1', name: 'Production 1 (Miri)', divisions: ['Digital Printing', 'Offset Printing', 'Large Format Printing'] },
+    { id: 'PROD-2', name: 'Production 2 (Kuching)', divisions: ['Digital Printing', 'Offset Printing', 'Large Format Printing'] },
+  ],
   couriers: ['J&T Express', 'Pos Laju', 'GDEX', 'City-Link Express', 'Lalamove', 'Printoka van'],
   productionSite: 'Printoka Production · Miri',
   productionAddress: 'Lot 1565, Piasau Industrial Estate, 98000 Miri, Sarawak',
@@ -40,12 +45,12 @@ const DEFAULT_CONFIG = {
 function config() {
   const db = store.load();
   if (!db.opsConfig) db.opsConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-  ['productionAddress', 'productionPhone'].forEach(k => { if (db.opsConfig[k] == null) db.opsConfig[k] = DEFAULT_CONFIG[k]; });
+  ['productionAddress', 'productionPhone', 'productionHubs'].forEach(k => { if (db.opsConfig[k] == null) db.opsConfig[k] = JSON.parse(JSON.stringify(DEFAULT_CONFIG[k])); });
   return db.opsConfig;
 }
 function saveConfig(patch, actor) {
   const c = config();
-  ['hubs', 'outlets', 'machines', 'couriers', 'productionSite', 'productionAddress', 'productionPhone'].forEach(k => { if (patch[k] !== undefined) c[k] = patch[k]; });
+  ['hubs', 'outlets', 'machines', 'couriers', 'productionSite', 'productionAddress', 'productionPhone', 'productionHubs'].forEach(k => { if (patch[k] !== undefined) c[k] = patch[k]; });
   store.logEvent({ actor: actor || 'admin', role: 'production_director', action: 'ops_settings', jobId: null, from: null, to: null, note: 'Operations settings updated (' + Object.keys(patch).join(', ') + ')' });
   store.save(); return c;
 }
@@ -375,18 +380,20 @@ function setStep(jid, group, key, done, role, actor, note) {
 // ---- Qn 752 CF1: send the order to internal production with delivery instructions ----
 // Scheduling SOP (§3.5): assign machine + time slot; the parcel goes to the order's own destination
 // (the customer's address, or the pickup outlet) — logistics packs and delivers it after printing.
+// (user, 2026-09-30) the scheduler only picks the production hub, then the division there that prints it
+// (e.g. Production 1 (Miri) → Offset Printing); no machine, time slot or parcel questions
 function sendInternal(jid, role, actor, body) {
   const j = store.job(jid); if (!j) return { error: 'Job not found' };
   normalizeJob(j);
-  if (!body.machine) return { error: 'Pick the machine.' };
-  if (!body.slot) return { error: 'Pick the time slot.' };
-  const prev = { destination: j.destination, instructions: j.instructions, parcels: j.parcels };
+  const hub = (config().productionHubs || []).find(p => p.id === body.productionHub || p.name === body.productionHub);
+  if (!hub) return { error: 'Choose the production hub.' };
+  if (!body.division || (hub.divisions || []).indexOf(body.division) < 0) return { error: 'Choose the division that will print it.' };
+  const prev = { destination: j.destination, productionHub: j.productionHub, division: j.division };
   j.destination = Object.assign({}, j.finalDestination);
-  if (body.instructions != null) j.instructions = String(body.instructions || '').slice(0, 600);
-  j.parcels = Math.max(1, Number(body.parcels) || j.parcels || 1);
+  j.productionHub = { id: hub.id, name: hub.name }; j.division = body.division;
   j.route = 'inhouse';
   makeLabel(j);
-  const r = transition(jid, role, actor, 'assign_inhouse', { machine: body.machine, slot: body.slot });
+  const r = transition(jid, role, actor, 'assign_inhouse', { machine: hub.name + ' · ' + body.division, slot: new Date().toISOString(), productionHub: hub.name, division: body.division });
   if (r.error) { Object.assign(j, prev); makeLabel(j); store.save(); return r; }
   return { job: store.job(jid) };
 }

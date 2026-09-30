@@ -274,7 +274,7 @@
     // Order details = the configurator's Summary: every option as label / value, then quantity (no due date)
     const item = d.order && (d.order.items || [])[(Number(String(id).split('-').pop()) || 1) - 1];
     const summary = { product: j.product, specLines: j.specLines || (item && item.specLines), spec: (pr.job && pr.job.spec) || j.spec, qty: j.qty, productionTime: j.productionTime || (item && item.productionTime), artworks: pr.job && pr.job.artworks,
-      rows: [['Customer', j.customer || '—'], j.instructions ? ['Instructions', j.instructions] : null, j.machine ? ['Machine', j.machine + (j.slot ? ' · ' + when(j.slot) : '')] : null],
+      rows: [['Customer', j.customer || '—'], j.instructions ? ['Instructions', j.instructions] : null, j.productionHub ? ['Printed at', j.productionHub.name + ' · ' + j.division] : j.machine ? ['Machine', j.machine + (j.slot ? ' · ' + when(j.slot) : '')] : null],
       // only prepress may change the artwork (the scheduler has no authority to change the order details)
       onUpload: !d.order && inDept(this, 'prepress') && !(pr.approvedArtwork) ? x => this.aFetchJ('/api/jobs/' + encodeURIComponent(id) + '/artwork', { name: x.name, data: x.data })
         .then(r => { if (this.acDone(r, 'Artwork uploaded.')) { this.acDrop('job_'); this.forceUpdate(); } })
@@ -443,25 +443,26 @@
           acts.choose_inhouse ? Btn('Print In House', () => act('choose_inhouse', {}, 'Moved to In House.'), 'primary') : null)]);
     }
     if (st === 'to_outsource') return inDept(this, 'scheduler') ? null : this.acC('Scheduler', note('The scheduler is outsourcing this job.'));
-    // In House page: machine, time slot, parcels, delivery instructions → Queue in-house
+    // In House page (user, 2026-09-30): the production hub first, then the division there that prints it → Queue in-house
     if (st === 'to_inhouse') {
       if (!inDept(this, 'scheduler')) return this.acC('Scheduler', note('The scheduler is queueing this job in-house.'));
-      const a = acts.assign_inhouse; const cfg = this.state.opsConfig || { machines: [] };
-      const machine = this.acF('machine') || cfg.machines[0] || '', slot = this.acF('slot'), parcels = this.acF('parcels') || '1';
+      const a = acts.assign_inhouse; const hubs = (this.state.opsConfig && this.state.opsConfig.productionHubs) || [];
+      const hubId = this.acF('prodHub'), hub = hubs.find(p => p.id === hubId), division = this.acF('division');
       return this.acC('Print In House', [
         blocked(a),
-        h('div', { key: 'f', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12 } },
-          FG('Machine', h('select', { value: machine, onChange: e => this.acSetF('machine', e.target.value), style: inp }, cfg.machines.map(m => h('option', { key: m }, m))), 1),
-          FG('Time slot', h('input', { type: 'datetime-local', value: slot, onChange: e => this.acSetF('slot', e.target.value), style: inp }), 1),
-          FG('Parcels', h('input', { type: 'number', min: 1, value: parcels, onChange: e => this.acSetF('parcels', e.target.value), style: inp }))),
-        FG('Delivery instructions for logistics', h('input', { value: this.acF('instr'), onChange: e => this.acSetF('instr', e.target.value), placeholder: 'optional', style: inp })),
-        h('div', { key: 'b', style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, Btn('Queue in-house', () => this.jPost('/api/jobs/' + id + '/send-internal', { machine, slot, parcels, instructions: this.acF('instr') || undefined }, 'Queued on ' + machine + '.', () => this.setState({ acForm: {} })), 'primary', !a || !a.enabled || !machine || !slot),
+        h('div', { key: 'f', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: 12 } },
+          FG('Production hub', h('select', { value: hubId, onChange: e => { this.acSetF('prodHub', e.target.value); this.acSetF('division', ''); }, style: inp },
+            h('option', { value: '' }, 'Choose the production hub'), hubs.map(p => h('option', { key: p.id, value: p.id }, p.name))), 1),
+          hub ? FG('Division', h('select', { value: division, onChange: e => this.acSetF('division', e.target.value), style: inp },
+            h('option', { value: '' }, 'Choose the division'), (hub.divisions || []).map(d => h('option', { key: d, value: d }, d))), 1) : null),
+        h('div', { key: 'b', style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, Btn('Queue in-house', () => this.jPost('/api/jobs/' + id + '/send-internal', { productionHub: hubId, division }, 'Queued at ' + (hub ? hub.name : '') + ' · ' + division + '.', () => this.setState({ acForm: {} })), 'primary', !a || !a.enabled || !hub || !division),
           acts.choose_outsource ? Btn('Outsource instead', () => act('choose_outsource', {}, 'Moved to Outsourced.')) : null)]);
     }
     // Step 4 — printing (in-house), monitored by the scheduler (§3.5 step 4, §3.6, §3.7)
     if (st === 'printing') {
-      if (!inDept(this, 'scheduler')) return this.acC('Printing', note('Printing in-house on ' + (j.machine || 'a machine') + '.'));
-      return this.acC('Printing in Progress', [this.acDL([['Machine', j.machine], ['Time slot', j.slot ? when(j.slot) : '—'], ['Due', j.deadline ? when(j.deadline) : '—']]),
+      if (!inDept(this, 'scheduler')) return this.acC('Printing', note('Printing in-house at ' + (j.productionHub ? j.productionHub.name + ' · ' + j.division : (j.machine || 'Printoka production')) + '.'));
+      return this.acC('Printing in Progress', [this.acDL(j.productionHub ? [['Production hub', j.productionHub.name], ['Division', j.division], ['Due', j.deadline ? when(j.deadline) : '—']]
+        : [['Machine', j.machine], ['Time slot', j.slot ? when(j.slot) : '—'], ['Due', j.deadline ? when(j.deadline) : '—']]),
         acts.finish ? h('div', { key: 'b' }, Btn('Ready to Ship', () => act('finish', { qc: true }, 'Ready to ship — sent to logistics.'), 'primary')) : null]);
     }
     if (st === 'outsourcing') return inDept(this, 'scheduler') ? null : this.acC('Printing', note('Outsourced to a printer.'));
@@ -746,13 +747,20 @@
   P.pSettings = function () {
     const cfg = this.state.opsConfig; if (!cfg) return [h('div', { key: 'l', style: { color: FAINT } }, 'Loading…')];
     const F = (k, def) => this.acF(k) !== '' ? this.acF(k) : def;
-    const v = { machines: F('machines', cfg.machines.join('\n')), couriers: F('couriers', cfg.couriers.join('\n')), site: F('site', cfg.productionSite || ''), address: F('address', cfg.productionAddress || ''), phone: F('phone', cfg.productionPhone || '') };
+    const hubsText = (cfg.productionHubs || []).map(p => p.name + ': ' + (p.divisions || []).join(', ')).join('\n');
+    const v = { hubs: F('prodHubs', hubsText), couriers: F('couriers', cfg.couriers.join('\n')), site: F('site', cfg.productionSite || ''), address: F('address', cfg.productionAddress || ''), phone: F('phone', cfg.productionPhone || '') };
+    // "Production 1 (Miri): Digital Printing, Offset Printing" per line → [{ id, name, divisions }] (a hub keeps its id by name)
+    const parseHubs = txt => txt.split('\n').map(s => s.trim()).filter(Boolean).map((line, i) => {
+      const k = line.indexOf(':'), name = (k >= 0 ? line.slice(0, k) : line).trim();
+      const old = (cfg.productionHubs || []).find(p => p.name === name);
+      return { id: old ? old.id : 'PROD-' + (i + 1) + '-' + Date.now().toString(36).slice(-4).toUpperCase(), name, divisions: k >= 0 ? line.slice(k + 1).split(',').map(s => s.trim()).filter(Boolean) : [] };
+    });
     return [h('h1', { key: 't', style: { fontSize: 34, fontWeight: 600, margin: '6px 0 0' } }, 'Settings'),
       this.acC('Production site', [null,
         FG('Name', h('input', { value: v.site, onChange: e => this.acSetF('site', e.target.value), style: inp }), 1), FG('Address', ta(v.address, x => this.acSetF('address', x), 2), 1), FG('Phone', h('input', { value: v.phone, onChange: e => this.acSetF('phone', e.target.value), style: inp }))]),
-      this.acC('Machines', FG('One machine per line', ta(v.machines, x => this.acSetF('machines', x), 6))),
+      this.acC('Production hubs & divisions', FG('One hub per line: hub name, a colon, then its divisions', ta(v.hubs, x => this.acSetF('prodHubs', x), 4))),
       this.acC('Delivery companies', FG('One per line — logistics can only choose from this list', ta(v.couriers, x => this.acSetF('couriers', x), 6))),
-      h('div', { key: 'b' }, Btn('Save settings', () => this.opsFetch('/api/ops/config', { machines: v.machines.split('\n').map(s => s.trim()).filter(Boolean), couriers: v.couriers.split('\n').map(s => s.trim()).filter(Boolean), productionSite: v.site, productionAddress: v.address, productionPhone: v.phone })
+      h('div', { key: 'b' }, Btn('Save settings', () => this.opsFetch('/api/ops/config', { productionHubs: parseHubs(v.hubs), couriers: v.couriers.split('\n').map(s => s.trim()).filter(Boolean), productionSite: v.site, productionAddress: v.address, productionPhone: v.phone })
         .then(d => { if (this.acDone(d, 'Settings saved.')) this.setState({ opsConfig: d.config, acForm: {} }); }), 'primary'))];
   };
 
