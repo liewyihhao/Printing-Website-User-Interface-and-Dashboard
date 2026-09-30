@@ -20,10 +20,10 @@
   const loadLibs = () => libsP || (libsP = LIBS.reduce((p, l) => p.then(() => window[l[0]] ? null : loadScript(l[1])), Promise.resolve()));
 
   // ---------------------------------------------------------------- template backgrounds
-  const TPL = { invoice: 'assets/docs/invoice-template.svg', slip: 'assets/docs/order-slip-template.svg',
+  const TPL = { invoice: 'assets/docs/invoice-template.svg', slip: 'assets/docs/order-slip-template.svg', quote: 'assets/docs/quote-template.svg',
     // original printoka-3rd-party-supplier templates (A4 portrait · A5 landscape · A6 landscape)
     'purchase-order': 'assets/docs/purchase-order-template.svg', 'shipping-label': 'assets/docs/shipping-label-template.svg', 'hub-label': 'assets/docs/hub-label-template.svg' };
-  const PAGE = { invoice: [210, 297], slip: [210, 297], 'purchase-order': [210, 297], 'shipping-label': [210, 148], 'hub-label': [148, 105] };
+  const PAGE = { invoice: [210, 297], slip: [210, 297], quote: [210, 297], 'purchase-order': [210, 297], 'shipping-label': [210, 148], 'hub-label': [148, 105] };
   const tplCache = {};
   function templateSvg(kind) {
     if (tplCache[kind]) return tplCache[kind];
@@ -155,6 +155,53 @@
     return doc;
   };
 
+  // ---------------------------------------------------------------- the quotation (original quote-template.svg)
+  // positions from the original theme (template-download-pdf.php + class-lx-pdf.php setup_quote_pdf): REF No. at
+  // (159, 27.5), date (148.2, 48.6), client name / company / address at x 42 (61.7 · 66.1 · 70.7), item rows from
+  // y 100 (No · Description · Qty · pcs · Unit Price · Total), totals at x 171 (y 217.7 · 222.4 · 226.9 · 231.7)
+  P.buildQuotePdf = async function (q) {
+    await loadLibs();
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', compress: true });
+    const FONT = applyFonts(doc, await loadFonts());
+    const req = q.requirement || {};
+    const who = q.customer || q.requester || {};
+    const product = req.product || q.product || 'Custom quote';
+    const qty = Number(req.qty || q.qty || 0);
+    const lines = (Array.isArray(req.specLines) && req.specLines.length ? req.specLines : (Array.isArray(q.specLines) ? q.specLines : null));
+    const desc = (lines ? lines.map(l => Array.isArray(l) ? l[0] + ': ' + l[1] : String(l)) : String(req.quoteData || q.spec || '').split('\n'))
+      .map(s => s.trim()).filter(s => s && !/^(quantity|qty)\b/i.test(s));
+    if (req.notes || q.notes) desc.push('Remarks: ' + (req.notes || q.notes));
+    if (q.leadDays) desc.push('Production time: ' + q.leadDays + ' working days');
+    const price = q.price != null ? Number(q.price) : null;
+    doc.setProperties({ title: 'Quotation ' + q.id, subject: 'Printoka quotation', author: 'Yushan Corporation Sdn Bhd (Printoka)', creator: 'Printoka' });
+    await drawTemplate(doc, 'quote');
+    doc.setFont(FONT, 'normal'); doc.setFontSize(6); doc.setTextColor(223, 8, 8);
+    doc.textWithLink('print@printoka.com', 60.866, 35.4 + 6 * PT, { url: 'mailto:print@printoka.com' });
+    doc.setTextColor(33, 33, 33);
+    doc.setFontSize(7); cellText(doc, [q.id], 159, 27.5, 7, 1.4);
+    doc.setFontSize(8); cellText(doc, [dmy(q.issuedAt || q.createdAt)], 148.185, 48.588, 8, 1.4);
+    doc.setFontSize(7);
+    doc.setFont(FONT, 'bold'); cellText(doc, [who.name || ''], 42, 61.7, 7, 1.4, 50);
+    if (who.company) cellText(doc, [who.company], 42, 66.1, 7, 1.4, 50);
+    doc.setFont(FONT, 'normal');
+    const addr = typeof who.address === 'string' ? who.address : [who.line1, who.line2, [who.postcode, who.city].filter(Boolean).join(' '), who.state].filter(Boolean).join(', ');
+    cellText(doc, [addr || [who.email, who.phone].filter(Boolean).join(' · ')], 42, 70.7, 7, 1.4, 100);
+    // the one item row
+    const LH = 7 * PT * 1.4, y0 = 100;
+    doc.text('1', 14, y0 + 3.4);
+    doc.setFont(FONT, 'bold'); const nl = doc.splitTextToSize(product, 96); nl.forEach((l, i) => doc.text(l, 24, y0 + 3.4 + i * LH));
+    doc.setFont(FONT, 'normal'); const dl = desc.reduce((a, l) => a.concat(doc.splitTextToSize(l, 96)), []);
+    dl.slice(0, 26).forEach((l, i) => doc.text(l, 24, y0 + 3.4 + (nl.length + i) * LH));
+    if (qty) { doc.text(qty.toLocaleString('en-US'), 126, y0 + 3.4); doc.text('pcs', 138, y0 + 3.4); }
+    if (price != null) { if (qty) doc.text(RM(price / qty), 171, y0 + 3.4, { align: 'right' }); doc.text(RM(price), 196, y0 + 3.4, { align: 'right' }); }
+    // totals: shipping · coupon discount · member discount · total
+    const Y = [217.7, 222.4, 226.9, 231.7].map(v => v + 3.9);
+    doc.text('-', 194.5, Y[0], { align: 'right' }); doc.text('-', 194.5, Y[1], { align: 'right' }); doc.text('-', 194.5, Y[2], { align: 'right' });
+    doc.setFont(FONT, 'bold'); doc.setFontSize(8); doc.text(price != null ? RM(price) : 'To be quoted', 194.5, Y[3], { align: 'right' });
+    return doc;
+  };
+
   // ---------------------------------------------------------------- printing-job documents (original supplier plugin)
   // TCPDF writeHTMLCell(x, y) places the top of the first line at y; jsPDF draws on the baseline.
   const cellText = (doc, lines, x, y, size, ratio, width) => {
@@ -195,7 +242,9 @@
       cellText(doc, [o.phone], 25, 130, 9, 1.4);
       doc.setFont(FONT, 'bold'); doc.setFontSize(16); cellText(doc, [o.postcode], 85, 130, 16, 1.4);
       doc.setFontSize(12); cellText(doc, [o.orderNumber], 165, 11, 12, 1.4);
-      doc.setFont(FONT, 'normal'); doc.setFontSize(8); cellText(doc, jobLines(J), 140, 30, 8, 1.75, 60);
+      // (user, 2026-09-30) the shipping label carries the order number, job number, product and quantity only
+      doc.setFont(FONT, 'normal'); doc.setFontSize(8);
+      cellText(doc, ['Order No.: ' + (o.orderNumber || J.orderId || ''), 'Job No.: ' + (J.id || d.jobId || ''), J.product, J.qty ? 'Quantity: ' + Number(J.qty).toLocaleString('en-US') : null], 140, 30, 8, 1.75, 60);
     } else if (kind === 'hub-label') {
       const hb = d.hub || {};
       doc.setFontSize(7.5);
@@ -203,9 +252,9 @@
       cellText(doc, String(hb.address || '').split(/\n|,\s*(?=\d{5})/), 25, 40.5, 7.5, 1.5, 70);
       cellText(doc, [hb.phone], 25, 90.5, 7.5, 1.5);
       doc.setFont(FONT, 'bold'); doc.setFontSize(10); cellText(doc, [String(d.poNumber || '')], 112, 10, 10, 1.4);
-      // the customer's order number (no customer details), then the order details
+      // (user, 2026-09-30) the order number, the product name and the quantity only (no customer details, no spec)
       doc.setFontSize(7); const on = d.orderNumber ? cellText(doc, ['Order No.: ' + d.orderNumber], 100, 30, 7, 1.4, 40) : 0;
-      doc.setFont(FONT, 'normal'); cellText(doc, jobLines(J), 100, 30 + (on ? on * 7 * PT * 1.4 + 1.5 : 0), 7, 1.4, 40);
+      doc.setFont(FONT, 'normal'); cellText(doc, [J.product, J.qty ? 'Quantity: ' + Number(J.qty).toLocaleString('en-US') : null], 100, 30 + (on ? on * 7 * PT * 1.4 + 1.5 : 0), 7, 1.4, 40);
     }
     doc.setProperties({ title: ({ 'purchase-order': 'Purchase Order ', 'shipping-label': 'Shipping Label ', 'hub-label': 'Hub Label ' })[kind] + (d.poNumber || d.jobId), author: 'Printoka', creator: 'Printoka' });
     return doc;
@@ -299,7 +348,17 @@
   P.saveBlob = function (blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000); };
   const origOpenDoc = P.openDoc;
   P.openDoc = function (id, kind) {
-    if (!(kind === 'invoice' || kind === 'slip') || !/^PO-/.test(String(id))) return origOpenDoc.call(this, id, kind);
+    // the quotation on the original printoka.com template (user, 2026-09-30)
+    if (kind === 'quote') {
+      const v = pdfViewer('Quotation ' + id);
+      const have = [].concat(this.state.quotesList || [], this.state.staffQuotes || []).find(q => q && q.id === id);
+      (have ? Promise.resolve(have) : fetch('/api/quotes/' + encodeURIComponent(id), { headers: this.authHeaders() }).then(r => r.json()).then(d => d.quote || null))
+        .then(q => { if (!q) throw new Error('Quotation not found'); return this.buildQuotePdf(q); })
+        .then(doc => v.show(doc.output('blob'), 'Quotation ' + id + '.pdf')).catch(e => v.fail(e.message));
+      return;
+    }
+    // invoices and order slips for every order number (PO-2026-… and the 8-character numbers)
+    if (!(kind === 'invoice' || kind === 'slip') || /^Q-?/.test(String(id))) return origOpenDoc.call(this, id, kind);
     const title = (kind === 'invoice' ? 'Invoice INV-' : 'Order Slip ') + String(id).replace(/^PO-/, '');
     const v = pdfViewer(title);
     this.fetchOrderFull(id).then(o => { if (!o) throw new Error('Order not found'); return this.buildOrderPdf(o, kind); })
