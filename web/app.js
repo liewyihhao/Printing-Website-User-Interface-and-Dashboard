@@ -4167,15 +4167,16 @@ class Component extends DCLogic {
     const [qText, qDesc] = curDef.widget === 'foilColours' ? ['Which foil colour would you like?', 'Choose a colour for each stamped area.'] : this.bookQuestion(cur.key, labelOf(cur.key), NAME);
     const ok = answered(cur), last = !flat.some(e => e !== cur && !seen[e.key]);
     const next = () => { if (!ok) return; this.setState({ bookProd: pid, bookSeen: Object.assign({}, seen, { [cur.key]: 1 }), bookKey: null, bookDir: 1, ddOpen: null }); };
-    // (user, 2026-09-30) Back (left) and Confirm (right) sit at the top; no chapter buttons
+    // (user, 2026-09-30) Back on top (kept in place, hidden on the first question); Confirm sits under the bar, level with the question
     return shell([
-      h('div', { key: 'nav', style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 18 } },
-        idx > 0 ? h('button', { type: 'button', onClick: () => goTo(idx - 1, -1), style: { font: '600 14px Montserrat,sans-serif', color: INK, background: '#fff', border: '1px solid ' + HAIR, borderRadius: 8, padding: '11px 20px', cursor: 'pointer' } }, '← Back') : h('span'),
-        h('button', { type: 'button', disabled: !ok, onClick: next, style: { font: '600 14px Montserrat,sans-serif', color: '#fff', background: ok ? TEAL : '#e3a09f', border: 'none', borderRadius: 8, padding: '12px 28px', cursor: ok ? 'pointer' : 'not-allowed' } }, last ? 'Confirm & finish' : 'Confirm')),
+      h('div', { key: 'nav', style: { display: 'flex', alignItems: 'center', marginBottom: 18 } },
+        h('button', { type: 'button', onClick: () => { if (idx > 0) goTo(idx - 1, -1); }, 'aria-hidden': idx > 0 ? undefined : 'true', tabIndex: idx > 0 ? 0 : -1, style: { visibility: idx > 0 ? 'visible' : 'hidden', font: '600 14px Montserrat,sans-serif', color: INK, background: '#fff', border: '1px solid ' + HAIR, borderRadius: 8, padding: '11px 20px', cursor: 'pointer' } }, '← Back')),
       bar,
       h('div', { key: 'gap', style: { height: 18 } }), // (user, 2026-09-30) no 'Question N of M' line — the bar shows progress
       h('div', { key: 'pg-' + cur.key, style: { animation: ((s.bookDir || 1) < 0 ? 'pkFlipBack' : 'pkFlip') + ' .45s cubic-bezier(.2,.8,.2,1) both', transformOrigin: (s.bookDir || 1) < 0 ? 'right center' : 'left center' } },
-        h('div', { style: { fontSize: 22, fontWeight: 600, letterSpacing: '-.01em', lineHeight: 1.3, marginBottom: 6 } }, qText),
+        h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 6 } },
+          h('div', { style: { fontSize: 22, fontWeight: 600, letterSpacing: '-.01em', lineHeight: 1.3, minWidth: 0 } }, qText),
+          h('button', { type: 'button', disabled: !ok, onClick: next, style: { flex: 'none', font: '600 14px Montserrat,sans-serif', color: '#fff', background: ok ? TEAL : '#e3a09f', border: 'none', borderRadius: 8, padding: '12px 28px', cursor: ok ? 'pointer' : 'not-allowed' } }, last ? 'Confirm & finish' : 'Confirm')),
         qDesc ? h('div', { style: { fontSize: 14, color: MUT, lineHeight: 1.6, marginBottom: 18 } }, qDesc) : null,
         cur.n)
       ]);
