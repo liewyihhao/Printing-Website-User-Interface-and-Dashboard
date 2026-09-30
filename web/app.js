@@ -241,22 +241,69 @@ const dlsHsFields = () => {
 };
 
 const PL_EXCLUDE = { 1: true };
+// Label Sticker (Digital) — Excard's option lists (live walk 2026-10-01)
+const STK_4CW = ['Transparent OPP', 'Brown Craft Paper', 'Matte Silver Polyester', 'Bright Silver Polyester', 'Removable Transparent OPP'];
+const STK_DS8 = ['330mm x 482mm', '297mm x 210mm', '210mm x 148mm', '148mm x 148mm', '111mm x 148mm', '89mm x 148mm', '112mm x 98mm', '74mm x 98mm'];
+const STK_DS3 = STK_DS8.slice(0, 3);
+const STK_QTY = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 6000, 7000, 8000, 9000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000, 60000, 70000, 80000, 90000, 100000, 150000, 200000, 250000, 300000, 350000, 400000, 450000, 500000, 600000, 700000, 800000, 900000, 1000000];
+function stkLams(paper) {
+  const all = ['Not Required', 'Matte Laminate (Front)', 'Gloss Laminate (Front)', 'Gloss Water Based Varnish', 'UV Varnish', 'Soft Touch Laminate (Front)'];
+  if (paper === 'Mirror Kote') return all;
+  if (['Printing Paper', 'Brown Craft Paper', 'Warranty Sticker'].indexOf(paper) >= 0) return ['Not Required'];
+  if (paper === 'Removable White PP') return all.slice(0, 3);
+  if (/Silver Polyester/.test(paper || '')) return all.filter(v => !/Varnish/.test(v));
+  return all.filter(v => v !== 'Gloss Water Based Varnish');
+}
 const STICKER_KISS_SHEETS = ['148mm x 148mm', '111mm x 148mm', '89mm x 148mm', '112mm x 98mm', '74mm x 98mm'];
 const optOn = v => v != null && v !== '' && !/^(-\s*)?(not required|no required|none|n\/a|not applicable|no\b.*|without\b.*|0)(\s*-)?$/i.test(String(v).trim());
 const CFG_OVERRIDES = {
-  // (user, 2026-09-30) Label Sticker: stickers only (no CD), no sample-proof or print-method questions; Kiss Cut
-  // has its own sheet sizes (Excard's list) and no separate height / width; Multiple Dieline keeps A3+ / A4 / A5.
+  // (user, 2026-09-30) Label Sticker: stickers only (no CD), no sample-proof or print-method questions.
+  // (2026-10-01, Excard live walk of every cut type × material × print colour × finishing, 1,389 states) the form
+  // asks exactly: Cut Type → Size (H × W; diameter for Round; none for Multiple Dieline / Kiss Cut / No Cut) →
+  // Material → Print Colour (+ "4C & White" on clear / craft / silver materials) → the 1C ink colour → Lamination
+  // (list per material; none on Printing Paper, Brown Craft, Warranty) → Cutting Method (Rectangle/Square) →
+  // Waste Removal (Round / Custom / Standard Shape) → Delivery Sheet Size → Quantity 10 – 1,000,000.
+  // No Easy Peel and no Hot Stamping on this product.
   'Label Sticker — Digital': {
-    hide: ['sample_proof', 'inc_printmethod', 'type'],
-    optionsOverride: { sheet_size: cfg => cfg.category === 'Kiss Cut' ? STICKER_KISS_SHEETS : ['A3+', 'A4', 'A5'] },
+    hide: ['sample_proof', 'inc_printmethod', 'type', 'easy_peel', 'hot_stamping'],
+    optionsOverride: {
+      colour: ['4C', '4C & White', '1C'],
+      sheet_size: cfg => cfg.category === 'Kiss Cut' ? STICKER_KISS_SHEETS : ['A3+', 'A4', 'A5'],
+    },
+    optLabel: { sheet_size: { 'A3+': '317mm x 425mm (A3+)', 'A4': '210mm x 297mm (A4)', 'A5': '148mm x 210mm (A5)' } },
+    validOpt: {
+      paper: (cfg, v) => !((cfg.category === 'Multiple Dieline' && (v === 'Brown Craft Paper' || v === 'Warranty Sticker'))
+        || (['Custom Die-Cut', 'Kiss Cut', 'No Cut'].indexOf(cfg.category) >= 0 && v === 'Warranty Sticker')),
+      colour: (cfg, v) => v !== '4C & White' || STK_4CW.indexOf(cfg.paper) >= 0,
+      ink_colour: (cfg, v) => v !== 'White' || STK_4CW.indexOf(cfg.paper) >= 0,
+      finishing: (cfg, v) => stkLams(cfg.paper).indexOf(v) >= 0,
+      sheet_size: (cfg, v) => !((cfg.category === 'Kiss Cut' && cfg.paper === 'Bright Silver Polyester' && v === '148mm x 148mm')
+        || (cfg.category === 'Multiple Dieline' && cfg.paper === 'Matte Silver Polyester' && v === 'A4')),
+      delivery_sheet: (cfg, v) => ['Mirror Kote', 'Warranty Sticker'].indexOf(cfg.paper) >= 0 || STK_DS3.indexOf(v) >= 0,
+    },
     hideWhen: {
       sheet_size: cfg => ['Multiple Dieline', 'Kiss Cut'].indexOf(cfg.category) < 0,
-      height: cfg => cfg.category === 'Kiss Cut',
-      width: cfg => cfg.category === 'Kiss Cut',
+      height: cfg => ['Multiple Dieline', 'Kiss Cut', 'No Cut'].indexOf(cfg.category) >= 0,
+      width: cfg => ['Multiple Dieline', 'Kiss Cut', 'No Cut'].indexOf(cfg.category) >= 0,
+      dielines: cfg => cfg.category !== 'Multiple Dieline',
+      finishing: cfg => stkLams(cfg.paper).length < 2,
+      cutting_method: cfg => cfg.category !== 'Rectangle/Square',
+      waste_removal: cfg => ['Round', 'Custom Die-Cut', 'Standard Shape'].indexOf(cfg.category) < 0 || cfg.paper === 'Warranty Sticker',
+      delivery_sheet: cfg => !((cfg.category === 'Rectangle/Square' && cfg.cutting_method === 'Die-Cutting') || ['Round', 'Custom Die-Cut', 'Standard Shape'].indexOf(cfg.category) >= 0)
+        || cfg.paper === 'White PE (Polyethylene)',
     },
-    placeholder: ['sheet_size'],
+    addFields: [
+      { key: 'ink_colour', label: 'Ink Colour', options: ['Black', 'Cyan', 'Magenta', 'White'], section: 'General', neutral: true, after: 'colour', showWhen: { field: 'colour', value: '1C' } },
+      { key: 'cutting_method', label: 'Cutting Method', options: ['Cut To Size', 'Die-Cutting'], section: 'General', neutral: true, after: 'finishing' },
+      { key: 'waste_removal', label: 'Waste Removal', options: ['Not Required', 'Required'], section: 'General', neutral: true, after: 'finishing' },
+      { key: 'delivery_sheet', label: 'Delivery Sheet Size', options: STK_DS8, section: 'General', neutral: true, after: 'finishing' },
+    ],
+    // Excard asks only these with "Please Select"; Cut Type, Print Colour, Lamination, Cutting Method,
+    // Waste Removal and the die-cut Delivery Sheet Size come preset
+    placeholderExact: ['paper', 'ink_colour', 'sheet_size', 'quantity'],
+    qtyOptions: STK_QTY,
     // Kiss Cut is priced by quantity only; its sheet sizes are passed to the engine as its default sheet
-    priceSub: { sheet_size: STICKER_KISS_SHEETS.reduce((m, v) => (m[v] = 'A3+', m), {}) },
+    priceSub: { sheet_size: STICKER_KISS_SHEETS.reduce((m, v) => (m[v] = 'A3+', m), {}), colour: { '4C & White': '4C' } },
   },
   'Label Sticker — Letterpress (Hot Stamping)': { hide: ['sample_proof', 'inc_printmethod'] },
   // (2026-09-30, Excard live walk) the bunting stands' display-only values: shown as fixed values, price-neutral
@@ -808,6 +855,8 @@ class Component extends DCLogic {
     const pid = id != null ? id : (this.state.prodId != null ? this.state.prodId : 1);
     const p = E.DATA.products.find(x => x.id === pid);
     if (!p || !p.quantity) return null;
+    const qo = (CFG_OVERRIDES[p.name] || {}).qtyOptions;
+    if (qo) { const l = typeof qo === 'function' ? qo(this.pkV()) : qo; return Object.assign({}, p.quantity, { options: l, moq: l[0], maxq: l[l.length - 1] }); }
     const cur = this.state.prodId != null && this.state.prodId === pid;
     const qs = this.plInfo(p) ? this.plQty(p, cur ? this.pkV() : {}) : null;
     return qs ? Object.assign({}, p.quantity, { options: qs, moq: qs[0], maxq: qs[qs.length - 1] }) : p.quantity;
@@ -1033,6 +1082,7 @@ class Component extends DCLogic {
     // inserted right after the engine field they depend on.
     (ov.addFields || []).forEach(af => {
       if (af.showWhen && !this.pkShown(af, cfg)) return;
+      if (hideWhen[af.key]) { try { if (hideWhen[af.key](cfg)) return; } catch (e) {} }
       const node = { def: af, options: (af.options || null) };
       const depKey = af.after || (af.showWhen && (af.showWhen.field || (af.showWhen.all && af.showWhen.all[0] && af.showWhen.all[0].field)));
       let at = depKey ? list.findIndex(x => x.def.key === depKey) : -1;
@@ -1051,7 +1101,7 @@ class Component extends DCLogic {
       if (!v || opensOwn(def.key, v)) return;
       if (/size/i.test(def.key) && /^(others?\b|other \(custom size\)|custom size)/i.test(v) && !list.some(x => /^(custom_[hw]|fold_[hw]_|height$|width$)/.test(x.def.key)))
         follow(def, [{ key: 'custom_h', label: 'Height (mm)', type: 'number', min: 1 }, { key: 'custom_w', label: 'Width (mm)', type: 'number', min: 1 }]);
-      else if (/custom die.?cut|custom shape/i.test(v))
+      else if (/custom die.?cut|custom shape/i.test(v) && !list.some(x => /^(height|width|custom_[hw]|diecut_[hw])$/.test(x.def.key)))
         follow(def, [{ key: 'diecut_h', label: 'Die-cut height (mm)', type: 'number', min: 1 }, { key: 'diecut_w', label: 'Die-cut width (mm)', type: 'number', min: 1 }]);
       else if (/numbering/i.test(def.key + ' ' + (def.label || '')) && /^yes/i.test(v))
         follow(def, [{ key: 'numbering_start', label: 'Numbering starts from', type: 'number', min: 0, placeholder: 'e.g. 0001' }]);
