@@ -1005,7 +1005,7 @@ class Component extends DCLogic {
     const canonical = origin + (d.canonical || (typeof location !== 'undefined' ? location.pathname : '/'));
     let can = document.head.querySelector('link[rel="canonical"]'); if (!can) { can = document.createElement('link'); can.setAttribute('rel', 'canonical'); document.head.appendChild(can); } can.setAttribute('href', canonical);
     // Open Graph + Twitter Card — social share previews
-    const ogImg = d.image ? (/^https?:/.test(d.image) ? d.image : origin + d.image) : (origin + '/assets/products/business-card.jpg');
+    const ogImg = d.image ? (/^https?:/.test(d.image) ? d.image : origin + d.image) : (origin + '/assets/original/Standard-Business-Card.png');
     setProp('og:type', d.ogType || 'website');
     setProp('og:site_name', 'Printoka');
     setProp('og:title', d.title || 'Printoka');
@@ -2202,29 +2202,30 @@ class Component extends DCLogic {
       if (f) return React.createElement('img', { src: window.__asset(PKI.base + f), alt: kind + ' printing', loading: 'lazy',
         style: { width: w || '100%', aspectRatio: '4 / 3', objectFit: 'contain', display: 'block', background: '#fff' } });
     }
+    // (user, 2026-09-30) only clean product cut-outs — never the old "Print Your … Online Now!" banners or
+    // another product's photo. A product without its own photo gets a neutral logo tile until one is made.
+    const O = 'assets/original/', PR = 'assets/products/';
     const BY_NAME = {
-      'Business Card': 'business-card.jpg', 'Kad Kahwin — Digital': 'greeting-cards.png',
-      'Greeting Card — Litho': 'greeting-cards.png', 'Creative Cut Card — Digital': 'die-cut-card.png',
-      'PVC Card — Digital': 'digital-cards.png', 'ID Card — Digital': 'key-card-holder.jpg',
-      'Tent Card — Litho': 'folded-business-card.png', 'Voucher — Litho': 'voucher-book.jpg',
-      'Bill Book (NCR)': 'computer-form.png', 'Letterhead': 'letterhead.jpg',
-      'Booklet — Litho': 'booklet.jpg', 'Booklet — Litho (Offset)': 'booklet.jpg',
-      'Notepad': 'business-documents.jpg', 'Label Sticker — Digital': 'car-sticker-single.png',
-      'Roll Label': 'cards.jpg', 'Car Sticker': 'car-stickers.jpg', 'UV DTF Sticker': 'car-stickers.jpg',
-      'Flyer': 'flyers.jpg', 'Banner — Litho': 'hanging-banners.jpg', 'Roll-up Stand': 'brochures.jpg',
-      'Bunting': 'hanging-banners.jpg', 'Foamboard': 'hardcover-booklet.png',
-      'Folding Carton': 'gift-boxes.jpg', 'Folding Carton (67 styles)': 'gift-boxes.jpg',
-      'Paper Bag — Litho': 'tote-bags.jpg', 'Standing Pouch': 'envelope.jpg', 'Food Tray': 'gift-boxes.jpg',
-      'Mug — Litho': 'button-badge.png', 'Wall Calendar': 'table-calendar.jpg',
-      'Desk Calendar': 'folded-menu.png', 'Money Packet': 'folded-cards.jpg',
+      'Business Card': O + 'Standard-Business-Card.png', 'Kad Kahwin — Digital': PR + 'greeting-cards.png',
+      'Greeting Card — Litho': PR + 'greeting-cards.png', 'Creative Cut Card — Digital': O + 'Custom-Die-Cut-Business-Card.png',
+      'PVC Card — Digital': PR + 'digital-cards.png', 'Voucher — Litho': O + 'Book-Binded-Ticket-and-Voucher.jpg',
+      'Bill Book (NCR)': PR + 'computer-form.png', 'Letterhead': O + 'Letterhead-Full-Color.png',
+      'Booklet — Litho': O + 'Booklet-Staple-Content.png', 'Booklet — Litho (Offset)': O + 'Booklet-Perfect-Cover.png',
+      'Notepad': O + 'Stitched-Office-Document.jpg', 'Label Sticker — Digital': PR + 'car-sticker-single.png',
+      'Roll Label': O + 'Round-Sticker.png', 'Car Sticker': O + 'Car-Window-Sticker.png', 'UV DTF Sticker': O + 'custom-die-cut-sticker.png',
+      'Flyer': O + 'Flyers-Cropped.png', 'Banner — Litho': O + 'Hanging-Banner.png', 'Roll-up Stand': O + 'Roll-Up-Banner.png',
+      'Bunting': O + 'Stand-Banner.png', 'Folding Carton': O + 'diecut-box.jpg', 'Folding Carton (67 styles)': O + 'diecut-box.jpg',
+      'Paper Bag — Litho': O + 'Paperbag-290x200x95-1.png', 'Standing Pouch': O + 'premium-packaging.jpg',
+      'Desk Calendar': O + 'soft-stand-table-calendar.png', 'Money Packet': O + 'Money-Pack-Vertical-3.png',
     };
-    const BY_KIND = { card: 'business-card.jpg', sticker: 'car-sticker-single.png', flyer: 'flyers.jpg',
-      book: 'booklet.jpg', banner: 'hanging-banners.jpg', box: 'gift-boxes.jpg',
-      cal: 'table-calendar.jpg', mug: 'tote-bags.jpg' };
-    const file = BY_NAME[kind] || BY_KIND[kind] || 'cards.jpg';
-    const alt = (typeof kind === 'string' && BY_NAME[kind]) ? (kind + ' printing') : 'Printoka custom printing product';
+    const BY_KIND = { card: O + 'Standard-Business-Card.png', sticker: PR + 'car-sticker-single.png', flyer: O + 'Flyers-Cropped.png',
+      book: O + 'Booklet-Staple-Content.png', banner: O + 'Hanging-Banner.png', box: O + 'diecut-box.jpg', cal: O + 'soft-stand-table-calendar.png' };
+    const file = BY_NAME[kind] || BY_KIND[kind];
+    if (!file) return React.createElement('div', { role: 'img', 'aria-label': (typeof kind === 'string' ? kind : 'Printoka') + ' printing',
+      style: { width: w || '100%', aspectRatio: '4 / 3', background: '#f5f6f8', display: 'grid', placeItems: 'center' } },
+      React.createElement('img', { src: window.__asset('assets/icons/logomark.svg'), alt: '', style: { height: '30%', width: 'auto', opacity: .16 } }));
     return React.createElement('img', {
-      src: window.__asset('assets/products/' + file), alt: alt, loading: 'lazy',
+      src: window.__asset(file), alt: (typeof kind === 'string' ? kind : 'Printoka product') + ' printing', loading: 'lazy',
       style: { width: w || '100%', aspectRatio: '4 / 3', objectFit: 'contain', display: 'block', background: '#fff' },
     });
   }
@@ -2846,8 +2847,8 @@ class Component extends DCLogic {
       ['Creative Cut Card — Digital', 'Cards', 'from ' + this.money(72), 'die-cut-card.png'],
       ['Folded Business Card', 'Cards', 'from ' + this.money(88), 'folded-business-card.png'],
       ['PVC Card — Digital', 'Cards', 'from ' + this.money(188), 'digital-cards.png'],
-      ['Name Card Holder', 'Apparel & Gifts', 'from ' + this.money(42), 'key-card-holder.jpg'],
-      ['Voucher — Litho', 'Cards', 'from ' + this.money(165), 'voucher-book.jpg'],
+      ['Name Card Holder', 'Apparel & Gifts', 'from ' + this.money(42), 'digital-cards.png'],
+      ['Voucher — Litho', 'Cards', 'from ' + this.money(165), '../original/Book-Binded-Ticket-and-Voucher.jpg'],
     ];
     const CATS_R = [['Cards', '8 products'], ['Books & Stationery', '19 products'], ['Money Packet', '4 products']];
     const ARTS = [

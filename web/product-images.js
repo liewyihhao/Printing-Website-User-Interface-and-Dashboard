@@ -24,12 +24,12 @@
     // Cards & Invitations
     169: 'Money-Packet-Horizontal.png', 166: '6x8-Folded-Cards-1.png', 168: 'Money-Pack-Vertical-2.png', 138: 'Money-Pack-Vertical-3.png',
     167: 'Money-Pack-Vertical.png', 113: 'frosted-plastic-card.jpg', 115: 'A5-Size-Folded-Cards.png', 114: 'Non-folded-Invitation-Cards.png',
-    165: 'A4-Size-Folded-Cards.png',
+    165: 'Custom-Die-Cut-Business-Card.png',
     // Large Format
     160: 'Stand-Banner.png', 161: 'Stand-Banner.png', 162: 'Stand-Banner.png', 124: 'Stand-Banner.png', 159: 'Roll-Up-Banner.png',
     125: 'Roll-Up-Banner.png', 123: 'Hanging-Banner.png',
     // Packaging & Boxes
-    179: 'premium-packaging.jpg', 127: 'Paperbag-290x200x95-1.png', 178: 'Paperbag-cover.jpg',
+    179: 'diecut-box.jpg', 127: 'Paperbag-290x200x95-1.png', 178: 'Paperbag-cover.jpg',
     // Apparel & Gifts
     132: 'Button-Badge.png', 128: 'C20.png', 133: 'HFS001.png', 174: 'lanyard.png', 139: 'N31A.png', 147: 'NH03A.png', 148: 'N01A.png',
     146: 'C10.png',

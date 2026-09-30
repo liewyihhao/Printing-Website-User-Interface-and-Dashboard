@@ -145,7 +145,7 @@ function page(slug, origin, opts) {
   const title = (h1 + ' | Printoka').slice(0, 60);
   const desc = c.intro.slice(0, 155);
   const catUrl = f.catId ? origin + '/products/' + f.catId : origin + '/products';
-  const asset = (PKI && PKI.products[f.id] && origImg(PKI.products[f.id])) || (function () { try { const p = path.join(__dirname, '..', 'assets', 'products', slugify(name) + '.jpg'); return fs.existsSync(p) ? '/assets/products/' + slugify(name) + '.jpg' : null; } catch (e) { return null; } })();
+  const asset = (PKI && PKI.products[f.id] && origImg(PKI.products[f.id])) || (function () { try { const p = path.join(__dirname, '..', 'assets', 'products', slugify(name) + '.png'); return fs.existsSync(p) ? '/assets/products/' + slugify(name) + '.png' : null; /* .png = clean cut-outs; the .jpg files there are old text banners */ } catch (e) { return null; } })();
   const ogImg = origin + (asset || '/assets/social/og-default.png');
 
   // JSON-LD
