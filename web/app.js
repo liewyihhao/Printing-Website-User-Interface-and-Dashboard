@@ -380,7 +380,20 @@ const CFG_OVERRIDES = {
     // Kiss Cut is priced by quantity only; its sheet sizes are passed to the engine as its default sheet
     priceSub: { sheet_size: STICKER_KISS_SHEETS.reduce((m, v) => (m[v] = 'A3+', m), {}), colour: { '4C & White': '4C' } },
   },
-  'Label Sticker — Letterpress (Hot Stamping)': { hide: ['sample_proof', 'inc_printmethod'] },
+  // (2026-10-01, Excard live form) Letterpress hot-stamp sticker: Category (preset Standard Shape) → Size (H 10–260 ×
+  // W 10–280 mm; Round: diameter 10–260) → Quantity 500 – 1,000,000 → fixed Transparent OPP, 0C print, 1C (Front) foil,
+  // Die-Cutting → foil colour Gold / Silver (Please Select). No Easy Peel. Prices match Excard exactly (7/7 samples).
+  'Label Sticker — Letterpress (Hot Stamping)': {
+    hide: ['sample_proof', 'inc_printmethod', 'easy_peel'],
+    label: { category: 'Category', colour: 'Hot Stamping Front Colour' },
+    addFields: [
+      { key: 'sticker_type', label: 'Sticker Type', options: ['Transparent OPP'], section: 'General', neutral: true, after: 'diameter' },
+      { key: 'print_colour', label: 'Print Colour', options: ['0C'], section: 'General', neutral: true, after: 'diameter' },
+      { key: 'hs_count', label: 'Hot Stamping Colour', options: ['1C (Front)'], section: 'General', neutral: true, after: 'diameter' },
+      { key: 'cutting_method', label: 'Cutting Method', options: ['Die-Cutting'], section: 'General', neutral: true, after: 'colour' },
+    ],
+    placeholderExact: ['colour', 'quantity'],
+  },
   // (2026-09-30, Excard live walk) the bunting stands' display-only values: shown as fixed values, price-neutral
   'Bunting — Gear X Stand': { addFields: [
     { key: 'size', label: 'Size', options: ['6ft x 2ft'], section: 'General', neutral: true, first: true },
