@@ -627,8 +627,45 @@ function bnEyelets(cfg, q) {
 // ---------- Mug (Excard mug, live 2026-10-02): the size comes with the model; prices = Excard's list (42/42 exact) ----------
 const MUG_SIZE = { '11OZ': '81mm x 95mm', '12OZ': '60mm x 100mm', '15OZ': '65mm x 115mm' };
 
+// ---------- Foamboard (Excard foamboard, live 2026-10-02): the model follows the size, the stand material follows
+// the size, AB Flute packing only from A0 up; prices = Excard's list (70/70 sampled rows exact) ----------
+const FB_SIZES = ['305mm x 457mm (12 x 18 inch)', '297mm x 420mm (A3)', '420mm x 594mm (A2)', '594mm x 841mm (A1)', '841mm x 1189mm (A0)', '610mm x 1219mm (2ft x 4ft)', '762mm x 1524mm (2.5ft x 5ft)', '762mm x 1829mm (2.5ft x 6ft)', '914mm x 1524mm (3ft x 5ft)', '914mm x 1829mm (3ft x 6ft)'];
+const fbModel = s => 'FB M' + (Math.max(0, FB_SIZES.indexOf(s)) + 1);
+const fbStand = cfg => FB_SIZES.indexOf(cfg.size) < 2 ? 'E flute corrugated with 250gsm boxboard with white liner' : '5mm PP Hollow';
+const fbPacking = cfg => FB_SIZES.indexOf(cfg.size) >= 4 ? ['B Flute', 'AB Flute'] : ['B Flute'];
+const QTY_1_100 = Array.from({ length: 100 }, (_, i) => i + 1);
+function plQuote(id, V, q) {
+  const E = typeof window !== 'undefined' && window.PricingEngine, p = E && E.DATA.products.find(x => x.id === id); if (!p) return null;
+  try { const r = E.localQuote(p, V, q); return r && isFinite(r.printoka_cash) ? r.printoka_cash : null; } catch (e) { return null; }
+}
+function fbPriceBase(cfg, q) {
+  if (FB_SIZES.indexOf(cfg.size) < 0) return null;
+  const req = cfg.butterflystand === 'Required', pk = fbPacking(cfg);
+  return plQuote(154, { model: fbModel(cfg.size), size: cfg.size, cuttingmethod: cfg.cuttingmethod || 'Cut To Size', lamination: cfg.lamination || 'Gloss Lamination',
+    butterflystand: req ? 'Required' : 'Not Required', materialstand: req ? fbStand(cfg) : 'N/A', package: cfg.package || 'Normal',
+    packingmaterial: pk.indexOf(cfg.packingmaterial) >= 0 ? cfg.packingmaterial : 'B Flute' }, q);
+}
+// ---------- Foamboard with Magnet / Foldable POP / POP Display (Excard, live 2026-10-02): the size comes with the model;
+// prices = Excard's lists (every curve exact; POP Display's list had 4 garbled cells, fixed in the engine data) ----------
+const FBM_SIZE = { A3: '297mm x 420mm', A4: '210mm x 297mm', A5: '148mm x 210mm' };
+const FPOP_SIZE = { M1: '247mm x 295mm x 1352mm', M2: '268mm x 346mm x 1381mm', M3: '314mm x 433mm x 1404mm', M4: '335mm x 505mm x 1404mm' };
+const POP_SIZE = { 'POP M1': '1270mm x 290mm x 240mm', 'POP M2': '1290mm x 340mm x 260mm', 'POP M3': '1320mm x 430mm x 310mm', 'POP M4': '1370mm x 610mm x 340mm' };
+// ---------- Wind Flag (Excard wind-flag, live 2026-10-02): Category Full Set (list prices, exact) or Fabric only
+// (sampled live CASH, Bow = Teardrop per length; linear between samples, within 1% on the 5 off-sample checks) ----------
+const WF_FAB_MODELS = ['Teardrop Fabric 3.0m', 'Teardrop Fabric 5.0m', 'Bow Fabric 5.0m', 'Bow Fabric 3.0m'];
+const WF_FAB = {
+  '3.0': [[1, 71], [2, 137], [3, 202], [5, 334], [7, 466], [10, 663], [15, 990], [20, 1300], [30, 1946], [40, 2555], [50, 3192]],
+  '5.0': [[1, 108], [2, 209], [5, 516], [10, 1027], [20, 2017], [50, 4957]],
+};
+function wfPriceBase(cfg, q) {
+  if (cfg.wf_category !== 'Fabric only') return null;
+  const m = String(cfg.model || '').match(/(\d\.\d)m/), t = WF_FAB[m ? m[1] : '3.0'];
+  for (let i = 0; i < t.length; i++) { if (q === t[i][0]) return t[i][1]; if (q < t[i][0]) { if (!i) return t[0][1] * q; const [q0, v0] = t[i - 1], [q1, v1] = t[i]; return Math.round(v0 + (v1 - v0) * (q - q0) / (q1 - q0)); } }
+  const [qa, va] = t[t.length - 1]; return Math.round(va * q / qa);
+}
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
-const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true };
+const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
 // Softcover: binding (saddle / perfect) → size → pages → the cover papers Excard offers for that size and page count →
 // the content papers it allows for that cover at that page count (A4-type sizes vs A5 portrait tables). Hardcover:
@@ -1293,6 +1330,74 @@ const CFG_OVERRIDES = {
     optionsOverride: { model: ['11OZ', '12OZ', '15OZ'], size: cfg => [MUG_SIZE[cfg.model] || '81mm x 95mm'] },
     defaultOpt: { model: '11OZ' },
     placeholderExact: ['quantity'],
+  },
+  'Foamboard — Digital': {
+    hide: ['model'],
+    label: { materialstand: 'Material (Stand)' },
+    optionsOverride: { size: FB_SIZES, model: cfg => [fbModel(cfg.size)], materialstand: cfg => [fbStand(cfg)], packingmaterial: fbPacking },
+    addFields: [
+      { key: 'fb_material', label: 'Material', options: ['5mm Paper Foamboards 127gsm Art Paper'], section: 'General', neutral: true, after: 'butterflystand' },
+      { key: 'fb_colour', label: 'Print Colour', options: ['4C'], section: 'General', neutral: true, after: 'fb_material' },
+      { key: 'fb_stand_na', label: 'Material (Stand)', options: ['N/A'], section: 'General', neutral: true, after: 'fb_colour', showWhen: { field: 'butterflystand', value: 'Not Required' } },
+    ],
+    defaultOpt: { cuttingmethod: 'Cut To Size', butterflystand: 'Not Required', packingmaterial: 'B Flute' },
+    placeholderExact: ['model', 'size', 'lamination', 'package', 'quantity'],   // model: hidden; listed so the display never narrows Size by it
+    qtyOptions: QTY_1_100,
+    priceBase: fbPriceBase,
+  },
+  'Foamboard with Magnet — Digital': {
+    optionsOverride: { size: cfg => [FBM_SIZE[cfg.model] || FBM_SIZE.A3] },
+    addFields: [
+      { key: 'fbm_material', label: 'Material', options: ['5mm Paper Foamboards 127gsm Art Paper + Magnetic Sheet'], section: 'General', neutral: true, after: 'lamination' },
+      { key: 'fbm_colour', label: 'Print Colour', options: ['4C (Front)'], section: 'General', neutral: true, after: 'fbm_material' },
+    ],
+    defaultOpt: { model: 'A3' },
+    placeholderExact: ['shape', 'lamination', 'quantity'],
+  },
+  'Foldable POP Display — Digital': {
+    optionsOverride: { size: cfg => [FPOP_SIZE[cfg.model] || FPOP_SIZE.M1] },
+    addFields: [
+      { key: 'fpop_material', label: 'Material', options: ['350gsm greyback + B flute/ k5k'], section: 'General', neutral: true, after: 'size' },
+      { key: 'fpop_colour', label: 'Print Colour', options: ['CMYK outer layer only including header'], section: 'General', neutral: true, after: 'fpop_material' },
+      { key: 'fpop_lamination', label: 'Lamination', options: ['Glossy Vinyl'], section: 'General', neutral: true, after: 'fpop_colour' },
+    ],
+    defaultOpt: { model: 'M1' },
+    placeholderExact: ['quantity'],
+  },
+  'POP Display — Digital': {
+    optionsOverride: { size: cfg => [POP_SIZE[cfg.model] || POP_SIZE['POP M1']] },
+    addFields: [
+      { key: 'pop_material', label: 'Material', options: ['6mm PVC Foamboard'], section: 'General', neutral: true, after: 'lamination' },
+      { key: 'pop_colour', label: 'Print Colour', options: ['CMYK Outer Wall + Top & Bottom Header'], section: 'General', neutral: true, after: 'pop_material' },
+      { key: 'pop_compulsory', label: 'Compulsory', options: ['Die-cutting + Gluing'], section: 'General', neutral: true, after: 'pop_colour' },
+    ],
+    defaultOpt: { model: 'POP M1' },
+    placeholderExact: ['lamination', 'quantity'],
+  },
+  'Economy Roll-Up Stand — Digital': {
+    addFields: [
+      { key: 'eru_size', label: 'Size', options: ['29inch x 78inch'], section: 'General', neutral: true },
+      { key: 'eru_material', label: 'Material', options: ['Synthethic Paper 180 micron'], section: 'General', neutral: true, after: 'eru_size' },
+      { key: 'eru_colour', label: 'Print Colour', options: ['Indigo Print'], section: 'General', neutral: true, after: 'eru_material' },
+      { key: 'eru_lamination', label: 'Lamination', options: ['Matte Lamination'], section: 'General', neutral: true, after: 'eru_colour' },
+      { key: 'eru_compulsory', label: 'Compulsory', options: ['Aluminium Stand'], section: 'General', neutral: true, after: 'eru_lamination' },
+    ],
+    placeholderExact: ['quantity'],
+    qtyOptions: QTY_1_100,
+  },
+  'Wind Flag — Digital': {
+    optionsOverride: {
+      model: cfg => cfg.wf_category === 'Fabric only' ? WF_FAB_MODELS : ['Teardrop Flag 3.0m', 'Teardrop Flag 5.0m', 'Bow Flag 3.0m', 'Bow Flag 5.0m'],
+      wf_compulsory: cfg => [cfg.wf_category === 'Fabric only' ? 'Not Required' : 'Cross Base with Water Bag'],
+    },
+    addFields: [
+      { key: 'wf_category', label: 'Category', options: ['Full Set (with Stand)', 'Fabric only'], section: 'General', first: true, neutral: true },
+      { key: 'wf_paper', label: 'Paper', options: ['Fabric'], section: 'General', neutral: true, after: 'model' },
+      { key: 'wf_compulsory', label: 'Compulsory', options: ['Cross Base with Water Bag', 'Not Required'], section: 'General', neutral: true, after: 'wf_paper' },
+    ],
+    placeholderExact: ['quantity'],
+    qtyOptions: Array.from({ length: 50 }, (_, i) => i + 1),
+    priceBase: wfPriceBase,
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
@@ -5401,7 +5506,7 @@ class Component extends DCLogic {
         h('div', { style: { position: 'sticky', top: 122, display: 'flex', flexDirection: 'column', gap: 14 } },
           // (user, 2026-09-30) styled like the cart's Summary box; Add to cart + Download Quotation only, no unit price
           (() => {
-            const row = (l, v, color) => h('div', { key: l, style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: 12, padding: '7px 0', fontSize: 14, lineHeight: 1.45 } },
+            const row = (l, v, color) => h('div', { key: l, style: { display: 'grid', gridTemplateColumns: 'minmax(96px,1fr) minmax(0,auto)', gap: 12, padding: '7px 0', fontSize: 14, lineHeight: 1.45 } },
               h('span', { style: { color: color || MUT } }, l), h('span', { style: { color: color || INK, textAlign: 'right' } }, v));
             const pt = this.procDays() != null ? (this.procDays() + (this.procDays() === 1 ? ' working day' : ' working days')) : '3 working days';
             let lines = []; if (!this._bookDoneNow) { try { lines = this.pkOrderSpec().lines || []; } catch (e) {} }
