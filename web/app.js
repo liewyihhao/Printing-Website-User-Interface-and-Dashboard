@@ -240,6 +240,113 @@ const dlsHsFields = () => {
   return out;
 };
 
+// ---------- Loose Sheet — Digital: Excard's v4 do-loose-sheet form (live walk + samples, 2026-10-01) ----------
+// Lamination only on Gloss / Matte Art 150gsm and the Gloss Art Cards. 1C print (with a Front / Back spot colour) only
+// on Simili. Light papers ask Folding Type (not on A7); heavier stock asks Creasing Type (A3, A4, A5, 2DL, 310 × 445 only);
+// Matte Art 150gsm asks both. Hole Punching and Round Corner only when nothing is folded or creased; no Round Corner on
+// A3 or 310 × 445. Excard prices 1C the same as 4C on the same sides.
+const DLS_SIM = ['Simili 80gsm', 'Simili 100gsm', 'Simili 140gsm'];
+const DLS_PAPERS = ['Simili 80gsm', 'Simili 100gsm', 'Simili 140gsm', 'Gloss Art Paper 100gsm', 'Gloss Art Paper 128gsm', 'Gloss Art Paper 150gsm',
+  'Matte Art Paper 100gsm', 'Matte Art Paper 130gsm', 'Matte Art Paper 150gsm', 'Gloss Art Card 230gsm (2 side coated)', 'Gloss Art Card 250gsm (2 side coated)',
+  'Gloss Art Card 310gsm (2 side coated)', 'Gloss Art Card 360gsm (2 side coated)', 'Linen 240gsm', 'Metal Ice 250gsm', 'Synthetic Paper 180micron',
+  'Super White 240gsm', 'Suwen 240gsm'];
+const DLS_PAPER_LABEL = { 'Simili 80gsm': 'Simili Paper 80gsm', 'Simili 100gsm': 'Simili Paper 100gsm', 'Simili 140gsm': 'Simili Paper 140gsm',
+  'Gloss Art Card 230gsm (2 side coated)': 'Gloss Art Card 230gsm (2 sides coated)', 'Gloss Art Card 250gsm (2 side coated)': 'Gloss Art Card 250gsm (2 sides coated)',
+  'Gloss Art Card 310gsm (2 side coated)': 'Gloss Art Card 310gsm (2 sides coated)', 'Gloss Art Card 360gsm (2 side coated)': 'Gloss Art Card 360gsm (2 sides coated)',
+  'Linen 240gsm': 'Fine Card - Linen 240gsm', 'Metal Ice 250gsm': 'Fine Card - Metal Ice 250gsm', 'Synthetic Paper 180micron': 'Fine Card - Synthetic Paper 180micron (0.18mm)',
+  'Super White 240gsm': 'Fine Card - Super White 240gsm', 'Suwen 240gsm': 'Fine Card - Suwen 240gsm' };
+const DLS_LAM_PAPERS = ['Gloss Art Paper 150gsm', 'Matte Art Paper 150gsm', 'Gloss Art Card 230gsm (2 side coated)', 'Gloss Art Card 250gsm (2 side coated)',
+  'Gloss Art Card 310gsm (2 side coated)', 'Gloss Art Card 360gsm (2 side coated)'];
+const DLS_LIGHT = ['Simili 80gsm', 'Simili 100gsm', 'Gloss Art Paper 100gsm', 'Gloss Art Paper 128gsm', 'Matte Art Paper 100gsm', 'Matte Art Paper 130gsm'];
+const DLS_LAMS = ['Not Required', 'Gloss Lamination (Front)', 'Gloss Lamination (Both)', 'Matt Lamination (Front)', 'Matt Lamination (Both)'];
+// size key, sheet sides (mm) and area in A4 units
+const DLS_SZ = { '297mm x 420mm (A3)': ['A3', 420, 297], '210mm x 297mm (A4)': ['A4', 297, 210], '148mm x 210mm (A5)': ['A5', 210, 148], '105mm x 148mm (A6)': ['A6', 148, 105],
+  '74mm x 105mm (A7)': ['A7', 105, 74], '99mm x 210mm (DL)': ['DL', 210, 99], '198mm x 210mm - (2DL)': ['2DL', 210, 198], '310mm x 445mm': ['310', 445, 310] };
+const DLS_SIZE_LABEL = { '297mm x 420mm (A3)': 'A3 (297mm x 420mm)', '210mm x 297mm (A4)': 'A4 (210mm x 297mm)', '148mm x 210mm (A5)': 'A5 (148mm x 210mm)',
+  '105mm x 148mm (A6)': 'A6 (105mm x 148mm)', '74mm x 105mm (A7)': 'A7 (74mm x 105mm)', '99mm x 210mm (DL)': 'DL (99mm x 210mm)', '198mm x 210mm - (2DL)': '2DL (198mm x 210mm)' };
+const DLS_FOLD9 = ['1Fa', '2Fa', '2Fb', '2Fc', '3Fa', '3Fb', '3Fd', '4Fa', '4Fb'];   // Folding Type = Required
+const DLS_FOLD_STD = ['1Fa', '2Fa', '2Fb', '2Fd', '3Fa', '3Fc', '4Fa'];             // Creasing Type = Standard
+const DLS_FOLD_CF = ['1Fa', '2Fa', '2Fb', '2Fd', '3Fa', '3Fc'];                     // Creasing Type = Crease + Fold
+const DLS_CREASE_SIDE = { A3: ['420'], A4: ['297', '210'], A5: ['210'], '2DL': ['210'], '310': ['445'] };
+const DLS_QTY = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200, 250, 300, 350, 400, 450, 500].concat(Array.from({ length: 20 }, (_, i) => (i + 1) * 1000));
+const dlsSz = cfg => DLS_SZ[cfg.size] || null;
+const dlsHpSides = cfg => { const s = dlsSz(cfg); return s ? ['Width Side (' + s[1] + 'mm)', 'Height Side (' + s[2] + 'mm)'] : []; };
+const DLS_HP_SIDES = Object.keys(DLS_SZ).reduce((a, k) => a.concat(dlsHpSides({ size: k }).filter(v => a.indexOf(v) < 0)), []);
+// which finishing questions this configuration shows (also used to price only what is shown)
+function dlsVis(cfg) {
+  const s = dlsSz(cfg), sk = s ? s[0] : '', p = cfg.paper || '', lamOn = DLS_LAM_PAPERS.indexOf(p) >= 0;
+  const laminated = lamOn && cfg.lam && cfg.lam !== 'Not Required';
+  const light = DLS_LIGHT.indexOf(p) >= 0 || (p === 'Gloss Art Paper 150gsm' && !laminated) || p === 'Matte Art Paper 150gsm';
+  const heavy = p && (DLS_LIGHT.indexOf(p) < 0 && !(p === 'Gloss Art Paper 150gsm' && !laminated));
+  const v = { lam: lamOn, fold: !!p && light && sk !== 'A7', crease: !!p && heavy && ['A3', 'A4', 'A5', '2DL', '310'].indexOf(sk) >= 0 };
+  v.folded = v.fold && cfg.folding_type === 'Required';
+  v.creased = v.crease && cfg.creasing && cfg.creasing !== 'Not Required';
+  v.foldCode = v.folded;
+  v.foldCodeC = v.crease && (cfg.creasing === 'Standard' || cfg.creasing === 'Crease + Fold');
+  v.finish = !v.folded && !v.creased;
+  v.rc = v.finish && sk !== 'A3' && sk !== '310';
+  return v;
+}
+// Folding Code for Creasing Type = Standard / Crease + Fold (on A5, 2DL and 310 × 445 Excard's 2Fd / 3Fc do not take)
+function dlsCreaseCodes(cfg) {
+  const sk = (dlsSz(cfg) || [])[0];
+  if (cfg.creasing === 'Crease + Fold') return DLS_FOLD_CF;
+  return ['A5', '2DL', '310'].indexOf(sk) >= 0 ? DLS_FOLD_STD.filter(c => c !== '2Fd' && c !== '3Fc') : DLS_FOLD_STD;
+}
+// Excard cash deltas, sampled live (A4; creasing / hole punching / round corner checked size-independent on A5).
+// Excard charges more for these at exactly 1,000 than at 2,000; the tables keep that.
+const DLS_ADD = {
+  fold:   [[10, 7.70], [100, 7.70], [500, 14.35], [1000, 20.95], [2000, 46.20], [5000, 112.00], [10000, 220.60], [20000, 441.20]],
+  crease: [[10, 17.60], [100, 18.75], [500, 23.15], [1000, 85.85], [2000, 55.45], [5000, 116.65], [10000, 221.75], [20000, 428.50]],
+  punch:  [[10, 6.60], [100, 6.60], [500, 6.65], [1000, 59.25], [2000, 12.70], [5000, 30.05], [20000, 116.65]],
+  rc:     [[10, 7.70], [100, 8.80], [500, 15.45], [1000, 78.90], [2000, 49.70], [5000, 118.95], [20000, 465.45]],
+};
+// lamination per piece per A4 of sheet area (A4 Gloss Art Card 310gsm), Gloss Both = 1.44 × Front, Matt Front = 0.67 × Both
+const DLS_LAM_RATE = { 'Matt Lamination (Both)': [[100, 0.2095], [1000, 0.2545], [5000, 0.2000]], 'Gloss Lamination (Front)': [[100, 0.1100], [1000, 0.1540], [5000, 0.0989]] };
+const DLS_ENV = { '133mm x 102mm - Cream A7': 0.02543, '162mm x 114mm - White A6': 0.03928, '108mm x 159mm - Pink A6': 0.0439, '162mm x 229mm - Pink A5': 0.0797,
+  '162mm x 229mm - White A5': 0.07565, '215mm x 114mm - Pink DL': 0.10453, '110mm x 220mm - White DL': 0.0514 };
+const DLS_ENV_LABEL = Object.keys(DLS_ENV).reduce((m, k) => { const p = k.split(' - '); m[k] = p[1] + ' (' + p[0] + ')'; return m; }, {});
+function dlsLin(T, q) {
+  if (q <= T[0][0]) return T[0][1];
+  for (let i = 1; i < T.length; i++) if (q <= T[i][0]) return T[i - 1][1] + (T[i][1] - T[i - 1][1]) * (q - T[i - 1][0]) / (T[i][0] - T[i - 1][0]);
+  const a = T[T.length - 2], b = T[T.length - 1]; return b[1] + (b[1] - a[1]) * (q - b[0]) / (b[0] - a[0]);
+}
+// the engine's sheet curve against Excard cash (A4 Gloss Art 128gsm + Gloss Art Card 310gsm, both sides), and the extra
+// Excard adds for front-only printing from 1,000 pcs (Simili 80, Gloss Art 128, Gloss Art Card 310 sampled)
+const DLS_QF = [[10, 1.048], [100, 1.002], [500, 0.9886], [1000, 0.9833], [2000, 1.0225], [5000, 1.0111], [10000, 1.001], [20000, 0.991]];
+const DLS_FRONT = [[100, 1], [1000, 1.092], [10000, 1.123], [20000, 1.123]];
+function dlsLamCost(cfg, q) {
+  const l = cfg.lam; if (!l || l === 'Not Required') return 0;
+  const s = dlsSz(cfg); if (!s) return 0;
+  const units = s[1] * s[2] / (297 * 210) * (s[1] * s[2] > 1.5 * 297 * 210 ? 0.8 : 1);   // A3 / 310 × 445 measured 20% under pro rata
+  const r = l === 'Matt Lamination (Both)' ? dlsLin(DLS_LAM_RATE[l], q) : l === 'Matt Lamination (Front)' ? 0.67 * dlsLin(DLS_LAM_RATE['Matt Lamination (Both)'], q)
+    : l === 'Gloss Lamination (Front)' ? dlsLin(DLS_LAM_RATE[l], q) : 1.44 * dlsLin(DLS_LAM_RATE['Gloss Lamination (Front)'], q);
+  // gloss film on the 150gsm art papers sampled at 0.58 × the card rate (A4 Gloss Art 150gsm, Gloss Front, 1,000 pcs)
+  const paper150 = /150gsm$/.test(cfg.paper || '') && /^Gloss/.test(l);
+  return r * units * q * (paper150 ? 0.58 : 1);
+}
+function dlsPriceBase(cfg, q) {
+  const E = typeof window !== 'undefined' && window.PricingEngine, p = E && E.DATA.products.find(x => x.id === 50);
+  if (!p || !cfg.size || !cfg.paper) return null;
+  const V = { size: cfg.size, paper: cfg.paper, colour: String(cfg.colour || '4C (Both)').replace('1C', '4C'), package: cfg.package || 'Normal', envelope: 'Not Required',
+    hot_stamping: 'Not Required', fold: 'None', punch: 'No', lamination: 'Not Required', round_corner: 'Not Required', perforation: 'Not Required' };
+  let base; try { base = E.localQuote(p, V, q).printoka_cash; } catch (e) { return null; }
+  if (!isFinite(base)) return null;
+  base *= dlsLin(DLS_QF, q) * (/\(Front\)/.test(V.colour) ? dlsLin(DLS_FRONT, q) : 1);
+  // full-sheet sizes (A3, 310 × 445) and Linen card sample ~5% above the engine
+  if (/^(A3|310)$/.test((dlsSz(cfg) || [])[0])) base *= 1.05;
+  if (cfg.paper === 'Linen 240gsm') base *= 1.05;
+  const v = dlsVis(cfg);
+  let add = 0;
+  if (v.lam) add += dlsLamCost(cfg, q);
+  if (v.folded) add += dlsLin(DLS_ADD.fold, q);
+  if (v.creased) add += dlsLin(DLS_ADD.crease, q) + (cfg.creasing === 'Crease + Fold' ? 0.08 * q : 0);
+  if (v.finish && cfg.hole_punch && cfg.hole_punch !== 'Not Required') add += dlsLin(DLS_ADD.punch, q);
+  if (v.rc && cfg.rcorner && cfg.rcorner !== 'Not Required') add += dlsLin(DLS_ADD.rc, q);
+  if (DLS_ENV[cfg.envelope]) add += DLS_ENV[cfg.envelope] * q;
+  return Math.round((base + add) * 100) / 100;
+}
+
 const PL_EXCLUDE = { 1: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
 // Softcover: binding (saddle / perfect) → size → pages → the cover papers Excard offers for that size and page count →
@@ -825,10 +932,58 @@ const CFG_OVERRIDES = {
   // Digital Loose Sheet: fixed sizes only (A3–A7, DL, 2DL, 310 × 445 mm). The imported "Custom width / height —
   // optional" boxes are not a choice on this product (no "Other" size), so they are not shown (user, 2026-09-29).
   'Loose Sheet — Digital': {
-    hide: ['custom_w', 'custom_h'],
-    // (user, 2026-09-29) hot stamping as on Excard: each colour asks its block size and foil colour,
-    // and is priced by block size × quantity (the engine's flat ~RM4 hot-stamping charge is replaced)
-    addFields: dlsHsFields(),
+    // (2026-10-01) rebuilt on Excard's v4 do-loose-sheet form — see DLS_* above. The engine's fold / punch / round corner /
+    // lamination / perforation questions are replaced by Excard's own (perforation is not offered there).
+    hide: ['custom_w', 'custom_h', 'fold', 'punch', 'lamination', 'round_corner', 'round_corner_position', 'perforation'],
+    label: { size: 'Size', paper: 'Paper', colour: 'Print Colour', envelope: 'Envelope', hot_stamping: 'Hot Stamping' },
+    optionsOverride: {
+      paper: DLS_PAPERS,
+      colour: cfg => DLS_SIM.indexOf(cfg.paper) >= 0 ? ['1C (Front)', '1C (Both)', '4C (Front)', '4C (Both)'] : ['4C (Front)', '4C (Both)'],
+      envelope: ['Not Required'].concat(Object.keys(DLS_ENV)),
+      fold_code: DLS_FOLD9,
+      fold_code_c: cfg => dlsCreaseCodes(cfg),
+      crease_side: cfg => DLS_CREASE_SIDE[(dlsSz(cfg) || [])[0]] || ['297'],
+      hp_side: cfg => dlsHpSides(cfg),
+    },
+    optLabel: { size: DLS_SIZE_LABEL, paper: DLS_PAPER_LABEL, envelope: DLS_ENV_LABEL,
+      fold_code: DLS_FOLD9.reduce((m, c) => (m[c] = c + ' - Landscape', m), {}),
+      fold_code_c: DLS_FOLD_STD.reduce((m, c) => (m[c] = c + ' - Landscape', m), {}) },
+    addFields: [
+      { key: 'lam', label: 'Lamination', options: DLS_LAMS, section: 'General', after: 'paper' },
+      { key: 'spot_front', label: 'Front Colour', options: ['Black', 'Cyan', 'Magenta'], section: 'General', neutral: true, after: 'colour', showWhen: { field: 'colour', values: ['1C (Front)', '1C (Both)'] } },
+      { key: 'spot_back', label: 'Back Colour', options: ['Black', 'Cyan', 'Magenta'], section: 'General', neutral: true, after: 'colour', showWhen: { field: 'colour', value: '1C (Both)' } },
+      { key: 'folding_type', label: 'Folding Type', options: ['Not Required', 'Required'], section: 'Optional Finishing', after: 'package' },
+      { key: 'creasing', label: 'Creasing Type', options: ['Not Required', 'Standard', 'Custom', 'Crease + Fold'], section: 'Optional Finishing', after: 'package' },
+      { key: 'fold_code', label: 'Folding Code', options: DLS_FOLD9, section: 'Optional Finishing', neutral: true, after: 'package' },
+      { key: 'fold_code_c', label: 'Folding Code', options: DLS_FOLD_STD, section: 'Optional Finishing', neutral: true, after: 'package' },
+      { key: 'crease_lines', label: 'Custom Creasing Line', options: ['1 Line', '2 Lines', '3 Lines', '4 Lines', '5 Lines', '6 Lines'], section: 'Optional Finishing', neutral: true, after: 'package' },
+      { key: 'crease_side', label: 'Custom Creasing Side', options: ['420', '297', '210', '445'], section: 'Optional Finishing', neutral: true, after: 'package' },
+      { key: 'hole_punch', label: 'Hole Punching', options: ['Not Required', 'Hole Punching (3mm)', 'Hole Punching (6mm)'], section: 'Optional Finishing', after: 'package' },
+      { key: 'hp_side', label: 'Hole Punching Side', options: DLS_HP_SIDES, section: 'Optional Finishing', neutral: true, after: 'package' },
+      { key: 'rcorner', label: 'Round Corner', options: ['Not Required', 'Round Corner (Radius 6mm)'], section: 'Optional Finishing', after: 'package' },
+    ].concat(dlsHsFields()),
+    hideWhen: {
+      lam: cfg => !dlsVis(cfg).lam,
+      folding_type: cfg => !dlsVis(cfg).fold,
+      creasing: cfg => !dlsVis(cfg).crease,
+      fold_code: cfg => !dlsVis(cfg).foldCode,
+      fold_code_c: cfg => !dlsVis(cfg).foldCodeC,
+      crease_lines: cfg => !(dlsVis(cfg).crease && cfg.creasing === 'Custom'),
+      crease_side: cfg => !(dlsVis(cfg).crease && cfg.creasing === 'Custom'),
+      hole_punch: cfg => !dlsVis(cfg).finish,
+      hp_side: cfg => !dlsVis(cfg).finish || !cfg.hole_punch || cfg.hole_punch === 'Not Required',
+      rcorner: cfg => !dlsVis(cfg).rc,
+    },
+    validOpt: {
+      fold_code_c: (cfg, v) => dlsCreaseCodes(cfg).indexOf(v) >= 0,
+      crease_side: (cfg, v) => (DLS_CREASE_SIDE[(dlsSz(cfg) || [])[0]] || ['297']).indexOf(v) >= 0,
+      hp_side: (cfg, v) => dlsHpSides(cfg).indexOf(v) >= 0,
+    },
+    placeholderExact: ['size', 'paper', 'spot_front', 'spot_back', 'quantity'],
+    defaultOpt: { colour: '4C (Front)' },   // Excard's preset
+    qtyOptions: DLS_QTY,
+    priceBase: dlsPriceBase,
+    // hot stamping as on Excard: each colour asks its block size and foil colour, priced by block size × quantity
     priceSub: { hot_stamping: { '1C (Front)': 'Not Required', '1C (Back)': 'Not Required', '2C (Front)': 'Not Required', '2C (Back)': 'Not Required' } },
     priceAddon: { hot_stamping: dlsHotStampCost },
   },
@@ -1571,6 +1726,8 @@ class Component extends DCLogic {
         // value (e.g. a fold-card preset size not in the engine's list) isn't reset.
         if (ovOpts[f.key]) { try { const a = typeof ovOpts[f.key] === 'function' ? ovOpts[f.key](cfg, opts) : ovOpts[f.key]; if (a && a.length) opts = a; } catch (e) {} }
         if (!opts.length) continue;
+        const dflt = (this.cfgOv().defaultOpt || {})[f.key];
+        if ((cfg[f.key] == null || opts.indexOf(cfg[f.key]) < 0) && dflt != null && opts.indexOf(dflt) >= 0) { cfg[f.key] = dflt; changed = true; continue; }
         if (cfg[f.key] == null || opts.indexOf(cfg[f.key]) < 0) { const nn = opts.find(isNoneOpt); cfg[f.key] = nn != null ? (Array.isArray(nn) ? nn[0] : nn) : opts[0]; changed = true; }
       }
       if (!changed) break;
@@ -1597,6 +1754,13 @@ class Component extends DCLogic {
     }
     // an added question with one valid option left (e.g. Creasing on a custom fold size) takes that value
     (ov.addFields || []).forEach(a => { if (!a.options || !a.options.length || (a.showWhen && !this.pkShown(a, cfg))) return; const vo = (ov.validOpt || {})[a.key]; const l = a.options.filter(v => { try { return !vo || vo(cfg, v); } catch (e) { return true; } }); if (l.length === 1) cfg[a.key] = l[0]; });
+    { const ph0 = ov.placeholder || [], oo0 = ov.optionsOverride || {};
+      (ov.addFields || []).forEach(a => {
+        if (!a.options || a.options.length < 2 || ph0.indexOf(a.key) >= 0 || (a.showWhen && !this.pkShown(a, cfg))) return;
+        let l = a.options; if (typeof oo0[a.key] === 'function') { try { const x = oo0[a.key](cfg); if (x && x.length) l = x; } catch (e) {} }
+        const vo = (ov.validOpt || {})[a.key]; if (vo) l = l.filter(v => { try { return vo(cfg, v); } catch (e) { return true; } });
+        if (l.length && (cfg[a.key] == null || cfg[a.key] === '' || l.indexOf(cfg[a.key]) < 0)) cfg[a.key] = l.find(isNoneOpt) || l[0];
+      }); }
     this.plEnforce(prod, cfg);
     return cfg;
   }
