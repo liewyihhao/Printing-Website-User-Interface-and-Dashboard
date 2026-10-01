@@ -765,8 +765,36 @@ const lhQty = cfg => { const sim = /^Simili/.test(cfg.paper || 'Simili');
 
 // (bookmark: structure only)
 
+// ---------- Folder (Excard folder, live 2026-10-02): Model Category -> Model (size and compulsory work fixed per model),
+// paper list per category, 4C Both only on 2-side-coated card, 8 finishes on 2-side card, protective back varnish with
+// 4C Both + a front-only finish, Fastener on Document Folders, CD Seal on the CD Jacket. Prices = Excard's list (616 curves
+// exact); the CD Jacket list has a with-seal and a without-seal row per spec (stored as their average), so the seal adds /
+// removes half of Excard's per-quantity seal difference. ----------
+const FD_MODELS = { 'Presentation Folder': ['FPF 001', 'FPF 004', 'FPF 005', 'FPF 014', 'FPF 015', 'FPF 016'], 'Document Folder': ['FDF 001', 'FDF 002'], 'Key Folder': ['FKF 001', 'FKF 002'], 'CD Jacket': ['FCD 004'] };
+const FD_SIZE = { 'FPF 001': '350mm x 510mm', 'FPF 004': '371mm x 534mm', 'FPF 005': '410mm x 614mm', 'FPF 014': '326mm x 613mm', 'FPF 015': '324mm x 635mm', 'FPF 016': '631mm x 478mm',
+  'FDF 001': '355mm x 535mm', 'FDF 002': '432mm x 624mm', 'FKF 001': '229mm x 194mm', 'FKF 002': '160mm x 161mm', 'FCD 004': '160mm x 384mm' };
+const FD_P2 = ['Gloss Art Card 230gsm (2 side coated)', 'Gloss Art Card 250gsm (2 side coated)', 'Gloss Art Card 310gsm (2 side coated)', 'Gloss Art Card 360gsm (2 side coated)'];
+const FD_PAPERS = { 'Presentation Folder': ['Gloss Art Card 250gsm (1 side coated)', 'Gloss Art Card 300gsm (1 side coated)'].concat(FD_P2.slice(1)),
+  'Key Folder': FD_P2 };
+FD_PAPERS['Document Folder'] = FD_PAPERS['CD Jacket'] = ['Gloss Art Card 210gsm (1 side coated)', 'Gloss Art Card 260gsm (1 side coated)', 'Gloss Art Card 300gsm (1 side coated)'].concat(FD_P2);
+const FD_LAM_F = ['Gloss Lamination (Front)', 'Matte Lamination (Front)', 'Matte Lamination (Front) + Spot UV (Front)', 'Gloss Waterbase Varnish (Front)'];
+const FD_LAM_ALL = ['Gloss Lamination (Front)', 'Gloss Lamination (Both)', 'Matte Lamination (Front)', 'Matte Lamination (Front) + Spot UV (Front)', 'Matte Lamination (Both)', 'Matte Lamination (Both) + Spot UV (Front)', 'Gloss Waterbase Varnish (Front)', 'Gloss Waterbase Varnish (Both)'];
+const fdCat = cfg => FD_MODELS[cfg.fd_cat] ? cfg.fd_cat : 'Presentation Folder';
+const fdTwoSide = cfg => /2 side coated/.test(cfg.paper || '');
+const fdProt = cfg => cfg.colour === '4C (Both)' && FD_LAM_F.indexOf(cfg.lamination) >= 0 ? 'Gloss Waterbase Varnish (Back)' : 'N/A';
+const FD_SEAL_D = { 250: 8.4, 300: 9.45, 350: 11.03, 400: 12.08, 450: 14.18, 500: 15.23, 550: 16.28, 600: 18.38, 650: 20.48, 700: 21.53, 750: 22.58, 800: 23.63, 850: 26.25, 900: 27.83, 950: 28.88, 1000: 29.93 };
+function fdPriceBase(cfg, q) {
+  const E = typeof window !== 'undefined' && window.PricingEngine, p = E && E.DATA.products.find(x => x.id === 107); if (!p) return null;
+  const model = (FD_MODELS[fdCat(cfg)].indexOf(cfg.model) >= 0 ? cfg.model : FD_MODELS[fdCat(cfg)][0]);
+  let r = null; try { r = E.localQuote(p, { model, paper: cfg.paper, colour: fdTwoSide(cfg) ? cfg.colour : '4C (Front)', lamination: cfg.lamination, protective: fdProt(cfg) }, q); } catch (e) { return null; }
+  if (!r || !isFinite(r.printoka_cash)) return null;
+  let v = r.printoka_cash;
+  if (model === 'FCD 004') v += (cfg.fd_cdseal === 'Required' ? 1 : -1) * (FD_SEAL_D[q] || 0) / 2;
+  return Math.round(v * 100) / 100;
+}
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
-const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true };
+const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
 // Softcover: binding (saddle / perfect) → size → pages → the cover papers Excard offers for that size and page count →
 // the content papers it allows for that cover at that page count (A4-type sizes vs A5 portrait tables). Hardcover:
@@ -1608,6 +1636,29 @@ const CFG_OVERRIDES = {
     ],
     defaultOpt: { model: 'BM-B', printcolour: '4C (Front)' },
     placeholderExact: ['paper', 'lamination', 'quantity'],
+  },
+  'Folder — Litho': {
+    hide: ['ex_modelcategory', 'ex_cdseal', 'ex_fastener'],
+    label: { model: 'Model', colour: 'Print Colour', inc_compulsory: 'Compulsory', protective: 'Colour Protective Layer', ex_size: 'Size' },
+    optionsOverride: {
+      model: cfg => FD_MODELS[fdCat(cfg)],
+      ex_size: cfg => [FD_SIZE[cfg.model] || FD_SIZE[FD_MODELS[fdCat(cfg)][0]]],
+      paper: cfg => FD_PAPERS[fdCat(cfg)],
+      colour: cfg => fdTwoSide(cfg) ? ['4C (Front)', '4C (Both)'] : ['4C (Front)'],
+      lamination: cfg => fdTwoSide(cfg) ? FD_LAM_ALL : FD_LAM_F,
+      protective: cfg => [fdProt(cfg)],
+      inc_compulsory: cfg => [fdCat(cfg) === 'Presentation Folder' ? 'Die-cutting + creasing' : 'Die-cutting + creasing, Gluing'],
+    },
+    addFields: [
+      { key: 'fd_cat', label: 'Model Category', options: ['Presentation Folder', 'Document Folder', 'Key Folder', 'CD Jacket'], default: 'Presentation Folder', section: 'General', first: true },
+      { key: 'fd_fastener', label: 'Fastener', options: ['Yes'], section: 'General', neutral: true, after: 'inc_compulsory', showWhen: { field: 'fd_cat', value: 'Document Folder' } },
+      { key: 'fd_cdseal', label: 'CD Seal', options: ['Not Required', 'Required'], default: 'Not Required', section: 'General', after: 'inc_compulsory', showWhen: { field: 'fd_cat', value: 'CD Jacket' } },
+    ],
+    hideWhen: { protective: cfg => fdProt(cfg) === 'N/A' },
+    defaultOpt: { colour: '4C (Front)' },
+    placeholderExact: ['paper', 'lamination', 'quantity'],
+    qtyOptions: cfg => fdCat(cfg) === 'Presentation Folder' ? [250, 300, 350, 400, 450, 500, 1000] : Array.from({ length: 16 }, (_, i) => 250 + i * 50),
+    priceBase: fdPriceBase,
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
