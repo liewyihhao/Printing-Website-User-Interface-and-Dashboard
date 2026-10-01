@@ -733,8 +733,27 @@ function bbPriceBase(cfg, q) {
 }
 const BB_QTY = Array.from({ length: 100 }, (_, i) => (i + 1) * 10);
 
+// ---------- Computer Form (Excard www spec/Litho/Computer_Form + its price-list generator, live 2026-10-02) ----------
+// 9.5" x 11" continuous form. Multi Layer: Ups, Print Colour, Layer (2-5), Copy Change, a paper per layer, Numbering;
+// Single Layer: Ups, Print Colour, Numbering; Pay Slip (3 layers, 2 up): 1C or 2C, Numbering. Everything is preset; quantity
+// 2,000 / 3,000 / 5,000 / 10,000 / 20,000. Prices = Excard's generated tables (West Malaysia, every cell exact); Copy Change,
+// Numbering and the tinted papers are price-neutral; each NCR White 80gsm layer adds a per-quantity amount (live).
+const CF_TABLE = {"M.2.1":{"2000":[474.1,565.4,788.7], "3000":[573.1,690.8,942.7], "5000":[751.3,920.7,1215.5], "10000":[1188,1364,1942.6], "20000":[2048.2,2366.1,3432]}, "M.2.2":{"2000":[481.8,573.1,797.5], "3000":[585.2,701.8,954.8], "5000":[771.1,941.6,1236.4], "10000":[1227.6,1404.7,1983.3], "20000":[2129.6,2447.5,3512.3]}, "M.2.3":{"2000":[497.2,587.4,810.7], "3000":[606.1,723.8,975.7], "5000":[806.3,975.7,1271.6], "10000":[1298,1475.1,2053.7], "20000":[2270.4,2589.4,3654.2]}, "M.3.1":{"2000":[624.8,729.3,952.6], "3000":[821.7,899.8,1191.3], "5000":[1069.2,1172.6,1566.4], "10000":[1856.8,2033.9,2542.1], "20000":[3529.9,3847.8,4635.4]}, "M.3.2":{"2000":[632.5,737,961.4], "3000":[834.9,911.9,1204.5], "5000":[1087.9,1193.5,1587.3], "10000":[1896.4,2074.6,2582.8], "20000":[3611.3,3928.1,4715.7]}, "M.3.3":{"2000":[646.8,751.3,974.6], "3000":[855.8,933.9,1225.4], "5000":[1124.2,1227.6,1621.4], "10000":[1969,2145,2653.2], "20000":[3753.2,4071.1,4857.6]}, "M.4.1":{"2000":[777.7,842.6,1119.8], "3000":[955.9,1073.6,1404.7], "5000":[1392.6,1500.4,1939.3], "10000":[2528.9,2637.8,3144.9], "20000":[4593.6,4911.5,5837.7]}, "M.4.2":{"2000":[786.5,851.4,1128.6], "3000":[968,1085.7,1416.8], "5000":[1412.4,1521.3,1959.1], "10000":[2569.6,2677.4,3184.5], "20000":[4675,4994,5919.1]}, "M.4.3":{"2000":[799.7,864.6,1141.8], "3000":[990,1106.6,1437.7], "5000":[1447.6,1556.5,1995.4], "10000":[2640,2747.8,3256], "20000":[4816.9,5134.8,6061]}, "M.5.1":{"2000":[920.7,1038.4,1262.8], "3000":[1160.5,1324.4,1622.5], "5000":[1691.8,1870,2306.7], "10000":[2920.5,3238.4,3885.2], "20000":[5518.7,5835.5,7042.2]}, "M.5.2":{"2000":[928.4,1047.2,1270.5], "3000":[1171.5,1335.4,1634.6], "5000":[1712.7,1889.8,2327.6], "10000":[2961.2,3278,3924.8], "20000":[5599,5916.9,7122.5]}, "M.5.3":{"2000":[942.7,1060.4,1284.8], "3000":[1192.4,1357.4,1655.5], "5000":[1746.8,1926.1,2363.9], "10000":[3031.6,3349.5,3997.4], "20000":[5740.9,6058.8,7264.4]}, "S.1.1":{"2000":[309.1,415.8,700.7], "3000":[368.5,487.3,877.8], "5000":[427.9,599.5,1063.7], "10000":[574.2,794.2,1222.1], "20000":[1024.1,1420.1,2222]}, "S.1.2":{"2000":[292.6,426.8,708.4], "3000":[381.7,499.4,891], "5000":[392.7,652.3,1083.5], "10000":[602.8,836,1263.9], "20000":[1082.4,1508.1,2308.9]}, "S.1.3":{"2000":[331.1,447.7,722.7], "3000":[402.6,519.2,911.9], "5000":[482.9,701.8,1117.6], "10000":[684.2,908.6,1321.1], "20000":[1245.2,1662.1,2426.6]}, "P":{"2000":[1129.7,1293.6], "3000":[1476.2,1629.1], "5000":[2163.7,2357.3], "10000":[4265.8,4604.6], "20000":[8476.6,8815.4]}};
+const CF_P80 = { 2000: 3.3, 3000: 6.6, 5000: 11, 10000: 22, 20000: 42.9 };
+const CF_PAPERS = ['NCR White 55gsm', 'NCR Yellow 55gsm', 'NCR Green 55gsm', 'NCR Pink 55gsm', 'NCR Blue 55gsm', 'NCR White 80gsm'];
+const cfMulti = cfg => !cfg.package || cfg.package === 'Multi Layer Computer Form';
+function cfPriceBase(cfg, q) {
+  const pk = cfg.package || 'Multi Layer Computer Form', L = +(cfg.layers || 2), U = cfg.ups || '1';
+  const key = pk === 'Pay Slip' ? 'P' : pk === 'Single Layer Computer Form' ? 'S.1.' + U : 'M.' + L + '.' + U;
+  const row = (CF_TABLE[key] || {})[q]; if (!row) return null;
+  const ci = { '1C': 0, '2C': 1, '4C': 2 }[cfg.colour || '1C']; if (row[ci] == null) return null;
+  let p = row[ci];
+  if (key[0] === 'M') for (let i = 1; i <= L; i++) if (cfg['cf_paper_' + i] === 'NCR White 80gsm') p += CF_P80[q] || 0;
+  return Math.round(p * 100) / 100;
+}
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
-const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true };
+const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
 // Softcover: binding (saddle / perfect) → size → pages → the cover papers Excard offers for that size and page count →
 // the content papers it allows for that cover at that page count (A4-type sizes vs A5 portrait tables). Hardcover:
@@ -1528,6 +1547,29 @@ const CFG_OVERRIDES = {
     remark: { bb_number_from: 'Up to 7 digits; the last digit of the starting number must be 1 (e.g. 0001, 00101).' },
     qtyOptions: cfg => cfg.diff_artwork === 'Yes — Different Artwork' ? BB_QTY.filter(n => n >= 100) : BB_QTY,
     priceBase: bbPriceBase,
+  },
+  'Computer Form — Litho (NCR)': {
+    label: { package: 'Package', layers: 'Layer', ups: 'Ups', colour: 'Print Colour', copychange: 'Copy Change', numbering: 'Numbering' },
+    optLabel: { copychange: { No: 'Not Required', Yes: 'Required' }, numbering: { No: 'Not Required', Yes: 'Required' } },
+    optionsOverride: {
+      package: ['Multi Layer Computer Form', 'Pay Slip', 'Single Layer Computer Form'],
+      colour: cfg => cfg.package === 'Pay Slip' ? ['1C', '2C'] : ['1C', '2C', '4C'],
+    },
+    addFields: [
+      { key: 'cf_size', label: 'Size', options: ['9.5" x 11"'], section: 'General', neutral: true, first: true },
+      { key: 'cf_paper_1', label: 'Paper (Layer 1)', options: CF_PAPERS, default: 'NCR White 55gsm', section: 'General', after: 'copychange', showWhen: { field: 'package', value: 'Multi Layer Computer Form' } },
+      { key: 'cf_paper_2', label: 'Paper (Layer 2)', options: CF_PAPERS, default: 'NCR White 55gsm', section: 'General', after: 'cf_paper_1', showWhen: { field: 'package', value: 'Multi Layer Computer Form' } },
+      { key: 'cf_paper_3', label: 'Paper (Layer 3)', options: CF_PAPERS, default: 'NCR White 55gsm', section: 'General', after: 'cf_paper_2', showWhen: { all: [{ field: 'package', value: 'Multi Layer Computer Form' }, { field: 'layers', values: ['3', '4', '5'] }] } },
+      { key: 'cf_paper_4', label: 'Paper (Layer 4)', options: CF_PAPERS, default: 'NCR White 55gsm', section: 'General', after: 'cf_paper_3', showWhen: { all: [{ field: 'package', value: 'Multi Layer Computer Form' }, { field: 'layers', values: ['4', '5'] }] } },
+      { key: 'cf_paper_5', label: 'Paper (Layer 5)', options: CF_PAPERS, default: 'NCR White 55gsm', section: 'General', after: 'cf_paper_4', showWhen: { all: [{ field: 'package', value: 'Multi Layer Computer Form' }, { field: 'layers', values: ['5'] }] } },
+    ],
+    hideWhen: {
+      layers: cfg => !cfMulti(cfg), copychange: cfg => !cfMulti(cfg), ups: cfg => cfg.package === 'Pay Slip',
+    },
+    defaultOpt: { package: 'Multi Layer Computer Form', layers: '2', ups: '1', colour: '1C', copychange: 'No', numbering: 'No' },
+    placeholderExact: ['quantity'],
+    qtyOptions: [2000, 3000, 5000, 10000, 20000],
+    priceBase: cfPriceBase,
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
