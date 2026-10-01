@@ -4996,13 +4996,13 @@ class Component extends DCLogic {
     const bg = HOME_GRADIENTS[this._bannerGrad[id]].replace('90deg', '115deg');
     const PKI = window.PK_IMAGES, file = PKI && prod && PKI.products[prod.id];
     const img = file
-            ? h('div', { className: 'pk-board' }, h('img', { className: 'pk-cfgb-img', src: window.__asset(PKI.base + file), alt: NAME + ' printed by Printoka', fetchpriority: 'high' }))
+      // (user, 2026-10-01) the photo sits on a raised board (foam-board edge, cast shadow, slight tilt), not a flat white frame
+      ? h('div', { className: 'pk-board' }, h('img', { className: 'pk-cfgb-img', src: window.__asset(PKI.base + file), alt: NAME + ' printed by Printoka', fetchpriority: 'high' }))
       : h('div', { className: 'pk-cfgb-img', style: { width: 250, borderRadius: 0, overflow: 'hidden', filter: 'drop-shadow(0 18px 30px rgba(0,0,0,.28))' } }, this.art(prod ? prod.name : 'card'));
     const benefits = [['Schedule your delivery', 'Door-to-door, nationwide'], ['Satisfaction guaranteed', 'Quality you can rely on'], ['Exclusive member pricing', 'Save 5–15% as a member']];
     return h('section', { 'aria-label': NAME + ' printing', style: { background: bg, color: '#fff', overflow: 'hidden', textShadow: '0 1px 2px rgba(0,0,0,.12)' } },
       h('div', { style: { maxWidth: 1180, margin: '0 auto', padding: '30px 20px', display: 'flex', flexWrap: 'wrap', gap: '28px 64px', alignItems: 'center', minHeight: 216 } },
-        // (user, 2026-10-01) the photo sits on a paper tab that runs from the top of the banner to the bottom
-        h('div', { className: 'pk-paper-col', style: { flex: '0 0 auto', maxWidth: '100%' } }, img),
+        h('div', { style: { flex: '0 0 auto', maxWidth: '100%', padding: '4px 14px 14px 0' } }, img),
         h('div', { style: { flex: '1 1 300px', minWidth: 0 } },
           h('h1', { className: 'pk-nobar', style: { margin: 0, display: 'flex', flexDirection: 'column', lineHeight: 1.08, fontWeight: 400 } },
             h('span', { className: 'pk-cfgb-sm', style: { fontSize: 26 } }, 'Print Your'),
