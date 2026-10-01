@@ -248,7 +248,7 @@ const PL_EXCLUDE = { 1: true };
 const BK_DIGI = {"coverDict":["S80|S100|S140|GA100|GA128|GA150|MA100|MA130|MA150|GAC230|GAC250|GAC310|MI250|SW240|LN240","S80|S140|GA100|GA128|GA150|MA100|MA130|MA150|GAC230|GAC250|GAC310|MI250|SW240|LN240","S80|S140|GA100|GA128|MA100|GAC230|GAC250|GAC310|MI250|SW240|LN240","S80|S100|GA100|GA128|GA150|MA100|MA130|MA150","S100|GA100|GA128|GAC250","GA100|GA128|GAC250","S100|S140|GA100|GA128|GA150|MA100|MA130|MA150|GAC230|GAC250|GAC310|MI250|SW240|LN240","S140|GA100|GA128|GA150|MA100|MA130|MA150|GAC230|GAC250|GAC310|MI250|SW240|LN240","S140|GA100|GA128|MA100|GAC230|GAC250|GAC310|MI250|SW240|LN240","GAC230|GAC250|GAC310","GAC230|GAC250","GAC250|GAC310"],"saddle":{"Portrait|A4":[[8,72,0],[76,76,1],[80,80,2]],"Portrait|A5":[[8,92,0],[96,100,3]],"Portrait|B5":[[8,72,4],[76,80,5]],"Portrait|A6":[[8,72,0],[76,76,1],[80,80,2]],"Portrait|B5+":[[8,72,4],[76,80,5]],"Portrait|210x210":[[8,72,6],[76,76,7],[80,80,8]],"Landscape|A5":[[8,72,0],[76,76,1],[80,80,2]]},"perfect":{"Portrait|A4":[[36,292,9]],"Portrait|A5":[[36,292,10]],"Portrait|B5":[[36,292,11]],"Portrait|A6":[[36,292,10]],"Portrait|B5+":[[36,292,11]],"Portrait|210x210":[[36,292,9]],"Landscape|A5":[[36,292,10]]},"maxA4":{"GAC230":{"S80":68,"S100":60,"GA100":80,"GA128":68,"GA150":56,"MA100":68,"MA130":56,"MA150":44,"GAC230":24},"GAC250":{"S80":68,"S100":60,"GA100":80,"GA128":64,"GA150":52,"MA100":68,"MA130":56,"MA150":40,"GAC230":24,"GAC250":24},"MI250":{"S80":68,"S100":52,"GA100":80,"GA128":64,"GA150":52,"MI250":24},"S140":{"S80":80,"S100":80,"S140":80,"GA100":80,"GA128":80,"MA100":80,"MA130":80},"S80":{"S80":80},"S100":{"S80":72,"S100":64},"GA100":{"GA100":80},"GA128":{"S80":72,"GA100":80,"GA128":72},"GA150":{"S80":72,"S100":64,"GA100":76,"GA128":72,"GA150":64},"MA100":{"MA100":80},"MA130":{"S80":72,"S100":64,"MA100":76,"MA130":60},"MA150":{"S80":72,"S100":64,"MA100":76,"MA130":60,"MA150":48},"GAC310":{"S80":68,"S100":56,"GA100":80,"GA128":64,"GA150":52,"MA100":64,"MA130":52,"MA150":40},"SW240":{"S80":68,"S100":56,"GA100":80,"GA128":64,"GA150":52,"SW240":28},"LN240":{"S80":68,"S100":56,"GA100":80,"GA128":64,"GA150":52,"LN240":32}},"maxA5":{"S80":{"S80":100},"S100":{"S80":88,"S100":100},"GA100":{"GA100":100},"GA128":{"S80":92,"GA100":88,"GA128":100},"GA150":{"S80":92,"S100":92,"GA100":92,"GA128":92,"GA150":100},"MA100":{"MA100":100},"MA130":{"S80":92,"S100":92,"MA100":92,"MA130":100},"MA150":{"S80":92,"S100":92,"MA100":92,"MA130":92,"MA150":100},"GAC310":{"S80":92,"S100":92,"GA100":92,"GA128":92,"GA150":92,"MA100":92,"MA130":92,"MA150":92},"SW240":{"S80":92,"S100":92,"GA100":92,"GA128":92,"GA150":92,"SW240":28},"LN240":{"S80":92,"S100":92,"GA100":92,"GA128":92,"GA150":92,"LN240":32},"GAC230":{"S80":92,"S100":92,"GA100":92,"GA128":92,"GA150":92,"MA100":92,"MA130":92,"MA150":92,"GAC230":24},"GAC250":{"S80":92,"S100":92,"GA100":92,"GA128":92,"GA150":92,"MA100":92,"MA130":92,"MA150":92,"GAC230":24,"GAC250":24},"MI250":{"S80":92,"S100":92,"GA100":92,"GA128":92,"GA150":92,"MI250":24},"S140":{"S80":92,"S100":92,"S140":88,"GA100":92,"GA128":88,"MA100":92,"MA130":92}}};
 const BK_HC_CONTENT = {"Portrait|A4":["S80","S100","GA100","GA128"],"Portrait|A5":["S80","S100","GA100","GA128"],"Portrait|B5":["S100","GA100","GA128"],"Portrait|B5+":["S100","GA100","GA128"],"Landscape|A5":["S80","S100","GA100","GA128"]};
 // Paper short codes used by the captured rule tables
-const BK_P = { S80: 'Simili Paper 80gsm', S100: 'Simili Paper 100gsm', S140: 'Simili Paper 140gsm', GA100: 'Gloss Art Paper 100gsm', GA128: 'Gloss Art Paper 128gsm', GA150: 'Gloss Art Paper 150gsm',
+const BK_P = { S80: 'Simili Paper 80gsm', S100: 'Simili Paper 100gsm', S140: 'Simili Paper 140gsm', GA80: 'Gloss Art Paper 80gsm', GA100: 'Gloss Art Paper 100gsm', GA128: 'Gloss Art Paper 128gsm', GA150: 'Gloss Art Paper 150gsm',
   MA100: 'Matte Art Paper 100gsm', MA130: 'Matte Art Paper 130gsm', MA150: 'Matte Art Paper 150gsm', GAC230: 'Gloss Art Card 230gsm (2 side coated)', GAC250: 'Gloss Art Card 250gsm (2 side coated)',
   GAC310: 'Gloss Art Card 310gsm (2 side coated)', MI250: 'Metal Ice 250gsm', SW240: 'Super White 240gsm', LN240: 'Linen 240gsm' };
 const BK_CODE = Object.keys(BK_P).reduce((m, k) => (m[BK_P[k]] = k, m), {});
@@ -352,6 +352,124 @@ function bkDigiPrice(cfg, q) {
   if (kind !== 'hard' && BK_CODE[cfg.cover] === 'GAC310') price *= 1.05;   // Excard: Gloss Art Card 310 cover = +5% on the whole book (exact on saddle + perfect samples)
   const hsN = /2 Colours/.test(cfg.hot_stamping || '') ? 2 : /1 Colour/.test(cfg.hot_stamping || '') ? 1 : 0;
   for (let n = 1; n <= hsN; n++) { const t = BK_HSC[cfg['hs_size_' + n]] || BK_HSC['90mm x 30mm']; price += bkLin2(t, q, 300, 500); }
+  return Math.round(price * 100) / 100;
+}
+// ---------- Booklet — Litho (Offset): Excard's v4 offset softcover + hardcover forms, live capture 2026-10-01 ----------
+// Structure like the digital forms, with Gloss Art 80 paper, its own cover / content tables, quantity 100 – 20,000
+// (perfect binding priced up to 10,000; hardcover 100 – 5,000), an extra-sampling-books option and no embossing.
+const BKO = {"dict":["S80|S100|GA80|GA100|GA128|GA150|MA100|MA130|MA150|GAC230|GAC250|GAC310","S80|S100|GA80|GA100|GA128|GA150|MA100|MA130|MA150","S100|GA100|GA128|GAC250","GA100|GA128|GAC250","S80|S100|GA80|GA100|GA128|GA150|MA100|MA130|MA150|GAC230|GAC250","S80|GA80|GA100|GA128|GA150|MA100|MA130|MA150|GAC230|GAC250","S80|GA80|GA100|GA128|MA100|GAC230|GAC250","S80|GA80|GA100|GA128|GA150|MA100|MA130|MA150|GAC230|GAC250|GAC310","S80|GA80|GA100|GA128|MA100|GAC230|GAC250|GAC310","GAC230|GAC250|GAC310","GAC230|GAC250","GAC250|GAC310"],"saddle":{"Portrait|A4":[[8,92,0],[96,100,1]],"Portrait|A5":[[8,92,0],[96,100,1]],"Portrait|B5":[[8,72,2],[76,80,3]],"Portrait|A6":[[8,72,4],[76,76,5],[80,80,6]],"Portrait|B5+":[[8,72,2],[76,80,3]],"Portrait|210x210":[[8,72,0],[76,76,7],[80,80,8]],"Landscape|A4":[[8,72,0],[76,76,7],[80,80,8]],"Landscape|A5":[[8,72,0],[76,76,7],[80,80,8]],"Landscape|210x210":[[8,72,0],[76,76,7],[80,80,8]]},"perfect":{"Portrait|A4":[[36,288,9]],"Portrait|A5":[[36,288,10]],"Portrait|B5":[[36,288,11]],"Portrait|A6":[[36,288,10]],"Portrait|B5+":[[36,288,11]],"Portrait|210x210":[[36,288,9]],"Landscape|A4":[[36,288,9]],"Landscape|A5":[[36,288,10]],"Landscape|210x210":[[36,288,9]]},"maxBig":{"S80":{"S80":100},"S100":{"S80":88,"S100":100},"GA80":{"GA80":100},"GA100":{"GA80":88,"GA100":100},"GA128":{"S80":92,"GA80":88,"GA100":88,"GA128":100},"GA150":{"S80":92,"S100":92,"GA80":92,"GA100":92,"GA128":92,"GA150":100},"MA100":{"MA100":100},"MA130":{"S80":92,"S100":92,"MA100":92,"MA130":100},"MA150":{"S80":92,"S100":92,"MA100":92,"MA130":92,"MA150":100},"GAC230":{"S80":92,"S100":92,"GA80":92,"GA100":92,"GA128":92,"GA150":92,"MA100":92,"MA130":92,"MA150":92,"GAC230":24},"GAC250":{"S80":92,"S100":92,"GA80":92,"GA100":92,"GA128":92,"GA150":92,"MA100":92,"MA130":92,"MA150":92,"GAC230":24,"GAC250":24},"GAC310":{"S80":92,"S100":92,"GA100":92,"GA128":92,"GA150":92,"MA100":92,"MA130":92,"MA150":92}},"maxSmall":{"S80":{"S80":80},"S100":{"S80":72,"S100":64},"GA80":{"GA80":80},"GA100":{"GA80":80,"GA100":80},"GA128":{"S80":72,"GA80":80,"GA100":80,"GA128":72},"GA150":{"S80":72,"S100":64,"GA80":76,"GA100":76,"GA128":72,"GA150":64},"MA100":{"MA100":80},"MA130":{"S80":72,"S100":64,"MA100":76,"MA130":60},"MA150":{"S80":72,"S100":60,"MA100":76,"MA130":60,"MA150":48},"GAC230":{"S80":68,"S100":60,"GA80":80,"GA100":80,"GA128":68,"GA150":56,"MA100":68,"MA130":56,"MA150":44,"GAC230":24},"GAC250":{"S80":68,"S100":60,"GA80":80,"GA100":80,"GA128":64,"GA150":52,"MA100":68,"MA130":56,"MA150":40,"GAC230":24,"GAC250":24},"GAC310":{"S80":68,"S100":56,"GA100":80,"GA128":64,"GA150":52,"MA100":64,"MA130":52,"MA150":40}}};
+const BKO_QTY = (() => { const r = []; for (let q = 100; q <= 1000; q += 50) r.push(q); for (let q = 1100; q <= 10000; q += 100) r.push(q); for (let q = 11000; q <= 20000; q += 100) r.push(q); return r; })();
+const BKO_HQTY = (() => { const r = []; for (let q = 100; q <= 1000; q += 50) r.push(q); for (let q = 1100; q <= 5000; q += 100) r.push(q); return r; })();
+const BKO_HS = ['No Required', 'Hot Stamping - 1 Colour (Front)', 'Hot Stamping - 2 Colours (Front)'];
+const bkoSizes = cfg => !bkSoft(cfg) ? (cfg.orientation === 'Landscape' ? [BK_SIZES[0], BK_SIZES[1]] : [BK_SIZES[0], BK_SIZES[1], BK_SIZES[2], BK_SIZES[4]])
+  : (cfg.orientation === 'Landscape' ? [BK_SIZES[0], BK_SIZES[1], BK_SIZES[5]] : BK_SIZES);
+const bkoPagesList = cfg => { const r = [], add = (a, b) => { for (let p = a; p <= b; p += 4) r.push(String(p)); };
+  if (!bkSoft(cfg)) add(56, 292); else if (bkPerfect(cfg)) add(36, 288);
+  else add(8, cfg.orientation === 'Portrait' && (cfg.size === BK_SIZES[0] || cfg.size === BK_SIZES[1]) ? 100 : 80);
+  return r; };
+function bkoCovers(cfg) {
+  if (!bkSoft(cfg)) return ['Gloss Art Paper 150gsm'];
+  const T = (bkPerfect(cfg) ? BKO.perfect : BKO.saddle)[(cfg.orientation || 'Portrait') + '|' + BK_SIZE_KEY[cfg.size]];
+  const p = +cfg.page; if (!T) return [];
+  const row = T.find(x => p >= x[0] && p <= x[1]) || T[0];
+  return BKO.dict[row[2]].split('|').map(c => BK_P[c]);
+}
+function bkoContents(cfg) {
+  const p = +cfg.page, cv = BK_CODE[cfg.cover], sk = BK_SIZE_KEY[cfg.size], b5 = sk === 'B5' || sk === 'B5+';
+  if (!bkSoft(cfg)) return (cfg.orientation === 'Landscape' ? ['S80', 'S100', 'GA100', 'GA128'] : b5 ? ['S100', 'GA100', 'GA128'] : ['S80', 'S100', 'GA100', 'GA128', 'GA150', 'MA100', 'MA130', 'MA150']).map(c => BK_P[c]);
+  if (bkPerfect(cfg)) { const mins = b5 ? { GA128: 36, S100: 40, MA100: 40, MA130: 40, GA100: 52 } : { GA128: 36, GA150: 36, MA150: 36, S100: 40, MA130: 40, S80: 44, MA100: 44, GA100: 52, GA80: 72 };
+    return Object.keys(mins).filter(c => p >= mins[c]).map(c => BK_P[c]); }
+  const big = cfg.orientation === 'Portrait' && (sk === 'A4' || sk === 'A5');
+  const tbl = (big ? BKO.maxBig : BKO.maxSmall)[cv] || {};
+  return Object.keys(tbl).filter(c => p <= tbl[c] && (!b5 || ['S100', 'GA100', 'GA128', 'GAC250'].indexOf(c) >= 0)).map(c => BK_P[c]);
+}
+const BKO_CARD_CLAM = ['Gloss Lamination (Both Sides)', 'Matte Lamination (Both Sides)', 'UV Varnish (Both Sides)', 'Gloss Waterbase Varnish (Both Sides)'];
+function bkoContentLams(cfg) {
+  if (!bkSoft(cfg)) return ['Not Required'];
+  if (/^GAC/.test(BK_CODE[cfg.content] || '')) return BKO_CARD_CLAM;
+  if (/^(GA150|MA150)$/.test(BK_CODE[cfg.content] || '') && !bkPerfect(cfg) && +cfg.page <= 40) return ['No Lamination', 'Gloss Lamination (Both Sides)', 'Matte Lamination (Both Sides)'];
+  return ['No Lamination'];
+}
+// price — reference: A4, Gloss Art Card 250 cover + Gloss Waterbase Varnish, Gloss Art 128 content, 4C (hardcover: Gloss Art 150
+// cover + Gloss Lamination (Front)). Pages × quantity grids, sampled size ratios, per-content-page paper deltas, per-book add-ons.
+const BKOQ = {
+  saddle: { 8: { 100: 709, 200: 747, 500: 873, 1000: 1084, 2000: 1555, 3000: 2045, 5000: 3084, 10000: 5671, 20000: 10769 }, 24: { 100: 1330, 500: 1686, 1000: 2130, 2000: 3071, 5000: 6124, 10000: 11293, 20000: 21556 },
+    44: { 100: 1967, 500: 2558, 1000: 3296, 2000: 4823, 5000: 9751, 10000: 18088, 20000: 34686 }, 80: { 100: 3517, 500: 4527, 1000: 5794, 2000: 8377, 5000: 16765, 10000: 30970, 20000: 59309 } },
+  perfect: { 36: { 100: 1628, 1000: 3052, 5000: 9852, 10000: 18552 }, 100: { 100: 4114, 1000: 7125, 5000: 21451, 10000: 39917 }, 200: { 100: 8163, 1000: 13883, 5000: 41002, 10000: 76037 }, 288: { 100: 11615, 1000: 19792, 5000: 58492, 10000: 108495 } },
+  hard: { 56: { 100: 3298, 1000: 8471, 5000: 32245 }, 100: { 100: 4864, 1000: 11129, 5000: 40048 }, 200: { 100: 8914, 1000: 17887, 5000: 59599 }, 292: { 100: 12379, 1000: 23921, 5000: 77711 } },
+};
+// size ratio to A4 at [100, 1,000, 10,000] books (hardcover: [100, 1,000, 5,000])
+const BKO_RATIO = {
+  saddle: { A5: { 8: [.9746, .8303, .6059], 44: [.6736, .6201, .5377], 80: [.6406, .5994, .5283] }, A6: { 8: [1.0028, .7934, .4622], 44: [.5257, .4451, .3331], 64: [.5642, .4677, .3287] },
+    B5: { 44: [.9725, .9227, .8695] }, 'B5+': { 44: [.997, .9815, .9627] }, '210x210': { 44: [.9954, .9709, .9423] } },
+  perfect: { A5: { 100: [.5467, .5552, .5417] }, A6: { 100: [.3269, .3399, .3337] }, B5: { 100: [.984, .9485, .9128] }, 'B5+': { 100: [.997, .9815, .9627] }, '210x210': { 100: [.9954, .9709, .9423] } },
+  hard: { A5: { 100: [.6012, .6414, .6529] }, B5: { 100: [.9174, .6758, .5546] }, 'B5+': { 100: [.9957, .9789, .9708] } },
+};
+const BKO_K = { A4: 1, '210x210': .95, B5: .9, 'B5+': .97, A5: .55, A6: .34 };
+// content paper vs Gloss Art 128, RM per content page per book at [1,000, 10,000] books (card stock includes its varnish)
+const BKO_CONT = { S80: [-.01183, -.00941], GA80: [-.01345, -.01063], GA100: [-.00775, -.0062], S100: [-.00575, -.004675], GA128: [0, 0], GA150: [.0062, .00487], MA100: [-.00675, -.00544],
+  MA130: [.00183, .00144], MA150: [.00768, .00602], GAC250: [.060, .0523], GAC230: [.0696, .0505] };
+const BKO_CLAM = { 'Gloss Lamination (Both Sides)': [.0535, .0511], 'Matte Lamination (Both Sides)': [.0553, .0523] };
+const BKO_CARD_CLAMD = { 'Gloss Lamination (Both Sides)': [.0364, .0364], 'Matte Lamination (Both Sides)': [.0376, .0376], 'UV Varnish (Both Sides)': [.0104, .0104], 'Gloss Waterbase Varnish (Both Sides)': [0, 0] };
+// cover paper vs Gloss Art Card 250 + varnish, per book: [at 1,000, at 10,000]
+const BKO_COVER = { GAC230: [-14, -201], GAC250: [0, 0], GAC310: [0, 0], GA150: [-230, -1734], MA150: [-228, -1684], GA128: [-437, -2377], GA100: [-468, -2623], GA80: [-491, -2801],
+  MA130: [-428, -2319], MA100: [-464, -2592], S100: [-460, -2562], S80: [-485, -2752] };
+const BKO_LAM = { 'Gloss Lamination (Front)': [70, 727], 'Matte Lamination (Front)': [70, 727], 'Gloss Lamination (Both)': [173, 1766], 'Matte Lamination (Both)': [173, 1766],
+  'Matte Lamination (Front) + Spot UV (Front)': [290, 1881], 'Matte Lamination (Both) + Spot UV (Front)': [393, 2920], 'UV Varnish (Front)': [18, 208], 'Gloss Waterbase Varnish (Front)': [0, 0] };
+// offset presses print 8 pages per sheet side: the first 4 pages of each 8 cost only part of the 8-page step (live: 23% at 1,000
+// books, 41% at 10,000), so pages ending in 4 sit below the straight line through the grid rows
+const bkoS = q => q <= 1000 ? .226 : q >= 10000 ? .415 : .226 + (.415 - .226) * Math.log10(q / 1000);
+function bkoSmooth(G, pp, q) {
+  const ps = Object.keys(G).map(Number).sort((a, b) => a - b), vals = ps.map(p => bkGridAt(G[p], q));
+  const slope = (vals[vals.length - 1] - vals[0]) / (ps[ps.length - 1] - ps[0]), dev = (0.5 - bkoS(q)) * slope * 8;
+  const adj = ps.map((p, i) => vals[i] + (p % 8 === 4 ? dev : 0));
+  let i = 1; while (i < ps.length - 1 && pp > ps[i]) i++;
+  const v = adj[i - 1] + (adj[i] - adj[i - 1]) * (pp - ps[i - 1]) / (ps[i] - ps[i - 1]);
+  return v - (pp % 8 === 4 ? dev : 0);
+}
+const bkoLog2 = (v, q) => { const t = Math.log(Math.min(10000, Math.max(1000, q)) / 1000) / Math.log(10); return v[0] + (v[1] - v[0]) * t; };
+const bkoLin2 = (v, q) => v[0] + (v[1] - v[0]) * (q - 1000) / 9000;
+function bkoPrice(cfg, q) {
+  const pp = +cfg.page, sk = BK_SIZE_KEY[cfg.size]; if (!(pp > 0) || !sk || !(q > 0)) return null;
+  const kind = !bkSoft(cfg) ? 'hard' : bkPerfect(cfg) ? 'perfect' : 'saddle';
+  if (kind === 'perfect' && q > 10000) return null;
+  const k = BKO_K[sk] || 1, cpages = pp - 4, G = BKOQ[kind], nodes = kind === 'hard' ? [100, 1000, 5000] : [100, 1000, 10000];
+  let price;
+  if (sk === 'A4') price = bkoSmooth(G, pp, q);
+  else { const R = (BKO_RATIO[kind] || {})[sk];
+    const rAt = (n, i) => { if (!R) return 1; const ps = Object.keys(R).map(Number).sort((a, b) => a - b); if (pp <= ps[0]) return R[ps[0]][i]; if (pp >= ps[ps.length - 1]) return R[ps[ps.length - 1]][i];
+      for (let j = 1; j < ps.length; j++) if (pp <= ps[j]) return R[ps[j - 1]][i] + (R[ps[j]][i] - R[ps[j - 1]][i]) * (pp - ps[j - 1]) / (ps[j] - ps[j - 1]); return 1; };
+    const v = nodes.map((n, i) => bkoSmooth(G, pp, n) * rAt(n, i));
+    price = q <= nodes[1] ? v[0] + (v[1] - v[0]) * (q - nodes[0]) / (nodes[1] - nodes[0]) : v[1] + (v[2] - v[1]) * (q - nodes[1]) / (nodes[2] - nodes[1]); }
+  const cc = BK_CODE[cfg.content];
+  if (BKO_CONT[cc]) price += bkoLog2(BKO_CONT[cc], q) * cpages * q * k;
+  if (/^GAC/.test(cc || '')) { const d = BKO_CARD_CLAMD[cfg.content_lamination]; if (d) price += bkoLog2(d, q) * cpages * q * k; }
+  else if (BKO_CLAM[cfg.content_lamination]) price += bkoLog2(BKO_CLAM[cfg.content_lamination], q) * cpages * q * k;
+  if (/^1C/.test(cfg.colour || '')) { const per = q <= 1000 ? -8.1 + (-8.25 + 8.1) * Math.log(Math.max(100, q) / 100) / Math.log(10) : -8.25 + (-11.9 + 8.25) * Math.log(Math.min(10000, q) / 1000) / Math.log(10); price += per * cpages * k; }
+  if (kind === 'hard') { if (/Spot UV/.test(cfg.cover_lamination || '')) price += 225 + (640 - 225) * (q - 1000) / 4000; }
+  else {
+    const cvc = BK_CODE[cfg.cover];
+    if (BKO_COVER[cvc]) {
+      // paper covers: the table holds the same-paper-as-content price at 8 pages; Excard gangs a same-paper cover with the
+      // content sheets (cheaper on page counts divisible by 8, dearer otherwise), a different content paper prints it separately
+      let d = BKO_COVER[cvc];
+      if (!/^GAC/.test(cvc)) {
+        const sep = (cvc === 'GA150' || cvc === 'MA150') ? d : [d[0] + 180, d[1] + 437];
+        d = cfg.content !== cfg.cover ? sep : (pp % 8 === 0 ? [sep[0] - 180, sep[1] - 437] : [sep[0] + 105, sep[1] + 30]);
+      }
+      price += bkoLin2(d, q) * k;
+    }
+    if (BKO_LAM[cfg.cover_lamination]) price += bkoLin2(BKO_LAM[cfg.cover_lamination], q) * k;
+    if (/Inner/.test(cfg.outer_inner || '')) price += (q <= 1000 ? 200 : 200 + 280 * (q - 1000) / 9000) * k;
+    if (BK_CODE[cfg.cover] === 'GAC310') price *= 1.05;
+  }
+  const hsN = /2 Colours/.test(cfg.hot_stamping || '') ? 2 : /1 Colour/.test(cfg.hot_stamping || '') ? 1 : 0;
+  // hot stamping per colour (live: 90x30 block +48 / +66 / +424 at 100 / 1,000 / 10,000; 206x294 +212 / +591 / +4,375; by block area);
+  // a second colour costs RM10 less than the first
+  const hsAt = (lo, hi, t) => { const v = [0, 1, 2].map(i => lo[i] + (hi[i] - lo[i]) * t); return q <= 1000 ? v[0] + (v[1] - v[0]) * (q - 100) / 900 : v[1] + (v[2] - v[1]) * (q - 1000) / 9000; };
+  for (let n = 1; n <= hsN; n++) { const m = String(cfg['hs_size_' + n] || '90mm x 30mm').match(/(\d+)mm x (\d+)mm/); const A = m ? (+m[1]) * (+m[2]) : 2700, t = (A - 2700) / 57864;
+    price += hsAt([48, 66, 424], [212, 591, 4375], t) - (n === 2 ? 10 : 0); }
+  if (cfg.extra_books === 'Yes') price += 30;
   return Math.round(price * 100) / 100;
 }
 function bkCoverLams(cfg) {
@@ -559,6 +677,44 @@ const CFG_OVERRIDES = {
     priceBase: bkDigiPrice,
     // Excard: hot stamping, embossing and Spot UV are only offered from 300 books (the price for fewer is never quoted)
     qtyFilter: (cfg, q) => q >= 300 || !((bkSoft(cfg) && /^GAC/.test(BK_CODE[cfg.cover] || '') && cfg.cover_embossing === 'Add Emboss') || /Spot UV/.test(cfg.cover_lamination || '') || optOn(cfg.hot_stamping)),
+  },
+  // (2026-10-01) Excard v4 Offset booklet forms (softcover + hardcover) — see BKO
+  'Booklet — Litho (Offset)': {
+    label: { ordertype: 'Cover Type', orientation: 'Book Orientation', binding: 'Binding', size: 'Book Size (Closed Size)', page: 'Pages (Including cover)', cover: 'Cover Paper', outer_inner: 'Cover Print Colour',
+      cover_lamination: 'Lamination / Finishing', hot_stamping: 'Hot Stamping Colour', content: 'Content Paper', colour: 'Content Print Colour', extra_books: 'Need Extra Books for Sampling?' },
+    hide: ['jawi', 'cover_embossing', 'hot_stamping_colour', 'hot_stamping_w', 'hot_stamping_h'],
+    optionsOverride: {
+      ordertype: ['Soft Cover', 'Hard Cover'],
+      orientation: ['Portrait', 'Landscape'],
+      binding: cfg => bkSoft(cfg) ? ['Saddle Stitching', 'Perfect Binding'] : ['Perfect Binding'],
+      size: cfg => bkoSizes(cfg),
+      page: cfg => bkoPagesList(cfg),
+      cover: cfg => bkoCovers(cfg),
+      outer_inner: cfg => bkSoft(cfg) ? ['4C : 4 Colour Outer Only', '4C : 4 Colour Outer & 4 Colour Inner'] : ['4C : 4 Colour Outer Only'],
+      cover_lamination: cfg => bkCoverLams(cfg),
+      hot_stamping: BKO_HS,
+      content: cfg => bkoContents(cfg),
+      colour: ['1C (Both Sides)', '4C (Both Sides)'],
+      extra_books: ['No', 'Yes'],
+    },
+    optLabel: { cover_lamination: { 'Not Required': 'No Required' }, content_lamination: { 'Not Required': 'No Required' }, extra_books: { 'Yes': 'Yes, add 3 extra books (+RM 30)' },
+      page: bkoPagesList({ binding: 'Perfect Binding' }).concat(bkoPagesList({ ordertype: 'Hard Cover' }), bkoPagesList({ orientation: 'Portrait', size: 'A4 (210mm x 297mm)' })).reduce((m, p) => (m[p] = p + ' pages', m), {}) },
+    hideWhen: { cover_lamination: cfg => bkCoverLams(cfg).length < 2 },
+    addFields: [
+      { key: 'hs_size_1', label: 'H/S Size 1', options: BK_HS_SIZES, section: 'Cover', after: 'hot_stamping', showWhen: { field: 'hot_stamping', notValues: ['No Required'] } },
+      { key: 'hs_colour_1', label: 'H/S Colour 1', options: BK_HS_COLOURS, section: 'Cover', neutral: true, after: 'hot_stamping', showWhen: { field: 'hot_stamping', notValues: ['No Required'] } },
+      { key: 'hs_size_2', label: 'H/S Size 2', options: BK_HS_SIZES, section: 'Cover', after: 'hot_stamping', showWhen: { field: 'hot_stamping', value: 'Hot Stamping - 2 Colours (Front)' } },
+      { key: 'hs_colour_2', label: 'H/S Colour 2', options: BK_HS_COLOURS, section: 'Cover', neutral: true, after: 'hot_stamping', showWhen: { field: 'hot_stamping', value: 'Hot Stamping - 2 Colours (Front)' } },
+      { key: 'ink_colour', label: 'Front Colour 1', options: ['Black', 'Cyan', 'Magenta'], section: 'Content', neutral: true, after: 'colour', showWhen: { field: 'colour', value: '1C (Both Sides)' } },
+      { key: 'content_lamination', label: 'Content Lamination', options: ['No Lamination', 'Not Required'].concat(BKO_CARD_CLAM), section: 'Content', after: 'colour' },
+    ],
+    validOpt: { content_lamination: (cfg, v) => bkoContentLams(cfg).indexOf(v) >= 0 },
+    placeholderExact: ['size', 'page', 'cover', 'content', 'colour', 'hs_size_1', 'hs_colour_1', 'hs_size_2', 'hs_colour_2', 'ink_colour', 'quantity'],
+    placeholderWhen: { cover_lamination: cfg => bkCoverLams(cfg).indexOf('Not Required') < 0, content_lamination: cfg => bkoContentLams(cfg).indexOf('No Lamination') < 0 && bkoContentLams(cfg).length > 1 },
+    qtyOptions: cfg => bkSoft(cfg) ? BKO_QTY : BKO_HQTY,
+    // Excard quotes perfect-bound offset books only up to 10,000
+    qtyFilter: (cfg, q) => !(bkSoft(cfg) && bkPerfect(cfg)) || q <= 10000,
+    priceBase: bkoPrice,
   },
   'Bunting — Gear X Stand': { addFields: [
     { key: 'size', label: 'Size', options: ['6ft x 2ft'], section: 'General', neutral: true, first: true },
