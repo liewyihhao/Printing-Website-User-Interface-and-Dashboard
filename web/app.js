@@ -887,7 +887,7 @@ const HOME_BANNERS = [
 ];
 // "Featured Hot Selling Printing Products in Malaysia" — the original's list, mapped to our products
 const HOME_FEATURED = [
-  ['Business Card', 1, 'pk-business-card.jpg'], ['Stickers and Labels', 60, 'Round-Sticker-Cover.png'],
+  ['Business Card', 1, 'Standard-Business-Card.png'], ['Stickers and Labels', 60, 'Round-Sticker-Cover.png'],
   ['Flyers', 102, 'Flyers-Cropped.png'], ['Stand Banners', 162, 'Stand-Banner.png'],
   ['Brochures and Leaflets', 101, 'Folded-Brochure-8.png'], ['Ticket & Voucher', 110, 'Book-Binded-1.png'],
   ['Car Window Stickers', 117, 'Car-Window-Sticker.png'], ['Roll Up Banners', 125, 'Roll-Up-Banner.png'],
@@ -896,19 +896,18 @@ const HOME_FEATURED = [
 ];
 // original product cut-outs for our products (product id → image); others fall back to art()
 const HOME_PRODUCT_IMG_LOCAL = {
-  // (user, 2026-10-01) Printoka-branded product photos
-  1: 'pk-business-card.jpg', 111: 'pk-computer-form.jpg', 106: 'pk-envelope.jpg', 105: 'Letterhead-Cover.png',
-  24: 'pk-bill-book.jpg', 119: 'pk-arch-file.jpg', 109: 'pk-bookmark.jpg', 107: 'pk-folder.jpg', 134: 'pk-hanger.jpg', 136: 'pk-menu.jpg', 110: 'Book-Binded-1.png', 101: 'Folded-Brochure-8.png', 102: 'Flyers-Cropped.png', 50: 'Non-Folded-Brochure-1.png',
+  1: 'Standard-Business-Card.png', 111: 'computer-form-multiply.png', 106: '4.5x9.5-White-Envelope-Window.png', 105: 'Letterhead-Cover.png',
+  24: 'Carbonised-Form.png', 110: 'Book-Binded-1.png', 101: 'Folded-Brochure-8.png', 102: 'Flyers-Cropped.png', 50: 'Non-Folded-Brochure-1.png',
   21: 'Non-Folded-Brochure-2.png', 103: 'Non-Folded-Brochure-3.png', 60: 'Round-Sticker-Cover.png', 117: 'Car-Window-Sticker.png',
   61: 'Round-Corner-Sticker.png', 37: 'Booklet-Staple-Content.png', 19: 'Booklet-Perfect-Cover.png', 121: 'soft-stand-table-calendar.png',
   166: '6x8-Folded-Cards-1.png', 114: 'Non-folded-Invitation-Cards.png', 138: 'Money-Pack-Vertical-3.png', 115: 'A5-Size-Folded-Cards.png',
   125: 'Roll-Up-Banner.png', 162: 'Stand-Banner.png', 123: 'Hanging-Banner.png', 124: 'Stand-Banner.png', 127: 'Paperbag-290x200x95-1.png',
-  174: 'lanyard.png', 133: 'pk-hand-fan.jpg', 132: 'pk-button-badge.jpg', 139: 'N31A.png', 128: 'C20.png',
+  174: 'lanyard.png', 133: 'HFS001.png', 132: 'Button-Badge.png', 139: 'N31A.png', 128: 'C20.png',
 };
 const HOME_PRODUCT_IMG = Object.assign({}, (window.PK_IMAGES || {}).products || {}, HOME_PRODUCT_IMG_LOCAL);
 // category rows: panel image + gradient (the original's three gradients, cycled)
 const HOME_CAT_PANEL = {
-  'business-essentials': 'pk-business-card.jpg', 'flyers-leaflets': 'Digital-Printing-Flyers-Cropped.png',
+  'business-essentials': 'Standard-Business-Card.png', 'flyers-leaflets': 'Digital-Printing-Flyers-Cropped.png',
   'labels-stickers': 'Round-Corner-Sticker.png', 'books-stationery': 'Saddle-Stitched-Booklets-Cropped.png',
   'cards-invitations': '6x8-Folded-Cards-1.png', 'large-format': 'Roll-Up-Banner.png',
   'packaging-boxes': 'Paperbag-290x200x95-1.png', 'apparel-gifts': 'lanyard.png',
@@ -2975,7 +2974,7 @@ class Component extends DCLogic {
     // another product's photo. A product without its own photo gets a neutral logo tile until one is made.
     const O = 'assets/original/', PR = 'assets/products/';
     const BY_NAME = {
-      'Business Card': O + 'pk-business-card.jpg', 'Kad Kahwin — Digital': PR + 'greeting-cards.png',
+      'Business Card': O + 'Standard-Business-Card.png', 'Kad Kahwin — Digital': PR + 'greeting-cards.png',
       'Greeting Card — Litho': PR + 'greeting-cards.png', 'Creative Cut Card — Digital': O + 'Custom-Die-Cut-Business-Card.png',
       'PVC Card — Digital': PR + 'digital-cards.png', 'Voucher — Litho': O + 'Book-Binded-Ticket-and-Voucher.jpg',
       'Bill Book (NCR)': PR + 'computer-form.png', 'Letterhead': O + 'Letterhead-Full-Color.png',
@@ -2987,7 +2986,7 @@ class Component extends DCLogic {
       'Paper Bag — Litho': O + 'Paperbag-290x200x95-1.png', 'Standing Pouch': O + 'premium-packaging.jpg',
       'Desk Calendar': O + 'soft-stand-table-calendar.png', 'Money Packet': O + 'Money-Pack-Vertical-3.png',
     };
-    const BY_KIND = { card: O + 'pk-business-card.jpg', sticker: PR + 'car-sticker-single.png', flyer: O + 'Flyers-Cropped.png',
+    const BY_KIND = { card: O + 'Standard-Business-Card.png', sticker: PR + 'car-sticker-single.png', flyer: O + 'Flyers-Cropped.png',
       book: O + 'Booklet-Staple-Content.png', banner: O + 'Hanging-Banner.png', box: O + 'diecut-box.jpg', cal: O + 'soft-stand-table-calendar.png' };
     const file = BY_NAME[kind] || BY_KIND[kind];
     if (!file) return React.createElement('div', { role: 'img', 'aria-label': (typeof kind === 'string' ? kind : 'Printoka') + ' printing',
@@ -3441,7 +3440,7 @@ class Component extends DCLogic {
                     h('svg', { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: TEAL, strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true' }, h('path', { d: t[0] }))),
                   h('span', { style: { fontSize: 15, color: INK, lineHeight: 1.35 } }, t[1], h('br'), t[2]))))),
           h('div', { style: { flex: '1 1 540px', minWidth: 280, display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 18 } },
-            [['pk-business-card.jpg', 'Business cards', 'open:1'], ['Round-Sticker-Cover.png', 'Stickers and labels', 'catopen:labels-stickers'],
+            [['Standard-Business-Card.png', 'Business cards', 'open:1'], ['Round-Sticker-Cover.png', 'Stickers and labels', 'catopen:labels-stickers'],
              ['Roll-Up-Banner.png', 'Roll up banner', 'catopen:large-format'], ['Perfect-Binding-Booklets-Cropped.png', 'Booklets and flyers', 'catopen:books-stationery']].map((t, i) =>
               h('div', { key: i, 'data-go': t[2], style: { background: '#fff', border: '1px solid #eef0f2', boxShadow: '0 10px 28px rgba(33,33,33,.08)', cursor: 'pointer', display: 'flex', flexDirection: 'column' } },
                 h('div', { style: { background: '#f4f4f4', aspectRatio: '4 / 3', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' } },

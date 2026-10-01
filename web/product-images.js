@@ -10,9 +10,9 @@
 (function (root) {
   var P = {
     // Business Essentials
-    1: 'pk-business-card.jpg', 111: 'pk-computer-form.jpg', 106: 'pk-envelope.jpg',
-    105: 'Letterhead-Full-Color.png', 24: 'pk-bill-book.jpg', 104: 'Stitched-Office-Document.jpg',
-    107: 'pk-folder.jpg', 119: 'pk-arch-file.jpg', 109: 'pk-bookmark.jpg', 136: 'pk-menu.jpg', 110: 'Book-Binded-Ticket-and-Voucher.jpg',
+    1: 'Standard-Business-Card.png', 111: 'computer-form-multiply.png', 106: '4.5x9.5-White-Envelope-Window.png',
+    136: 'Hardcover-Booklet.jpg', 105: 'Letterhead-Full-Color.png', 24: 'Carbonised-Form.png', 104: 'Stitched-Office-Document.jpg',
+    107: 'Presentation-Folder-Cover-Image.jpg', 110: 'Book-Binded-Ticket-and-Voucher.jpg',
     // Flyers & Leaflets
     101: 'Folded-Brochure-8.png', 103: 'Non-Folded-Brochure-3.png', 50: 'Non-Folded-Brochure-1.png', 102: 'Flyers-Cropped.png', 21: 'Non-Folded-Brochure-2.png',
     // Labels & Stickers
@@ -31,16 +31,15 @@
     // Packaging & Boxes
     179: 'diecut-box.jpg', 127: 'Paperbag-290x200x95-1.png', 178: 'Paperbag-cover.jpg',
     // Apparel & Gifts
-    132: 'pk-button-badge.jpg', 128: 'C20.png', 133: 'pk-hand-fan.jpg', 134: 'pk-hanger.jpg', 174: 'lanyard.png', 139: 'N31A.png', 147: 'NH03A.png', 148: 'N01A.png',
+    132: 'Button-Badge.png', 128: 'C20.png', 133: 'HFS001.png', 174: 'lanyard.png', 139: 'N31A.png', 147: 'NH03A.png', 148: 'N01A.png',
     146: 'C10.png',
   };
 
   // per-product rules: Business Card types use the original card photos; sticker products map cut shapes
   var STICKERS = { 60: 1, 61: 1, 184: 1, 176: 1 };
   var PR = {
-    // (user, 2026-10-01) Printoka-branded photos for each card type
-    1: [['category', /^standard$/i, 'pk-business-card.jpg'], ['category', /thin fold/i, 'pk-thin-fold-business-card.jpg'], ['category', /fat fold/i, 'pk-fat-fold-business-card.jpg'],
-        ['category', /die.?cut/i, 'pk-custom-die-cut-business-card.jpg'], ['category', /plastic/i, 'pk-plastic-business-card.jpg']],
+    1: [['category', /^standard$/i, 'Standard-Business-Card.png'], ['category', /fold/i, 'Folded-Business-Card.png'],
+        ['category', /die.?cut/i, 'Custom-Die-Cut-Business-Card.png'], ['category', /plastic/i, 'frosted-plastic-card.jpg']],
   };
   var STICKER_RULES = [['category', /^round$/i, 'Round-Sticker.png'], ['category', /oval/i, 'Oval-Sticker.png'],
     ['category', /rectangle|square|standard shape/i, 'Square-Sticker.png'], ['category', /custom|kiss cut|multiple dieline/i, 'custom-die-cut-sticker.png']];
