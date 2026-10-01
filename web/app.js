@@ -752,6 +752,19 @@ function cfPriceBase(cfg, q) {
   return Math.round(p * 100) / 100;
 }
 
+// ---------- Letterhead (Excard letterhead, live 2026-10-02): prices = Excard's list (36/36 litho curves + the digital rows
+// exact). Quantity follows paper x colour (4C on Simili also prints digitally from 10 pcs); Pad only from 500; 1C / 2C ask
+// their spot colours (Front K, Front M). ----------
+const EX_SPOT = ['EX BLK 01', 'EX BLU 01', 'EX BLU 02', 'EX BLU 03', 'EX BLU 04', 'EX BRW 01', 'EX CYN 01', 'EX GRN 04', 'EX GRN 05', 'EX MAG 01', 'EX MAR 01', 'EX ORG 01', 'EX RED 01', 'EX RED 03', 'EX VIO 01'];
+const LH_LITHO = [500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500];
+const LH_DIGI = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200, 250, 300, 350, 400, 450, 500];
+const lhQty = cfg => { const sim = /^Simili/.test(cfg.paper || 'Simili');
+  if (cfg.colour === '4C (Both)') return LH_DIGI;
+  if (cfg.colour === '4C (Front)' && sim) return LH_DIGI.slice(0, -1).concat(LH_LITHO);
+  return LH_LITHO; };
+
+// (bookmark: structure only)
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -1570,6 +1583,31 @@ const CFG_OVERRIDES = {
     placeholderExact: ['quantity'],
     qtyOptions: [2000, 3000, 5000, 10000, 20000],
     priceBase: cfPriceBase,
+  },
+  'Letterhead — Litho': {
+    label: { inc_size: 'Size', colour: 'Print Colour', packing: 'Packing' },
+    addFields: [
+      { key: 'lh_ink_k', label: 'Front K', options: EX_SPOT, section: 'General', neutral: true, after: 'colour', showWhen: { field: 'colour', values: ['1C (Front)', '2C (Front)'] } },
+      { key: 'lh_ink_m', label: 'Front M', options: EX_SPOT, section: 'General', neutral: true, after: 'colour', showWhen: { field: 'colour', values: ['2C (Front)'] } },
+    ],
+    optionsOverride: { packing: cfg => cfg.colour === '4C (Both)' ? ['Loose'] : ['Loose', 'Pad (100 pcs per pad)'] },
+    defaultOpt: { colour: '1C (Front)', packing: 'Loose' },
+    placeholderExact: ['paper', 'lh_ink_k', 'lh_ink_m', 'quantity'],
+    qtyOptions: lhQty,
+    qtyFilter: (cfg, n) => cfg.packing !== 'Pad (100 pcs per pad)' || n >= 500,
+  },
+  'Bookmark — Digital': {
+    hide: ['ex_isalquran'],
+    optionsOverride: {
+      paper: ['Gloss Art Card 250gsm', 'Gloss Art Card 310gsm', 'Linen 240gsm', 'Metal Ice 250gsm', 'Super White 250gsm', 'Suwen 240gsm', 'Synthetic Paper 180micron'],
+      lamination: (cfg, o) => ['Gloss Lamination (Both)', 'Matte Lamination (Both)', 'Matte Lamination (Both) + Spot UV (Front)', 'No Required'].filter(v => !o || o.map(x => Array.isArray(x) ? x[0] : x).indexOf(v) >= 0),
+      bm_comp: cfg => [cfg.model === 'BM-C' || cfg.model === 'BM-D' ? 'Die-Cutting' : 'No Required'],
+    },
+    addFields: [
+      { key: 'bm_comp', label: 'Compulsory', options: ['No Required', 'Die-Cutting'], section: 'General', neutral: true, after: 'lamination' },
+    ],
+    defaultOpt: { model: 'BM-B', printcolour: '4C (Front)' },
+    placeholderExact: ['paper', 'lamination', 'quantity'],
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
