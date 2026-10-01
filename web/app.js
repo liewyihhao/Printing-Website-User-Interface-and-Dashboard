@@ -1768,7 +1768,7 @@ class Component extends DCLogic {
     const route = this.state.route, C = 'Malaysia, Singapore & Brunei';
     const ctx = 'https://schema.org', origin = (typeof location !== 'undefined' ? location.origin : 'https://printoka.com');
     const org = { '@context': ctx, '@type': 'Organization', name: 'Printoka', url: origin, logo: origin + '/assets/icons/logo.png' };
-    const IDX = 'index,follow', NOIDX = 'noindex,follow', money0 = n => this.money(n);
+    const IDX = 'index,follow', NOIDX = 'noindex,follow', money0 = n => (n * this.fx() < 0.1 ? this.currency() + ' ' + (n * this.fx()).toFixed(3) : this.money(n));   // per-piece prices under 10 sen keep 3 decimals (was "From RM 0.00/pc")
     if (route === 'product') {
       const prod = this.pkProduct(), name = prod ? this.catName(prod.id) : 'Business Card';
       const from = prod ? this.catFromPrice(prod.id) : null, cat = prod ? this.catCategoryLabel(this.catCategoryOf(prod.id)) : 'Products';
