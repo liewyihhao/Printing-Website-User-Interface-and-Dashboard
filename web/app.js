@@ -793,8 +793,52 @@ function fdPriceBase(cfg, q) {
   return Math.round(v * 100) / 100;
 }
 
+// ---------- Wall Calendar (Excard wall-calendar, live 2026-10-02): the order form now offers Racing Horse Without School
+// Holiday (RHC 003, Package 1-10 in 1) and Custom Design Content (RHC 003, from 1,000); everything else is fixed at
+// 260 x 265 mm. Prices = Excard's list (unchanged from the stored RHC 003 curves). ----------
+const WC_RH = 'Racing Horse Without School Holiday', WC_CUSTOM = 'Custom Design Content';
+const wcCustom = cfg => cfg.category === WC_CUSTOM;
+function wcPriceBase(cfg, q) {
+  const E = typeof window !== 'undefined' && window.PricingEngine; const c = E && E.DATA.params.wallcal_plx && E.DATA.params.wallcal_plx.curves; if (!c) return null;
+  const k = wcCustom(cfg) ? 'Custom Design Content|RHC 003|260mm x 265mm|-|260mm x 265mm|Normal'
+    : 'Racing Horse With School Holiday|RHC 003 (Racing Horse)|260mm x 265mm|Racing Horse|260mm x 265mm|' + (cfg.package || 'Normal');
+  const v = c[k]; return v && v[q] != null ? +v[q] : null;
+}
+
+// ---------- Hard Stand Desk Calendar (Excard hard-stand-desk-calendar, live 2026-10-02) ----------
+// WDCH 001 / 002 (portrait / landscape, same price): 8 / 14 / 16 sheets, Gloss Art Card or Simili cover (the content
+// follows), OPP Plastic Packing (+RM0.20 each). DCHS 001 / 002 hot-stamped: Custom Design Content only, Gloss Art Card
+// (with water-base varnish) or Simili. Prices = Excard's list, cell for cell.
+const HD_Q46 = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000, 9500, 10000];
+const HD_Q36 = HD_Q46.slice(0, 36);
+const HD_T = {
+  'W8|GAC': [76, 121, 176, 231, 275, 312, 364, 416, 468, 495, 675, 825, 950, 1100, 1225, 1375, 1440, 1485, 1595, 1738, 1872, 1991, 2115, 2244, 2380, 2497, 2565, 2695, 3818, 5088, 6300, 7550, 8799, 10056, 11250, 12460, 13640, 14759, 15860, 17057, 18150, 19355, 20485, 21654, 22800, 23952],
+  'W14|GAC': [105, 182, 263, 338, 406, 462, 532, 600, 652.5, 722, 1005, 1223, 1425, 1608, 1750, 1899, 2047.5, 2155, 2337.5, 2523, 2697.5, 2889, 3037.5, 3200, 3357.5, 3512, 3705, 3824, 5732, 7580, 9125, 10553, 12075, 13603, 15075, 16265, 17710, 19270, 20735, 22265, 23700, 25204, 26690, 28175, 28975, 30318],
+  'W16|GAC': [107, 186, 269, 346, 416, 474, 546, 616, 670.5, 742, 1035, 1263, 1475, 1668, 1820, 1979, 2137.5, 2255, 2447.5, 2643, 2827.5, 3029, 3187.5, 3360, 3527.5, 3692, 3895, 4024, 6032, 7980, 9625, 11153, 12775, 14403, 15975, 17265, 18810, 20470, 22035, 23665, 25200, 26804, 28390, 29975, 30875, 32318],
+  'W8|SIM': [73, 115, 168, 220, 262, 297, 346, 396, 445, 471, 642, 784, 903, 1045, 1164, 1307, 1368, 1410, 1516, 1652, 1779, 1892, 2010, 2132, 2261, 2373, 2437, 2560, 3627, 4668, 5750, 6831, 7875, 8824, 9810, 10816, 11825, 12809, 13780, 14801, 15750, 16793, 17765, 18786, 19760, 20778],
+  'W14|SIM': [100, 173, 250, 321, 386, 439, 505, 570, 619, 685, 954, 1160, 1352, 1525, 1659, 1801, 1941, 2042, 2216, 2391, 2557, 2738, 2879, 3032, 3182, 3328, 3511, 3623, 5430, 7181, 8625, 9995, 11375, 12163, 13275, 14539, 15895, 17223, 18525, 19900, 21187.5, 22524, 23800, 25178, 26125, 27086],
+  'W16|SIM': [102, 177, 256, 329, 396, 451, 519, 586, 637, 705, 984, 1200, 1402, 1585, 1729, 1881, 2031, 2142, 2326, 2511, 2687, 2878, 3029, 3192, 3352, 3508, 3701, 3823, 5730, 7581, 9125, 10595, 12075, 12963, 14175, 15539, 16995, 18423, 19825, 21300, 22687.5, 24124, 25500, 26978, 28025, 29086],
+  'D1|GAC': [147, 182, 237, 286, 292, 342, 392, 443.2, 497.7, 512, 750, 952, 1125, 1254, 1417.5, 1562, 1665, 1705, 1842.5, 1991, 2132, 2277, 2422.5, 2563, 2703, 2849, 2973.5, 3080, 4368, 5684, 7000, 8362, 9625, 10928, 12150, 13385],
+  'D1|SIM': [133, 164, 214, 258, 263, 306, 350, 384, 423, 461, 660, 857, 1000, 1129, 1277.5, 1406, 1512, 1630, 1760, 1901, 2034.5, 2172, 2310, 2443, 2575.5, 2714, 2802.5, 2930, 4143, 5384, 6625, 7912, 9100, 10328, 11430, 12635],
+  'D2|GAC': [162, 201, 261, 315, 322, 377, 432, 488, 548, 564, 825, 1048, 1238, 1380, 1560, 1719, 1832, 1876, 2027, 2191, 2346, 2505, 2665, 2820, 2974, 3134, 3271, 3388, 4805, 6253, 7700, 9199, 10588, 12021, 13365, 14724],
+  'D2|SIM': [147, 181, 236, 284, 290, 337, 385, 423, 466, 508, 726, 943, 1100, 1242, 1406, 1547, 1664, 1793, 1936, 2092, 2238, 2390, 2541, 2688, 2834, 2986, 3083, 3223, 4558, 5923, 7288, 8704, 10010, 11361, 12573, 13899],
+};
+const HD_TYPES = ['WDCH 001 (Portrait)', 'WDCH 002 (Landscape)', 'DCHS 001 (Hot Stamping - Portrait)', 'DCHS 002 (Hot Stamping - Landscape)'];
+const hdHot = cfg => /^DCHS/.test(cfg.producttype || '');
+const hdLand = cfg => /Landscape/.test(cfg.producttype || '');
+const hdD2 = cfg => cfg.producttype === HD_TYPES[3];
+const hdSheets = cfg => +((String(cfg.model || '').match(/^(\d+) Sheets/) || [])[1] || 8);
+const hdSim = cfg => /Simili/.test(cfg.coverpaper || '');
+const hdCover = cfg => hdHot(cfg) ? ['Gloss Art Card 230gsm (2 side coated) (1 Sheets)', 'Simili 140gsm (1 Sheets)'] : ['Gloss Art Card 230gsm (2 side coated) (2 Sheets)', 'Simili 140gsm (2 Sheets)'];
+const hdSize = cfg => hdHot(cfg) ? (hdD2(cfg) ? '150mm x 215mm' : '170mm x 150mm') : (hdLand(cfg) ? '150mm x 215mm' : '215mm x 150mm');
+function hdPriceBase(cfg, q) {
+  const k = hdHot(cfg) ? (hdD2(cfg) ? 'D2' : 'D1') + '|' + (hdSim(cfg) ? 'SIM' : 'GAC') : 'W' + hdSheets(cfg) + '|' + (hdSim(cfg) ? 'SIM' : 'GAC');
+  const t = HD_T[k], qs = hdHot(cfg) ? HD_Q36 : HD_Q46, i = qs.indexOf(q); if (!t || i < 0) return null;
+  return Math.round((t[i] + (!hdHot(cfg) && cfg.hd_opp === 'Yes' ? 0.2 * q : 0)) * 100) / 100;
+}
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
-const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true };
+const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
 // Softcover: binding (saddle / perfect) → size → pages → the cover papers Excard offers for that size and page count →
 // the content papers it allows for that cover at that page count (A4-type sizes vs A5 portrait tables). Hardcover:
@@ -1659,6 +1703,54 @@ const CFG_OVERRIDES = {
     placeholderExact: ['paper', 'lamination', 'quantity'],
     qtyOptions: cfg => fdCat(cfg) === 'Presentation Folder' ? [250, 300, 350, 400, 450, 500, 1000] : Array.from({ length: 16 }, (_, i) => 250 + i * 50),
     priceBase: fdPriceBase,
+  },
+  'Wall Calendar — Litho': {
+    label: { inc_headercompulsory: 'Compulsory (Header)', inc_contentcompulsory: 'Compulsory (Content)', contentartwork: 'Content Artwork' },
+    optionsOverride: {
+      category: [WC_RH, WC_CUSTOM],
+      model: cfg => [wcCustom(cfg) ? 'RHC 003' : 'RHC 003 (Racing Horse)'],
+      headersize: ['260mm x 265mm'], contentsize: ['260mm x 265mm'],
+      contentartwork: cfg => [wcCustom(cfg) ? 'Custom Design' : 'Racing Horse'],
+    },
+    addFields: [
+      { key: 'wc_contentcolour', label: 'Content Print Colour', options: ['4C (Front)'], section: 'General', neutral: true, after: 'contentsize' },
+    ],
+    hideWhen: { package: wcCustom },
+    defaultOpt: { category: WC_RH },
+    placeholderExact: ['package', 'quantity'],
+    qtyOptions: cfg => wcCustom(cfg) ? [1000, 1500, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000, 15000, 16000, 17000, 18000, 19000, 20000]
+      : [50, 100, 150, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000, 15000, 16000, 17000, 18000, 19000, 20000],
+    priceBase: wcPriceBase,
+  },
+  'Desk Calendar — Hard Stand (Litho)': {
+    hide: ['contentartwork'],
+    optionsOverride: {
+      producttype: HD_TYPES,
+      model: cfg => hdHot(cfg) ? [hdD2(cfg) ? 'Custom Design Content (DCHS 002)' : 'Custom Design Content']
+        : ['8 Sheets - 16 Pages', '14 Sheets - 28 Pages', '16 Sheets - 32 Pages'].map(m => m + (hdLand(cfg) ? ' (Landscape)' : ' (Portrait)')),
+      coverpaper: hdCover,
+      coversize: cfg => [hdSize(cfg)], contentsize: cfg => [hdSize(cfg)],
+      contentpaper: cfg => [(hdSim(cfg) ? 'Simili 140gsm' : 'Gloss Art Card 230gsm (2 side coated)') + ' (' + (hdHot(cfg) ? 6 : { 8: 6, 14: 12, 16: 14 }[hdSheets(cfg)]) + ' Sheets)'],
+      standpaper: ['Chipboard 700gsm + Bukram Black'],
+      standsize: cfg => [hdHot(cfg) ? (hdD2(cfg) ? '200mm x 215mm' : '215mm x 150mm') : hdSize(cfg)],
+      hd_opp: cfg => hdHot(cfg) ? ['No'] : ['No', 'Yes'],
+      hd_compstand: cfg => [hdD2(cfg) ? 'Hot Stamping - Gold (40mm x 185mm)' : 'Hot Stamping - Gold (35mm x 126mm)'],
+    },
+    addFields: [
+      { key: 'hd_opp', label: 'OPP Plastic Packing', options: ['No', 'Yes'], default: 'No', section: 'General', after: 'coverpaper' },
+      { key: 'hd_comp', label: 'Compulsory', options: ['Collating, Wire O Hole Punching, Wire O Binding (Black)'], section: 'General', neutral: true, after: 'hd_opp' },
+      { key: 'hd_covercolour', label: 'Cover Print Colour', options: ['4C (Both)'], section: 'General', neutral: true, after: 'coversize' },
+      { key: 'hd_compcover', label: 'Compulsory (Cover)', options: ['Gloss Water Base Varnish (Both)'], section: 'General', neutral: true, after: 'hd_covercolour', showWhen: { field: 'producttype', values: [HD_TYPES[2], HD_TYPES[3]] } },
+      { key: 'hd_artwork', label: 'Content Artwork', options: ['Custom Design'], section: 'General', neutral: true, after: 'hd_compcover', showWhen: { field: 'producttype', values: [HD_TYPES[2], HD_TYPES[3]] } },
+      { key: 'hd_contentcolour', label: 'Content Print Colour', options: ['4C (Both)'], section: 'General', neutral: true, after: 'contentsize' },
+      { key: 'hd_compcontent', label: 'Compulsory (Content)', options: ['Gloss Water Base Varnish (Both)'], section: 'General', neutral: true, after: 'hd_contentcolour', showWhen: { field: 'producttype', values: [HD_TYPES[2], HD_TYPES[3]] } },
+      { key: 'hd_compstand', label: 'Compulsory (Stand)', options: ['Hot Stamping - Gold (35mm x 126mm)', 'Hot Stamping - Gold (40mm x 185mm)'], section: 'General', neutral: true, after: 'standsize', showWhen: { field: 'producttype', values: [HD_TYPES[2], HD_TYPES[3]] } },
+    ],
+    hideWhen: { hd_compcover: hdSim, hd_compcontent: hdSim },
+    defaultOpt: { producttype: HD_TYPES[0] },
+    placeholderExact: ['coverpaper', 'quantity'],
+    qtyOptions: cfg => hdHot(cfg) ? HD_Q36 : HD_Q46,
+    priceBase: hdPriceBase,
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
