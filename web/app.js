@@ -664,8 +664,77 @@ function wfPriceBase(cfg, q) {
   const [qa, va] = t[t.length - 1]; return Math.round(va * q / qa);
 }
 
+// ---------- Bill Book (Excard bill-book, live 2026-10-02) ----------
+// Structure: Binding Type / Orientation / Binding Location (per size: most sizes bind Left in landscape and Top in portrait,
+// five sizes the other way round, five allow both) / Paper Materials + Layers (NCR 2-6, Normal 1-6) / Paper per layer
+// (Normal adds Newsprint on the last layer) / Different Artwork + Copy Change (2+ layers) / Print Colour with its spot-colour
+// picks / Sets per book (100 only up to 2 layers) / Numbering (on by default) / Hole Punching (every size).
+// Price: Excard's stored NCR curves (exact for front-only colours), linear between list quantities (within 1% of live),
+// plus live-measured adjustments: back-colour printing on sizes above 145 x 210 (rate per size and bound edge x books x sets, less RM33),
+// Normal paper (by layers, area and books x sets, within ~1-3%), Different Artwork RM22 x (front colours + 1) per layer, custom sizes = the first standard size that holds them + RM10, Copy Change RM13.975
+// per layer.
+const BB_NCR_TINTS = ['NCR White 50gsm', 'NCR Green 50gsm', 'NCR Blue 50gsm', 'NCR Yellow 50gsm', 'NCR Pink 50gsm'];
+const BB_NORMAL = ['Simili White 50gsm', 'Simili White 80gsm', 'Bond Blue 50gsm', 'Bond Green 50gsm', 'Bond Pink 50gsm', 'Bond Yellow 50gsm'];
+const BB_SPOT = ['EX BLK 01', 'EX BLU 01', 'EX BLU 02', 'EX BLU 03', 'EX BLU 04', 'EX BRW 01', 'EX CYN 01', 'EX GRN 04', 'EX GRN 05', 'EX MAG 01', 'EX MAR 01', 'EX ORG 01', 'EX RED 01', 'EX RED 03', 'EX VIO 01'];
+const BB_BACK = ['1C (Both)', '2C (Front) / 1C (Back)', '4C (Front) / 1C (Back)'];
+const bbDims = s => { const m = String(s || '').match(/(\d+)mm x (\d+)mm/); return m ? m[1] + 'x' + m[2] : ''; };
+const BB_LOC_BOTH = ['145x210', '210x297', '176x250', '105x145', '192x268'], BB_LOC_REV = ['148x190', '148x291', '173x206', '194x205', '210x291'];
+const bbLocs = cfg => { const d = bbDims(cfg.size), p = cfg.orientation === 'Portrait';
+  if (BB_LOC_BOTH.indexOf(d) >= 0 || !d) return ['Left side binding', 'Top side binding'];
+  return [(BB_LOC_REV.indexOf(d) >= 0) !== p ? 'Top side binding' : 'Left side binding']; };
+const bbLayers = cfg => Math.max(1, Math.min(6, parseInt(cfg.layers, 10) || 2));
+const bbNormal = cfg => cfg.papermaterials === 'Normal Paper';
+// back-colour surcharge rate per size (RM per book x set beyond 1,919), keyed size|L (landscape-left / portrait-top
+// binding along the same edge) or size|S (the other edge); from live q1000 quotes
+const BB_BACK_K = {"210x297|L":0.017202, "176x250|L":0.009553, "250x353|L":0.017202, "90x140|L":0.003429, "90x177|L":0.005895, "95x210|L":0.004598, "95x225|L":0.004598, "105x145|L":0.005894, "105x175|L":0.004599, "107x190|L":0.004548, "110x210|L":0.004573, "120x210|L":0.009401, "120x230|L":0.009528, "125x175|L":0.005895, "135x210|L":0.005869, "160x240|L":0.009528, "165x210|L":0.005894, "170x190|L":0.005894, "180x280|L":0.017176, "190x210|L":0.009503, "190x270|L":0.017177, "190x290|L":0.017177, "190x297|L":0.017176, "192x268|L":0.017176, "206x240|L":0.009554, "206x330|L":0.009554, "145x210|L":0.005869, "148x190|S":0.009553, "148x291|S":0.009528, "173x206|S":0.009502, "194x205|S":0.009528, "210x291|S":0.009553, "145x148|L":0.004598, "145x190|L":0.005895, "145x210|S":0.009528, "210x297|S":0.009528, "176x250|S":0.009553, "105x145|S":0.014965, "192x268|S":0.009528, "210x270|L":0.017176, "291x420|L":0.017176, "330x420|L":0.017202};
+function bbCurve(V, q) {
+  const E = typeof window !== 'undefined' && window.PricingEngine; if (!E) return null;
+  const c = E.DATA.params.billbook_plx && E.DATA.params.billbook_plx.curves; if (!c) return null;
+  const key = L => [V.binding, V.size, V.orientation, V.bindinglocation, String(L), V.printcolour, V.sets, V.holepunching].join('|');
+  const at = (L) => { const v = c[key(L)]; if (!v) return null; const qs = Object.keys(v).map(Number).sort((a, b) => a - b);
+    if (v[q] != null) return +v[q]; for (let i = 1; i < qs.length; i++) if (q < qs[i]) { const a = qs[i - 1], b = qs[i]; return +v[a] + (+v[b] - +v[a]) * (q - a) / (b - a); }
+    return +v[qs[qs.length - 1]] * q / qs[qs.length - 1]; };
+  return at;
+}
+// custom size: Excard prices the first standard size (in height order) that holds it, plus RM10 (live 3/3 exact)
+function bbFitSize(h, w) {
+  const E = typeof window !== 'undefined' && window.PricingEngine, p = E && E.DATA.products.find(x => x.id === 24); if (!p) return null;
+  const l = (p.fields.find(f => f.key === 'size') || {}).options || [];
+  return l.map(s => [s, bbDims(s).split('x').map(Number)]).filter(([s, d]) => d.length === 2 && d[0] && BB_LOC_REV.indexOf(bbDims(s)) < 0)
+    .sort((a, b) => a[1][0] - b[1][0] || a[1][1] - b[1][1]).map(([s, d]) => (d[0] >= h && d[1] >= w) ? s : null).find(Boolean) || null;
+}
+const BB_FRONT_C = { '1C (Front)': 1, '2C (Front)': 2, '4C (Front)': 4, '1C (Both)': 1, '2C (Front) / 1C (Back)': 2, '4C (Front) / 1C (Back)': 4 };
+function bbPriceBase(cfg, q) {
+  if (!cfg.size) return null;
+  let size = cfg.size, extra = 0;
+  if (/Other/.test(size)) { const h = +cfg.bb_custom_h, w = +cfg.bb_custom_w; if (!(h >= 90 && h <= 330 && w >= 140 && w <= 420)) return null; size = bbFitSize(h, w); if (!size) return null; extra = 10; }
+  const L = bbLayers(cfg), sets = cfg.sets === '100' && L <= 2 ? '100' : '50';
+  const V = { binding: cfg.binding || 'Book', size, orientation: cfg.orientation || 'Landscape', bindinglocation: cfg.bindinglocation || 'Left side binding',
+    printcolour: cfg.printcolour || '1C (Front)', sets, holepunching: cfg.bb_hole === 'Yes — Hole Punching (6mm)' ? 'Yes — Hole Punching (6mm)' : 'No Hole Punching' };
+  const at = bbCurve(V, q); if (!at) return null;
+  let p;
+  if (L >= 2) p = at(L); else { const a = at(2), b = at(3); p = (a != null && b != null) ? 2 * a - b : null; }
+  if (p == null && L === 1 && sets === '100') { const a = at(2); const V50 = Object.assign({}, V, { sets: '50' }), at50 = bbCurve(V50, q); const r = at50 && at50(2) && at50(3) ? (2 * at50(2) - at50(3)) / at50(2) : null; p = a != null && r != null ? a * r : null; }
+  if (p == null) return null;
+  const S = q * (+sets), d = bbDims(size), [w, hgt] = d.split('x').map(Number), A = (w * hgt) / 30450;
+  if (BB_BACK.indexOf(V.printcolour) >= 0) {
+    const sameEdge = (V.orientation === 'Landscape') === (V.bindinglocation === 'Left side binding');
+    const k = BB_BACK_K[d + '|' + (sameEdge ? 'L' : 'S')] || 0; p += Math.max(0, k * S - 33);
+    if (cfg.back_print_layer === 'All Layers' && L > 1) p += (L - 1) * k * S;   // back printed on every layer (A4 live exact)
+  }
+  if (bbNormal(cfg)) {
+    p -= (L * 0.02039 - 0.0141) * S * A;
+    const PD = { 'Simili White 80gsm': 0.0090, 'Newsprint 50gsm': -0.0028, 'Bond Blue 50gsm': 0.00076, 'Bond Green 50gsm': 0.00076, 'Bond Pink 50gsm': 0.00076, 'Bond Yellow 50gsm': 0.00076 };
+    for (let i = 1; i <= L; i++) p += (PD[cfg['bb_paper_' + i]] || 0) * S * A;
+  }
+  if (L >= 2 && cfg.diff_artwork === 'Yes — Different Artwork') p += 22 * ((BB_FRONT_C[V.printcolour] || 1) + 1) * L;
+  else if (L >= 2 && cfg.copy_change === 'Yes — Add Copy Change') p += 13.975 * L;
+  return Math.round((p + extra) * 20) / 20;
+}
+const BB_QTY = Array.from({ length: 100 }, (_, i) => (i + 1) * 10);
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
-const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true };
+const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
 // Softcover: binding (saddle / perfect) → size → pages → the cover papers Excard offers for that size and page count →
 // the content papers it allows for that cover at that page count (A4-type sizes vs A5 portrait tables). Hardcover:
@@ -1398,6 +1467,67 @@ const CFG_OVERRIDES = {
     placeholderExact: ['quantity'],
     qtyOptions: Array.from({ length: 50 }, (_, i) => i + 1),
     priceBase: wfPriceBase,
+  },
+  'Wobbler — Digital': {
+    label: { inc_compulsory: 'Compulsory' },
+    defaultOpt: { category: 'Rectangle', modelcategory: 'Portrait' },
+    placeholderExact: ['paper', 'lamination', 'quantity'],
+  },
+  'Bill-Book — Litho (NCR Carbonless)': {
+    hide: ['paper_tint', 'holepunching'],
+    label: { binding: 'Binding Type', papermaterials: 'Paper Materials', layers: 'Layers', last_layer_perforation: 'Last Layer Perforation', diff_artwork: 'Different Artwork', copy_change: 'Copy Change',
+      printcolour: 'Print Colour', back_print_layer: 'Back Print — Apply to', sets: 'Sets per Book/Pad', numbering: 'Numbering' },
+    optLabel: { layers: { 1: '1 Layer', 2: '2 Layers', 3: '3 Layers', 4: '4 Layers', 5: '5 Layers', 6: '6 Layers' }, sets: { 50: '50 Sets', 100: '100 Sets' } },
+    optionsOverride: {
+      bindinglocation: bbLocs,
+      layers: cfg => bbNormal(cfg) ? ['1', '2', '3', '4', '5', '6'] : ['2', '3', '4', '5', '6'],
+      sets: cfg => bbLayers(cfg) <= 2 ? ['50', '100'] : ['50'],
+      bb_paper_1: cfg => !bbNormal(cfg) ? BB_NCR_TINTS : bbLayers(cfg) === 1 ? BB_NORMAL.concat('Newsprint 50gsm') : BB_NORMAL,
+      bb_paper_2: cfg => !bbNormal(cfg) ? BB_NCR_TINTS : bbLayers(cfg) === 2 ? BB_NORMAL.concat('Newsprint 50gsm') : BB_NORMAL,
+      bb_paper_3: cfg => !bbNormal(cfg) ? BB_NCR_TINTS : bbLayers(cfg) === 3 ? BB_NORMAL.concat('Newsprint 50gsm') : BB_NORMAL,
+      bb_paper_4: cfg => !bbNormal(cfg) ? BB_NCR_TINTS : bbLayers(cfg) === 4 ? BB_NORMAL.concat('Newsprint 50gsm') : BB_NORMAL,
+      bb_paper_5: cfg => !bbNormal(cfg) ? BB_NCR_TINTS : bbLayers(cfg) === 5 ? BB_NORMAL.concat('Newsprint 50gsm') : BB_NORMAL,
+      bb_paper_6: cfg => !bbNormal(cfg) ? BB_NCR_TINTS : BB_NORMAL.concat('Newsprint 50gsm'),
+    },
+    addFields: [
+      { key: 'bb_custom_h', label: 'Height (mm)', type: 'number', min: 90, max: 330, section: 'General', after: 'size', showWhen: { field: 'size', value: 'Other (Custom Size)' } },
+      { key: 'bb_custom_w', label: 'Width (mm)', type: 'number', min: 140, max: 420, section: 'General', after: 'bb_custom_h', showWhen: { field: 'size', value: 'Other (Custom Size)' } },
+      { key: 'bb_paper_1', label: 'Paper (Layer 1)', options: BB_NCR_TINTS.concat(BB_NORMAL, 'Newsprint 50gsm'), section: 'Layers Configuration', after: 'layers' },
+      { key: 'bb_paper_2', label: 'Paper (Layer 2)', options: BB_NCR_TINTS.concat(BB_NORMAL, 'Newsprint 50gsm'), section: 'Layers Configuration', after: 'bb_paper_1', showWhen: { field: 'layers', values: ['2', '3', '4', '5', '6'] } },
+      { key: 'bb_paper_3', label: 'Paper (Layer 3)', options: BB_NCR_TINTS.concat(BB_NORMAL, 'Newsprint 50gsm'), section: 'Layers Configuration', after: 'bb_paper_2', showWhen: { field: 'layers', values: ['3', '4', '5', '6'] } },
+      { key: 'bb_paper_4', label: 'Paper (Layer 4)', options: BB_NCR_TINTS.concat(BB_NORMAL, 'Newsprint 50gsm'), section: 'Layers Configuration', after: 'bb_paper_3', showWhen: { field: 'layers', values: ['4', '5', '6'] } },
+      { key: 'bb_paper_5', label: 'Paper (Layer 5)', options: BB_NCR_TINTS.concat(BB_NORMAL, 'Newsprint 50gsm'), section: 'Layers Configuration', after: 'bb_paper_4', showWhen: { field: 'layers', values: ['5', '6'] } },
+      { key: 'bb_paper_6', label: 'Paper (Layer 6)', options: BB_NCR_TINTS.concat(BB_NORMAL, 'Newsprint 50gsm'), section: 'Layers Configuration', after: 'bb_paper_5', showWhen: { field: 'layers', values: ['6'] } },
+      { key: 'bb_copy_font', label: 'Copy Change Font Size', options: ['8', '10', '12'], section: 'Layers Configuration', neutral: true, after: 'copy_change', showWhen: { field: 'copy_change', value: 'Yes — Add Copy Change' } },
+      { key: 'bb_copy_1', label: 'Copy Change Text (Layer 1)', type: 'text', section: 'Layers Configuration', neutral: true, after: 'bb_copy_font', showWhen: { field: 'copy_change', value: 'Yes — Add Copy Change' } },
+      { key: 'bb_copy_2', label: 'Copy Change Text (Layer 2)', type: 'text', section: 'Layers Configuration', neutral: true, after: 'bb_copy_1', showWhen: { all: [{ field: 'copy_change', value: 'Yes — Add Copy Change' }, { field: 'layers', values: ['2', '3', '4', '5', '6'] }] } },
+      { key: 'bb_copy_3', label: 'Copy Change Text (Layer 3)', type: 'text', section: 'Layers Configuration', neutral: true, after: 'bb_copy_2', showWhen: { all: [{ field: 'copy_change', value: 'Yes — Add Copy Change' }, { field: 'layers', values: ['3', '4', '5', '6'] }] } },
+      { key: 'bb_copy_4', label: 'Copy Change Text (Layer 4)', type: 'text', section: 'Layers Configuration', neutral: true, after: 'bb_copy_3', showWhen: { all: [{ field: 'copy_change', value: 'Yes — Add Copy Change' }, { field: 'layers', values: ['4', '5', '6'] }] } },
+      { key: 'bb_copy_5', label: 'Copy Change Text (Layer 5)', type: 'text', section: 'Layers Configuration', neutral: true, after: 'bb_copy_4', showWhen: { all: [{ field: 'copy_change', value: 'Yes — Add Copy Change' }, { field: 'layers', values: ['5', '6'] }] } },
+      { key: 'bb_copy_6', label: 'Copy Change Text (Layer 6)', type: 'text', section: 'Layers Configuration', neutral: true, after: 'bb_copy_5', showWhen: { all: [{ field: 'copy_change', value: 'Yes — Add Copy Change' }, { field: 'layers', values: ['6'] }] } },
+      { key: 'bb_ink_f1', label: 'Front K100', options: BB_SPOT, section: 'Print Color', neutral: true, after: 'printcolour', showWhen: { field: 'printcolour', values: ['1C (Front)', '2C (Front)', '1C (Both)', '2C (Front) / 1C (Back)'] } },
+      { key: 'bb_ink_f2', label: 'Front M100', options: BB_SPOT.slice(1), section: 'Print Color', neutral: true, after: 'printcolour', showWhen: { field: 'printcolour', values: ['2C (Front)', '2C (Front) / 1C (Back)'] } },
+      { key: 'bb_ink_b', label: 'Back K100', options: BB_SPOT, section: 'Print Color', neutral: true, after: 'printcolour', showWhen: { field: 'printcolour', values: BB_BACK } },
+      { key: 'bb_number_from', label: 'Number From', type: 'text', section: 'Finishing', neutral: true, after: 'numbering', showWhen: { field: 'numbering', value: 'Yes — Add Numbering' } },
+      { key: 'bb_hole', label: 'Hole Punching', options: ['No Hole Punching', 'Yes — Hole Punching (6mm)'], default: 'No Hole Punching', section: 'Finishing', after: 'bb_number_from' },
+    ],
+    hideWhen: {
+      last_layer_perforation: cfg => cfg.binding === 'Pad',
+      back_print_layer: cfg => BB_BACK.indexOf(cfg.printcolour) < 0,
+      diff_artwork: cfg => bbLayers(cfg) < 2,
+      copy_change: cfg => bbLayers(cfg) < 2 || cfg.diff_artwork === 'Yes — Different Artwork',
+      bb_copy_font: cfg => cfg.diff_artwork === 'Yes — Different Artwork' || bbLayers(cfg) < 2,
+      bb_copy_1: cfg => cfg.diff_artwork === 'Yes — Different Artwork' || bbLayers(cfg) < 2,
+      bb_copy_2: cfg => cfg.diff_artwork === 'Yes — Different Artwork', bb_copy_3: cfg => cfg.diff_artwork === 'Yes — Different Artwork',
+      bb_copy_4: cfg => cfg.diff_artwork === 'Yes — Different Artwork', bb_copy_5: cfg => cfg.diff_artwork === 'Yes — Different Artwork',
+      bb_copy_6: cfg => cfg.diff_artwork === 'Yes — Different Artwork',
+    },
+    defaultOpt: { binding: 'Book', orientation: 'Landscape', papermaterials: 'NCR (Carbonize Paper)', last_layer_perforation: 'No', diff_artwork: 'No — Same Artwork',
+      copy_change: 'No Copy Change', back_print_layer: 'First Layer Only', sets: '50', numbering: 'Yes — Add Numbering' },
+    placeholderExact: ['size', 'layers', 'bb_paper_1', 'bb_paper_2', 'bb_paper_3', 'bb_paper_4', 'bb_paper_5', 'bb_paper_6', 'printcolour', 'bb_ink_f1', 'bb_ink_f2', 'bb_ink_b', 'quantity'],
+    remark: { bb_number_from: 'Up to 7 digits; the last digit of the starting number must be 1 (e.g. 0001, 00101).' },
+    qtyOptions: cfg => cfg.diff_artwork === 'Yes — Different Artwork' ? BB_QTY.filter(n => n >= 100) : BB_QTY,
+    priceBase: bbPriceBase,
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
