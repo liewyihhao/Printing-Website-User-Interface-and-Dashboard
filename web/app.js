@@ -837,6 +837,15 @@ function hdPriceBase(cfg, q) {
   return Math.round((t[i] + (!hdHot(cfg) && cfg.hd_opp === 'Yes' ? 0.2 * q : 0)) * 100) / 100;
 }
 
+// (button badge / hand fan / hanger: structure only)
+
+// ---------- Papan Kopi / Sachet Board (Excard papan-kopi, live 2026-10-02): Size first; 547 x 346 asks the window count;
+// the model, window size / shape and hole punch follow. Prices = Excard's list (exact). ----------
+const pkoModel = cfg => cfg.ex_size === '622mm x 346mm' ? 'SB 02' : cfg.ex_size === '547mm x 346mm' ? (String(cfg.ex_window) === '15' ? 'SB 04' : 'SB 03') : 'SB 01';
+const PKO = { 'SB 01': ['20', '52 x 38', 'Round Square', '4'], 'SB 02': ['20', '64 x 40', 'Oval', '6'], 'SB 03': ['20', '64 x 40', 'Oval', '6'], 'SB 04': ['15', '61 x 38.5', 'Oval', '6'] };
+
+// (paper bag: structure only)
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -1751,6 +1760,41 @@ const CFG_OVERRIDES = {
     placeholderExact: ['coverpaper', 'quantity'],
     qtyOptions: cfg => hdHot(cfg) ? HD_Q36 : HD_Q46,
     priceBase: hdPriceBase,
+  },
+  'Button Badge — Digital': {
+    label: { inc_paper: 'Paper', inc_compulsory: 'Compulsory' },
+    optionsOverride: { model: ['BBD32P', 'BBD44P', 'BBD58P', 'BBD75P', 'BBD75CM', 'BBD58RM'] },
+    defaultOpt: { model: 'BBD32P' },
+    placeholderExact: ['package', 'finishing', 'quantity'],
+  },
+  'Hand Fan — Digital': {
+    label: { inc_compulsory: 'Compulsory' },
+    defaultOpt: { model: 'PFS 001' },
+    placeholderExact: ['paper', 'lamination', 'quantity'],
+  },
+  'Hanger — Digital': {
+    label: { printcolour: 'Print Colour', inc_compulsory: 'Compulsory' },
+    defaultOpt: { model: 'H01' },
+    placeholderExact: ['paper', 'printcolour', 'lamination', 'quantity'],
+  },
+  'Papan Kopi / Sachet Board — Litho': {
+    hide: ['model', 'inc_printmethod'],
+    optionsOverride: {
+      model: cfg => [pkoModel(cfg)],
+      ex_window: cfg => cfg.ex_size === '547mm x 346mm' ? ['15', '20'] : ['20'],
+      ex_windowsize: cfg => [PKO[pkoModel(cfg)][1]], ex_windowshape: cfg => [PKO[pkoModel(cfg)][2]], ex_holepunch: cfg => [PKO[pkoModel(cfg)][3]],
+      pko_model: cfg => [pkoModel(cfg)],
+    },
+    addFields: [
+      { key: 'pko_model', label: 'Model', options: ['SB 01', 'SB 02', 'SB 03', 'SB 04'], section: 'General', neutral: true, after: 'ex_windowshape' },
+      { key: 'pko_comp', label: 'Compulsory', options: ['Boxboard Grey Back 400gsm, Gloss Water Based Varnish (Front),4C Front, Die-Cutting'], section: 'General', neutral: true, after: 'pko_model' },
+    ],
+    defaultOpt: { ex_size: '537mm x 334mm' },
+    placeholderExact: ['model', 'ex_window', 'quantity'],
+  },
+  'Paper Bag — Litho': {
+    defaultOpt: { model: 'PBG 001' },
+    placeholderExact: ['paper', 'lamination', 'rope_colour', 'quantity'],
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
