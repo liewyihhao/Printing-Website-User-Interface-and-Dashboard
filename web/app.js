@@ -596,8 +596,39 @@ const LO_OV = {
   priceAddon: { hot_stamping: loHotStampCost },
 };
 
+// ---------- Banner (Excard banner + banner?variant=custom, live 2026-10-02) ----------
+// Sizes follow the orientation; Finishing Yes opens the eyelet counts (2 + 2 included, RM0.50 per extra eyelet per banner);
+// Packing Method is price-neutral. Custom size: height × width in ft (1–30, at least 8 sq ft), priced like the standard
+// sizes by area (3 × 10 ft = the standard 10 × 3 ft exactly; in-between areas interpolated).
+const BN_LAND = ['3ft x 2ft', '4ft x 2ft', '6ft x 2ft', '4ft x 3ft', '8ft x 3ft', '10ft x 3ft', '8ft x 4ft', '10ft x 4ft', '18ft x 3ft', '20ft x 4ft'];
+const BN_PORT = ['2ft x 3ft', '2ft x 4ft', '2ft x 6ft', '3ft x 4ft', '3ft x 8ft', '3ft x 10ft', '4ft x 8ft', '4ft x 10ft', '3ft x 18ft', '4ft x 20ft'];
+// eyelets included in the base price: 2 + 2, or 3 top + 2 bottom from 24 sq ft
+const bnArea = size => { const m = String(size || '').match(/(\d+)ft x (\d+)ft/); return m ? +m[1] * +m[2] : 0; };
+const bnMinTop = a => a >= 24 ? 3 : 2;
+function bnStd(cfg, size, q) {
+  const E = typeof window !== 'undefined' && window.PricingEngine, p = E && E.DATA.products.find(x => x.id === 123); if (!p) return null;
+  const portrait = BN_PORT.indexOf(size) >= 0;
+  try { const r = E.localQuote(p, { size_type: 'Standard Size', orientation: portrait ? 'Portrait' : 'Landscape', size, material: cfg.material || 'Tarpaulin 300gsm', topeyelet: String(bnMinTop(bnArea(size))), bottomeyelet: '2' }, q); return r && isFinite(r.printoka_cash) ? r.printoka_cash : null; } catch (e) { return null; }
+}
+function bnPriceBase(cfg, q) {
+  if (cfg.size_type !== 'Custom Size') return bnStd(cfg, cfg.size, q);
+  const h = +cfg.custom_h, w = +cfg.custom_w, a = h * w; if (!(h >= 1 && w >= 1 && h <= 30 && w <= 30 && a >= 8)) return null;
+  const pts = []; BN_LAND.forEach(s => { const [x, y] = s.match(/\d+/g).map(Number), v = bnStd(cfg, s, q); if (v != null && !pts.some(p => p[0] === x * y)) pts.push([x * y, v]); });
+  pts.sort((m, n) => m[0] - n[0]); if (pts.length < 2) return null;
+  for (let i = 1; i < pts.length; i++) if (a <= pts[i][0]) { const [a0, v0] = pts[i - 1], [a1, v1] = pts[i]; return Math.round((v0 + (v1 - v0) * (a - a0) / (a1 - a0)) * 100) / 100; }
+  const [aL, vL] = pts[pts.length - 1]; return Math.round(vL * a / aL * 100) / 100;   // beyond 80 sq ft: the 80 sq ft rate
+}
+function bnEyelets(cfg, q) {
+  if (cfg.finishing === 'No') return 0;
+  const a = cfg.size_type === 'Custom Size' ? (+cfg.custom_h || 0) * (+cfg.custom_w || 0) : bnArea(cfg.size);
+  const extra = Math.max(0, (+cfg.topeyelet || 2) - bnMinTop(a)) + Math.max(0, (+cfg.bottomeyelet || 2) - 2);
+  return extra * 0.5 * q;
+}
+// ---------- Mug (Excard mug, live 2026-10-02): the size comes with the model; prices = Excard's list (42/42 exact) ----------
+const MUG_SIZE = { '11OZ': '81mm x 95mm', '12OZ': '60mm x 100mm', '15OZ': '65mm x 115mm' };
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
-const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true };
+const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
 // Softcover: binding (saddle / perfect) → size → pages → the cover papers Excard offers for that size and page count →
 // the content papers it allows for that cover at that page count (A4-type sizes vs A5 portrait tables). Hardcover:
@@ -1236,6 +1267,32 @@ const CFG_OVERRIDES = {
     // hot stamping as on Excard: each colour asks its block size and foil colour, priced by block size × quantity
     priceSub: { hot_stamping: { '1C (Front)': 'Not Required', '1C (Back)': 'Not Required', '2C (Front)': 'Not Required', '2C (Back)': 'Not Required' } },
     priceAddon: { hot_stamping: dlsHotStampCost },
+  },
+  'Banner — Litho': {
+    label: { topeyelet: 'Top Eyelets', bottomeyelet: 'Bottom Eyelets', inc_printcolour: 'Printing', inc_compulsory: 'Compulsory' },
+    optionsOverride: { size: cfg => cfg.orientation === 'Portrait' ? BN_PORT : BN_LAND,
+      // standard sizes from 24 sq ft start at 3 top eyelets
+      topeyelet: cfg => cfg.size_type !== 'Custom Size' && bnArea(cfg.size) >= 24 ? ['3', '4', '5'] : ['2', '3', '4', '5'] },
+    addFields: [
+      { key: 'custom_h', label: 'Height (ft)', type: 'number', min: 1, max: 30, section: 'General', after: 'size_type', showWhen: { field: 'size_type', value: 'Custom Size' } },
+      { key: 'custom_w', label: 'Width (ft)', type: 'number', min: 1, max: 30, section: 'General', after: 'size_type', showWhen: { field: 'size_type', value: 'Custom Size' } },
+      { key: 'finishing', label: 'Finishing', options: ['Yes', 'No'], default: 'Yes', section: 'Add On', after: 'material' },
+      { key: 'packing', label: 'Packing Method', options: ['Fold Packing', 'Roll Packing'], section: 'Add On', neutral: true, after: 'bottomeyelet' },
+    ],
+    hideWhen: {
+      size: cfg => cfg.size_type === 'Custom Size',
+      topeyelet: cfg => cfg.finishing === 'No', bottomeyelet: cfg => cfg.finishing === 'No', inc_compulsory: cfg => cfg.finishing === 'No',
+    },
+    placeholderExact: ['size', 'topeyelet', 'bottomeyelet', 'quantity'],
+    remark: { custom_w: 'Custom banners are at least 8 sq ft (height × width).' },
+    priceBase: bnPriceBase,
+    priceAddon: { eyelets: bnEyelets },
+  },
+  'Mug — Litho': {
+    label: { mug_colour: 'Colour' },
+    optionsOverride: { model: ['11OZ', '12OZ', '15OZ'], size: cfg => [MUG_SIZE[cfg.model] || '81mm x 95mm'] },
+    defaultOpt: { model: '11OZ' },
+    placeholderExact: ['quantity'],
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
@@ -1987,7 +2044,7 @@ class Component extends DCLogic {
         if (!a.options || a.options.length < 2 || ph0.indexOf(a.key) >= 0 || (a.showWhen && !this.pkShown(a, cfg))) return;
         let l = a.options; if (typeof oo0[a.key] === 'function') { try { const x = oo0[a.key](cfg); if (x && x.length) l = x; } catch (e) {} }
         const vo = (ov.validOpt || {})[a.key]; if (vo) l = l.filter(v => { try { return vo(cfg, v); } catch (e) { return true; } });
-        if (l.length && (cfg[a.key] == null || cfg[a.key] === '' || l.indexOf(cfg[a.key]) < 0)) cfg[a.key] = l.find(isNoneOpt) || l[0];
+        if (l.length && (cfg[a.key] == null || cfg[a.key] === '' || l.indexOf(cfg[a.key]) < 0)) cfg[a.key] = (a.default != null && l.indexOf(a.default) >= 0) ? a.default : (l.find(isNoneOpt) || l[0]);
       }); }
     this.plEnforce(prod, cfg);
     return cfg;
