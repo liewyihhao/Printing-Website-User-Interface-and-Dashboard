@@ -179,7 +179,7 @@ function page(slug, origin, opts) {
     + '<rect x="66" y="74" width="118" height="6" rx="3" fill="#f0f0f0"/><rect x="66" y="88" width="96" height="6" rx="3" fill="#f0f0f0"/><rect x="66" y="102" width="70" height="6" rx="3" fill="#f0f0f0"/>'
     + '</svg></div>';
   S.push('<section id="top" class="pk-hero"><div class="pk-hero-in">'
-    + (asset ? '<div class="pk-hero-img"><img src="' + esc(asset) + '" alt="' + esc(name + ' printed by Printoka') + '" width="300" height="220" fetchpriority="high"></div>' : heroFallback)
+    + (asset ? '<div class="pk-hero-img"><div class="pk-board"><img src="' + esc(asset) + '" alt="' + esc(name + ' printed by Printoka') + '" width="300" height="220" fetchpriority="high"></div></div>' : heroFallback)
     + '<div class="pk-hero-c"><h1><span class="pk-h-sm">Print Your</span><span class="pk-h-lg">' + esc(name) + '</span><span class="pk-h-md">Online Now!</span></h1>'
     + '<p class="pk-hero-tag">configure, upload and print</p></div>'
     + '<div class="pk-hero-benefits">' + heroBenefits.map(b => '<div class="pk-hb"><div class="pk-hb-h">' + esc(b[0]) + '</div><div class="pk-hb-c">' + esc(b[1]) + '</div></div>').join('') + '</div>'
@@ -336,8 +336,8 @@ function css() {
     '.pk-login{display:flex;align-items:center;gap:7px;font-size:13.5px}.pk-login img{height:18px;width:auto}.pk-cart{display:flex}.pk-cart img{height:19px;width:auto}.pk-country{display:flex;align-items:center;gap:6px}.pk-country img{height:15px;width:22px;object-fit:cover;display:block}',
     // hero (orange banner, printoka.com product-header layout)
     '.pk-hero{background:linear-gradient(115deg,#F26722 0%,#EF5A28 45%,#E52220 100%);color:#fff;overflow:hidden}',
-    '.pk-hero-in{max-width:1180px;margin:0 auto;padding:34px 20px;display:flex;flex-wrap:wrap;gap:28px;align-items:center;min-height:216px}',
-    '.pk-hero-img{flex:0 0 auto}.pk-hero-img img{height:190px;width:auto;filter:drop-shadow(0 18px 30px rgba(0,0,0,.28))}.pk-hero-fallback{display:flex;align-items:center;justify-content:center}.pk-hero-fallback svg{filter:drop-shadow(0 16px 28px rgba(0,0,0,.22))}',
+    '.pk-hero-in{max-width:1180px;margin:0 auto;padding:34px 20px;display:flex;flex-wrap:wrap;gap:28px 64px;align-items:center;min-height:216px}',
+    '.pk-hero-img{flex:0 0 auto;padding:6px 18px 18px 0}.pk-board{position:relative;display:inline-block;background:#fff;padding:8px;transform:perspective(900px) rotateY(-13deg) rotateX(5deg);transform-origin:50% 50%;box-shadow:1px 1px 0 #eceef0,2px 2px 0 #e4e7ea,3px 3px 0 #dde1e4,4px 4px 0 #d6dadd,5px 5px 0 #cfd4d7,6px 6px 0 #c8cdd1,7px 7px 0 #c1c7cb,8px 8px 0 #bac0c5,10px 14px 0 rgba(0,0,0,.05),22px 32px 42px rgba(0,0,0,.30)}.pk-board::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(135deg,rgba(255,255,255,.55) 0%,rgba(255,255,255,0) 38%,rgba(0,0,0,0) 70%,rgba(0,0,0,.05) 100%)}.pk-board img{display:block;height:180px;width:auto;max-width:100%;filter:none!important}@media(max-width:760px){.pk-board img{height:124px}}.pk-hero-fallback{display:flex;align-items:center;justify-content:center}.pk-hero-fallback svg{filter:drop-shadow(0 16px 28px rgba(0,0,0,.22))}',
     '.pk-hero-c{flex:1 1 300px}.pk-hero h1{margin:0;display:flex;flex-direction:column;line-height:1.08;font-weight:400}',
     '.pk-h-sm{font-size:26px}.pk-h-lg{font-size:40px;font-weight:700;letter-spacing:-.01em}.pk-h-md{font-size:30px;font-weight:500}',
     '.pk-hero-tag{margin:12px 0 0;font-size:20px;font-weight:300;color:rgba(255,255,255,.95)}',
