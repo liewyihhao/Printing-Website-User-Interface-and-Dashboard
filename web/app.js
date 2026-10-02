@@ -1200,6 +1200,10 @@ const woHsFields = () => {
   return out;
 };
 
+// ---------- Exclusive Leather Cover Wire-O Notebook (Excard exclusive-leather-cover-wire-o-notebook, live 2026-10-02): Bronze / Grey
+// leather (no Brown on Excard), fixed binding/cover size/front frosted sheet/content spec, pages 5-12 follow pages 1-4, 10..200 pcs.
+// Prices = Excard's list (3,900 curves exact). ----------
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -2510,6 +2514,26 @@ const CFG_OVERRIDES = {
     placeholderWhen: { printcolourcontent: cfg => woPcc(cfg).length > 1 },
     qtyFilter: (cfg, n) => n >= 300 || (!woHs(cfg) && !woSuv(cfg)),
     priceBase: woPriceBase,
+  },
+  'Exclusive Leather Cover Wire-O Notebook — Litho': {
+    hide: ['inc_printmethod'],
+    addFields: [
+      { key: 'el_cat', label: 'Category', options: ['Exclusive Leather Cover'], section: 'General', neutral: true, first: true },
+      { key: 'el_binding', label: 'Binding', options: ['Wire-O Hole Punching, 1/2” Wire-O Binding (Black)'], section: 'General', neutral: true, after: 'inc_orientation' },
+      { key: 'el_csize', label: 'Size (Cover)', options: ['222mm x 347mm'], section: 'General', neutral: true, after: 'el_binding' },
+      { key: 'el_frontpaper', label: 'Front Content Paper Material', options: ['Frosted Plastic 200 micron (0.2mm)'], section: 'General', neutral: true, after: 'readycontent' },
+      { key: 'el_readypaper', label: 'Ready Content Paper Material', options: ['Simili 80gsm'], section: 'General', neutral: true, after: 'innerfrontcontent' },
+      { key: 'el_contentsize', label: 'Content Size (Closed Size)', options: ['210mm (H) x 148mm (W)'], section: 'General', neutral: true, after: 'el_readypaper' },
+      { key: 'el_contentcolour', label: 'Print Colour (Content)', options: ['1C (Both)'], section: 'General', neutral: true, after: 'el_contentsize' },
+    ],
+    optionsOverride: {
+      printcolourcover: ['Exclusive Leather Bronze', 'Exclusive Leather Grey'],
+      paper5to8: cfg => [cfg.paper1to4 || 'Simili 80gsm'],
+      paper9to12: cfg => [cfg.paper1to4 || 'Simili 80gsm'],
+    },
+    defaultOpt: { printcolourcover: 'Exclusive Leather Bronze', finishingcover: 'No Finishing', readycontent: '16 sheets diary planner + 64 sheets ready content', additionalcontent: 'Not Required', stickerposition: 'Left' },
+    placeholderExact: ['deboss', 'debosssizeh', 'debosssizew', 'stickersize', 'innerfrontcontent', 'paper1to4', 'quantity'],
+    qtyOptions: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200],
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
