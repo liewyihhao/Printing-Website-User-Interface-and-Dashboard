@@ -1081,8 +1081,55 @@ function hcpPriceBase(cfg, q) {
 
 // (pvc card: structure only)
 
+// ---------- Creative Cut Card (Excard creative-cut-card, live 2026-10-02): Size A3 / 720 x 490mm, 4C Front or Both, laminations by
+// print colour, creasing (price-neutral), 1..200 pcs. A3 + 4C Front = Excard's price list (exact). Other combos = that list curve
+// plus the sampled CASH difference, interpolated between sampled quantities. 4C Both adds RM1.50 (1 pc), RM2 (2-9), RM1/pc (10-19),
+// RM0.50/pc (20+) on both sizes; 310gsm adds RM0.30/pc. ----------
+const CC_QTY = Array.from({ length: 200 }, (_, i) => i + 1);
+const CC_LAM_F = ['No Lamination', 'Gloss Lamination (Front)', 'Matte Lamination (Front)', 'Soft Touch Lamination (Front)'];
+const CC_LAM_B = ['No Lamination', 'Gloss Lamination (Front)', 'Matte Lamination (Front)', 'Gloss Lamination (Both)', 'Matte Lamination (Both)', 'Soft Touch Lamination (Front)', 'Soft Touch Lamination (Both)'];
+const ccBoth = q => q === 1 ? 1.5 : q < 10 ? 2 : q < 20 ? q : q * 0.5;
+// sampled CASH, Gloss Art Card 250gsm. key = size|lamination class|print colour (F/B). Missing Both classes = Front class + ccBoth.
+const CC_PTS = {
+  'A3|STF|F': { 1: 48.3, 5: 63.3, 10: 84.8, 30: 159, 50: 232, 100: 406, 200: 792 },
+  'A3|GF|B': { 1: 48.8, 10: 84.8, 50: 232, 200: 792 },
+  'A3|GB|B': { 1: 49.3, 5: 65.8, 10: 89.8, 20: 139, 30: 165, 50: 242, 100: 426, 200: 832 },
+  'A3|STB|B': { 1: 50.3, 10: 99.8, 50: 282, 200: 992 },
+  '720|No|F': { 1: 25, 2: 30, 5: 47.5, 10: 73, 20: 130, 30: 189, 50: 290, 100: 540, 200: 1060 },
+  '720|GF|F': { 1: 58, 2: 64, 5: 80, 10: 108, 20: 170, 30: 249, 50: 340, 100: 640, 200: 1160 },
+  '720|STF|F': { 1: 59.5, 10: 118, 50: 365, 200: 1260 },
+  '720|GB|B': { 1: 60, 10: 123, 50: 375, 200: 1300 },
+  '720|STB|B': { 1: 61.5, 10: 133, 50: 415, 200: 1500 },
+};
+const ccLam = l => /Soft Touch.*Both/.test(l) ? 'STB' : /Soft Touch/.test(l) ? 'STF' : /\(Both\)/.test(l) ? 'GB' : /Lamination \(Front\)/.test(l) ? 'GF' : 'No';
+function ccListA3(lam, q) { // Excard's A3 4C Front list, 250gsm
+  return plQuote(165, { paper: 'Gloss Art Card 250gsm', lamination: lam === 'No' ? 'No Lamination' : 'Gloss Lamination (Front)' }, q);
+}
+function ccLerpDelta(pts, ref, q) {
+  const ks = Object.keys(pts).map(Number).sort((a, b) => a - b), d = k => pts[k] - ref(k);
+  if (pts[q] != null) return d(q);
+  if (q <= ks[0]) return d(ks[0]); if (q >= ks[ks.length - 1]) return d(ks[ks.length - 1]) / ks[ks.length - 1] * q;
+  let i = 0; while (ks[i + 1] < q) i++;
+  const a = ks[i], b = ks[i + 1]; return d(a) + (d(b) - d(a)) * (q - a) / (b - a);
+}
+function ccPrice250(size, lam, col, q) {
+  const s = size === '720mm x 490mm' ? '720' : 'A3', fam = lam === 'No' ? 'No' : 'GF';
+  const pts = CC_PTS[s + '|' + lam + '|' + col];
+  if (pts) { const ref = k => ccListA3(fam, k) + (col === 'B' ? ccBoth(k) : 0); return ref(q) + ccLerpDelta(pts, ref, q); }
+  if (col === 'B') { const f = ccPrice250(size, lam, 'F', q); return f == null ? null : f + ccBoth(q); }
+  if (s === 'A3') return ccListA3(lam, q); // No / Gloss / Matte Front
+  return null;
+}
+function ccPriceBase(cfg, q) {
+  if (!cfg.cc_size || !cfg.lamination || q < 1 || q > 200) return null;
+  const col = cfg.cc_colour === '4C (Both)' ? 'B' : 'F', lam = ccLam(cfg.lamination);
+  if (col === 'F' && (lam === 'GB' || lam === 'STB')) return null;
+  const p = ccPrice250(cfg.cc_size, lam, col, q); if (p == null) return null;
+  return Math.round((p + (/310gsm/.test(cfg.paper || '') ? 0.3 * q : 0)) * 20) / 20;
+}
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
-const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true };
+const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
 // Softcover: binding (saddle / perfect) → size → pages → the cover papers Excard offers for that size and page count →
 // the content papers it allows for that cover at that page count (A4-type sizes vs A5 portrait tables). Hardcover:
@@ -2339,6 +2386,17 @@ const CFG_OVERRIDES = {
     },
     defaultOpt: { orientation: 'Portrait', vdp: 'Not Required', hole_punch: 'Not Required' },
     placeholderExact: ['colour', 'quantity'],
+  },
+  'Creative Cut Card — Digital': {
+    addFields: [
+      { key: 'cc_size', label: 'Size', options: ['A3', '720mm x 490mm'], section: 'General', first: true },
+      { key: 'cc_colour', label: 'Print Colour', options: ['4C (Front)', '4C (Both)'], default: '4C (Front)', section: 'General', after: 'paper' },
+      { key: 'cc_crease', label: 'Creasing', options: ['No', 'Yes'], section: 'Optional Finishing', neutral: true, after: 'lamination' },
+    ],
+    optionsOverride: { lamination: cfg => cfg.cc_colour === '4C (Both)' ? CC_LAM_B : CC_LAM_F },
+    placeholderExact: ['cc_size', 'paper', 'lamination', 'cc_crease', 'quantity'],
+    qtyOptions: CC_QTY,
+    priceBase: ccPriceBase,
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
