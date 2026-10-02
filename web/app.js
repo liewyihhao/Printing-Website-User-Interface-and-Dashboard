@@ -1135,6 +1135,71 @@ const EMP_QTY = [].concat(Array.from({ length: 26 }, (_, i) => 50 + i * 10), Arr
 // ---------- Greeting Card (Excard greeting-card, live 2026-10-02): Fold Type + Model + Print Colour preset; paper, lamination and
 // quantity are Please Select. Excard's live form = its price list x 1.05 (7/7 live points exact after scaling the curves). ----------
 
+// ---------- Wire-O Notebook, Hard Cover (Excard hard-cover-wire-o-notebook, live 2026-10-02): fixed A5 cover spec, H/S foil colour
+// per slot (206 x 136 fixed), six Ready Content options with their own Print Colour (Content), extra pages 4/8/12 sheets (pages 5-12
+// follow the paper of pages 1-4). Prices: Excard's list for its three listed contents (exact). The custom-content variants are not on
+// the list: Excard prices them as the diary-planner list price for the same cover/HS/extra pages plus a per-quantity difference
+// (verified exact on mixed combos), sampled live at 10 quantities each and interpolated between them. HS / Spot UV from 300 pcs. ----------
+const WO_READY = ['16 sheets diary planner + 64 sheets ready content', '16 sheets custom content + 64 sheets ready content', '80 sheets ready content',
+  '16 sheets custom content + 64 sheets custom repeated content', '16 sheets diary planner + 64 sheets custom repeated content', '80 sheets custom repeated content'];
+const WO_PCC = {
+  '16 sheets diary planner + 64 sheets ready content': ['1C (Both)'],
+  '16 sheets custom content + 64 sheets ready content': ['16 sheets custom content=4C(Both) + 64 sheets ready content=1C(Both)'],
+  '80 sheets ready content': ['1C (Both)'],
+  '16 sheets custom content + 64 sheets custom repeated content': ['16 sheets custom content=4C(Both) + 64 sheets Custom Content=1C(Both)', '16 sheets custom content=4C(Both) + 64 sheets Custom Content=4C(Both)'],
+  '16 sheets diary planner + 64 sheets custom repeated content': ['16 sheets ready content=1C(Both) + 64 sheets Custom Content=1C(Both)', '16 sheets ready content=1C(Both) + 64 sheets Custom Content=4C(Both)'],
+  '80 sheets custom repeated content': ['1C (Both)', '4C (Both)'],
+};
+const woPcc = cfg => WO_PCC[cfg.readycontent] || ['1C (Both)'];
+// live CASH, Matte Lamination (Front), no H/S, no extra pages
+const WO_V1 = { 10: 133, 30: 370, 50: 600, 100: 1050, 200: 1779.25, 300: 2426.7, 500: 3526.2, 1000: 6272.55, 3000: 17548.6, 10000: 55181.45 };
+const WO_VAR = {
+  '16 sheets custom content=4C(Both) + 64 sheets ready content=1C(Both)': WO_V1,
+  '16 sheets ready content=1C(Both) + 64 sheets Custom Content=1C(Both)': WO_V1,
+  '16 sheets custom content=4C(Both) + 64 sheets Custom Content=1C(Both)': { 10: 152, 30: 399, 50: 650, 100: 1131, 200: 2062, 300: 2765.5, 500: 3877.85, 1000: 6643.4, 3000: 17996.15, 10000: 55904.5 },
+  '16 sheets custom content=4C(Both) + 64 sheets Custom Content=4C(Both)': { 10: 238, 30: 678, 50: 920, 100: 1271, 200: 2209, 300: 2956, 500: 4313, 1000: 7685, 3000: 21543, 10000: 68994 },
+  '16 sheets ready content=1C(Both) + 64 sheets Custom Content=4C(Both)': { 10: 217, 30: 619, 50: 840, 100: 1161, 200: 2017, 300: 2699, 500: 3938, 1000: 7017, 3000: 19670, 10000: 62995 },
+  '80 sheets custom repeated content|4C (Both)': { 10: 206.15, 30: 588.75, 50: 800, 100: 1105, 200: 1920.3, 300: 2569.7, 500: 3750.35, 1000: 6682.2, 3000: 18732.65, 10000: 59994.7 },
+};
+const WO_DIARY = '16 sheets diary planner + 64 sheets ready content';
+const woHs = cfg => cfg.hotstamping && cfg.hotstamping !== 'Not Required';
+const woSuv = cfg => /Spot UV/.test(cfg.lamination || '');
+function woCurve(cfg, ready, pcc) {
+  const E = typeof window !== 'undefined' && window.PricingEngine, c = E && E.DATA.params.wireonb_plx; if (!c) return null;
+  const n = { 'Not Required': 0, '4 Sheets': 1, '8 Sheets': 2, '12 Sheets': 3 }[cfg.additionalcontent || 'Not Required'] || 0, pp = cfg.paper1to4 || 'Simili 80gsm';
+  const tail = n ? [pp, n > 1 ? pp : '-', n > 2 ? pp : '-', '4C (Both)'] : ['-', '-', '-', '-'];
+  for (const sp of ['Sheets', 'sheets']) {
+    const add = n ? (n * 4) + ' ' + sp : 'Not Required';
+    const k = [cfg.lamination, cfg.hotstamping || 'Not Required', ready, pcc, add].concat(tail).join('|');
+    if (c.curves[k]) return c.curves[k];
+  }
+  return null;
+}
+function woPriceBase(cfg, q) {
+  if (!cfg.lamination || !cfg.readycontent) return null;
+  const pcc = cfg.printcolourcontent || woPcc(cfg)[0];
+  const vkey = cfg.readycontent === '80 sheets custom repeated content' ? (pcc === '4C (Both)' ? cfg.readycontent + '|4C (Both)' : null) : (pcc !== '1C (Both)' ? pcc : null);
+  if (!vkey) { const cv = woCurve(cfg, cfg.readycontent, '1C (Both)'); return cv && cv[q] != null ? +cv[q] : null; }
+  const pts = WO_VAR[vkey], cv = woCurve(cfg, WO_DIARY, '1C (Both)'), base = woCurve({ lamination: 'Matte Lamination (Front)' }, WO_DIARY, '1C (Both)');
+  if (!pts || !cv || cv[q] == null || !base) return null;
+  const ks = Object.keys(pts).map(Number).sort((a, b) => a - b), d = k => pts[k] - base[k];
+  let delta; if (pts[q] != null) delta = d(q); else if (q >= ks[ks.length - 1]) delta = d(ks[ks.length - 1]) / ks[ks.length - 1] * q;
+  else { let i = 0; while (ks[i + 1] < q) i++; const a = ks[i], b = ks[i + 1]; delta = d(a) + (d(b) - d(a)) * (q - a) / (b - a); }
+  return Math.round((+cv[q] + delta) * 20) / 20;
+}
+const WO_HS_COLOURS = ['Black', 'Blue', 'Gold', 'Green', 'Red', 'Silver'];
+const woHsFields = () => {
+  const slots = [['f1', 'Front', 1, ['1C (Front Cover)', '1C (Front & Back Cover)', '2C (Front Cover)', '2C (Front & Back Cover)']], ['f2', 'Front', 2, ['2C (Front Cover)', '2C (Front & Back Cover)']],
+    ['b1', 'Back', 1, ['1C (Front & Back Cover)', '2C (Front & Back Cover)']], ['b2', 'Back', 2, ['2C (Front & Back Cover)']]];
+  let after = 'hotstamping'; const out = [];
+  slots.forEach(([id, side, n, vals]) => {
+    out.push({ key: 'wo_hs_size_' + id, label: 'H/S ' + side + ' Size ' + n + ' (mm)', options: ['206 x 136'], section: 'Optional Finishing', neutral: true, after, showWhen: { field: 'hotstamping', values: vals } });
+    out.push({ key: 'wo_hs_colour_' + id, label: 'H/S ' + side + ' Colour ' + n, options: WO_HS_COLOURS, section: 'Optional Finishing', neutral: true, after: 'wo_hs_size_' + id, showWhen: { field: 'hotstamping', values: vals } });
+    after = 'wo_hs_colour_' + id;
+  });
+  return out;
+};
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -2420,6 +2485,31 @@ const CFG_OVERRIDES = {
   'Greeting Card — Litho': {
     optionsOverride: { foldtype: ['No Fold', 'Gate Fold', 'Half Fold', 'C Fold', 'Z Fold'] },
     placeholderExact: ['papermaterial', 'lamination', 'quantity'],
+  },
+  'Wire-O Notebook — Litho': {
+    hide: ['inc_printmethod'],
+    addFields: [
+      { key: 'wo_cat', label: 'Category', options: ['Hard Cover'], section: 'General', neutral: true, first: true },
+      { key: 'wo_size', label: 'Size', options: ['210mm x 148mm'], section: 'General', neutral: true, after: 'inc_orientation' },
+      { key: 'wo_binding', label: 'Binding', options: ['Wire-O Hole Punching, 9/16” Wire-O Binding (Black)'], section: 'General', neutral: true, after: 'wo_size' },
+      { key: 'wo_cpaper', label: 'Paper (Cover)', options: ['Gloss Art Paper 150gsm, Chipboard 1000gsm'], section: 'General', neutral: true, after: 'wo_binding' },
+      { key: 'wo_csize', label: 'Size (Cover)', options: ['216mm x 154mm'], section: 'General', neutral: true, after: 'wo_cpaper' },
+      { key: 'wo_ccolour', label: 'Print Colour (Cover)', options: ['4C'], section: 'General', neutral: true, after: 'wo_csize' },
+      { key: 'wo_contentpaper', label: 'Paper (Content)', options: ['Simili 80gsm'], section: 'General', neutral: true, after: 'readycontent' },
+      { key: 'wo_contentsize', label: 'Size (Content)', options: ['210mm (H) x 148mm (W)'], section: 'General', neutral: true, after: 'wo_contentpaper' },
+    ].concat(woHsFields()),
+    optionsOverride: {
+      readycontent: WO_READY,
+      printcolourcontent: woPcc,
+      additionalcontent: ['Not Required', '4 Sheets', '8 Sheets', '12 Sheets'],
+      paper5to8: cfg => [cfg.paper1to4 || 'Simili 80gsm'],
+      paper9to12: cfg => [cfg.paper1to4 || 'Simili 80gsm'],
+    },
+    defaultOpt: { readycontent: WO_DIARY, additionalcontent: 'Not Required', hotstamping: 'Not Required' },
+    placeholderExact: ['lamination', 'wo_hs_colour_f1', 'wo_hs_colour_f2', 'wo_hs_colour_b1', 'wo_hs_colour_b2', 'paper1to4', 'quantity'],
+    placeholderWhen: { printcolourcontent: cfg => woPcc(cfg).length > 1 },
+    qtyFilter: (cfg, n) => n >= 300 || (!woHs(cfg) && !woSuv(cfg)),
+    priceBase: woPriceBase,
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
