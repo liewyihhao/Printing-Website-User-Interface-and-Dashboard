@@ -1391,6 +1391,8 @@ function kpbPriceBase(cfg, q) {
   return q > 1000 && cv[1000] != null ? Math.round(cv[1000] / 1000 * q - 1e-9) : null;
 }
 
+// ---------- Tent Card (Excard tent-card, live 2026-10-02): live form = its list x 1.05 (curves scaled; 2/2 exact). ----------
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -2824,6 +2826,15 @@ const CFG_OVERRIDES = {
     placeholderExact: ['printcolour', 'quantity'],
     qtyOptions: Array.from({ length: 40 }, (_, i) => (i + 1) * 50),
     priceBase: kpbPriceBase,
+  },
+  'Tent Card — Litho': {
+    hide: ['inc_printmethod'],
+    label: { model: 'Model', ex_size: 'Size', inc_paper: 'Paper', inc_printcolour: 'Print Colour', inc_compulsory: 'Compulsory' },
+    order: ['model', 'ex_size', 'inc_paper', 'inc_printcolour', 'lamination', 'inc_compulsory'],
+    optionsOverride: { ex_size: cfg => [cfg.model === 'TC 004' ? '294mm x 140mm' : '294mm x 86mm'] },
+    defaultOpt: { model: 'TC 003' },
+    placeholderExact: ['lamination', 'quantity'],
+    qtyOptions: [300, 500, 1000, 2000, 3000, 4000, 5000, 10000, 20000],
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
