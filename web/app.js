@@ -921,8 +921,63 @@ function kpPriceBase(cfg, q) {
 
 // (pouches: structure only)
 
+// ---------- Money Packet (Excard money-packet, live 2026-10-02) ----------
+// Model MP 101 / 103 / 104 / 105 (size follows), Mix Design No -> Normal or 2-6 in 1, Yes -> Dual / 5 / 6 Design (packing
+// per pack depends on the package), Art Paper takes Matte or Soft Touch lamination. Prices = Excard's list: Normal curves to
+// 200,000; N in 1 = Normal x 1.78 / 2.64 / 3.48 / 4.30 / 5.10 (600-5,000, exact); design packages from their own rows.
+const MPK_Q = [600, 1250, 2500, 5000, 10000, 15000, 20000, 25000, 30000, 40000, 50000, 60000, 70000, 80000, 90000, 100000, 110000, 120000, 130000, 140000, 150000, 160000, 170000, 180000, 190000, 200000];
+const MPK_N = {
+  'AP|MP101|M': [240, 328, 575, 1133, 1981, 2785, 3634, 4447, 5267, 6960, 8550, 9693, 10770, 11693, 12462, 13077, 13539, 14770, 16000, 17231, 17308, 18462, 19616, 20770, 21924, 23077],
+  'AP|MP101|S': [311, 426, 650, 1290, 2575, 3620, 4723, 5781, 6900, 9178, 11437, 12600, 14000, 15200, 16200, 17000, 17600, 19200, 20800, 22400, 22500, 24000, 25500, 27000, 28500, 30000],
+  'AP|MP103|M': [264, 361, 625, 1247, 2180, 3064, 3998, 4892, 5850, 7766, 9678, 10663, 11847, 12863, 13709, 14385, 14893, 16247, 17600, 18955, 19039, 20309, 21578, 22847, 24117, 25385],
+  'AP|MP103|S': [359, 474, 693, 1375, 2730, 3834, 5037, 6102, 7145, 9496, 11800, 13200, 14700, 16000, 17100, 18000, 19800, 21600, 23400, 25200, 25500, 27200, 28900, 30600, 32300, 34000],
+  'AP|MP104|M': [252, 344.4, 603.75, 1189.65, 2080.05, 2924.25, 3815.7, 4669.35, 5530.35, 7308, 8977.5, 10177.65, 11308.5, 12277.65, 13085.1, 13730.85, 14215.95, 15508.5, 16800, 18092.55, 18173.4, 19385.1, 20596.8, 21808.5, 23020.2, 24230.85],
+  'AP|MP104|S': [327, 448, 700, 1350, 2600, 3801, 4960, 6071, 7230, 9637, 12009, 13230, 14700, 15960, 17010, 17850, 18480, 20160, 21840, 23520, 23625, 25200, 26775, 28350, 29925, 31500],
+  'AP|MP105|M': [278, 380, 657, 1310, 2289, 3218, 4198, 5137, 6143, 8155, 10162, 11197, 12440, 13507, 14395, 15105, 15638, 17060, 18480, 19903, 19991, 21325, 22657, 23990, 25323, 26655],
+  'AP|MP105|S': [377, 498, 728, 1444, 2867, 4026, 5289, 6408, 7503, 9971, 12390, 13860, 15435, 16800, 17955, 18900, 20790, 22680, 24570, 26460, 26775, 28560, 30345, 32130, 33915, 35700],
+  'GAP|MP101': [212, 247, 378, 665, 965, 1222, 1525, 1783, 2100, 2793, 3467, 3916, 4534, 5151, 5712, 6274, 6600, 7080, 7540, 7980, 8015, 8550, 9084, 9618, 10153, 10463],
+  'GAP|MP103': [262, 297, 460, 809, 1131, 1449, 1857, 2125, 2386, 3144, 3870, 4486, 5213, 5926, 6553, 7159, 7865, 8568, 9269, 9660, 9975, 10047, 10675, 11303, 11931, 12294],
+  'GAP|MP104': [212, 247, 378, 665, 965, 1222, 1525, 1783, 2100, 2793, 3467, 3916, 4534, 5151, 5712, 6274, 6600, 7080, 7540, 7980, 8015, 8550, 9084, 9618, 10153, 10463],
+  'GAP|MP105': [276, 312, 483, 850, 1188, 1522, 1950, 2232, 2506, 3302, 4064, 4711, 5474, 6223, 6881, 7517, 8259, 8997, 9733, 10143, 10474, 10550, 11209, 11869, 12528, 12909],
+  'LIN|MP101': [234, 272, 499.4, 877.8, 1273.8, 1612.6, 2013, 2354, 2772, 3687.2, 4576, 5168.9, 5984, 6799.1, 7540.5, 8280.8, 9108.649, 9936.718, 10764.776, 11592.834, 12068.1, 12872.2, 13676.3, 14481.5, 15285.6, 16089.7],
+  'LIN|MP103': [263, 327, 606.1, 1067, 1492.7, 1912.9, 2450.8, 2803.9, 3149.3, 4083.2, 5016, 5948.8, 6881.6, 7822.1, 8650.4, 9450.1, 10395, 11339.9, 12284.8, 13229.7, 14175.7, 15120.6, 16065.5, 17010.4, 17955.3, 18499.8],
+  'LIN|MP104': [240, 328, 525, 922, 1338, 1694, 2114, 2472, 2911, 3872, 4805, 5428, 6284, 7140, 7918, 8695, 9565, 10434, 11304, 12173, 12672, 13516, 14361, 15206, 16050, 16895],
+  'LIN|MP105': [277, 344, 637, 1121, 1568, 2009, 2574, 2945, 3307, 4288, 5267, 6247, 7226, 8214, 9083, 9923, 10915, 11907, 12900, 13892, 14885, 15877, 16869, 17861, 18854, 19425],
+};
+// design packages at 600 / 1,250 / 2,500 / 5,000 (null = not offered)
+const MPK_D = {
+  '5D|AP|MP101|M': [1062, 1440.4, 2502.5, 4901.9], '5D|AP|MP101|S': [1367.3, 1861.8, 2825, 5577], '5D|AP|MP103|M': [1165.2, 1582.3, 2717.5, 5392.1], '5D|AP|MP103|S': [1573.7, 2068.2, 3009.9, 5942.5],
+  '5D|AP|MP104|M': [1113.6, 1510.92, 2626.125, 5145.495], '5D|AP|MP104|S': [1436.1, 1956.4, 3040, 5835], '5D|AP|MP105|M': [1225.4, 1664, 2855.1, 5663], '5D|AP|MP105|S': [1651.1, 2171.4, 3160.4, 6239.2],
+  '5D|GAP|MP101': [941.6, 1092.1, 1655.4, 2889.5], '5D|GAP|MP103': [1156.6, 1307.1, 2008, 3508.7], '5D|GAP|MP104': [941.6, 1092.1, 1655.4, 2889.5], '5D|GAP|MP105': [1216.8, 1371.6, 2106.9, 3685],
+  '5D|LIN|MP101': [1036.2, 1199.6, 2177.42, 3804.54], '5D|LIN|MP103': [1160.9, 1436.1, 2636.23, 4618.1], '5D|LIN|MP104': [1062, 1440.4, 2287.5, 3994.6], '5D|LIN|MP105': [1221.1, 1509.2, 2769.1, 4850.3],
+  '6D|AP|MP101|M': [1254], '6D|AP|MP101|S': [1616.1], '6D|AP|MP103|M': [1376.4], '6D|AP|MP103|S': [1860.9], '6D|AP|MP104|M': [1315.2], '6D|AP|MP104|S': [1697.7], '6D|AP|MP105|M': [1447.8], '6D|AP|MP105|S': [1952.7],
+  '6D|GAP|MP101': [1111.2], '6D|GAP|MP103': [1366.2], '6D|GAP|MP104': [1111.2], '6D|GAP|MP105': [1437.6], '6D|LIN|MP101': [1223.4], '6D|LIN|MP103': [1371.3], '6D|LIN|MP104': [1254], '6D|LIN|MP105': [1442.7],
+  'DD|AP|MP101|M': [457.2], 'DD|AP|MP101|S': [583.58], 'DD|AP|MP103|M': [499.92], 'DD|AP|MP103|S': [669.02], 'DD|AP|MP104|M': [478.56], 'DD|AP|MP104|S': [612.06], 'DD|AP|MP105|M': [524.84], 'DD|AP|MP105|S': [701.06],
+  'DD|GAP|MP101': [407.36, 469.66, 702.84, 1213.7], 'DD|GAP|MP103': [496.36, 558.66, 848.8, 1470.02], 'DD|GAP|MP104': [407.36, 469.66, 702.84, 1213.7], 'DD|GAP|MP105': [521.28, 585.36, 889.74, 1543],
+  'DD|LIN|MP101': [446.52, 514.16, 918.932, 1592.484], 'DD|LIN|MP103': [498.14, 612.06, 1108.858, 1929.26], 'DD|LIN|MP104': [457.2, 613.84, 964.5, 1671.16], 'DD|LIN|MP105': [523.06, 642.32, 1163.86, 2025.38],
+};
+const MPK_NIN1 = { '2 in 1': 1.78, '3 in 1': 2.64, '4 in 1': 3.48, '5 in 1': 4.30, '6 in 1': 5.10 };
+const MPK_SIZE = { 'MP 101': '154mm x 79.5mm', 'MP 103': '79.5mm x 154mm', 'MP 104': '167mm x 85mm', 'MP 105': '85mm x 167mm' };
+const MPK_PACKING = { 'Dual Design': ['6pcs / Pack', '8pcs / Pack', '10pcs / Pack'], '5 Design': ['5pcs / Pack', '10pcs / Pack'], '6 Design': ['6pcs / Pack'] };
+const mpkKey = cfg => { const p = { 'Gloss Art Paper 130gsm': 'GAP', 'Linen 140gsm': 'LIN', 'Art Paper 157gsm': 'AP' }[cfg.paper] || 'GAP';
+  return p + '|' + String(cfg.model || 'MP 101').replace(' ', '') + (p === 'AP' ? '|' + (cfg.finishing === 'Soft Touch Lamination' ? 'S' : 'M') : ''); };
+const mpkMix = cfg => cfg.ex_mixdesign === 'Yes';
+const mpkPkgCode = pk => ({ 'Dual Design': 'DD', '5 Design': '5D', '6 Design': '6D' })[pk];
+function mpkQty(cfg) {
+  const pk = cfg.package || 'Normal';
+  if (mpkMix(cfg)) { const t = MPK_D[mpkPkgCode(pk) + '|' + mpkKey(cfg)] || []; return MPK_Q.slice(0, 4).filter((q, i) => t[i] != null); }
+  return pk === 'Normal' ? MPK_Q : MPK_Q.slice(0, 4);
+}
+function mpkPriceBase(cfg, q) {
+  const pk = cfg.package || 'Normal', i = MPK_Q.indexOf(q); if (i < 0) return null;
+  if (mpkMix(cfg)) { const t = MPK_D[mpkPkgCode(pk) + '|' + mpkKey(cfg)]; return t && t[i] != null ? t[i] : null; }
+  const t = MPK_N[mpkKey(cfg)]; if (!t || t[i] == null) return null;
+  if (pk === 'Normal') return t[i];
+  const f = MPK_NIN1[pk]; return f && i < 4 ? Math.round(t[i] * f * 100) / 100 : null;
+}
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
-const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true };
+const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
 // Softcover: binding (saddle / perfect) → size → pages → the cover papers Excard offers for that size and page count →
 // the content papers it allows for that cover at that page count (A4-type sizes vs A5 portrait tables). Hardcover:
@@ -2094,6 +2149,21 @@ const CFG_OVERRIDES = {
     ],
     defaultOpt: { model: 'Model 1' },
     placeholderExact: ['lamination', 'quantity'],
+  },
+  'Money Packet — Litho': {
+    label: { design_source: 'Type', model: 'Model', ex_size: 'Size', ex_mixdesign: 'Mix Design', packing: 'Packing Method', inc_compulsory: 'Compulsory', inc_printmethod: 'Print Method' },
+    optionsOverride: {
+      model: ['MP 101', 'MP 103', 'MP 104', 'MP 105'],
+      ex_size: cfg => [MPK_SIZE[cfg.model] || MPK_SIZE['MP 101']],
+      package: cfg => mpkMix(cfg) ? ['Dual Design', '5 Design', '6 Design'] : ['Normal', '2 in 1', '3 in 1', '4 in 1', '5 in 1', '6 in 1'],
+      packing: cfg => MPK_PACKING[cfg.package] || ['5pcs / Pack', '6pcs / Pack', '8pcs / Pack', '10pcs / Pack'],
+      finishing: cfg => cfg.paper === 'Art Paper 157gsm' ? ['Matte Lamination', 'Soft Touch Lamination'] : ['N/A'],
+      inc_printmethod: ['Quantity below 5,000 pcs : DO Printing, Quantity 5,000 pcs and above: LO Printing'],
+    },
+    defaultOpt: { design_source: 'Custom Made Money Packet', model: 'MP 101', ex_mixdesign: 'No' },
+    placeholderExact: ['package', 'paper', 'finishing', 'quantity'],
+    qtyOptions: mpkQty,
+    priceBase: mpkPriceBase,
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
