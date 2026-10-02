@@ -1371,6 +1371,9 @@ const csOv = (pk, extraFields) => ({
 // size follows the size (A3 / A4 / A5). Prices = Excard's list (live 3/3 exact). ----------
 const UVD_SHEET = { '267mm x 390mm': '297mm x 420mm (A3)', '180mm x 267mm': '210mm x 297mm (A4)', '118mm x 180mm': '148mm x 210mm (A5)' };
 
+// ---------- Lanyard (Excard lanyard, live 2026-10-02): model preset, size by model, fixed material + 4C (Both), 10..500 pcs.
+// Prices = Excard's list (live 2/2 exact). ----------
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -2765,6 +2768,17 @@ const CFG_OVERRIDES = {
     ],
     optionsOverride: { size: ['267mm x 390mm', '118mm x 180mm', '180mm x 267mm'], uvd_sheet: cfg => [UVD_SHEET[cfg.size] || '297mm x 420mm (A3)'] },
     placeholderExact: ['size', 'package', 'ex_sheets', 'quantity'],
+  },
+  'Lanyard — Litho': {
+    hide: ['inc_printmethod'],
+    addFields: [
+      { key: 'ly_material', label: 'Material', options: ['Polyester fabric material (White)'], section: 'General', neutral: true, after: 'size' },
+      { key: 'ly_colour', label: 'Print Colour', options: ['4C (Both)'], section: 'General', neutral: true, after: 'ly_material' },
+    ],
+    optionsOverride: { size: cfg => [cfg.model === 'PB LANYARD 02 BUCKLE' ? '20mm x 525mm' : '20mm x 465mm'] },
+    defaultOpt: { model: 'PB LANYARD 01' },
+    placeholderExact: ['quantity'],
+    qtyOptions: Array.from({ length: 50 }, (_, i) => (i + 1) * 10),
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
