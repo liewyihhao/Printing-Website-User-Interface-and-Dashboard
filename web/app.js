@@ -897,6 +897,16 @@ function lnPriceBase(cfg, q) {
   return bagPerPiece(147, { model: m, size: LN_SPEC[m][0], bagcolour: cfg.bagcolour, handlelength: LN_SPEC[m][1], printcolour: cfg.printcolour || '4C (Front)' }, q);
 }
 
+// ---------- Non-Woven Bag (Excard non-woven-bag, live 2026-10-02): bag colours per model (out-of-stock ones left out),
+// WH-A4 picks the handle colour instead; 1C asks its Pantone ink. Prices = Excard's list (10/10 curves exact). ----------
+const NW_PANTONE = CT_PANTONE.slice(0, 1).concat(['White (CMYK=0)'], CT_PANTONE.slice(1, 15), ['629 C'], CT_PANTONE.slice(15));
+const NW_BAG = { 'WN-B5': ['Black', 'White', 'Yellow', 'Red', 'Green', 'Royal Blue'],
+  'WS-A4': ['Black', 'White', 'Beige', 'Yellow', 'Orange', 'Magenta', 'Red', 'Maroon', 'Green', 'Milo Green', 'Dark Green', 'Iris Green', 'Turquoise', 'Cyan', 'Royal Blue', 'Navy Blue', 'Pastel Blue', 'Med Blue', 'Dark Purple', 'Light Brown', 'Dark Brown', 'Grey'],
+  'WS-A3P': ['Orange', 'Light Brown'],
+  'WS-A3L': ['Black', 'White', 'Yellow', 'Orange', 'Magenta', 'Red', 'Green', 'Milo Green', 'Iris Green', 'Cyan', 'Royal Blue', 'Navy Blue', 'Pastel Blue', 'Med Blue', 'Dark Purple'],
+  'WH-A4': ['White'] };
+const NW_HANDLE_WH = ['Black', 'White', 'Beige', 'Orange', 'Dark Orange', 'Magenta', 'Red', 'Maroon', 'Green', 'Milo Green', 'Dark Green', 'Turquoise', 'Cyan', 'Royal Blue', 'Navy Blue', 'Dark Purple', 'Light Brown', 'Dark Brown', 'Grey'];
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -2013,6 +2023,18 @@ const CFG_OVERRIDES = {
     placeholderExact: ['printcolour', 'quantity'],
     qtyOptions: BAG_QTY,
     priceBase: lnPriceBase,
+  },
+  'Non-Woven Bag — Litho': {
+    label: { model: 'Model', ex_size: 'Size', inc_paper: 'Material', bag_colour: 'Bag Colour', handle_colour: 'Handle Colour', handle_length: 'Handle Length', print_colour: 'Print Colour', inc_compulsory: 'Compulsory' },
+    optionsOverride: {
+      bag_colour: cfg => NW_BAG[cfg.model] || NW_BAG['WN-B5'],
+      handle_colour: cfg => cfg.model === 'WH-A4' ? NW_HANDLE_WH : ['Same as bag colour'],
+    },
+    addFields: [
+      { key: 'nw_ink', label: 'Pantone Colour', options: NW_PANTONE, section: 'General', neutral: true, after: 'print_colour', showWhen: { field: 'print_colour', values: ['1C (Front)', '1C (Both)'] } },
+    ],
+    defaultOpt: { model: 'WN-B5' },
+    placeholderExact: ['bag_colour', 'handle_colour', 'nw_ink', 'quantity'],
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
