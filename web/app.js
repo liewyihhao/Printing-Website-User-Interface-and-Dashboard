@@ -1128,6 +1128,10 @@ function ccPriceBase(cfg, q) {
   return Math.round((p + (/310gsm/.test(cfg.paper || '') ? 0.3 * q : 0)) * 20) / 20;
 }
 
+// ---------- Envelope Money Packet (Excard envelope-money-packet, live 2026-10-02): one model PFD-24-001, 97 x 185mm, fixed paper,
+// 4C Front, finishing Matte / Soft Touch (Please Select), 50..15,000 pcs. Prices = Excard's list (live spot check 5/5 exact). ----------
+const EMP_QTY = [].concat(Array.from({ length: 26 }, (_, i) => 50 + i * 10), Array.from({ length: 14 }, (_, i) => 350 + i * 50), Array.from({ length: 28 }, (_, i) => 1500 + i * 500));
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -2397,6 +2401,18 @@ const CFG_OVERRIDES = {
     placeholderExact: ['cc_size', 'paper', 'lamination', 'cc_crease', 'quantity'],
     qtyOptions: CC_QTY,
     priceBase: ccPriceBase,
+  },
+  'Envelope Money Packet — Litho': {
+    hide: ['inc_printmethod', 'inc_package'],
+    label: { design_source: 'Type', inc_size: 'Size', inc_printcolour: 'Print Colour', inc_compulsory: 'Compulsory' },
+    optionsOverride: { inc_size: ['97mm x 185mm'], inc_compulsory: ['Die-Cutting, Folding, Gluing'] },
+    addFields: [
+      { key: 'emp_model', label: 'Model', options: ['PFD-24-001'], section: 'General', neutral: true, after: 'design_source' },
+      { key: 'emp_paper', label: 'Paper', options: ['Art Card 1 side coated 250gsm'], section: 'General', neutral: true, after: 'inc_size' },
+    ],
+    defaultOpt: { design_source: 'Custom Made Money Packet' },
+    placeholderExact: ['finishing', 'quantity'],
+    qtyOptions: EMP_QTY,
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
