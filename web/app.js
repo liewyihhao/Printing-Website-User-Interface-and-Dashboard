@@ -1132,6 +1132,9 @@ function ccPriceBase(cfg, q) {
 // 4C Front, finishing Matte / Soft Touch (Please Select), 50..15,000 pcs. Prices = Excard's list (live spot check 5/5 exact). ----------
 const EMP_QTY = [].concat(Array.from({ length: 26 }, (_, i) => 50 + i * 10), Array.from({ length: 14 }, (_, i) => 350 + i * 50), Array.from({ length: 28 }, (_, i) => 1500 + i * 500));
 
+// ---------- Greeting Card (Excard greeting-card, live 2026-10-02): Fold Type + Model + Print Colour preset; paper, lamination and
+// quantity are Please Select. Excard's live form = its price list x 1.05 (7/7 live points exact after scaling the curves). ----------
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -2413,6 +2416,10 @@ const CFG_OVERRIDES = {
     defaultOpt: { design_source: 'Custom Made Money Packet' },
     placeholderExact: ['finishing', 'quantity'],
     qtyOptions: EMP_QTY,
+  },
+  'Greeting Card — Litho': {
+    optionsOverride: { foldtype: ['No Fold', 'Gate Fold', 'Half Fold', 'C Fold', 'Z Fold'] },
+    placeholderExact: ['papermaterial', 'lamination', 'quantity'],
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
