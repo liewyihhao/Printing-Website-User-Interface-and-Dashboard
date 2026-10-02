@@ -1328,6 +1328,45 @@ const kkHsFields = () => {
 // ---------- Kad Terima Kasih (Excard kad-terima-kasih, live 2026-10-02): lamination only on Gloss Art Card (preset Not Required),
 // hole punch after quantity, 50..500 pcs. Prices re-captured from Excard's price-list generator (the stored curves were scrambled). ----------
 
+// ---------- Car Sticker / Static Cling (Excard car-sticker; the static-cling page is gone, same form): Size + Print Colour Please
+// Select, Print Direction preset, Both Side View has no VDP; VDP opens per-field details (Excard "+ Add VDP", up to 6). Prices = Excard's
+// list (live VDP 1/2 exact); on Excard the price follows the print direction only (either print colour, same price, live 7/7). ----------
+const CS_FONTS = ['Allergro', 'Arial', 'Bazooka', 'Calligrapher', 'Century Gothic', 'Chaucer', 'Cloister Black BT', 'Comic Sans MS', 'English 111 Vivace', 'Times New Roman'];
+function csPriceBase(pk) {
+  return (cfg, q) => {
+    const E = typeof window !== 'undefined' && window.PricingEngine, c = E && E.DATA.params[pk]; if (!c || !cfg.size || !cfg.printdirection) return null;
+    const both = cfg.printdirection === 'Both Side View', vdp = !both && cfg.vdptype === 'Variable Data Printing (VDP)';
+    const cv = c.curves[[cfg.size, cfg.printdirection, both ? '4C & White Base & 4C' : '4C & White Base', vdp ? 'Variable Data Printing (VDP)' : 'Not Required', vdp ? String(cfg.vdp || '1') : 'N/A'].join('|')];
+    return cv && cv[q] != null ? +cv[q] : null;
+  };
+}
+const csVdpFields = () => {
+  const out = []; let after = 'vdp';
+  for (let i = 1; i <= 6; i++) {
+    const vals = []; for (let n = i; n <= 6; n++) vals.push(String(n));
+    const sw = { all: [{ field: 'vdptype', value: 'Variable Data Printing (VDP)' }, { field: 'vdp', values: vals }] };
+    [['type', 'Type', ['Numbering only', 'Numbering + Text', 'Text only']], ['font', 'Font', CS_FONTS], ['style', 'Style', ['Regular', 'Bold only', 'Italic only', 'Bold & Italic']], ['size', 'Size', null], ['align', 'Font Alignment', ['From Left', 'From Center', 'From Right']], ['c', 'C', null], ['m', 'M', null], ['y', 'Y', null], ['k', 'K', null]]
+      .forEach(([k, l, opts]) => { const key = 'cs_vdp' + i + '_' + k; out.push(Object.assign({ key, label: 'VDP ' + i + ' ' + l + (/^[CMYK]$/.test(l) ? ' (%)' : ''), section: 'Add On', neutral: true, after, showWhen: sw }, opts ? { options: opts } : { type: 'number', min: 0, max: /^[CMYK]$/.test(l) ? 100 : 999 })); after = key; });
+  }
+  return out;
+};
+const csOv = (pk, extraFields) => ({
+  hide: ['inc_printmethod'],
+  label: { printdirection: 'Print Direction', printcolour: 'Print Colour', vdptype: 'VDP Type', vdp: 'Number of VDP', inc_paper: 'Paper' },
+  order: ['size', 'inc_paper', 'cs_paper', 'printcolour', 'printdirection', 'vdptype', 'vdp'],
+  addFields: (extraFields || []).concat(csVdpFields()),
+  optionsOverride: {
+    printcolour: ['4C & White Base', '4C & White Base & 4C'],
+    printdirection: ['Face Out View', 'Face In View', 'Both Side View'],
+    vdptype: cfg => cfg.printdirection === 'Both Side View' ? ['Not Required'] : ['Not Required', 'Variable Data Printing (VDP)'],
+    vdp: ['1', '2', '3', '4', '5', '6'],
+  },
+  hideWhen: { vdp: cfg => cfg.printdirection === 'Both Side View' || cfg.vdptype !== 'Variable Data Printing (VDP)' },
+  defaultOpt: { printdirection: 'Face Out View', vdptype: 'Not Required', vdp: '1' },
+  placeholderExact: ['size', 'printcolour'].concat([1, 2, 3, 4, 5, 6].reduce((a, i) => a.concat(['type', 'font', 'style', 'align'].map(k => 'cs_vdp' + i + '_' + k)), []), ['quantity']),
+  priceBase: csPriceBase(pk),
+});
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -2710,6 +2749,8 @@ const CFG_OVERRIDES = {
     placeholderExact: ['size', 'paper', 'printcolour', 'quantity'],
     qtyOptions: [50, 100, 150, 200, 250, 300, 350, 400, 450, 500],
   },
+  'Car Sticker — Digital (= Static Cling form)': csOv('carsticker_plx'),
+  'Static Cling Window Sticker — Digital': csOv('staticcling_plx', [{ key: 'cs_paper', label: 'Paper', options: ['Static Cling'], section: 'General', neutral: true, after: 'size' }]),
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
   'Flyer (= Loose Sheet Litho)': LO_OV,
