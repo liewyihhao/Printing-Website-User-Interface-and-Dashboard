@@ -1416,6 +1416,14 @@ const ENV_TYPE = { OE4496NW: 'Simili 100gsm + Peel & Seal', OE4496W: 'Simili 100
 const ENV_QTY_OE = [1000, 2000, 3000, 4000, 5000, 10000, 15000, 20000];
 const ENV_QTY_EV = [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000, 10000];
 
+// ---------- Kotak Cenderahati (Excard kotak-cenderahati, live 2026-10-02): size by model; laminations and quantities depend on the
+// paper (GAC 260/300 = coated 1 side, 250..10,000; GAC 310 = 50..5,000; Metal Ice = no lamination). Prices = Excard's list (live 4/4
+// within 0.05%). ----------
+const KOTAK_SIZE = { 'GB 001': '85mm x 85mm x 60mm', 'GB 005': '165mm x 60mm x 175mm' };
+const kotakCurves = cfg => { const E = typeof window !== 'undefined' && window.PricingEngine, c = E && E.DATA.params.kotak_pl; if (!c) return []; const pre = [cfg.model || 'GB 001', KOTAK_SIZE[cfg.model || 'GB 001'], cfg.paper].join('|') + '|'; return Object.keys(c.curves).filter(k => k.indexOf(pre) === 0).map(k => [k.slice(pre.length), c.curves[k]]); };
+const kotakLams = cfg => { const l = kotakCurves(cfg).map(x => x[0]); const order = ['Not Required', 'Matte Lamination (Front)', 'Gloss Lamination (Front)', 'UV Varnish (Front)', 'Gloss Waterbase Varnish (Front)']; return order.filter(o => l.indexOf(o) >= 0); };
+const kotakQty = cfg => { const cs = kotakCurves(cfg); const hit = cs.find(x => x[0] === cfg.lamination) || cs[0]; return hit ? Object.keys(hit[1]).map(Number).filter(q => q <= 10000).sort((a, b) => a - b) : [50, 100, 250, 500, 1000]; };
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -2890,6 +2898,17 @@ const CFG_OVERRIDES = {
     },
     placeholderExact: ['env_fk', 'env_bk', 'env_fm', 'env_bm', 'quantity'],
     qtyOptions: cfg => envOE(cfg) ? ENV_QTY_OE : ENV_QTY_EV,
+  },
+  'Kotak Cenderahati — Litho': {
+    hide: ['inc_printmethod'],
+    label: { inc_printcolour: 'Print Colour', inc_compulsory: 'Compulsory' },
+    optLabel: { paper: { 'Gloss Art Card 260gsm': 'Gloss Art Card 260gsm (1 sides coated)', 'Gloss Art Card 300gsm': 'Gloss Art Card 300gsm (1 sides coated)', 'Gloss Art Card 310gsm': 'Gloss Art Card 310gsm (2 sides coated)' } },
+    order: ['model', 'size', 'paper', 'inc_printcolour', 'lamination', 'inc_compulsory'],
+    optionsOverride: { size: cfg => [KOTAK_SIZE[cfg.model] || KOTAK_SIZE['GB 001']], lamination: kotakLams },
+    defaultOpt: { model: 'GB 001' },
+    placeholderExact: ['paper', 'quantity'],
+    placeholderWhen: { lamination: cfg => kotakLams(cfg).indexOf('Not Required') < 0 },
+    qtyOptions: kotakQty,
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
