@@ -853,6 +853,8 @@ const SS_PRICE = { 100: 407, 200: 698, 300: 807.8, 500: 1073, 1000: 1912, 1500: 
 // matte lamination; Frosted Plastic asks 4C or 4C + White (to 300 pcs). Prices = Excard's list (exact). ----------
 const lsFrosted = cfg => /Frosted/.test(cfg.paper || '');
 
+// (wire-o wall / premium desk: structure only)
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -1844,6 +1846,37 @@ const CFG_OVERRIDES = {
       { key: 'af_design', label: 'Design', options: ['Ready Design'], section: 'General', neutral: true, after: 'inc_lamination' },
     ],
     placeholderExact: ['quantity'],
+  },
+  'Wire-O Wall Calendar — Litho': {
+    hide: ['inc_printmethod', 'inc_punchhole'],
+    label: { inc_mould: 'Model' },
+    addFields: [
+      { key: 'ww_size', label: 'Size', options: ['297mm x 420mm'], section: 'General', neutral: true, after: 'inc_mould' },
+      { key: 'ww_paper', label: 'Paper', options: ['Gloss Art Paper 150gsm'], section: 'General', neutral: true, after: 'ww_size' },
+      { key: 'ww_colour', label: 'Print Colour', options: ['4C'], section: 'General', neutral: true, after: 'ww_paper' },
+      { key: 'ww_comp', label: 'Compulsory', options: ['Collating, Wire-O Hole Punching, Wire-O Binding (White) 5/16, Hanger'], section: 'General', neutral: true, after: 'ww_colour' },
+      { key: 'ww_artwork', label: 'Artwork', options: ['Custom Design'], section: 'General', neutral: true, after: 'ww_comp' },
+    ],
+    placeholderExact: ['quantity'],
+  },
+  'Premium Desk Calendar — Litho': {
+    addFields: [
+      { key: 'pd_model', label: 'Model', options: ['WPDC 001'], section: 'General', neutral: true, after: 'standlamination' },
+      { key: 'pd_comp', label: 'Compulsory', options: ['Wire O Hole Punching, Wire O Binding (White) 7/16'], section: 'General', neutral: true, after: 'pd_model' },
+      { key: 'pd_coverpaper', label: 'Cover Paper', options: ['Gloss Art Card 230gsm (2 side coated) (2 sheets)'], section: 'General', neutral: true, after: 'pd_comp' },
+      { key: 'pd_coversize', label: 'Cover Size', options: ['164mm x 236mm'], section: 'General', neutral: true, after: 'pd_coverpaper' },
+      { key: 'pd_covercolour', label: 'Cover Print Colour', options: ['4C (Both)'], section: 'General', neutral: true, after: 'pd_coversize' },
+      { key: 'pd_compcover', label: 'Compulsory (Cover)', options: ['Gloss Water Based Varnish (Both Side)'], section: 'General', neutral: true, after: 'pd_covercolour' },
+      { key: 'pd_artwork', label: 'Content Artwork', options: ['Custom Design'], section: 'General', neutral: true, after: 'pd_compcover' },
+      { key: 'pd_contentpaper', label: 'Content Paper', options: ['Gloss Art Card 230gsm (2 side coated) (12 sheets)'], section: 'General', neutral: true, after: 'pd_artwork' },
+      { key: 'pd_contentsize', label: 'Content Size', options: ['164mm x 236mm'], section: 'General', neutral: true, after: 'pd_contentpaper' },
+      { key: 'pd_contentcolour', label: 'Content Print Colour', options: ['4C (Both)'], section: 'General', neutral: true, after: 'pd_contentsize' },
+      { key: 'pd_compcontent', label: 'Compulsory (Content)', options: ['Gloss Water Based Varnish (Both Side)'], section: 'General', neutral: true, after: 'pd_contentcolour' },
+      { key: 'pd_standpaper', label: 'Stand Paper', options: ['Chipboard 1200gsm + Gloss Artpaper 150gsm'], section: 'General', neutral: true, after: 'pd_compcontent' },
+      { key: 'pd_standsize', label: 'Stand Size', options: ['200mm x 236mm'], section: 'General', neutral: true, after: 'pd_standpaper' },
+      { key: 'pd_standcolour', label: 'Stand Print Colour', options: ['4C (Front)'], section: 'General', neutral: true, after: 'pd_standsize' },
+    ],
+    placeholderExact: ['standlamination', 'quantity'],
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
