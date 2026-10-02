@@ -1377,6 +1377,20 @@ const UVD_SHEET = { '267mm x 390mm': '297mm x 420mm (A3)', '180mm x 267mm': '210
 // ---------- Food Tray (Excard food-tray, live 2026-10-02): fixed model / material / printing / lid / colour / compulsory; ml + size
 // Please Select (size follows ml). Prices = Excard's list (live 2/2 exact). ----------
 
+// ---------- Kraft Paper Bag (Excard kraft-paper-bag, live 2026-10-02): model preset; size / material / base colour / handle are fixed
+// by model (Twisted Handle); print colour Please Select; 50..2,000 pcs. No lamination / rope options on Excard's kraft bag. Prices =
+// Excard's list to 1,000; above 1,000 Excard scales the 1,000-pc unit price (live 8/8 exact). ----------
+const KPB = { 1: ['150mm x 210mm x 80mm', '190mm'], 2: ['210mm x 270mm x 110mm', '210mm'], 3: ['260mm x 310mm x 120mm', '240mm'] };
+const kpbM = cfg => KPB[(cfg.model || 'BKPH01').slice(-1)] || KPB[1];
+const kpbWhite = cfg => /^W/.test(cfg.model || '');
+function kpbPriceBase(cfg, q) {
+  const E = typeof window !== 'undefined' && window.PricingEngine, c = E && E.DATA.params.kraft_paperbag_pl; if (!c || !cfg.model || !cfg.printcolour) return null;
+  const m = kpbM(cfg), w = kpbWhite(cfg);
+  const cv = c.curves[[cfg.model, m[0], m[1], w ? 'White Kraft 120 gsm' : 'Brown Kraft 120 gsm', w ? 'White' : 'Brown', cfg.printcolour].join('|')]; if (!cv) return null;
+  if (cv[q] != null) return +cv[q];
+  return q > 1000 && cv[1000] != null ? Math.round(cv[1000] / 1000 * q - 1e-9) : null;
+}
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -2797,6 +2811,19 @@ const CFG_OVERRIDES = {
     ],
     optionsOverride: { size: cfg => [cfg.ml === '1200ml' ? '172mm x 110mm x 51.6mm' : '106mm x 106mm x 56.5mm'] },
     placeholderExact: ['ml', 'size', 'ex_qty', 'quantity'],
+  },
+  'Kraft Paper Bag — Litho': {
+    hide: ['lamination', 'inc_finishing', 'inc_compulsory', 'rope_colour', 'inc_printmethod'],
+    order: ['model', 'size', 'material', 'materialbasecolor', 'kpb_handle', 'handlelength', 'printcolour'],
+    addFields: [{ key: 'kpb_handle', label: 'Handle Type', options: ['Twisted Handle'], section: 'General', neutral: true, after: 'materialbasecolor' }],
+    optionsOverride: {
+      size: cfg => [kpbM(cfg)[0]], handlelength: cfg => [kpbM(cfg)[1]],
+      material: cfg => [kpbWhite(cfg) ? 'White Kraft 120 gsm' : 'Brown Kraft 120 gsm'], materialbasecolor: cfg => [kpbWhite(cfg) ? 'White' : 'Brown'],
+    },
+    defaultOpt: { model: 'BKPH01' },
+    placeholderExact: ['printcolour', 'quantity'],
+    qtyOptions: Array.from({ length: 40 }, (_, i) => (i + 1) * 50),
+    priceBase: kpbPriceBase,
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
