@@ -907,8 +907,22 @@ const NW_BAG = { 'WN-B5': ['Black', 'White', 'Yellow', 'Red', 'Green', 'Royal Bl
   'WH-A4': ['White'] };
 const NW_HANDLE_WH = ['Black', 'White', 'Beige', 'Orange', 'Dark Orange', 'Magenta', 'Red', 'Maroon', 'Green', 'Milo Green', 'Dark Green', 'Turquoise', 'Cyan', 'Royal Blue', 'Navy Blue', 'Dark Purple', 'Light Brown', 'Dark Brown', 'Grey'];
 
+// ---------- Kraft Standing Pouch (Excard kraft-standing-pouch, live 2026-10-02): quantity 100-2,000 in fifties; above 1,000
+// Excard charges the 1,000 rate per pouch (list exact). ----------
+const KP_SPEC = { BKSP01: '140mm x 200mm x 80mm', BKSP02: '160mm x 220mm x 80mm', BKSP03: '180mm x 260mm x 80mm', WKSP01: '140mm x 200mm x 80mm', WKSP02: '150mm x 220mm x 80mm', WKSP03: '180mm x 260mm x 80mm' };
+const kpWhite = cfg => /^W/.test(cfg.model || '');
+const KP_QTY = Array.from({ length: 39 }, (_, i) => 100 + i * 50);
+function kpPriceBase(cfg, q) {
+  const E = typeof window !== 'undefined' && window.PricingEngine, p = E && E.DATA.products.find(x => x.id === 151); if (!p) return null;
+  const at = n => { try { const r = E.localQuote(p, cfg, n); return r && isFinite(r.printoka_cash) ? r.printoka_cash : null; } catch (e) { return null; } };
+  if (q <= 1000) return at(q);
+  const b = at(1000); return b == null ? null : Math.round(b / 1000 * q * 100) / 100;
+}
+
+// (pouches: structure only)
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
-const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true };
+const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
 // Softcover: binding (saddle / perfect) → size → pages → the cover papers Excard offers for that size and page count →
 // the content papers it allows for that cover at that page count (A4-type sizes vs A5 portrait tables). Hardcover:
@@ -2035,6 +2049,51 @@ const CFG_OVERRIDES = {
     ],
     defaultOpt: { model: 'WN-B5' },
     placeholderExact: ['bag_colour', 'handle_colour', 'nw_ink', 'quantity'],
+  },
+  'Standing Pouch — Litho': {
+    label: { paper: 'Material', inc_compulsory: 'Compulsory' },
+    defaultOpt: { model: 'M1' },
+    placeholderExact: ['paper', 'lamination', 'quantity'],
+  },
+  'Kraft Standing Pouch — Litho': {
+    optionsOverride: {
+      size: cfg => [KP_SPEC[cfg.model] || KP_SPEC.BKSP01],
+      material: cfg => [kpWhite(cfg) ? 'White Kraft 65G + PE 40U' : 'Brown Kraft 75G + PE 40U'],
+      materialbasecolor: cfg => [kpWhite(cfg) ? 'White' : 'Brown'],
+    },
+    addFields: [
+      { key: 'kp_colour', label: 'Print Colour', options: ['4C (Front)'], section: 'General', neutral: true, after: 'materialbasecolor' },
+      { key: 'kp_finishing', label: 'Finishing', options: ['V-cut & Zipper , Clear Window'], section: 'General', neutral: true, after: 'kp_colour' },
+    ],
+    defaultOpt: { model: 'BKSP01' },
+    placeholderExact: ['quantity'],
+    qtyOptions: KP_QTY,
+    priceBase: kpPriceBase,
+  },
+  '3-Side Seal Packaging — Litho': {
+    addFields: [
+      { key: 'ss3_colour', label: 'Print Colour', options: ['4C + White Base (Both)'], section: 'General', neutral: true, after: 'size' },
+      { key: 'ss3_comp', label: 'Compulsory', options: ['V cut'], section: 'General', neutral: true, after: 'ss3_colour' },
+    ],
+    defaultOpt: { model: 'Model 1' },
+    placeholderExact: ['material', 'lamination', 'quantity'],
+  },
+  'Standing Pouch with Spout — Litho': {
+    addFields: [
+      { key: 'sp_material', label: 'Material', options: ['Aluminium PET Film'], section: 'General', neutral: true, after: 'size' },
+      { key: 'sp_colour', label: 'Print Colour', options: ['4C + White Base (Both)'], section: 'General', neutral: true, after: 'sp_material' },
+    ],
+    defaultOpt: { model: 'Model 6S' },
+    placeholderExact: ['lamination', 'quantity'],
+  },
+  'Vacuum Bag Packaging — Litho': {
+    addFields: [
+      { key: 'vb_material', label: 'Material', options: ['Nylon'], section: 'General', neutral: true, after: 'size' },
+      { key: 'vb_colour', label: 'Print Colour', options: ['4C + White Base (Both)'], section: 'General', neutral: true, after: 'vb_material' },
+      { key: 'vb_comp', label: 'Compulsory', options: ['V cut'], section: 'General', neutral: true, after: 'vb_colour' },
+    ],
+    defaultOpt: { model: 'Model 1' },
+    placeholderExact: ['lamination', 'quantity'],
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
