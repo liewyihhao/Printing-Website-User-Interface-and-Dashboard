@@ -1060,8 +1060,27 @@ const hsmKey = cfg => { const p = { 'Gloss Art Paper 130gsm': 'GAP', 'Linen 140g
 const HSM_QTY = HSM_Q.slice(3);
 function hsmPriceBase(cfg, q) { const t = HSM_T[hsmKey(cfg)], i = HSM_Q.indexOf(q); return t && i >= 3 && t[i] != null ? t[i] : null; }
 
+// ---------- Hard Cover Perfect Bind Notebook (Excard hard-cover-perfect-bind-notebook, live 2026-10-02): A5 portrait, one fixed
+// content spec. Price = base (gloss = matte; inner colour price-neutral) + hot stamping per colour by foil size (Excard's list:
+// 2C = base + size 1 + size 2, 108/108 exact). Hot stamping and Spot UV from 300 pcs. ----------
+const HCP_Q = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000];
+const HCP_BASE = { 10: 315.1, 20: 453.2, 30: 584.15, 40: 721.9, 50: 852.45, 60: 927.4, 70: 1049.7, 80: 1178.65, 90: 1300.85, 100: 1434.95, 150: 1735.45, 200: 2175, 300: 3115.45, 400: 3855.65,
+  500: 4210.3, 600: 4770.7, 700: 5324.8, 800: 5881.9, 900: 6436.1, 1000: 6992.5, 1500: 9773.65, 2000: 12552.35, 3000: 18107.1, 4000: 23661.8, 5000: 29216.5, 6000: 34771.25, 7000: 40325.95, 8000: 45880.65, 9000: 51435.4, 10000: 56990.1 };
+const HCP_SUV = { 300: 3265.35, 400: 4010.75, 500: 4370.6, 600: 4936.2, 700: 5495.5, 800: 6057.8, 900: 6617.2, 1000: 7178.8, 1500: 9985.95, 2000: 12790.65, 3000: 18397.45, 4000: 24004.15, 5000: 29610.85, 6000: 35217.65, 7000: 40824.35, 8000: 46431.1, 9000: 52037.85, 10000: 57644.55 };
+const HCP_HS_SIZES = ['90mm x 30mm', '90mm x 70mm', '95mm x 206mm', '144mm x 206mm'];
+const HCP_HS = { 300: [45.2, 50.7, 70.9, 98.86], 400: [49.1, 55.1, 77.05, 106.75], 500: [53, 59.45, 83.15, 114.63], 600: [56.9, 63.85, 89.3, 122.52], 700: [60.85, 68.25, 95.4, 130.41], 800: [64.75, 72.6, 101.55, 138.29],
+  900: [68.65, 77, 107.7, 146.18], 1000: [89.6, 98.45, 130.9, 154.07], 1500: [111.8, 123, 164.15, 193.5], 2000: [134, 147.6, 197.45, 232.94], 3000: [178.35, 196.7, 264.05, 311.81], 4000: [222.7, 245.85, 330.65, 390.67],
+  5000: [267.05, 294.95, 397.2, 469.54], 6000: [311.45, 344.1, 463.8, 548.41], 7000: [355.8, 393.2, 530.35, 627.28], 8000: [400.15, 442.35, 596.95, 706.15], 9000: [444.5, 491.45, 663.55, 785.02], 10000: [488.85, 540.6, 730.1, 863.88] };
+const HCP_FOILS = ['Black', 'Blue', 'Gold', 'Green', 'Silver', 'Red'];
+const hcpHs = cfg => cfg.hotstampingcolour === '2C (Front)' ? 2 : cfg.hotstampingcolour === '1C (Front)' ? 1 : 0;
+function hcpPriceBase(cfg, q) {
+  let p = /Spot UV/.test(cfg.lamination || '') ? HCP_SUV[q] : HCP_BASE[q]; if (p == null) return null;
+  for (let i = 1; i <= hcpHs(cfg); i++) { const t = HCP_HS[q], s = HCP_HS_SIZES.indexOf(cfg['hcp_hs_size_' + i]); if (!t) return null; p += t[s >= 0 ? s : 0]; }
+  return Math.round(p * 100) / 100;
+}
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
-const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true };
+const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
 // Softcover: binding (saddle / perfect) → size → pages → the cover papers Excard offers for that size and page count →
 // the content papers it allows for that cover at that page count (A4-type sizes vs A5 portrait tables). Hardcover:
@@ -2283,6 +2302,31 @@ const CFG_OVERRIDES = {
     placeholderExact: ['paper', 'lamination', 'finishing', 'quantity'],
     qtyOptions: HSM_QTY,
     priceBase: hsmPriceBase,
+  },
+  'Hard Cover Perfect Bind Notebook — Litho': {
+    hide: ['add_content', 'inc_printmethod'],
+    label: { inc_orientation: 'Model' },
+    addFields: [
+      { key: 'hcp_cat', label: 'Category', options: ['Hard Cover'], section: 'General', neutral: true, first: true },
+      { key: 'hcp_size', label: 'Size', options: ['148mm x 210mm (A5)'], section: 'General', neutral: true, after: 'inc_orientation' },
+      { key: 'hcp_coversize', label: 'Cover Size', options: ['148mm x 210mm (A5)'], section: 'General', neutral: true, after: 'hcp_size' },
+      { key: 'hcp_covercolour', label: 'Cover Print Colour', options: ['4 Colour Outer Only'], section: 'General', neutral: true, after: 'hcp_coversize' },
+      { key: 'hcp_hs_size_1', label: 'H/S Size 1 (mm)', options: HCP_HS_SIZES, section: 'General', after: 'hotstampingcolour', showWhen: { field: 'hotstampingcolour', values: ['1C (Front)', '2C (Front)'] } },
+      { key: 'hcp_hs_colour_1', label: 'H/S Colour 1', options: HCP_FOILS, section: 'General', neutral: true, after: 'hcp_hs_size_1', showWhen: { field: 'hotstampingcolour', values: ['1C (Front)', '2C (Front)'] } },
+      { key: 'hcp_hs_size_2', label: 'H/S Size 2 (mm)', options: HCP_HS_SIZES, section: 'General', after: 'hcp_hs_colour_1', showWhen: { field: 'hotstampingcolour', values: ['2C (Front)'] } },
+      { key: 'hcp_hs_colour_2', label: 'H/S Colour 2', options: HCP_FOILS, section: 'General', neutral: true, after: 'hcp_hs_size_2', showWhen: { field: 'hotstampingcolour', values: ['2C (Front)'] } },
+      { key: 'hcp_innerpaper', label: 'Inner Paper', options: ['Gloss Art Paper 150gsm'], section: 'General', neutral: true, after: 'hcp_hs_colour_2' },
+      { key: 'hcp_innersize', label: 'Inner Cover Size', options: ['148mm x 210mm (A5)'], section: 'General', neutral: true, after: 'hcp_innerpaper' },
+      { key: 'hcp_content', label: 'Content', options: ['32 Pages diary planner + 128 pages ready content'], section: 'General', neutral: true, after: 'innerprintcolour' },
+      { key: 'hcp_contentpaper', label: 'Content Paper', options: ['Simili Paper 80gsm'], section: 'General', neutral: true, after: 'hcp_content' },
+      { key: 'hcp_contentsize', label: 'Content Size', options: ['148mm x 210mm (A5)'], section: 'General', neutral: true, after: 'hcp_contentpaper' },
+      { key: 'hcp_contentcolour', label: 'Content Print Colour', options: ['1C (Both)'], section: 'General', neutral: true, after: 'hcp_contentsize' },
+    ],
+    defaultOpt: { hotstampingcolour: 'Not Required', innerprintcolour: '4C + 4C' },
+    placeholderExact: ['lamination', 'hcp_hs_size_1', 'hcp_hs_colour_1', 'hcp_hs_size_2', 'hcp_hs_colour_2', 'quantity'],
+    qtyOptions: HCP_Q,
+    qtyFilter: (cfg, n) => n >= 300 || (!hcpHs(cfg) && !/Spot UV/.test(cfg.lamination || '')),
+    priceBase: hcpPriceBase,
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
