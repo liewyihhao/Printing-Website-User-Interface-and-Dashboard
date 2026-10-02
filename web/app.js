@@ -1250,6 +1250,81 @@ function voPriceBase(cfg, q) {
 }
 const voPanelFields = () => { const out = []; let after = 'perforation'; for (let i = 1; i <= 7; i++) { const vals = []; for (let n = Math.max(1, i - 1); n <= 6; n++) vals.push(String(n)); out.push({ key: 'vo_panel_' + i, label: 'Panel ' + i + ' Width (mm)', type: 'number', min: 45, section: 'Optional Finishing', after, showWhen: { field: 'perforation', values: vals } }); after = 'vo_panel_' + i; } return out; };
 
+// ---------- Kad Kahwin (Excard kad-kahwin, live 2026-10-02): lamination only on Gloss Art Card (Please Select, 4 options); Folding by
+// size (Finishing shows Creasing when folded; both price-neutral); H/S foil size list by card size + colour per slot; envelope by size
+// and fold. Prices: Excard's list for the list quantities (exact). Excard's form also sells quantities the list doesn't show; their
+// per-piece rate follows the list's regular points (the cheap 500 / 1,000 / 2,000 points are separate litho prices), so they are
+// interpolated on the regular points (live: 1-2% off). H/S add-on = per foil size by quantity (same on every card size / paper);
+// envelope add-on by envelope size by quantity (live samples). ----------
+const KK_QTY = [10, 20, 30, 40, 50].concat(Array.from({ length: 19 }, (_, i) => 100 + i * 50), Array.from({ length: 10 }, (_, i) => 1100 + i * 100));
+const KK_GAC = /^Gloss Art Card/;
+const KK_PAPERS = ['Gloss Art Card 230gsm (2 sides coated)', 'Gloss Art Card 260gsm (2 sides coated)', 'Gloss Art Card 310gsm (2 sides coated)', 'Gloss Art Card 360gsm (2 sides coated)',
+  'Super White 240gsm', 'Metal Ice 250gsm', 'Linen 240gsm', 'Suwen 240gsm', 'Simili 140gsm', 'Matte Art Paper 150gsm'];
+const KK_FOLD = { 'DL (99mm x 210mm)': null, '2DL (198mm x 210mm)': ['1Fa – Landscape', '2Fd – Landscape', '1Fa – Portrait'], 'A4 (210mm x 297mm)': ['Not Required', '1Fa – Landscape', '2Fa – Landscape', '2Fb – Landscape', '2Fd – Landscape'],
+  'A5 (148mm x 210mm)': ['Not Required', '1Fa – Landscape', '2Fd – Landscape'], 'A6 (105mm x 148mm)': ['Not Required', '1Fa – Landscape'], 'A7 (74mm x 105mm)': null, 'Square (140mm x 280mm)': ['1Fa – Landscape', '2Fd – Landscape'] };
+const kkFolded = cfg => { const o = KK_FOLD[cfg.size]; return !!(o && cfg.kk_fold && cfg.kk_fold !== 'Not Required'); };
+function kkEnvelopes(cfg) {
+  const s = cfg.size, f = kkFolded(cfg);
+  if (s === 'DL (99mm x 210mm)') return ['Not Required', 'White (DL)', 'Pink (DL)'];
+  if (s === '2DL (198mm x 210mm)') return ['Not Required', 'White (DL)'];
+  if (s === 'A4 (210mm x 297mm)' && f) return ['Not Required', 'White (A5)', 'Pink (A5)'];
+  if (s === 'A5 (148mm x 210mm)' && f) return ['Not Required', 'White (A6)', 'Pink (A6)'];
+  if (s === 'Square (140mm x 280mm)') return ['Not Required', 'Cream (Square)'];
+  return ['Not Required'];
+}
+const KK_HS_ALL = ['90mm x 30mm', '90mm x 70mm', '206mm x 294mm', '144mm x 206mm', '101mm x 144mm', '95mm x 206mm', '194mm x 206mm'];
+const KK_HS_BY = { 'DL (99mm x 210mm)': ['90mm x 30mm', '90mm x 70mm', '95mm x 206mm'], '2DL (198mm x 210mm)': ['90mm x 30mm', '90mm x 70mm', '144mm x 206mm', '101mm x 144mm', '95mm x 206mm', '194mm x 206mm'],
+  'A4 (210mm x 297mm)': KK_HS_ALL, 'A5 (148mm x 210mm)': ['90mm x 30mm', '90mm x 70mm', '144mm x 206mm', '101mm x 144mm', '95mm x 206mm'], 'A6 (105mm x 148mm)': ['90mm x 30mm', '90mm x 70mm', '101mm x 144mm'],
+  'A7 (74mm x 105mm)': ['90mm x 30mm', '90mm x 70mm'], 'Square (140mm x 280mm)': KK_HS_ALL };
+// live CASH add-on per foil (one colour), by quantity
+const KK_HS_ADD = { '90mm x 30mm': { 10: 53.15, 100: 53.15, 500: 53.1, 1000: 78.35, 2000: 130.2 }, '90mm x 70mm': { 100: 66.4, 1000: 144.75, 2000: 249.75 },
+  '101mm x 144mm': { 100: 93, 1000: 247.05, 2000: 427.7 }, '95mm x 206mm': { 100: 106.25, 1000: 321.45, 2000: 563.2 }, '144mm x 206mm': { 100: 150.1, 1000: 421.05, 2000: 722.6 },
+  '194mm x 206mm': { 100: 192.6, 1000: 544.55, 2000: 936.45 }, '206mm x 294mm': { 10: 245.75, 100: 274.95, 1000: 777, 2000: 1334.9 } };
+const KK_ENV_ADD = { DL: { 100: 7.95, 1000: 71.7 }, A6: { 100: 7.95, 1000: 54.45 }, A5: { 100: 11.95, 500: 51.8, 1000: 99.6 } };
+function kkLerp(pts, q, low) {
+  const ks = Object.keys(pts).map(Number).sort((a, b) => a - b); if (pts[q] != null) return pts[q];
+  if (q < ks[0]) return low ? low(pts[ks[0]], q, ks[0]) : pts[ks[0]];
+  if (q > ks[ks.length - 1]) { const a = ks[ks.length - 2], b = ks[ks.length - 1]; return pts[b] + (pts[b] - pts[a]) / (b - a) * (q - b); }
+  let i = 0; while (ks[i + 1] < q) i++; const a = ks[i], b = ks[i + 1]; return pts[a] + (pts[b] - pts[a]) * (q - a) / (b - a);
+}
+function kkBase(cfg, q) {
+  const E = typeof window !== 'undefined' && window.PricingEngine, c = E && E.DATA.params.kadkahwin_plx; if (!c) return null;
+  const lam = KK_GAC.test(cfg.paper || '') ? cfg.lamination : 'Not Required';
+  const cv = c.curves[[cfg.size, cfg.paper, cfg.printcolour, lam].join('|')]; if (!cv) return null;
+  if (cv[q] != null) return +cv[q];
+  const ks = Object.keys(cv).map(Number).sort((a, b) => a - b), r = k => cv[k] / k;
+  // the cheap litho points (a per-piece rate well below both neighbours) are not part of the regular rate curve
+  const dip = k => { const i = ks.indexOf(k); const n = [ks[i - 1], ks[i + 1]].filter(x => x != null).map(r); return n.length && r(k) < 0.85 * Math.min.apply(null, n); };
+  const reg = ks.filter(k => !dip(k)), hasDip1000 = dip(1000);
+  if (q === 2000 && hasDip1000) return Math.round(cv[1000] * 1.586 * 100) / 100;
+  let rate;
+  if (q > reg[reg.length - 1]) { const a = reg[reg.length - 2], b = reg[reg.length - 1]; rate = r(b) + (r(b) - r(a)) * (Math.log(q) - Math.log(b)) / (Math.log(b) - Math.log(a)); }
+  else { let i = 0; while (reg[i + 1] < q) i++; const a = reg[i], b = reg[i + 1]; rate = r(a) + (r(b) - r(a)) * (Math.log(q) - Math.log(a)) / (Math.log(b) - Math.log(a)); }
+  return Math.round(rate * q * 20) / 20;
+}
+function kkPriceBase(cfg, q) {
+  if (!cfg.size || !cfg.paper || !cfg.printcolour) return null;
+  if (KK_GAC.test(cfg.paper) && !cfg.lamination) return null;
+  let p = kkBase(cfg, q); if (p == null) return null;
+  const n = /^2C/.test(cfg.hot_stamping || '') ? 2 : /^1C/.test(cfg.hot_stamping || '') ? 1 : 0;
+  for (let i = 1; i <= n; i++) {
+    const t = KK_HS_ADD[cfg['kk_hs_size_' + i]]; if (!t) continue;
+    p += kkLerp(t, q);
+  }
+  const env = (cfg.envelope || '').match(/\((DL|A5|A6)\)/);
+  if (env && KK_ENV_ADD[env[1]]) p += kkLerp(KK_ENV_ADD[env[1]], q, (v, qq, k0) => v * qq / k0);
+  return Math.round(p * 100) / 100;
+}
+const kkHsFields = () => {
+  const sl = [[1, ['1C (Front)', '1C (Back)', '2C (Front)', '2C (Back)']], [2, ['2C (Front)', '2C (Back)']]]; const out = []; let after = 'hot_stamping';
+  sl.forEach(([n, vals]) => {
+    out.push({ key: 'kk_hs_size_' + n, label: 'H/S Size ' + n, options: KK_HS_ALL, section: 'Optional Finishing', after, showWhen: { field: 'hot_stamping', values: vals } });
+    out.push({ key: 'kk_hs_colour_' + n, label: 'H/S Colour ' + n, options: ['Black', 'Blue', 'Gold', 'Green', 'Red', 'Silver'], section: 'Optional Finishing', neutral: true, after: 'kk_hs_size_' + n, showWhen: { field: 'hot_stamping', values: vals } });
+    after = 'kk_hs_colour_' + n;
+  });
+  return out;
+};
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -2600,6 +2675,30 @@ const CFG_OVERRIDES = {
     placeholderExact: ['quantity'],
     qtyOptions: cfg => cfg.packform === 'Loose' ? VO_LOOSE_QTY : VO_PAD_QTY,
     priceBase: voPriceBase,
+  },
+  'Kad Kahwin — Digital': {
+    hide: ['hot_stamping_colour', 'hot_stamping_w', 'hot_stamping_h'],
+    order: ['category', 'size', 'paper', 'printcolour', 'lamination', 'kk_finish', 'kk_fold', 'hot_stamping', 'kk_hs_size_1', 'kk_hs_colour_1', 'kk_hs_size_2', 'kk_hs_colour_2', 'envelope'],
+    addFields: [
+      { key: 'kk_finish', label: 'Finishing', options: ['-'], section: 'Optional Finishing', neutral: true, after: 'lamination', showWhen: { field: 'size', values: ['DL (99mm x 210mm)', '2DL (198mm x 210mm)', 'A4 (210mm x 297mm)', 'A5 (148mm x 210mm)', 'A6 (105mm x 148mm)', 'Square (140mm x 280mm)'] } },
+      { key: 'kk_fold', label: 'Folding', options: ['Not Required', '1Fa – Landscape', '2Fa – Landscape', '2Fb – Landscape', '2Fd – Landscape', '1Fa – Portrait'], section: 'Optional Finishing', neutral: true, after: 'kk_finish',
+        showWhen: { field: 'size', values: ['DL (99mm x 210mm)', '2DL (198mm x 210mm)', 'A4 (210mm x 297mm)', 'A5 (148mm x 210mm)', 'A6 (105mm x 148mm)', 'Square (140mm x 280mm)'] } },
+    ].concat(kkHsFields()),
+    optionsOverride: {
+      size: ['DL (99mm x 210mm)', '2DL (198mm x 210mm)', 'A4 (210mm x 297mm)', 'A5 (148mm x 210mm)', 'A6 (105mm x 148mm)', 'A7 (74mm x 105mm)', 'Square (140mm x 280mm)'],
+      paper: KK_PAPERS,
+      lamination: ['Gloss Lamination (Front)', 'Gloss Lamination (Both)', 'Matte Lamination (Front)', 'Matte Lamination (Both)'],
+      kk_fold: cfg => KK_FOLD[cfg.size] || ['Not Required'],
+      kk_finish: cfg => [kkFolded(cfg) ? 'Creasing' : '-'],
+      kk_hs_size_1: cfg => KK_HS_BY[cfg.size] || KK_HS_ALL,
+      kk_hs_size_2: cfg => KK_HS_BY[cfg.size] || KK_HS_ALL,
+      envelope: kkEnvelopes,
+    },
+    hideWhen: { lamination: cfg => !KK_GAC.test(cfg.paper || '') },
+    defaultOpt: { category: 'Standard Kad Kahwin', hot_stamping: 'Not Required', envelope: 'Not Required' },
+    placeholderExact: ['size', 'paper', 'printcolour', 'lamination', 'kk_hs_size_1', 'kk_hs_colour_1', 'kk_hs_size_2', 'kk_hs_colour_2', 'quantity'],
+    qtyOptions: KK_QTY,
+    priceBase: kkPriceBase,
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
