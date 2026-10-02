@@ -1433,7 +1433,7 @@ const MAG_F = [[1,58],[2,67],[3,77],[4,86],[5,96],[6,105],[7,115],[8,117],[9,133
 const MAG_QTY = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100].concat(Array.from({ length: 38 }, (_, i) => 150 + i * 50));
 const magF = s => { const F = MAG_F; if (s <= F[0][0]) return F[0][1]; for (let i = 1; i < F.length; i++) if (s <= F[i][0]) { const [a, pa] = F[i - 1], [b, pb] = F[i]; return pa + (pb - pa) * (s - a) / (b - a); } const [a, pa] = F[F.length - 2], [b, pb] = F[F.length - 1]; return pb + (pb - pa) / (b - a) * (s - b); };
 const magPer = (h, w, sw, sh) => { const x = (a, b) => Math.floor((sw + 4) / (a + 4)) * Math.floor((sh + 4) / (b + 4)); return Math.max(x(h, w), x(w, h)); };
-const magDims = cfg => cfg.shape === 'Round' ? [+cfg.mg_d, +cfg.mg_d] : [+cfg.mg_h, +cfg.mg_w];
+const magDims = cfg => cfg.shape === 'Round' ? [+(cfg.mg_d || 90), +(cfg.mg_d || 90)] : [+(cfg.mg_h || 54), +(cfg.mg_w || 90)];
 function magPriceBase(cfg, q) {
   const [h, w] = magDims(cfg); if (!h || !w || !cfg.lamination) return null;
   if (cfg.shape === 'Round' ? (h < 50 || h > 300) : (h < 40 || h > 300 || w < 40 || w > 420)) return null;
@@ -1449,7 +1449,7 @@ function magPriceBase(cfg, q) {
 }
 
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
-const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true };
+const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true, 135: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
 // Softcover: binding (saddle / perfect) → size → pages → the cover papers Excard offers for that size and page count →
 // the content papers it allows for that cover at that page count (A4-type sizes vs A5 portrait tables). Hardcover:
