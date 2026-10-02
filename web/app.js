@@ -866,8 +866,39 @@ function tbPriceBase(cfg, q) {
 }
 const RP_SPEC = { 'rPET - A4': ['280mm x 330mm x 80mm', '440mm'], 'rPET - A3L': ['420mm x 320mm x 100mm', '500mm'] };
 
+// ---------- Canvas (Silkscreen) Tote / Heat Transfer Tote (Excard canvas-tote-bag + heat-transfer-tote-bag, live
+// 2026-10-02): one Excard form with a Category switch. Silkscreen asks the Pantone ink; prices = Excard's lists (exact). ----------
+const CT_PANTONE = ['Black (K100)', 'Cool Gray 7 C', 'Cool Gray 8 C', 'Cool Gray 10 C', 'Cool Gray 11 C', '4655 C', '7589 C', '7533 C', '7518 C', '498 C', '2111 C', '2380 C', '648 C', '2141 C', '2382 C', '2145 C', '326 C', '360 C', '361 C', '2291 C', '7741 C', '7732 C', '7735 C', 'YELLOW C', 'YELLOW 012 C', '137 C', '1645 C', '185 C', '1795 C', '1797 C', '230 C', '231 C', '232 C', '7647 C', '2046 C', '2072 C', '2665 C'];
+const CT_SPEC = { 'CT8-A3': ['360 (W) x 400 (H)', 'Cotton Canvas 10oz', '500mm'], 'CTD12-A3': ['360 (W) x 320 (H) x 100 (D)', 'Cotton Canvas 12oz', '440mm'] };
+
+// ---------- Cooler Bag / Laminated Non-Woven Bag (Excard, live 2026-10-02): quantity 50-2,000 in fifties; above 1,000 Excard
+// charges the 1,000 rate per bag (live 6/6 exact). Cooler Bag 4C (Front) up to 500 is now cheaper than the stored curves:
+// live CASH table below (38 quotes); everything else = stored curves (live spot checks exact). ----------
+const BAG_QTY = Array.from({ length: 40 }, (_, i) => (i + 1) * 50);
+const CL_F = {
+  'CLB-S': { 50: 61, 100: 99, 150: 142, 200: 175, 250: 217, 300: 254, 350: 295, 400: 321, 450: 362, 500: 397 },
+  'CLB-D': { 50: 78, 100: 131, 150: 189, 200: 236, 250: 292, 300: 344, 350: 401, 400: 438, 450: 493, 500: 543 },
+};
+const CL_SIZE = { 'CLB-S': '120mm x 280mm x 100mm', 'CLB-D': '200mm x 290mm x 120mm' };
+const LN_SPEC = { 'LNWB-S': ['285mm (W) x 335mm (H) x 140mm (D)', '300mm'], 'LNWB-B': ['356mm (W) x 380mm (H) x 190mm (D)', '440mm'] };
+function bagPerPiece(id, V, q) {
+  const E = typeof window !== 'undefined' && window.PricingEngine, p = E && E.DATA.products.find(x => x.id === id); if (!p) return null;
+  const at = n => { try { const r = E.localQuote(p, V, n); return r && isFinite(r.printoka_cash) ? r.printoka_cash : null; } catch (e) { return null; } };
+  if (q <= 1000) return at(q);
+  const b = at(1000); return b == null ? null : Math.floor(b / 1000 * q + 1e-6);   // Excard drops to the whole ringgit
+}
+function clPriceBase(cfg, q) {
+  const m = CL_SIZE[cfg.model] ? cfg.model : 'CLB-S';
+  if (cfg.printcolour === '4C (Front)' && CL_F[m][q] != null) return CL_F[m][q];
+  return bagPerPiece(144, { model: m, size: CL_SIZE[m], printcolour: cfg.printcolour || '4C (Front)' }, q);
+}
+function lnPriceBase(cfg, q) {
+  const m = LN_SPEC[cfg.model] ? cfg.model : 'LNWB-S';
+  return bagPerPiece(147, { model: m, size: LN_SPEC[m][0], bagcolour: cfg.bagcolour, handlelength: LN_SPEC[m][1], printcolour: cfg.printcolour || '4C (Front)' }, q);
+}
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
-const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true };
+const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
 // Softcover: binding (saddle / perfect) → size → pages → the cover papers Excard offers for that size and page count →
 // the content papers it allows for that cover at that page count (A4-type sizes vs A5 portrait tables). Hardcover:
@@ -1928,6 +1959,60 @@ const CFG_OVERRIDES = {
       { key: 'dz_handlelength', label: 'Handle Length', options: ['500mm'], section: 'General', neutral: true, after: 'dz_handlecolour' },
     ],
     placeholderExact: ['printcolour', 'quantity'],
+  },
+  'Canvas Tote Bag — Litho': {
+    label: { printcolour: 'Print Colour', handlelength: 'Handle Length', inc_compulsory: 'Compulsory' },
+    optionsOverride: {
+      size: cfg => [(CT_SPEC[cfg.model] || CT_SPEC['CT8-A3'])[0]],
+      paper: cfg => [(CT_SPEC[cfg.model] || CT_SPEC['CT8-A3'])[1]],
+      handlelength: cfg => [(CT_SPEC[cfg.model] || CT_SPEC['CT8-A3'])[2]],
+    },
+    addFields: [
+      { key: 'ct_cat', label: 'Category', options: ['Silkscreen Tote Bag ( 1C )'], section: 'General', neutral: true, first: true },
+      { key: 'ct_ink', label: 'Pantone Colour', options: CT_PANTONE, section: 'General', neutral: true, after: 'printcolour' },
+    ],
+    defaultOpt: { model: 'CT8-A3', printcolour: '1C (Front)' },
+    placeholderExact: ['ct_ink', 'quantity'],
+  },
+  'Heat Transfer Tote Bag — Litho': {
+    addFields: [
+      { key: 'ht_cat', label: 'Category', options: ['Heat Transfer Tote Bag ( 4C )'], section: 'General', neutral: true, first: true },
+      { key: 'ht_model', label: 'Model', options: ['HTTB'], section: 'General', neutral: true, after: 'printcolour' },
+      { key: 'ht_size', label: 'Size', options: ['360mm x 400mm'], section: 'General', neutral: true, after: 'ht_model' },
+      { key: 'ht_paper', label: 'Paper', options: ['Polycanvas 10oz'], section: 'General', neutral: true, after: 'ht_size' },
+      { key: 'ht_bagcolour', label: 'Bag Colour', options: ['Beige'], section: 'General', neutral: true, after: 'ht_paper' },
+      { key: 'ht_handlecolour', label: 'Handle Colour', options: ['Same as bag colour'], section: 'General', neutral: true, after: 'ht_bagcolour' },
+      { key: 'ht_handlelength', label: 'Handle Length', options: ['500mm'], section: 'General', neutral: true, after: 'ht_handlecolour' },
+    ],
+    placeholderExact: ['ex_orientation', 'printcolour', 'quantity'],
+  },
+  'Cooler Bag — Litho': {
+    optionsOverride: { size: cfg => [CL_SIZE[cfg.model] || CL_SIZE['CLB-S']] },
+    addFields: [
+      { key: 'cl_material', label: 'Material', options: ['Non Woven Thermal 100gsm'], section: 'General', neutral: true, after: 'size' },
+      { key: 'cl_base', label: 'Material Base Color', options: ['White'], section: 'General', neutral: true, after: 'cl_material' },
+      { key: 'cl_handle', label: 'Handle Length', options: ['300mm'], section: 'General', neutral: true, after: 'cl_base' },
+      { key: 'cl_finishing', label: 'Finishing', options: ['Ultrasonic , Self Adhesive Tape'], section: 'General', neutral: true, after: 'cl_handle' },
+    ],
+    defaultOpt: { model: 'CLB-S' },
+    placeholderExact: ['printcolour', 'quantity'],
+    qtyOptions: BAG_QTY,
+    priceBase: clPriceBase,
+  },
+  'Laminated Non-Woven Bag — Litho': {
+    optionsOverride: {
+      bagcolour: cfg => ['White', 'Khaki', 'Apple Green'].map(c => c + ' (' + (LN_SPEC[cfg.model] ? cfg.model : 'LNWB-S') + ')'),
+      size: cfg => [(LN_SPEC[cfg.model] || LN_SPEC['LNWB-S'])[0]],
+      handlelength: cfg => [(LN_SPEC[cfg.model] || LN_SPEC['LNWB-S'])[1]],
+    },
+    addFields: [
+      { key: 'ln_material', label: 'Material', options: ['Non-Woven 120gsm'], section: 'General', neutral: true, after: 'size' },
+      { key: 'ln_comp', label: 'Compulsory', options: ['Ultrasonic'], section: 'General', neutral: true, after: 'printcolour' },
+    ],
+    defaultOpt: { model: 'LNWB-S' },
+    placeholderExact: ['printcolour', 'quantity'],
+    qtyOptions: BAG_QTY,
+    priceBase: lnPriceBase,
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
