@@ -1393,6 +1393,16 @@ function kpbPriceBase(cfg, q) {
 
 // ---------- Tent Card (Excard tent-card, live 2026-10-02): live form = its list x 1.05 (curves scaled; 2/2 exact). ----------
 
+// ---------- Hard Cover Menu (Excard hard-cover-menu, live 2026-10-02): Type decides which cover/content fields show; Content only =
+// 4-16 pages, Cover + Content = 12-32 pages; Gloss and Matte cost the same (our list lacks Matte 12pp, so it reads Gloss). Live 3/3. ----------
+function hmPriceBase(cfg, q) {
+  const E = typeof window !== 'undefined' && window.PricingEngine, c = E && E.DATA.params.hardmenu_plx; if (!c || !cfg.orderdesc || !cfg.lamination) return null;
+  const cov = cfg.orderdesc !== 'Content Only', con = cfg.orderdesc !== 'Cover only';
+  const k = lam => [cfg.orderdesc, lam, cov ? 'Chipboard 1000gsm + Gloss Art Paper 150gsm' : 'N/A', cov ? '220mm x 307mm' : 'N/A', con ? 'Gloss Art Paper 150gsm' : 'N/A', con ? '210mm x 297mm' : 'N/A', con ? String(cfg.pages || '') : 'N/A'].join('|');
+  const cv = c.curves[k(cfg.lamination)] || c.curves[k('Gloss Lamination (Both)')];
+  return cv && cv[q] != null ? +cv[q] : null;
+}
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -2835,6 +2845,19 @@ const CFG_OVERRIDES = {
     defaultOpt: { model: 'TC 003' },
     placeholderExact: ['lamination', 'quantity'],
     qtyOptions: [300, 500, 1000, 2000, 3000, 4000, 5000, 10000, 20000],
+  },
+  'Hard Cover Menu — Digital': {
+    label: { orderdesc: 'Type', inc_printcolour: 'Print Colour', lamination: 'Colour Protective Finishing', inc_compulsory: 'Compulsory', coverpaper: 'Paper (Cover)', coversize: 'Size (Cover)', contentpaper: 'Paper (Content)', contentsize: 'Size (Content)', pages: 'Pages' },
+    order: ['orderdesc', 'inc_printcolour', 'lamination', 'inc_compulsory', 'coverpaper', 'coversize', 'contentpaper', 'contentsize', 'pages'],
+    optionsOverride: { pages: cfg => cfg.orderdesc === 'Content Only' ? ['4', '8', '12', '16'] : ['12', '16', '20', '24', '28', '32'] },
+    hideWhen: {
+      inc_compulsory: cfg => cfg.orderdesc === 'Content Only', coverpaper: cfg => cfg.orderdesc === 'Content Only', coversize: cfg => cfg.orderdesc === 'Content Only',
+      contentpaper: cfg => cfg.orderdesc === 'Cover only', contentsize: cfg => cfg.orderdesc === 'Cover only', pages: cfg => cfg.orderdesc === 'Cover only',
+    },
+    defaultOpt: { orderdesc: 'Cover + Content' },
+    placeholderExact: ['lamination', 'pages', 'quantity'],
+    qtyOptions: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200, 250, 300, 350, 400, 450, 500],
+    priceBase: hmPriceBase,
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
