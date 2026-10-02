@@ -1374,6 +1374,9 @@ const UVD_SHEET = { '267mm x 390mm': '297mm x 420mm (A3)', '180mm x 267mm': '210
 // ---------- Lanyard (Excard lanyard, live 2026-10-02): model preset, size by model, fixed material + 4C (Both), 10..500 pcs.
 // Prices = Excard's list (live 2/2 exact). ----------
 
+// ---------- Food Tray (Excard food-tray, live 2026-10-02): fixed model / material / printing / lid / colour / compulsory; ml + size
+// Please Select (size follows ml). Prices = Excard's list (live 2/2 exact). ----------
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -2779,6 +2782,21 @@ const CFG_OVERRIDES = {
     defaultOpt: { model: 'PB LANYARD 01' },
     placeholderExact: ['quantity'],
     qtyOptions: Array.from({ length: 50 }, (_, i) => (i + 1) * 10),
+  },
+  'Food Tray — Litho': {
+    hide: ['inc_printmethod'],
+    label: { ml: 'Ml', ex_qty: 'Quantity' },
+    addFields: [
+      { key: 'ft_model', label: 'Model', options: ['Printed Food Tray + Blank PET Cover'], section: 'General', neutral: true, first: true },
+      { key: 'ft_material', label: 'Material', options: ['300gsm White Card + 18PE'], section: 'General', neutral: true, after: 'size' },
+      { key: 'ft_print', label: 'Food Tray Printing', options: ['Required'], section: 'General', neutral: true, after: 'ft_material' },
+      { key: 'ft_lid', label: 'Lid', options: ['PET Lid'], section: 'General', neutral: true, after: 'ft_print' },
+      { key: 'ft_lidprint', label: 'Lid Printing', options: ['Not Required'], section: 'General', neutral: true, after: 'ft_lid' },
+      { key: 'ft_colour', label: 'Print Colour', options: ['4C'], section: 'General', neutral: true, after: 'ft_lidprint' },
+      { key: 'ft_comp', label: 'Compulsory', options: ['Blister Pack Varnish + Die-Cutting + Food Tray Forming + Food Tray Plastic Packing'], section: 'General', neutral: true, after: 'ft_colour' },
+    ],
+    optionsOverride: { size: cfg => [cfg.ml === '1200ml' ? '172mm x 110mm x 51.6mm' : '106mm x 106mm x 56.5mm'] },
+    placeholderExact: ['ml', 'size', 'ex_qty', 'quantity'],
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
