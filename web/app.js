@@ -1152,7 +1152,7 @@ const WO_PCC = {
 };
 const woPcc = cfg => WO_PCC[cfg.readycontent] || ['1C (Both)'];
 // live CASH, Matte Lamination (Front), no H/S, no extra pages
-const WO_V1 = { 10: 133, 30: 370, 50: 600, 100: 1050, 200: 1779.25, 300: 2426.7, 500: 3526.2, 1000: 6272.55, 3000: 17548.6, 10000: 55181.45 };
+const WO_V1 = { 10: 133, 30: 370, 50: 600, 100: 1050, 150: 1482, 200: 1779.25, 300: 2426.7, 500: 3526.2, 1000: 6272.55, 2000: 11892.45, 3000: 17548.6, 10000: 55181.45 };
 const WO_VAR = {
   '16 sheets custom content=4C(Both) + 64 sheets ready content=1C(Both)': WO_V1,
   '16 sheets ready content=1C(Both) + 64 sheets Custom Content=1C(Both)': WO_V1,
