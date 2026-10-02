@@ -855,8 +855,19 @@ const lsFrosted = cfg => /Frosted/.test(cfg.paper || '');
 
 // (wire-o wall / premium desk: structure only)
 
+// ---------- Toast Bag / RPET Non-Woven Bag / DTF Tote Bag With Zip (Excard, live 2026-10-02): Excard's fixed spec rows.
+// Toast Bag quantity 50-2,000 in fifties (Excard's list: RM1.05 a bag from 550 up); RPET form offers A4 / A3L only. ----------
+const TB_QTY = Array.from({ length: 40 }, (_, i) => (i + 1) * 50);
+function tbPriceBase(cfg, q) {
+  if (q > 1000) return Math.round(q * 1.05 * 100) / 100;
+  const E = typeof window !== 'undefined' && window.PricingEngine, p = E && E.DATA.products.find(x => x.id === 149);
+  const c = p && E.DATA.params[p.paramKey] && E.DATA.params[p.paramKey].curves; const v = c && c[Object.keys(c)[0]];
+  return v && v[q] != null ? +v[q] : null;
+}
+const RP_SPEC = { 'rPET - A4': ['280mm x 330mm x 80mm', '440mm'], 'rPET - A3L': ['420mm x 320mm x 100mm', '500mm'] };
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
-const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true };
+const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
 // Softcover: binding (saddle / perfect) → size → pages → the cover papers Excard offers for that size and page count →
 // the content papers it allows for that cover at that page count (A4-type sizes vs A5 portrait tables). Hardcover:
@@ -1877,6 +1888,46 @@ const CFG_OVERRIDES = {
       { key: 'pd_standcolour', label: 'Stand Print Colour', options: ['4C (Front)'], section: 'General', neutral: true, after: 'pd_standsize' },
     ],
     placeholderExact: ['standlamination', 'quantity'],
+  },
+  'Toast Bag — Litho': {
+    addFields: [
+      { key: 'tb_model', label: 'Model', options: ['TBW'], section: 'General', neutral: true, first: true },
+      { key: 'tb_size', label: 'Bag Size', options: ['160mm (W) x 260mm (H) x 130mm (G)'], section: 'General', neutral: true, after: 'tb_model' },
+      { key: 'tb_material', label: 'Material', options: ['White Paper 55G + PE 30U'], section: 'General', neutral: true, after: 'tb_size' },
+      { key: 'tb_base', label: 'Material Base Colour', options: ['White'], section: 'General', neutral: true, after: 'tb_material' },
+      { key: 'tb_colour', label: 'Print Colour', options: ['4C (Front)'], section: 'General', neutral: true, after: 'tb_base' },
+      { key: 'tb_comp', label: 'Compulsory', options: ['Curl Wire Sealed'], section: 'General', neutral: true, after: 'tb_colour' },
+    ],
+    placeholderExact: ['quantity'],
+    qtyOptions: TB_QTY,
+    priceBase: tbPriceBase,
+  },
+  'RPET Non-Woven Bag — Litho': {
+    optionsOverride: {
+      model: ['rPET - A4', 'rPET - A3L'],
+      size: cfg => [(RP_SPEC[cfg.model] || RP_SPEC['rPET - A4'])[0]],
+      handlelength: cfg => [(RP_SPEC[cfg.model] || RP_SPEC['rPET - A4'])[1]],
+    },
+    addFields: [
+      { key: 'rp_material', label: 'Material', options: ['rPET 90gsm'], section: 'General', neutral: true, after: 'size' },
+      { key: 'rp_handlecolour', label: 'Handle Colour', options: ['White'], section: 'General', neutral: true, after: 'rp_material' },
+      { key: 'rp_colour', label: 'Print Colour', options: ['4C'], section: 'General', neutral: true, after: 'handlelength' },
+      { key: 'rp_comp', label: 'Compulsory', options: ['Ultrasonic'], section: 'General', neutral: true, after: 'rp_colour' },
+    ],
+    defaultOpt: { model: 'rPET - A4' },
+    placeholderExact: ['quantity'],
+  },
+  'DTF Tote Bag With Zip — Litho': {
+    addFields: [
+      { key: 'dz_cat', label: 'Category', options: ['DTF Tote Bag With Zip'], section: 'General', neutral: true, first: true },
+      { key: 'dz_model', label: 'Model', options: ['DTFTBZ'], section: 'General', neutral: true, after: 'printcolour' },
+      { key: 'dz_size', label: 'Size', options: ['340mm X 370mm'], section: 'General', neutral: true, after: 'dz_model' },
+      { key: 'dz_material', label: 'Material', options: ['Cotton Canvas 12oz'], section: 'General', neutral: true, after: 'dz_size' },
+      { key: 'dz_bagcolour', label: 'Bag Colour', options: ['Beige'], section: 'General', neutral: true, after: 'dz_material' },
+      { key: 'dz_handlecolour', label: 'Handle Colour', options: ['Same as bag colour'], section: 'General', neutral: true, after: 'dz_bagcolour' },
+      { key: 'dz_handlelength', label: 'Handle Length', options: ['500mm'], section: 'General', neutral: true, after: 'dz_handlecolour' },
+    ],
+    placeholderExact: ['printcolour', 'quantity'],
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
