@@ -1424,6 +1424,30 @@ const kotakCurves = cfg => { const E = typeof window !== 'undefined' && window.P
 const kotakLams = cfg => { const l = kotakCurves(cfg).map(x => x[0]); const order = ['Not Required', 'Matte Lamination (Front)', 'Gloss Lamination (Front)', 'UV Varnish (Front)', 'Gloss Waterbase Varnish (Front)']; return order.filter(o => l.indexOf(o) >= 0); };
 const kotakQty = cfg => { const cs = kotakCurves(cfg); const hit = cs.find(x => x[0] === cfg.lamination) || cs[0]; return hit ? Object.keys(hit[1]).map(Number).filter(q => q <= 10000).sort((a, b) => a - b) : [50, 100, 250, 500, 1000]; };
 
+// ---------- Magnet (Excard www /spec/Digital/Magnet, live 2026-10-02): Excard takes a typed size (Height 40-300 x Width 40-420 mm;
+// Round = Diameter 50-300 mm), lamination is required (no plain option). Prices (live samples, 50+ points): Excard prices by printed
+// sheets. Rectangle: F(sheets) + RM0.10/pc on a 304 x 432 mm sheet (4 mm gap); our list curves are used as-is for its standard sizes
+// (live exact). Custom Die-Cut and Round (same price by size): 1.13 x F + 5 + RM0.10/pc on a 300 x 420 mm sheet (worst 3.6%).
+// Soft Touch adds ~RM0.46 per sheet; Gloss = Matte. ----------
+const MAG_F = [[1,58],[2,67],[3,77],[4,86],[5,96],[6,105],[7,115],[8,117],[9,133],[10,135],[12,154],[13,171],[15,183],[16,187],[17,211],[19,229],[20,230],[21,248],[22,248],[24,262],[25,285],[30,314],[32,345],[34,373],[38,412],[40,412],[42,451],[44,451],[48,477],[50,524],[59,570],[63,606],[70,614],[84,792],[88,828],[96,828],[100,932],[125,1159],[167,1407],[250,2100],[500,4138],[1000,8305],[2000,16582]];
+const MAG_QTY = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100].concat(Array.from({ length: 38 }, (_, i) => 150 + i * 50));
+const magF = s => { const F = MAG_F; if (s <= F[0][0]) return F[0][1]; for (let i = 1; i < F.length; i++) if (s <= F[i][0]) { const [a, pa] = F[i - 1], [b, pb] = F[i]; return pa + (pb - pa) * (s - a) / (b - a); } const [a, pa] = F[F.length - 2], [b, pb] = F[F.length - 1]; return pb + (pb - pa) / (b - a) * (s - b); };
+const magPer = (h, w, sw, sh) => { const x = (a, b) => Math.floor((sw + 4) / (a + 4)) * Math.floor((sh + 4) / (b + 4)); return Math.max(x(h, w), x(w, h)); };
+const magDims = cfg => cfg.shape === 'Round' ? [+cfg.mg_d, +cfg.mg_d] : [+cfg.mg_h, +cfg.mg_w];
+function magPriceBase(cfg, q) {
+  const [h, w] = magDims(cfg); if (!h || !w || !cfg.lamination) return null;
+  if (cfg.shape === 'Round' ? (h < 50 || h > 300) : (h < 40 || h > 300 || w < 40 || w > 420)) return null;
+  const st = /Soft Touch/.test(cfg.lamination), rect = cfg.shape === 'Rectangle/Square' || cfg.shape === 'Multiple Dieline';
+  if (rect) {   // the list's standard sizes are exact
+    const E = typeof window !== 'undefined' && window.PricingEngine, c = E && E.DATA.params.magnet_plx;
+    if (c) { for (const k in c.curves) { const p = k.split('|'); if (p[0] !== cfg.shape || p[2] !== cfg.lamination) continue; const d = (p[1].match(/\d+/g) || []).map(Number); if (((d[0] === h && d[1] === w) || (d[0] === w && d[1] === h)) && c.curves[k][q] != null) return +c.curves[k][q]; } }
+    const n = magPer(h, w, 304, 432); if (!n) return null; const s = Math.ceil(q / n);
+    return Math.round(magF(s) + 0.1 * q + (st ? 0.46 * s : 0));
+  }
+  const n = magPer(h, w, 300, 420); if (!n) return null; const s = Math.ceil(q / n);
+  return Math.round(magF(s) * 1.13 + 5 + 0.1 * q + (st ? 0.46 * s : 0));
+}
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -2909,6 +2933,28 @@ const CFG_OVERRIDES = {
     placeholderExact: ['paper', 'quantity'],
     placeholderWhen: { lamination: cfg => kotakLams(cfg).indexOf('Not Required') < 0 },
     qtyOptions: kotakQty,
+  },
+  'Magnet — Digital': {
+    hide: ['inc_printmethod', 'size'],
+    label: { inc_rdtype: 'Order Type', shape: 'Category', lamination: 'Lamination / Finishing' },
+    optLabel: { lamination: { 'Matte Lamination (Front)': 'Matte Laminate (Front)', 'Gloss Lamination (Front)': 'Gloss Laminate (Front)', 'Soft Touch Lamination (Front)': 'Soft Touch Laminate (Front)' } },
+    order: ['inc_rdtype', 'shape', 'mg_h', 'mg_w', 'mg_d', 'mg_paper', 'mg_colour', 'lamination', 'mg_cut'],
+    addFields: [
+      { key: 'mg_h', label: 'Height (40mm - 300mm)', type: 'number', min: 40, max: 300, default: 54, section: 'General', after: 'shape', showWhen: { field: 'shape', values: ['Custom Die-Cut (with round corner)', 'Rectangle/Square', 'Multiple Dieline'] } },
+      { key: 'mg_w', label: 'Width (40mm - 420mm)', type: 'number', min: 40, max: 420, default: 90, section: 'General', after: 'mg_h', showWhen: { field: 'shape', values: ['Custom Die-Cut (with round corner)', 'Rectangle/Square', 'Multiple Dieline'] } },
+      { key: 'mg_d', label: 'Diameter (50mm - 300mm)', type: 'number', min: 50, max: 300, default: 90, section: 'General', after: 'shape', showWhen: { field: 'shape', value: 'Round' } },
+      { key: 'mg_paper', label: 'Paper', options: ['Magnetic Sheet 0.98mm'], section: 'General', neutral: true, after: 'mg_w' },
+      { key: 'mg_colour', label: 'Print Colour', options: ['4C'], section: 'General', neutral: true, after: 'mg_paper' },
+      { key: 'mg_cut', label: 'Cutting Method', options: ['Die-Cutting'], section: 'Optional Finishing', neutral: true, after: 'lamination' },
+    ],
+    optionsOverride: {
+      shape: ['Custom Die-Cut (with round corner)', 'Rectangle/Square', 'Round', 'Multiple Dieline'],
+      lamination: ['Matte Lamination (Front)', 'Gloss Lamination (Front)', 'Soft Touch Lamination (Front)'],
+    },
+    defaultOpt: { shape: 'Custom Die-Cut (with round corner)' },
+    placeholderExact: ['lamination', 'quantity'],
+    qtyOptions: MAG_QTY,
+    priceBase: magPriceBase,
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
