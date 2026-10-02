@@ -1325,6 +1325,9 @@ const kkHsFields = () => {
   return out;
 };
 
+// ---------- Kad Terima Kasih (Excard kad-terima-kasih, live 2026-10-02): lamination only on Gloss Art Card (preset Not Required),
+// hole punch after quantity, 50..500 pcs. Prices re-captured from Excard's price-list generator (the stored curves were scrambled). ----------
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -2699,6 +2702,13 @@ const CFG_OVERRIDES = {
     placeholderExact: ['size', 'paper', 'printcolour', 'lamination', 'kk_hs_size_1', 'kk_hs_colour_1', 'kk_hs_size_2', 'kk_hs_colour_2', 'quantity'],
     qtyOptions: KK_QTY,
     priceBase: kkPriceBase,
+  },
+  'Kad Terima Kasih — Digital': {
+    optionsOverride: { size: ['40mm x 70mm', '40mm x 86mm', '52mm x 52mm'] },
+    hideWhen: { lamination: cfg => !/^Gloss Art Card/.test(cfg.paper || '') },
+    defaultOpt: { lamination: 'Not Required', holepunch: 'Not Required' },
+    placeholderExact: ['size', 'paper', 'printcolour', 'quantity'],
+    qtyOptions: [50, 100, 150, 200, 250, 300, 350, 400, 450, 500],
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
