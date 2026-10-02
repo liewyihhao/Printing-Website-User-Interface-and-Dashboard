@@ -1204,6 +1204,52 @@ const woHsFields = () => {
 // leather (no Brown on Excard), fixed binding/cover size/front frosted sheet/content spec, pages 5-12 follow pages 1-4, 10..200 pcs.
 // Prices = Excard's list (3,900 curves exact). ----------
 
+// ---------- Voucher (Excard www /spec/Litho/Voucher, live 2026-10-02). Option rules from a full size x form x paper crawl:
+// perforation lines by size and form (Book has no 0 and goes higher), sets 10/25 on Art Card, spot colours on colour papers (Simili
+// gets spot + 4C), Loose has its own quantity list and no sets; Book shows Craft Paper front + Craft Card back, Pad Craft Card back.
+// Prices: our curves (repaired, 30+ live points exact) for 4C on non-card papers; perforation above 2 lines costs the same as 2.
+// Art Card = the Art Paper 100gsm price + a paper surcharge (1.27 / 1.02 per m2 of sheets, small minimum, double for 4C Both; ~3%).
+// Spot colours = a 1-colour price by m2 of paper + a per-plate step, sampled live; numbering/perforation/form add the same as on 4C. ----------
+const VO_K = 1.2705;
+const VO_SPOT = ['1C(Front)', '1C(Both)', '2C(Front)', '2C(Both)', '2C(Front),1C(Back)'];
+const VO_PLATES = { '1C(Front)': 1, '1C(Both)': 2, '2C(Front)': 2, '2C(Front),1C(Back)': 3, '2C(Both)': 4 };
+const VO_P1 = [[6.3, 110.53], [12.6, 132.13], [63, 181.68], [157.5, 269.35], [630, 973.2]];
+const VO_PAD_QTY = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 1000];
+const VO_LOOSE_QTY = [250, 500, 1000, 1500, 2000, 2500, 5000, 10000, 15000, 20000, 25000, 50000];
+const voCard = cfg => /^Art Card/.test(cfg.paper || '');
+const voColourPaper = cfg => /^Colour Paper/.test(cfg.paper || '');
+const voSimili = cfg => /^Simili/.test(cfg.paper || '');
+const voColours = cfg => voColourPaper(cfg) ? VO_SPOT : voSimili(cfg) ? VO_SPOT.concat(['4C (Front)', '4C (Both)']) : ['4C (Front)', '4C (Both)'];
+function voPerfs(cfg) {
+  const sz = cfg.size || '', book = cfg.packform === 'Book';
+  const g = s => ['90mm x 140mm', '105mm x 145mm', '145mm x 145mm', '125mm x 175mm'].indexOf(s) >= 0 ? 2 : ['95mm x 225mm', '120mm x 230mm'].indexOf(s) >= 0 ? 4 : s === '105mm x 300mm' ? 5 : 3;
+  let max = g(sz);
+  if (book) max = ['90mm x 140mm', '105mm x 145mm', '145mm x 145mm'].indexOf(sz) >= 0 ? 2 : ['125mm x 175mm', '90mm x 190mm', '107mm x 190mm'].indexOf(sz) >= 0 ? 3 : sz === '105mm x 300mm' ? 6 : 4;
+  const out = []; for (let i = book ? 1 : 0; i <= max; i++) out.push(String(i)); return out;
+}
+const voArea = cfg => { const m = (cfg.size || '').match(/\d+/g) || [90, 140]; return m[0] * m[1] / 1e6; };
+function voPriceBase(cfg, q) {
+  if (!cfg.size || !cfg.paper || !cfg.packform) return null;
+  const loose = cfg.packform === 'Loose', col = cfg.ex_printcolour || '4C (Front)', spot = VO_PLATES[col] != null;
+  const sets = loose ? '' : String(cfg.sets || '50'), sheets = loose ? q : q * (+sets || 50), m2 = sheets * voArea(cfg);
+  const perf = String(Math.min(2, +(cfg.perforation || 0)));
+  const V = { packform: cfg.packform, size: cfg.size, paper: voCard(cfg) ? 'Art Paper 100gsm' : cfg.paper, colour: spot ? '4C (Front)' : col, sets, numbering: cfg.numbering === 'Yes' ? 'Yes' : 'No', perforation: perf };
+  const full = plQuote(110, V, q); if (full == null) return null;
+  let p = full;
+  if (voCard(cfg)) {
+    const gsm260 = /260/.test(cfg.paper), u = Math.max(gsm260 ? 11 : 9, (gsm260 ? 1.27 : 1.02) * m2) * (col === '4C (Both)' ? 2 : 1);
+    p = full + u * VO_K;
+  } else if (spot) {
+    const ref = plQuote(110, Object.assign({}, V, { packform: loose ? 'Loose' : 'Pad', numbering: 'No', perforation: '0' }), q);
+    let p1; if (m2 <= VO_P1[0][0]) p1 = VO_P1[0][1]; else if (m2 >= VO_P1[4][0]) p1 = VO_P1[4][1] + (m2 - VO_P1[4][0]) * 1.4896;
+    else { let i = 0; while (VO_P1[i + 1][0] < m2) i++; const [a, pa] = VO_P1[i], [b, pb] = VO_P1[i + 1]; p1 = pa + (pb - pa) * (m2 - a) / (b - a); }
+    const step = 80.04 + 0.283 * Math.max(0, m2 - 96.8);
+    p = (p1 + (VO_PLATES[col] - 1) * step) * (voSimili(cfg) ? 0.965 : 1) + (ref != null ? full - ref : 0);
+  }
+  return Math.round(p * 100) / 100;
+}
+const voPanelFields = () => { const out = []; let after = 'perforation'; for (let i = 1; i <= 7; i++) { const vals = []; for (let n = Math.max(1, i - 1); n <= 6; n++) vals.push(String(n)); out.push({ key: 'vo_panel_' + i, label: 'Panel ' + i + ' Width (mm)', type: 'number', min: 45, section: 'Optional Finishing', after, showWhen: { field: 'perforation', values: vals } }); after = 'vo_panel_' + i; } return out; };
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -2535,6 +2581,26 @@ const CFG_OVERRIDES = {
     placeholderExact: ['deboss', 'debosssizeh', 'debosssizew', 'stickersize', 'innerfrontcontent', 'paper1to4', 'quantity'],
     qtyOptions: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200],
   },
+  'Voucher — Litho': {
+    hide: ['inc_printmethod', 'colour', 'ex_lamination', 'ex_perforationline'],
+    order: ['size', 'packform', 'vo_fc', 'vo_bc', 'paper', 'sets', 'ex_printcolour', 'numbering', 'perforation'],
+    label: { packform: 'Form', size: 'Size', paper: 'Paper Material (Content)', sets: 'Sheets per Pad / Book', ex_printcolour: 'Print Colour', numbering: 'Numbering', perforation: 'Perforation Line (s)' },
+    optLabel: { numbering: { No: 'Not required', Yes: 'Required (All Panels)' } },
+    addFields: [
+      { key: 'vo_fc', label: 'Paper Material (Front Cover)', options: ['Craft Paper'], section: 'General', neutral: true, after: 'packform', showWhen: { field: 'packform', value: 'Book' } },
+      { key: 'vo_bc', label: 'Paper Material (Back Cover)', options: ['Craft Card'], section: 'General', neutral: true, after: 'packform', showWhen: { field: 'packform', values: ['Pad', 'Book'] } },
+    ].concat(voPanelFields()),
+    optionsOverride: {
+      sets: cfg => voCard(cfg) ? ['10', '25'] : ['10', '25', '50'],
+      ex_printcolour: voColours,
+      perforation: voPerfs,
+    },
+    hideWhen: { sets: cfg => cfg.packform === 'Loose' },
+    defaultOpt: { packform: 'Pad', numbering: 'No', sets: '10' },
+    placeholderExact: ['quantity'],
+    qtyOptions: cfg => cfg.packform === 'Loose' ? VO_LOOSE_QTY : VO_PAD_QTY,
+    priceBase: voPriceBase,
+  },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
   'Flyer (= Loose Sheet Litho)': LO_OV,
@@ -3152,7 +3218,7 @@ class Component extends DCLogic {
     ph.forEach(k => { if (sc[k] == null || sc[k] === '') delete cfg[k]; });
     const gates = ov.optGate || {}, hideWhen = ov.hideWhen || {};
     const hidden = f => { if (this.pkHidden(f.key)) return true; if (this.plHidden(prod, f.key, cfg)) return true; if (hideWhen[f.key]) { try { return !!hideWhen[f.key](cfg); } catch (e) {} } return false; };
-    const list = (prod.fields || []).filter(f => f.key && !hidden(f) && this.pkShown(f, cfg)).map(f => {
+    let list = (prod.fields || []).filter(f => f.key && !hidden(f) && this.pkShown(f, cfg)).map(f => {
       let options = [];
       try { options = E.localOptions(prod, f.key, cfg) || []; } catch (e) { options = f.options || []; }
       if (options.length) options = this.plOptions(prod, f.key, cfg, options);
@@ -3198,6 +3264,8 @@ class Component extends DCLogic {
       else if (/custom (design|made)/i.test(v))
         follow(def, [{ key: 'custom_brief', label: 'Describe your custom design', type: 'text', placeholder: 'Size, shape, content — anything we should know' }]);
     });
+    // optional question order (Excard's sequence): keys in ov.order are placed in that order; any other question stays right after the one before it
+    if (ov.order) { let r = -1, n = 0; const rank = list.map(x => { const i = ov.order.indexOf(x.def.key); if (i >= 0) { r = i; n = 0; return i; } n++; return r + n / 1000; }); list = list.map((x, i) => [x, rank[i], i]).sort((a, b) => a[1] - b[1] || a[2] - b[2]).map(a => a[0]); }
     return list;
   }
   // does this product take a custom size? (the size preview is shown only for these — user, 2026-09-28)
