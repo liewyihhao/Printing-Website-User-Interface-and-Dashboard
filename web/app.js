@@ -1079,6 +1079,8 @@ function hcpPriceBase(cfg, q) {
   return Math.round(p * 100) / 100;
 }
 
+// (pvc card: structure only)
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -2327,6 +2329,16 @@ const CFG_OVERRIDES = {
     qtyOptions: HCP_Q,
     qtyFilter: (cfg, n) => n >= 300 || (!hcpHs(cfg) && !/Spot UV/.test(cfg.lamination || '')),
     priceBase: hcpPriceBase,
+  },
+  'PVC Card — Digital': {
+    label: { orientation: 'Orientation', inc_paper: 'Paper', inc_compulsory: 'Compulsory', hole_punch: 'Hole Punch', vdp: 'VDP Type' },
+    optLabel: { hole_punch: { 'Hole Punching (6mm)': 'Hole Punching' } },
+    optionsOverride: {
+      ex_size: cfg => [cfg.orientation === 'Landscape' ? '54mm x 86mm' : '86mm x 54mm'],
+      vdp: cfg => cfg.colour === '4C (Both)' ? ['Not Required', 'Variable Data Printing (Front)', 'Variable Data Printing (Back)', 'Variable Data Printing (Both)'] : ['Not Required', 'Variable Data Printing (Front)'],
+    },
+    defaultOpt: { orientation: 'Portrait', vdp: 'Not Required', hole_punch: 'Not Required' },
+    placeholderExact: ['colour', 'quantity'],
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
