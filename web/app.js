@@ -846,8 +846,15 @@ const PKO = { 'SB 01': ['20', '52 x 38', 'Round Square', '4'], 'SB 02': ['20', '
 
 // (paper bag: structure only)
 
+// ---------- Soft Stand Desk Calendar (Excard soft-stand-desk-calendar, live 2026-10-02): one fixed spec (WDCS 002).
+// Prices = live order-form CASH for all 15 quantities (Excard's price-list page still shows older, higher prices). ----------
+const SS_PRICE = { 100: 407, 200: 698, 300: 807.8, 500: 1073, 1000: 1912, 1500: 2741, 2000: 3208, 3000: 4630, 4000: 6032, 5000: 7405, 6000: 8700, 7000: 9869.4, 8000: 11121.3, 9000: 12374.1, 10000: 13626 };
+// ---------- L-Shape Plastic Folder (Excard l-shape-plastic-folder): Model LSF 001, 310 x 442 mm; Synthetic Paper is 4C with
+// matte lamination; Frosted Plastic asks 4C or 4C + White (to 300 pcs). Prices = Excard's list (exact). ----------
+const lsFrosted = cfg => /Frosted/.test(cfg.paper || '');
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
-const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true };
+const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
 // Softcover: binding (saddle / perfect) → size → pages → the cover papers Excard offers for that size and page count →
 // the content papers it allows for that cover at that page count (A4-type sizes vs A5 portrait tables). Hardcover:
@@ -1795,6 +1802,48 @@ const CFG_OVERRIDES = {
   'Paper Bag — Litho': {
     defaultOpt: { model: 'PBG 001' },
     placeholderExact: ['paper', 'lamination', 'rope_colour', 'quantity'],
+  },
+  'Desk Calendar — Soft Stand (Litho)': {
+    addFields: [
+      { key: 'ss_model', label: 'Model', options: ['WDCS 002'], section: 'General', neutral: true, first: true },
+      { key: 'ss_comp', label: 'Compulsory', options: ['Collating, Wire O Hole Punching, Wire O Binding (Black), Creasing'], section: 'General', neutral: true, after: 'ss_model' },
+      { key: 'ss_coverpaper', label: 'Cover Paper', options: ['Simili 100gsm (2 Sheets)'], section: 'General', neutral: true, after: 'ss_comp' },
+      { key: 'ss_coversize', label: 'Cover Size', options: ['150mm x 215mm'], section: 'General', neutral: true, after: 'ss_coverpaper' },
+      { key: 'ss_covercolour', label: 'Cover Print Colour', options: ['4C (Both)'], section: 'General', neutral: true, after: 'ss_coversize' },
+      { key: 'ss_artwork', label: 'Content Artwork', options: ['Custom Design'], section: 'General', neutral: true, after: 'ss_covercolour' },
+      { key: 'ss_contentpaper', label: 'Content Paper', options: ['Simili 100gsm (6 Sheets)'], section: 'General', neutral: true, after: 'ss_artwork' },
+      { key: 'ss_contentsize', label: 'Content Size', options: ['150mm x 215mm'], section: 'General', neutral: true, after: 'ss_contentpaper' },
+      { key: 'ss_contentcolour', label: 'Content Print Colour', options: ['4C (Both)'], section: 'General', neutral: true, after: 'ss_contentsize' },
+      { key: 'ss_standpaper', label: 'Stand Paper', options: ['Gloss Art Card 400gsm (1 side coated)'], section: 'General', neutral: true, after: 'ss_contentcolour' },
+      { key: 'ss_standsize', label: 'Stand Size', options: ['155mm x 215mm'], section: 'General', neutral: true, after: 'ss_standpaper' },
+      { key: 'ss_compstand', label: 'Compulsory (Stand)', options: ['Creasing'], section: 'General', neutral: true, after: 'ss_standsize' },
+    ],
+    placeholderExact: ['quantity'],
+    qtyOptions: Object.keys(SS_PRICE).map(Number),
+    priceBase: (cfg, q) => SS_PRICE[q] != null ? SS_PRICE[q] : null,
+  },
+  'L-Shape Plastic Folder — Digital': {
+    hide: ['inc_printmethod'],
+    label: { printcolour: 'Print Colour' },
+    optionsOverride: {
+      printcolour: cfg => lsFrosted(cfg) ? ['4C', '4C + White'] : ['4C'],
+      ls_comp: cfg => [lsFrosted(cfg) ? 'Die-Cutting, Ultrasonic Sealing' : 'Matte Lamination (1 side), Die-Cutting, Ultrasonic Sealing'],
+    },
+    addFields: [
+      { key: 'ls_model', label: 'Model', options: ['LSF 001'], section: 'General', neutral: true, after: 'paper' },
+      { key: 'ls_size', label: 'Size', options: ['310mm x 442mm'], section: 'General', neutral: true, after: 'ls_model' },
+      { key: 'ls_comp', label: 'Compulsory', options: ['Matte Lamination (1 side), Die-Cutting, Ultrasonic Sealing', 'Die-Cutting, Ultrasonic Sealing'], section: 'General', neutral: true, after: 'printcolour' },
+    ],
+    placeholderExact: ['paper', 'printcolour', 'quantity'],
+  },
+  'Arch File — Digital': {
+    label: { cover_paper: 'Inner Paper Material', cover_print: 'Inner Print Colour', inc_binding: 'Binding' },
+    optionsOverride: { inc_binding: ['Steel Binding- 4 ring & Metal Clip & Wire-O & Oval curve & 2 L-shape corner'] },
+    addFields: [
+      { key: 'af_paper', label: 'Paper Material', options: ['Chipboard 1200gsm & Gloss Art Paper 150gsm'], section: 'General', neutral: true, after: 'inc_binding' },
+      { key: 'af_design', label: 'Design', options: ['Ready Design'], section: 'General', neutral: true, after: 'inc_lamination' },
+    ],
+    placeholderExact: ['quantity'],
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
