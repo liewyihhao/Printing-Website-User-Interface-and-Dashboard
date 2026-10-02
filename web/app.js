@@ -1367,6 +1367,10 @@ const csOv = (pk, extraFields) => ({
   priceBase: csPriceBase(pk),
 });
 
+// ---------- UV DTF Sticker (Excard uv-dtf-sticker, live 2026-10-02): fixed paper / print colour / Cold Lamination, delivery sheet
+// size follows the size (A3 / A4 / A5). Prices = Excard's list (live 3/3 exact). ----------
+const UVD_SHEET = { '267mm x 390mm': '297mm x 420mm (A3)', '180mm x 267mm': '210mm x 297mm (A4)', '118mm x 180mm': '148mm x 210mm (A5)' };
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -2751,6 +2755,17 @@ const CFG_OVERRIDES = {
   },
   'Car Sticker — Digital (= Static Cling form)': csOv('carsticker_plx'),
   'Static Cling Window Sticker — Digital': csOv('staticcling_plx', [{ key: 'cs_paper', label: 'Paper', options: ['Static Cling'], section: 'General', neutral: true, after: 'size' }]),
+  'UV DTF Sticker — Digital': {
+    order: ['size', 'package', 'uvd_paper', 'uvd_colour', 'uvd_sheet', 'uvd_comp', 'ex_sheets'],
+    addFields: [
+      { key: 'uvd_paper', label: 'Paper', options: ['UV DTF Sticker'], section: 'General', neutral: true, after: 'package' },
+      { key: 'uvd_colour', label: 'Print Colour', options: ['4C (Front)'], section: 'General', neutral: true, after: 'uvd_paper' },
+      { key: 'uvd_sheet', label: 'Delivery Sheet Size', options: ['297mm x 420mm (A3)', '210mm x 297mm (A4)', '148mm x 210mm (A5)'], section: 'General', neutral: true, after: 'uvd_colour' },
+      { key: 'uvd_comp', label: 'Compulsory', options: ['Cold Lamination'], section: 'General', neutral: true, after: 'uvd_sheet' },
+    ],
+    optionsOverride: { size: ['267mm x 390mm', '118mm x 180mm', '180mm x 267mm'], uvd_sheet: cfg => [UVD_SHEET[cfg.size] || '297mm x 420mm (A3)'] },
+    placeholderExact: ['size', 'package', 'ex_sheets', 'quantity'],
+  },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
   'Flyer (= Loose Sheet Litho)': LO_OV,
