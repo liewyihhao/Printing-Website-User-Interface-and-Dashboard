@@ -1403,6 +1403,19 @@ function hmPriceBase(cfg, q) {
   return cv && cv[q] != null ? +cv[q] : null;
 }
 
+// ---------- Envelope (Excard envelope, live 2026-10-02): plain model codes; spot-colour ink per plate (Front K / Front M / Back K /
+// Back M) for 1C and 2C sides; OE models = 4C (Front), 1,000..20,000; EV / IS / OP models = 500..10,000. Prices: our curves with the
+// concurrent-sampling repair (integer points = true / 1.1, 1,286 rescaled; live 7/7 exact). ----------
+const ENV_SPOT = ['EX BLK 01', 'EX BLU 01', 'EX BLU 02', 'EX BLU 03', 'EX BLU 04', 'EX BRW 01', 'EX CYN 01', 'EX GRN 04', 'EX GRN 05', 'EX MAG 01', 'EX MAR 01', 'EX ORG 01', 'EX RED 01', 'EX RED 03', 'EX VIO 01'];
+const envSide = (cfg, side) => {   // colours on a side: 0 / 1 / 2 / 4
+  const c = String(cfg.colour || ''); const both = c.match(/^(\d)C \(Both\)$/); if (both) return +both[1];
+  const m = c.match(new RegExp('(\d)C \(' + side + '\)')); return m ? +m[1] : 0;
+};
+const envOE = cfg => /^OE/.test(cfg.model || '');
+const ENV_TYPE = { OE4496NW: 'Simili 100gsm + Peel & Seal', OE4496W: 'Simili 100gsm + Peel & Seal + Window Patching', OE9013NW: 'Simili 100gsm + Peel & Seal', EV4090NW: 'Peel & Seal + Blue Security Line + Security Slit', EV4090W: 'Peel & Seal + Blue Security Line + Security Slit + Window', EV4286NW: 'Peel & Seal + Blue Security Line + Security Slit', EV4286W: 'Peel & Seal + Blue Security Line + Security Slit + Window', EV4496NW: 'Peel & Seal + Blue Security Line + Security Slit', EV4496W: 'Peel & Seal + Blue Security Line + Security Slit + Window', EV6390NW: 'Peel & Seal + Blue Security Line', EV7010NW: 'Peel & Seal', EV9013NW: 'Peel & Seal + Blue Security Line', EV1015NW: 'Peel & Seal + Blue Security Line', IS4286NW: 'White 100gsm', IS6390NW: 'White 100gsm + Peel & Seal', OP8642NW: 'Peel & Seal + Blue Security Line', OP6344NW: 'Peel & Seal + Blue Security Line' };
+const ENV_QTY_OE = [1000, 2000, 3000, 4000, 5000, 10000, 15000, 20000];
+const ENV_QTY_EV = [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000, 10000];
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -2858,6 +2871,25 @@ const CFG_OVERRIDES = {
     placeholderExact: ['lamination', 'pages', 'quantity'],
     qtyOptions: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200, 250, 300, 350, 400, 450, 500],
     priceBase: hmPriceBase,
+  },
+  'Envelope — Litho': {
+    hide: ['inc_printmethod'],
+    label: { model: 'Model', ex_size: 'Size', colour: 'Print Colour', inc_compulsory: 'Compulsory', ex_envelopetype: 'Envelope Type' },
+    optLabel: { model: {"OE4496NW — 114x248mm (Best Seller)":"OE4496NW", "OE4496W — 114x248mm (window)":"OE4496W", "OE9013NW — 229x324mm":"OE9013NW", "EV4090NW — 102x229mm":"EV4090NW", "EV4090W — 102x229mm (window)":"EV4090W", "EV4286NW — 110x220mm":"EV4286NW", "EV4286W — 110x220mm (window)":"EV4286W", "EV4496NW — 114x248mm":"EV4496NW", "EV4496W — 114x248mm (window)":"EV4496W", "EV6390NW — 162x229mm":"EV6390NW", "EV7010NW — 178x254mm":"EV7010NW", "EV9013NW — 229x324mm":"EV9013NW", "EV1015NW — 254x381mm":"EV1015NW", "IS4286NW — 110x220mm":"IS4286NW", "IS6390NW — 162x229mm":"IS6390NW", "OP8642NW — 220x110mm":"OP8642NW", "OP6344NW — 162x114mm":"OP6344NW"}, colour: {"1C (Front)/2C (Back)":"1C (Front) + 2C (Back)","1C (Front)/4C (Back)":"1C (Front) + 4C (Back)","2C (Front)/1C (Back)":"2C (Front) + 1C (Back)","2C (Front)/4C (Back)":"2C (Front) + 4C (Back)","4C (Front)/1C (Back)":"4C (Front) + 1C (Back)","4C (Front)/2C (Back)":"4C (Front) + 2C (Back)"} },
+    order: ['model', 'ex_size', 'colour', 'env_fk', 'env_bk', 'env_fm', 'env_bm', 'inc_compulsory', 'ex_envelopetype'],
+    addFields: [
+      { key: 'env_fk', label: 'Front K', options: ENV_SPOT, section: 'General', neutral: true, after: 'colour', showWhen: { field: 'colour', values: ['1C (Front)', '1C (Both)', '1C (Front)/2C (Back)', '1C (Front)/4C (Back)', '2C (Front)', '2C (Front)/1C (Back)', '2C (Both)', '2C (Front)/4C (Back)'] } },
+      { key: 'env_bk', label: 'Back K', options: ENV_SPOT, section: 'General', neutral: true, after: 'env_fk', showWhen: { field: 'colour', values: ['1C (Both)', '1C (Front)/2C (Back)', '2C (Front)/1C (Back)', '2C (Both)', '4C (Front)/1C (Back)', '4C (Front)/2C (Back)'] } },
+      { key: 'env_fm', label: 'Front M', options: ENV_SPOT, section: 'General', neutral: true, after: 'env_bk', showWhen: { field: 'colour', values: ['2C (Front)', '2C (Front)/1C (Back)', '2C (Both)', '2C (Front)/4C (Back)'] } },
+      { key: 'env_bm', label: 'Back M', options: ENV_SPOT, section: 'General', neutral: true, after: 'env_fm', showWhen: { field: 'colour', values: ['1C (Front)/2C (Back)', '2C (Both)', '4C (Front)/2C (Back)'] } },
+    ],
+    priceSub: { colour: ['1C (Front)/2C (Back)', '1C (Front)/4C (Back)', '2C (Front)/1C (Back)', '2C (Front)/4C (Back)', '4C (Front)/1C (Back)', '4C (Front)/2C (Back)'].reduce((m, v) => (m[v] = v.replace('/', ' + '), m), {}) },
+    optionsOverride: {
+      colour: cfg => envOE(cfg) ? ['4C (Front)'] : ['1C (Front)', '1C (Both)', '1C (Front)/2C (Back)', '1C (Front)/4C (Back)', '2C (Front)', '2C (Front)/1C (Back)', '2C (Both)', '2C (Front)/4C (Back)', '4C (Front)', '4C (Front)/1C (Back)', '4C (Front)/2C (Back)', '4C (Both)'],
+      ex_envelopetype: cfg => [ENV_TYPE[String(cfg.model || '').split(' — ')[0]] || 'Peel & Seal'],
+    },
+    placeholderExact: ['env_fk', 'env_bk', 'env_fm', 'env_bm', 'quantity'],
+    qtyOptions: cfg => envOE(cfg) ? ENV_QTY_OE : ENV_QTY_EV,
   },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
