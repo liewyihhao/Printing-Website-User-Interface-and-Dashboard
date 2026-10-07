@@ -1574,8 +1574,117 @@ const SILK_LB = {
   price: silkLinePrice,
 };
 
+// ---------- Sublimation garments (Excard sublimation shirt / muslimah / sweatshirt-hoodies / corporate-shirt / jacket, live
+// 2026-10-08): one form, then Size & Quantity rows (size + pcs, up to 11 rows, 5-1000 pcs; Sample Proof = 1-2 pcs). Prices are
+// flat per piece (no quantity breaks) by model + sleeve (+ fabric on NFL Oversize), with big-size bands 4XL-7XL / 8XL-9XL / 10XL.
+// Add-ons per piece: variable data (Numbering or Text RM4, both RM6 per side; Both sides = dearer side + RM2, shirt and pants
+// alike), logo patch RM3 per position. Units below are Excard CASH per piece (spec-paired live samples). ----------
+const SB_SZ_A = ['2XS', 'XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL', '7XL', '8XL', '9XL', '10XL'];
+const SB_SZ_7 = ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL', '7XL'];
+const SB_SZ_K = ['22', '24', '26', '28', '30', '32'];
+const SB_BAND = s => /^(4|5|6|7)XL$/.test(s) ? 1 : /^(8|9)XL$/.test(s) ? 2 : s === '10XL' ? 3 : 0;
+const SB_F0 = ['Micro Fiber Eyelet 160gsm', 'Microfiber Super Square 160gsm'];
+const SB_L0 = ['Short Sleeve', 'Long Sleeve', 'Sleeveless'], SB_L1 = ['Short Sleeve', 'Long Sleeve'], SB_L2 = ['Long Sleeve'];
+// model: [label, sleeves, fabrics, sizes, unit per sleeve [base, 4-7XL, 8-9XL, 10XL] (missing band = base), pants?]
+const SB_MODELS = {
+  'Sublimation Shirt': {
+    Adult: [
+      ['Round Neck', SB_L0, SB_F0, SB_SZ_A, { 'Short Sleeve': [16, 20, 28, 31], 'Long Sleeve': [20, 23.5, 32.5, 35], 'Sleeveless': [16, 20, 28, 31] }, true],
+      ['V Neck', SB_L0, SB_F0, SB_SZ_A, { 'Short Sleeve': [16, 20, 28, 31], 'Long Sleeve': [20, 23.5, 32.5, 35], 'Sleeveless': [16, 20, 28, 31] }, true],
+      ['Collar with Button', SB_L1, SB_F0, SB_SZ_A, { 'Short Sleeve': [21, 24.5, 35, 38], 'Long Sleeve': [24.5, 28, 39, 42] }],
+      ['Mandarin Collar', SB_L1, SB_F0, SB_SZ_A, { 'Short Sleeve': [22.5, 26, 36.5, 39.5], 'Long Sleeve': [26, 29.5, 40.5, 43.5] }],
+      ['Retro V Collar', SB_L1, SB_F0, SB_SZ_A, { 'Short Sleeve': [22, 25.5, 36, 39], 'Long Sleeve': [25.5, 29, 40, 43] }],
+      ['Retro Flat Collar', SB_L1, SB_F0, SB_SZ_A, { 'Short Sleeve': [22, 25.5, 36, 39], 'Long Sleeve': [25.5, 29, 40, 43] }],
+      ['Raglan Round Neck', SB_L1, SB_F0, SB_SZ_A, { 'Short Sleeve': [19, 22.5, 32.5, 35], 'Long Sleeve': [22.5, 26, 36.5, 39] }],
+      ['NFL Oversize', SB_L1, ['Lycra 270gsm'].concat(SB_F0), SB_SZ_A.slice(1), { 'Short Sleeve': [36, 39.5, 52, 55], 'Long Sleeve': [39.5, 43, 56.5, 59] }, false,
+        { 'Short Sleeve': [21, 24.5, 35, 38], 'Long Sleeve': [24.5, 28, 39, 42] }]],   // on Eyelet / Super Square: priced as Collar with Button
+    Kid: [
+      ['Kids Round Neck', SB_L0, SB_F0, SB_SZ_K, { 'Short Sleeve': [15.5], 'Long Sleeve': [19], 'Sleeveless': [15.5] }],
+      ['Kids V Neck', SB_L0, SB_F0, SB_SZ_K, { 'Short Sleeve': [15.5], 'Long Sleeve': [19], 'Sleeveless': [15.5] }],
+      ['Kids Collar with Button', SB_L1, SB_F0, SB_SZ_K, { 'Short Sleeve': [20.8], 'Long Sleeve': [24.3] }],
+      ['Kids Retro V Collar', SB_L1, SB_F0, SB_SZ_K, { 'Short Sleeve': [21.8], 'Long Sleeve': [25.3] }],
+      ['Kids Retro Flat Collar', SB_L1, SB_F0, SB_SZ_K, { 'Short Sleeve': [21.8], 'Long Sleeve': [25.3] }],
+      ['Kids Raglan Round Neck', SB_L1, SB_F0, SB_SZ_K, { 'Short Sleeve': [18.5], 'Long Sleeve': [22] }]] },
+  'Muslimah Sublimation — Digital': {
+    Adult: [['Muslimah Round Neck', SB_L2, SB_F0, SB_SZ_A, { 'Long Sleeve': [25, 28, 38, 40.5] }]],
+    Kid: [['Kids Muslimah Round Neck', SB_L2, SB_F0, SB_SZ_K, { 'Long Sleeve': [22] }]] },
+  'Sweatshirt & Hoodies — Digital': {
+    Adult: [['Sweat Shirt', SB_L2, ['Lycra 270gsm'], SB_SZ_7, { 'Long Sleeve': [47] }], ['Hoodie', SB_L2, ['Lycra 270gsm'], SB_SZ_7, { 'Long Sleeve': [53] }],
+      ['Hoodie with Zip', SB_L2, ['Lycra 270gsm'], SB_SZ_7, { 'Long Sleeve': [64] }]] },
+  'Corporate Shirt — Digital': {
+    Adult: [['Corporate with Collar', SB_L1, ['Polysoft 150gsm'], SB_SZ_7, { 'Short Sleeve': [65, 68], 'Long Sleeve': [68, 72] }],
+      ['Corporate with Mandarin Collar', SB_L2, ['Polysoft 150gsm'], SB_SZ_7, { 'Long Sleeve': [68, 72] }],
+      ['Corporate Muslimah', SB_L2, ['Polysoft 150gsm'], SB_SZ_7, { 'Long Sleeve': [78, 82] }]] },
+  'Jacket — Digital': {
+    Adult: [['Jacket', SB_L2, ['Lycra 270gsm'], SB_SZ_7, { 'Long Sleeve': [63] }], ['Wind Breaker', SB_L2, ['Wind Resistance 145gsm'], SB_SZ_7, { 'Long Sleeve': [60] }],
+      ['Wind Breaker with Hoodie', SB_L2, ['Wind Resistance 145gsm'], SB_SZ_7, { 'Long Sleeve': [60] }]] },
+};
+// Soccer Pants set (Round Neck / V Neck): unit per sleeve [base, 4-7XL], sizes XS-7XL
+const SB_PANTS = { 'Short Sleeve': [30.5, 37.5], 'Sleeveless': [30.5, 37.5], 'Long Sleeve': [37.5, 44] };
+const SB_VDP = { 'Numbering': 4, 'Text': 4, 'Numbering + Text': 6 };
+const SB_PATCH_POS = ['Not Required', 'Front', 'Left Sleeve', 'Right Sleeve'];
+function sbModel(name, V) { const M = SB_MODELS[name] || {}, cat = V.sb_category || 'Adult'; return (M[cat] || M.Adult || []).find(m => m[0] === V.sb_model) || (M[cat] || M.Adult || [])[0]; }
+function sbPants(V) { return V.sb_pants === 'Soccer Pants'; }
+function sbSizes(name, V) { const m = sbModel(name, V); if (!m) return []; return sbPants(V) ? SB_SZ_7 : m[3]; }
+function sbVdpPart(pos, a, b) { // pos Front/Back/Both (or Left/Right/Both); a, b = the two sides' choice
+  if (!pos || pos === 'Not Required') return 0;
+  const sa = SB_VDP[a] || 0, sbb = SB_VDP[b] || 0;
+  return pos === 'Both' ? Math.max(sa, sbb) + 2 : (/^(Front|Left)$/.test(pos) ? sa : sbb);
+}
+function sbUnit(name, V, size) {
+  const m = sbModel(name, V); if (!m) return null;
+  const u = m[4][V.sb_sleeve] || m[4][Object.keys(m[4])[0]], band = SB_BAND(size);
+  let unit;
+  if (sbPants(V)) { const p = SB_PANTS[V.sb_sleeve] || SB_PANTS['Short Sleeve']; unit = band ? p[1] : p[0]; }
+  else { const t = (m[6] && V.sb_fabric && V.sb_fabric !== m[2][0]) ? (m[6][V.sb_sleeve] || u) : u; unit = t[band] != null ? t[band] : t[0]; }
+  if (V.sb_proof === 'Sample Proof') unit = Math.ceil(unit + (sbPants(V) ? 49.5 : 24));
+  else unit += sbVdpPart(V.sb_vdp, V.sb_vdp_front, V.sb_vdp_back) + (sbPants(V) ? sbVdpPart(V.sb_pvdp, V.sb_pvdp_left, V.sb_pvdp_right) : 0);
+  if (V.sb_patch && V.sb_patch !== 'Not Required') ['sb_patch1', 'sb_patch2', 'sb_patch3'].forEach(k => { if (V[k] && V[k] !== 'Not Required') unit += 3; });
+  return unit;
+}
+function sbOverride(name, engineKeys) {
+  const M = SB_MODELS[name], cats = Object.keys(M), proof = name === 'Sublimation Shirt' || /^Muslimah/.test(name), hasPants = name === 'Sublimation Shirt';
+  const allModels = [].concat.apply([], cats.map(c => M[c].map(m => m[0])));
+  const allFab = []; cats.forEach(c => M[c].forEach(m => m[2].forEach(f => { if (allFab.indexOf(f) < 0) allFab.push(f); })));
+  const vdpT = ['Numbering', 'Text', 'Numbering + Text'];
+  const f = [];
+  if (proof) f.push({ key: 'sb_proof', label: 'Sample Proof', options: ['Not Required', 'Sample Proof'], default: 'Not Required', section: 'General', first: true });
+  if (cats.length > 1) f.push({ key: 'sb_category', label: 'Category', options: cats, section: 'General' });
+  f.push({ key: 'sb_model', label: 'Model', options: allModels, section: 'General' },
+    { key: 'sb_sleeve', label: 'Sleeve Type', options: SB_L0.filter(s => cats.some(c => M[c].some(m => m[1].indexOf(s) >= 0))), section: 'General' });
+  if (hasPants) f.push({ key: 'sb_pants', label: 'Pants', options: ['Not Required', 'Soccer Pants'], default: 'Not Required', section: 'General' });
+  f.push({ key: 'sb_fabric', label: 'Fabric', options: allFab, section: 'General' },
+    { key: 'sb_base', label: 'Base Colour', options: ['White'], section: 'General', neutral: true },
+    { key: 'sb_pcol', label: 'Print Colour', options: ['4C+4C'], section: 'General', neutral: true },
+    { key: 'sb_comp', label: 'Compulsory', options: ['Sublimation'], section: 'General', neutral: true },
+    { key: 'sb_vdp', label: 'Shirt VDP Position', options: ['Not Required', 'Front', 'Back', 'Both'], default: 'Not Required', section: 'Shirt VDP', showWhen: { field: 'sb_proof', notValue: 'Sample Proof' } },
+    { key: 'sb_vdp_front', label: 'Shirt VDP (Front)', options: vdpT, section: 'Shirt VDP', showWhen: { all: [{ field: 'sb_vdp', values: ['Front', 'Both'] }, { field: 'sb_proof', notValue: 'Sample Proof' }] } },
+    { key: 'sb_vdp_back', label: 'Shirt VDP (Back)', options: vdpT, section: 'Shirt VDP', showWhen: { all: [{ field: 'sb_vdp', values: ['Back', 'Both'] }, { field: 'sb_proof', notValue: 'Sample Proof' }] } });
+  if (hasPants) f.push(
+    { key: 'sb_pvdp', label: 'Pants VDP Position', options: ['Not Required', 'Left', 'Right', 'Both'], default: 'Not Required', section: 'Pants VDP', showWhen: { all: [{ field: 'sb_pants', value: 'Soccer Pants' }, { field: 'sb_proof', notValue: 'Sample Proof' }] } },
+    { key: 'sb_pvdp_left', label: 'Pants VDP (Left)', options: vdpT, section: 'Pants VDP', showWhen: { all: [{ field: 'sb_pants', value: 'Soccer Pants' }, { field: 'sb_pvdp', values: ['Left', 'Both'] }, { field: 'sb_proof', notValue: 'Sample Proof' }] } },
+    { key: 'sb_pvdp_right', label: 'Pants VDP (Right)', options: vdpT, section: 'Pants VDP', showWhen: { all: [{ field: 'sb_pants', value: 'Soccer Pants' }, { field: 'sb_pvdp', values: ['Right', 'Both'] }, { field: 'sb_proof', notValue: 'Sample Proof' }] } });
+  f.push({ key: 'sb_patch', label: 'Patch Type', options: ['Not Required', '3D TPU', 'Gold', 'Tatami'], default: 'Not Required', section: 'Logo Patch' },
+    { key: 'sb_patch1', label: 'Patch Position 1', options: SB_PATCH_POS, default: 'Front', section: 'Logo Patch', showWhen: { field: 'sb_patch', notValues: ['Not Required'] } },
+    { key: 'sb_patch2', label: 'Patch Position 2', options: SB_PATCH_POS, default: 'Not Required', section: 'Logo Patch', showWhen: { field: 'sb_patch', notValues: ['Not Required'] } },
+    { key: 'sb_patch3', label: 'Patch Position 3', options: SB_PATCH_POS, default: 'Not Required', section: 'Logo Patch', showWhen: { field: 'sb_patch', notValues: ['Not Required'] } });
+  const mOf = V => sbModel(name, V);
+  return {
+    hide: engineKeys,
+    addFields: f,
+    placeholderExact: ['sb_vdp_front', 'sb_vdp_back', 'sb_pvdp_left', 'sb_pvdp_right'],
+    validOpt: {
+      sb_model: (V, o) => (M[V.sb_category || 'Adult'] || M.Adult).some(m => m[0] === o),
+      sb_sleeve: (V, o) => { const m = mOf(V); return !m || m[1].indexOf(o) >= 0; },
+      sb_fabric: (V, o) => { const m = mOf(V); return !m || m[2].indexOf(o) >= 0; },
+      sb_pants: (V, o) => o === 'Not Required' || ((V.sb_category || 'Adult') === 'Adult' && /^(Round Neck|V Neck)$/.test(V.sb_model || 'Round Neck')),
+    },
+    sizeRows: { sizes: V => sbSizes(name, V), unit: (V, s) => sbUnit(name, V, s), min: V => V.sb_proof === 'Sample Proof' ? 1 : 5, max: V => V.sb_proof === 'Sample Proof' ? 2 : 1000, maxRows: 11 },
+  };
+}
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
-const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true, 135: true, 114: true, 178: true };
+const PL_EXCLUDE = { 180: true, 181: true, 182: true, 183: true, 143: true, 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true, 135: true, 114: true, 178: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
 // Softcover: binding (saddle / perfect) → size → pages → the cover papers Excard offers for that size and page count →
 // the content papers it allows for that cover at that page count (A4-type sizes vs A5 portrait tables). Hardcover:
@@ -3085,6 +3194,11 @@ const CFG_OVERRIDES = {
   'Cap — DTF': { lineBuilder: CAP_LB },
   'DTF Shirt — Digital': { lineBuilder: DTF_LB },
   'Silkscreen Shirt — Digital': { lineBuilder: SILK_LB },
+  'Sublimation Shirt': sbOverride('Sublimation Shirt', ['category', 'model', 'sleeve']),
+  'Muslimah Sublimation — Digital': sbOverride('Muslimah Sublimation — Digital', ['category', 'model', 'sleeve', 'fabric', 'vdp_position']),
+  'Sweatshirt & Hoodies — Digital': sbOverride('Sweatshirt & Hoodies — Digital', ['model', 'sleeve', 'fabric', 'vdp_position']),
+  'Corporate Shirt — Digital': sbOverride('Corporate Shirt — Digital', ['model', 'sleeve', 'fabric', 'vdp_position']),
+  'Jacket — Digital': sbOverride('Jacket — Digital', ['model', 'sleeve', 'fabric', 'vdp_position']),
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
   'Flyer (= Loose Sheet Litho)': LO_OV,
@@ -3556,7 +3670,7 @@ class Component extends DCLogic {
       return sc[d.key] != null && sc[d.key] !== ''; });
     const qf = this.cfgOv().qtyFilter;
     if (qf) { try { if (!qf(this.pkV(), this.state.qty)) return false; } catch (e) {} }
-    return ok && !!this.state.qtyChosen;
+    return ok && (this.srCfg() ? this.srValid() : !!this.state.qtyChosen);
   }
   // live size simulator: a proportional diagram of the selected size (standard or custom),
   // with Width/Height dimension lines — so the customer can see exactly what they picked.
@@ -3847,6 +3961,13 @@ class Component extends DCLogic {
     const E = this.pkEngine(), prod = this.pkProduct(); if (!E || !prod) return null;
     const qty = qtyOverride || this.state.qty || 1;
     const ov = this.cfgOv();
+    if (ov.sizeRows) {   // size rows: each size at its own per-piece price, added up
+      const C = ov.sizeRows, V = this.pkV(), rows = this.srRows(); let g = 0, tq = 0;
+      if (rows.length) { for (const r of rows) { const u = C.unit(V, r.size); if (u == null || !(+r.qty > 0)) return { ok: false, message: 'Enter a quantity' }; g += u * r.qty; tq += +r.qty; } }
+      else { const sz = C.sizes(V), s0 = sz.indexOf('M') >= 0 ? 'M' : sz[0], u = s0 ? C.unit(V, s0) : null; if (u == null) return { ok: false, message: 'Add a size' }; tq = qty; g = u * qty; }
+      const gross = Math.round(g * 100) / 100, net = Math.round(gross * (1 - this.tierPct() / 100) * 100) / 100;
+      return { ok: true, gross, disc: Math.round((gross - net) * 100) / 100, net, unit: net / (tq || 1), weight: tq * 0.2, note: null, method: 'excard', finishing: 0 };
+    }
     if (ov.lineBuilder) {   // line builder: every model line is priced on its own quantity, then added up
       const L = this.lbLines(); if (!L.length) return { ok: false, message: 'Add a model' };
       let g = 0; for (const l of L) { const lp = this.lbLinePrice(l); if (lp == null) return { ok: false, message: 'Enter a quantity' }; g += lp; }
@@ -4132,6 +4253,7 @@ class Component extends DCLogic {
     if (hs && !/^no /i.test(hs)) {
       hs.split('+').forEach(part => { const m = part.match(/(\d)\s*C\s*\((Front|Back)\)/i); if (m) { const n = +m[1], side = /front/i.test(m[2]) ? 'Front' : 'Back'; for (let i = 1; i <= n; i++) { const v = cfg['hs_' + side.toLowerCase() + '_' + i]; if (v) lines.push(['Foil — ' + side + ' Colour ' + i, v]); } } });
     }
+    if (ov.sizeRows) this.srRows().forEach(r => { if (+r.qty) lines.push(['Qty (' + r.size + ')', r.qty + ' pcs']); });
     // short line for the cart row: the meaningful choices, geometry/colour detail trimmed
     const short = lines.filter(l => !/^(creasing|crease|foil |hot stamping block|custom size|open size)/i.test(l[0])).slice(0, 5).map(l => l[1]).join(' · ');
     return { short: short || lines.slice(0, 5).map(l => l[1]).join(' · '), lines };
@@ -4142,7 +4264,7 @@ class Component extends DCLogic {
     const { short, lines } = this.pkOrderSpec();
     // the configurator summary travels with the order: every option, quantity and production time
     const pd = this.procDays(), productionTime = pd != null ? pd + (pd === 1 ? ' working day' : ' working days') : '3 working days';
-    const item = { jobCode: this.newJobCode(), productId: prod.id, name: this.catName(prod.id), spec: short, specLines: lines, size: this.artworkTarget(), productionTime, qty: this.state.qty || 1, unitPrice: q.gross / (this.state.qty || 1), lineTotal: q.gross };
+    const item = { jobCode: this.newJobCode(), productId: prod.id, name: this.catName(prod.id), spec: short, specLines: lines, size: this.artworkTarget(), productionTime, qty: (this.srCfg() ? this.srTotal() : this.state.qty) || 1, unitPrice: q.gross / ((this.srCfg() ? this.srTotal() : this.state.qty) || 1), lineTotal: q.gross };
     const cart = (this.state.cart || []).concat([item]);
     this.setState({ cart }); this.saveCart(cart); this.go('cart');
   }
@@ -7047,6 +7169,7 @@ class Component extends DCLogic {
       h('span', { style: { width: 4, height: 18, background: TEAL, borderRadius: 2, flex: 'none' } }),
       h('span', { style: { fontSize: 15, fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: INK } }, sec));
     if (opts.manualQty) groups[groups.length - 1].nodes[groups[groups.length - 1].nodes.length - 1] = opts.manualQty;
+    else if (ov.sizeRows && groups.length) groups[groups.length - 1].nodes[groups[groups.length - 1].nodes.length - 1] = this.srNode();
     return { groups, sectionHeader, qtyChosen, ov };
   }
   // (user, 2026-09-30) the configurator as a guided "book": one friendly question per page, chapters
@@ -7065,7 +7188,7 @@ class Component extends DCLogic {
       [/cover.?type/, 'Which cover would you like?', 'A soft cover is flexible. A hard cover is rigid and premium.'],
       [/jawi/, 'Do you need Jawi content?', ''],
       [/duplicat/, 'Would you like to duplicate the job for multiple artworks?', 'Same settings, different designs. For example, one card for each staff member.'],
-      [/quantity/, 'What quantity do you need?', 'Larger quantities lower the price per piece.'],
+      [/quantity/, this.srCfg() ? 'How many do you need in each size?' : 'What quantity do you need?', this.srCfg() ? 'Add a row for every size you need.' : 'Larger quantities lower the price per piece.'],
       [/hot.?stamp|foil/, 'Do you need Hot Stamping?', 'Metallic foil, like gold or silver, pressed onto your design.'],
       [/spot/, 'Do you need Spot UV?', 'A glossy, raised coating on chosen areas so they stand out.'],
       [/emboss|deboss/, 'Do you need Embossing?', 'Raises part of your design so people can feel it.'],
@@ -7182,6 +7305,57 @@ class Component extends DCLogic {
         qDesc ? h('div', { style: { fontSize: 14, color: MUT, lineHeight: 1.6, marginBottom: 18 } }, qDesc) : null,
         cur.n)
       ]);
+  }
+  // ---------- size rows (sublimation garments): Size & Quantity as rows of size + pcs, like the live form ----------
+  srCfg() { const ov = this.cfgOv(); return ov && ov.sizeRows; }
+  srStored() { const p = this.pkProduct(); return (p && (this.state.srRows || {})[p.id]) || []; }
+  srRows() { const C = this.srCfg(); if (!C) return []; const sz = C.sizes(this.pkV()); return this.srStored().filter(r => sz.indexOf(r.size) >= 0); }
+  srTotal() { return this.srRows().reduce((a, r) => a + (+r.qty || 0), 0); }
+  srSet(rows) {
+    const p = this.pkProduct(); if (!p) return;
+    const all = Object.assign({}, this.state.srRows || {}); all[p.id] = rows;
+    const total = rows.reduce((a, r) => a + (+r.qty || 0), 0);
+    this.setState({ srRows: all, qty: total || 1, qtyChosen: total > 0 });
+  }
+  srErr() {
+    const C = this.srCfg(); if (!C) return null; const V = this.pkV(), rows = this.srRows(), t = this.srTotal();
+    if (!rows.length) return 'Add at least one size.';
+    if (rows.some(r => !(+r.qty > 0))) return 'Quantity cannot be 0.';
+    const mn = C.min(V), mx = C.max(V);
+    if (t < mn) return 'Order at least ' + mn + ' pcs in total.';
+    if (t > mx) return 'Order up to ' + mx + ' pcs in total.';
+    return null;
+  }
+  srValid() { const C = this.srCfg(); if (!C || this.srErr()) return false; const V = this.pkV(); return this.srRows().every(r => C.unit(V, r.size) != null); }
+  srNode() {
+    const C = this.srCfg(), V = this.pkV(), sizes = C.sizes(V), rows = this.srRows(), stored = this.srStored(), total = this.srTotal();
+    // sizes that no longer exist for the chosen model drop out of the order
+    if (stored.length !== rows.length) setTimeout(() => { if (this.srStored().length !== this.srRows().length) this.srSet(this.srRows()); }, 0);
+    const err = this.srErr(), ans = !err;
+    const setRow = (i, patch) => this.srSet(this.srRows().map((r, k) => k === i ? Object.assign({}, r, patch) : r));
+    const add = () => { const used = this.srRows().map(r => r.size), free = sizes.filter(z => used.indexOf(z) < 0); if (free.length) this.srSet(this.srRows().concat([{ size: free[0], qty: 0 }])); };
+    const rm = i => this.srSet(this.srRows().filter((_, k) => k !== i));
+    const btnSq = { width: 32, height: 32, border: '1px solid #e6e8eb', background: '#fff', cursor: 'pointer', fontSize: 16, lineHeight: '30px', textAlign: 'center', padding: 0, color: INK };
+    const ctl = { height: 36, border: '1px solid #e6e8eb', background: '#fff', font: '400 14px Montserrat,sans-serif', color: INK };
+    return h('div', { key: 'quantity', 'data-cfgkey': 'quantity', 'data-cfgans': ans ? '1' : '0', 'data-cfgsel': ans ? '1' : '0', style: { padding: '15px 0', borderTop: '1px solid ' + LINE } },
+      h('div', { style: { fontSize: 13.5, fontWeight: 600, marginBottom: 10 } }, 'Size & Quantity'),
+      rows.map((r, i) => { const u = C.unit(V, r.size), used = rows.map(x => x.size);
+        return h('div', { key: i, style: { display: 'grid', gridTemplateColumns: 'minmax(80px,120px) auto minmax(0,1fr) auto', gap: 10, alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f0f1f3' } },
+          h('select', { 'aria-label': 'Size ' + (i + 1), value: r.size, onChange: e => setRow(i, { size: e.target.value }), style: Object.assign({ padding: '0 8px' }, ctl) },
+            sizes.filter(z => z === r.size || used.indexOf(z) < 0).map(z => h('option', { key: z, value: z }, z))),
+          h('div', { style: { display: 'flex', alignItems: 'center', gap: 6 } },
+            h('button', { type: 'button', 'aria-label': 'Fewer ' + r.size, onClick: () => setRow(i, { qty: Math.max(0, (+r.qty || 0) - 1) }), style: btnSq }, '−'),
+            h('input', { type: 'number', min: 0, 'aria-label': r.size + ' quantity', value: r.qty || 0, onChange: e => setRow(i, { qty: Math.max(0, parseInt(e.target.value, 10) || 0) }), style: Object.assign({ width: 70, textAlign: 'center' }, ctl) }),
+            h('button', { type: 'button', 'aria-label': 'More ' + r.size, onClick: () => setRow(i, { qty: (+r.qty || 0) + 1 }), style: btnSq }, '+')),
+          h('div', { style: { textAlign: 'right' } },
+            h('div', { style: { fontWeight: 600, fontSize: 14 } }, u != null ? this.money(u * (+r.qty || 0)) : '—'),
+            h('div', { style: { fontSize: 12.5, color: MUT } }, u != null ? this.money(u) + ' / pcs' : '')),
+          h('span', { role: 'button', tabIndex: 0, 'aria-label': 'Remove ' + r.size, onClick: () => rm(i), onKeyDown: e => { if (e.key === 'Enter') rm(i); }, style: { color: MUT, cursor: 'pointer', fontSize: 18, padding: '0 4px' } }, '×')); }),
+      rows.length < (C.maxRows || 11) && rows.length < sizes.length ? h('div', { role: 'button', tabIndex: 0, onClick: add, onKeyDown: e => { if (e.key === 'Enter') add(); },
+        style: { border: '1px dashed #c9191b', color: '#c9191b', textAlign: 'center', padding: '10px', marginTop: 10, cursor: 'pointer', fontWeight: 500 } }, '+ Add size') : null,
+      err ? h('div', { role: 'alert', style: { color: '#c9191b', fontSize: 13.5, marginTop: 10 } }, err) : null,
+      h('div', { style: { display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e6e8eb', marginTop: 12, paddingTop: 12, fontWeight: 600 } },
+        h('span', null, 'Total: ' + total + ' pcs'), h('span', null, this.money(rows.reduce((a, r) => { const u = C.unit(V, r.size); return a + (u != null ? u * (+r.qty || 0) : 0); }, 0)))));
   }
   // ---------- line builder (Cap / readymade apparel): the order is a list of model lines ----------
   lbCfg() { const ov = this.cfgOv(); return ov && ov.lineBuilder; }
@@ -7343,7 +7517,7 @@ class Component extends DCLogic {
               h('div', { style: { width: 24, height: 3, background: TEAL, marginBottom: 12 } }),
               h('div', { style: { fontSize: 24, fontWeight: 500, letterSpacing: '-.01em', marginBottom: 14 } }, this._bookDoneNow ? 'Price' : 'Summary'),
               lines.length ? h('div', { style: { borderBottom: '1px solid #e6e8eb', paddingBottom: 8, marginBottom: 8 } }, lines.map(l => row(l[0], l[1]))) : null,
-              this._bookDoneNow ? null : row('Order Quantity', qtyChosen ? s.qty.toLocaleString() + ' pcs' : 'Please select'),
+              this._bookDoneNow ? null : row('Order Quantity', this.srCfg() ? (this.srTotal() ? this.srTotal().toLocaleString() + ' pcs' : 'Please select') : qtyChosen ? s.qty.toLocaleString() + ' pcs' : 'Please select'),
               row('Production time', pt),
               quoteOnly ? h('div', { style: { borderTop: '1px solid #e6e8eb', marginTop: 8, paddingTop: 12, fontSize: 18, fontWeight: 600, color: INK } }, 'Price on request')
                 : ready ? h('div', { style: { borderTop: '1px solid #e6e8eb', marginTop: 8, paddingTop: 6 } },
