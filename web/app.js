@@ -1754,6 +1754,84 @@ const STAMP_LINES = {
   },
 };
 
+// ---------- Roll Form Sticker (Excard roll-form-sticker, live 2026-10-08): Sample Proof (2 pcs), Category (Rectangle/Square, Round,
+// Custom Shape), typed size (H 20-300 x W 20-330 mm, or diameter 20-300), Paper, Print Colour by paper (4C + White on OPP / Hologram;
+// 1C / 1C + White on OPP with a spot ink), Lamination (compulsory on White PP / OPP / Hologram, optional on Mirror Kote / Synthetic,
+// none on Printing Paper), Hot Stamping 1C (Front) Gold / Silver on White PP / OPP / Mirror Kote, Paper Core, Roll Type, Final Roll
+// Direction, fixed Gap / Slitting Gap / Die-Cutting + Waste Removal, Quantity 1,000-100,000, Pcs / Roll up to the quantity.
+// Price: Excard prices in whole steps of RM7.425. Base = units for Mirror Kote 4C from a live grid (square 20-300 mm x 1k/2k/10k/50k,
+// paired with the page's own price requests), interpolated by label area (with 3 mm gaps) and quantity; lamination, paper, white ink
+// and hot stamping add units by total sticker area (fitted on 50x50 at 1k / 10k). Pcs / roll, core and roll direction are price-neutral.
+// Validation: grid exact; other shapes within ~5% (very wide 330 mm labels ~10% low). ----------
+const RF_U = 7.425;
+const RF_GRID = { 20: { 1000: 25, 2000: 28, 10000: 41, 50000: 83 }, 35: { 1000: 27, 2000: 32, 10000: 55, 50000: 133 },
+  50: { 1000: 30, 2000: 38, 3000: 41, 5000: 52, 10000: 77, 20000: 115, 50000: 228, 100000: 415 }, 75: { 1000: 37, 2000: 47, 10000: 125, 50000: 482 },
+  100: { 1000: 42, 2000: 56, 10000: 155, 50000: 620 }, 150: { 1000: 54, 2000: 87, 10000: 292, 50000: 1313 },
+  200: { 1000: 96, 2000: 171, 10000: 732, 50000: 3541 }, 300: { 1000: 130, 2000: 234, 10000: 1030, 50000: 5009 } };
+function rfCurve(c, q) {
+  const ks = Object.keys(c).map(Number).sort((a, b) => a - b);
+  if (q <= ks[0]) return c[ks[0]];
+  for (let i = 1; i < ks.length; i++) if (q <= ks[i]) { const a = ks[i - 1], b = ks[i]; return c[a] + (c[b] - c[a]) * (q - a) / (b - a); }
+  const a = ks[ks.length - 2], b = ks[ks.length - 1]; return c[b] + (c[b] - c[a]) / (b - a) * (q - b);
+}
+function rfBase(h, w, q) {
+  const A = (h + 3) * (w + 3), sides = Object.keys(RF_GRID).map(Number).sort((a, b) => a - b), area = s => (s + 3) * (s + 3);
+  let lo = sides[0], hi = sides[1];
+  for (let i = 1; i < sides.length; i++) { lo = sides[i - 1]; hi = sides[i]; if (A <= area(hi)) break; }
+  const t = Math.max(0, (A - area(lo)) / (area(hi) - area(lo)));
+  const a = rfCurve(RF_GRID[lo], q), b = rfCurve(RF_GRID[hi], q);
+  return a + (b - a) * t;
+}
+const RF_LAM = { 'Matte Lamination': [1.78, 0.435], 'Gloss Lamination': [2.45, 0.198], 'UV Varnish': [2, 0] };
+const RF_PAPER = { 'White PP': [-0.22, 0.079], 'Transparent OPP': [0.45, 0.198], 'Printing Paper': [0.33, -0.119], 'Synthetic Paper': [0.33, 0.237], 'Hologram': [2.56, 1.225] };
+function rfPrice(cfg, qty) {
+  if (cfg.rf_proof === 'Yes (2 pcs)') return 42;
+  const round = cfg.rf_cat === 'Round', h = parseFloat(round ? cfg.rf_dia : cfg.rf_h), w = parseFloat(round ? cfg.rf_dia : cfg.rf_w), q = +qty || 0;
+  if (!(h >= 20 && w >= 20 && q > 0)) return null;
+  const A = q * (h + 3) * (w + 3) / 1e6;   // total sticker area incl. gaps, m²
+  let n = rfBase(h, w, q);
+  const lin = (c, min) => { const v = c[0] + c[1] * A; return min != null ? Math.max(min, v) : v; };
+  if (RF_LAM[cfg.rf_lam]) n += lin(RF_LAM[cfg.rf_lam], 0);
+  if (RF_PAPER[cfg.rf_paper]) n += cfg.rf_paper === 'Printing Paper' ? Math.min(0, lin(RF_PAPER[cfg.rf_paper])) : lin(RF_PAPER[cfg.rf_paper], 0);
+  if (/White/.test(cfg.rf_colour || '')) n += Math.max(0, -0.33 + 0.119 * A);
+  if (cfg.rf_hs === '1C (Front)') n += 25.2 + 0.632 * A;
+  return Math.round(Math.round(n) * RF_U * 20) / 20;
+}
+const RF_HS_PAPERS = ['White PP', 'Transparent OPP', 'Mirror Kote'];
+const RF_QTY = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000, 15000, 16000, 17000, 18000, 19000, 20000, 25000, 30000, 35000, 40000, 45000, 50000, 60000, 70000, 80000, 90000, 100000];
+const ROLL_STICKER_OV = {
+  hide: ['sample_proof', 'quantity_hint', 'shape', 'paper', 'colour', 'lamination', 'hot_stamping', 'core', 'roll_type', 'direction', 'pcs_per_roll', 'size', 'height', 'width', 'diameter', 'inc_printmethod'],
+  placeholderExact: ['rf_h', 'rf_w', 'rf_dia', 'rf_pcs'],
+  addFields: [
+    { key: 'rf_proof', label: 'Sample Proof (2pcs)', options: ['Not Required', 'Yes (2 pcs)'], default: 'Not Required', section: 'General', first: true },
+    { key: 'rf_cat', label: 'Category', options: ['Rectangle/Square', 'Round', 'Custom Shape'], default: 'Rectangle/Square', section: 'General' },
+    { key: 'rf_h', label: 'Height (mm)', type: 'number', min: 20, max: 300, section: 'Product Spec', showWhen: { field: 'rf_cat', notValues: ['Round'] } },
+    { key: 'rf_w', label: 'Width (mm)', type: 'number', min: 20, max: 330, section: 'Product Spec', showWhen: { field: 'rf_cat', notValues: ['Round'] } },
+    { key: 'rf_dia', label: 'Diameter (mm)', type: 'number', min: 20, max: 300, section: 'Product Spec', showWhen: { field: 'rf_cat', value: 'Round' } },
+    { key: 'rf_paper', label: 'Paper', options: ['White PP', 'Transparent OPP', 'Mirror Kote', 'Printing Paper', 'Synthetic Paper', 'Hologram'], default: 'Mirror Kote', section: 'Product Spec' },
+    { key: 'rf_colour', label: 'Print Colour', options: ['4C', '4C + White', '1C', '1C + White'], default: '4C', section: 'Product Spec' },
+    { key: 'rf_spot', label: 'Spot Colour', options: ['NBLK 01', 'NCYN 01', 'NMAG 01', 'NWHT 01'], section: 'Product Spec', showWhen: { field: 'rf_colour', values: ['1C', '1C + White'] } },
+    { key: 'rf_lam', label: 'Lamination / Finishing', options: ['Not Required', 'Matte Lamination', 'Gloss Lamination', 'UV Varnish'], section: 'Product Spec', showWhen: { field: 'rf_paper', notValues: ['Printing Paper'] } },
+    { key: 'rf_hs', label: 'Hot Stamping Colour', options: ['Not Required', '1C (Front)'], default: 'Not Required', section: 'Product Spec', showWhen: { all: [{ field: 'rf_paper', values: RF_HS_PAPERS }, { field: 'rf_proof', notValue: 'Yes (2 pcs)' }] } },
+    { key: 'rf_foil', label: 'Foil Colour', options: ['Gold', 'Silver'], default: 'Gold', section: 'Product Spec', showWhen: { all: [{ field: 'rf_hs', value: '1C (Front)' }, { field: 'rf_paper', values: RF_HS_PAPERS }, { field: 'rf_proof', notValue: 'Yes (2 pcs)' }] } },
+    { key: 'rf_core', label: 'Paper Core', options: ['25mm', '40mm', '76mm'], default: '76mm', section: 'Product Spec', neutral: true, showWhen: { field: 'rf_proof', notValue: 'Yes (2 pcs)' } },
+    { key: 'rf_rolltype', label: 'Roll Type', options: ['Roll In', 'Roll Out'], default: 'Roll In', section: 'Product Spec', neutral: true },
+    { key: 'rf_dir', label: 'Final Roll Direction', options: ["3 o'clock", "6 o'clock", "9 o'clock", "12 o'clock"], default: "3 o'clock", section: 'Product Spec', neutral: true },
+    { key: 'rf_gap', label: 'Gap', options: ['3mm'], section: 'Other Info', neutral: true },
+    { key: 'rf_slit', label: 'Slitting Gap', options: ['3mm (1.5mm + 1.5mm)'], section: 'Other Info', neutral: true },
+    { key: 'rf_comp', label: 'Compulsory', options: ['Die-Cutting + Waste Removal'], section: 'Other Info', neutral: true },
+    { key: 'rf_pcs', label: 'Pcs / Roll', options: ['500', '1,000', '2,000', '2,500', '5,000', '10,000'], section: 'Other Info', neutral: true, showWhen: { field: 'rf_proof', notValue: 'Yes (2 pcs)' } },
+  ],
+  validOpt: {
+    rf_colour: (V, o) => o === '4C' || (o === '4C + White' && /^(Transparent OPP|Hologram)$/.test(V.rf_paper || 'Mirror Kote')) || (/^1C/.test(o) && V.rf_paper === 'Transparent OPP'),
+    rf_spot: (V, o) => o !== 'NWHT 01' || V.rf_colour === '1C',
+    rf_lam: (V, o) => o !== 'Not Required' || /^(Mirror Kote|Synthetic Paper)$/.test(V.rf_paper || 'Mirror Kote'),
+  },
+  qtyOptions: V => V.rf_proof === 'Yes (2 pcs)' ? [2] : RF_QTY,
+  qtyFilter: (V, q) => V.rf_proof === 'Yes (2 pcs)' || !V.rf_pcs || +String(V.rf_pcs).replace(/,/g, '') <= q,
+  priceBase: (cfg, qty) => rfPrice(cfg, qty),
+};
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 180: true, 181: true, 182: true, 183: true, 143: true, 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true, 135: true, 114: true, 178: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -3271,6 +3349,7 @@ const CFG_OVERRIDES = {
   'Corporate Shirt — Digital': sbOverride('Corporate Shirt — Digital', ['model', 'sleeve', 'fabric', 'vdp_position']),
   'Jacket — Digital': sbOverride('Jacket — Digital', ['model', 'sleeve', 'fabric', 'vdp_position']),
   'Stamp Chop': { hide: ['inc_printmethod', 'ink_colour', 'stamp_type', 'category', 'model_key'], placeholderExact: [], customQty: STAMP_LINES },
+  'Roll Form Sticker — Litho': ROLL_STICKER_OV,
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
   'Flyer (= Loose Sheet Litho)': LO_OV,
