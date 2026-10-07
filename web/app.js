@@ -1460,9 +1460,7 @@ function capLinePrice(line) {
   const E = typeof window !== 'undefined' && window.PricingEngine, c = E && E.DATA.params.cap_plx; const q = line.qty;
   if (!c || !q) return null;
   const cv = c.curves[line.model === 'bt_c' ? 'Trucker' : 'Baseball']; if (!cv) return null;
-  const ks = Object.keys(cv).map(Number).sort((a, b) => a - b); let unit;
-  if (cv[q] != null) unit = cv[q] / q; else if (q <= ks[0]) unit = cv[ks[0]] / ks[0]; else if (q >= ks[ks.length - 1]) unit = cv[ks[ks.length - 1]] / ks[ks.length - 1];
-  else { let i = 0; while (ks[i + 1] < q) i++; const a = ks[i], b = ks[i + 1]; unit = cv[a] / a + (cv[b] / b - cv[a] / a) * (q - a) / (b - a); }
+  let unit = shUnit(cv, q);   // Excard steps the unit price by quantity tier
   if (line.cat === 'Kid') unit -= 0.2;
   const R = CAP_POS_RATE; let r = R[R.length - 1][1];
   if (q <= R[0][0]) r = R[0][1]; else for (let i = 1; i < R.length; i++) if (q <= R[i][0]) { r = R[i - 1][1] + (R[i][1] - R[i - 1][1]) * (q - R[i - 1][0]) / (R[i][0] - R[i - 1][0]); break; }
@@ -1480,6 +1478,65 @@ const CAP_LB = {
   note: 'Mixed models must share the same artwork.',
   minTotal: 5, maxTotal: 500, maxLines: 10,
   price: capLinePrice,
+};
+
+// ---------- DTF Shirt (Excard dtf-shirt, live 2026-10-08): fabric for the order, then model lines (Adult / Kid, model, colour, prints
+// Front/Back A3..7in, Left/Right sleeve), quantity per garment size. Price per line (spec-paired live samples, 40+ exact): unit from our
+// list (Adult = garment + Front A3, Kid = garment + Front 3in) on Excard's quantity tiers, plus each print's cost minus the base print,
+// prints x16/15 below 50 pcs and x14/15 from 400; sizes 4XL-7XL x1.468. ----------
+Object.assign(LB_HEX, { 'Blackberry Purple': '#4b2a55', 'Dark Brown': '#4a3428', 'Ice Mint': '#bfe8dc', 'Light Blue': '#9ec9ea', 'Neon Green': '#6cff3c', 'Neon Orange': '#ff7a1a', 'Neon Peach': '#ff9e80',
+  'Neon Pink': '#ff3fa4', 'Neon Yellow': '#e9ff2a', 'Sport Royal': '#1f4fb4', 'Turquoise Green': '#1aa79c', 'Twilight Blue': '#3a4f7a', 'Navy Knight': '#232b45', 'Sand': '#d9c7a1', 'Sun Yellow': '#ffc72c',
+  'Grey Melange': '#a7a9ac', 'Lavender': '#b9a6db' });
+const SH_SIZES = { Adult: ['2XS', 'XS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL', '7XL'], Kid: ['22', '24', '26', '28', '30', '32'] };
+const SH_BIG = { '4XL': 1, '5XL': 1, '6XL': 1, '7XL': 1 };
+const SH_MODEL_LABEL = { rn_short: 'Round Neck (Short Sleeve)', rn_long: 'Round Neck (Long Sleeve)', po_short: 'Polo (Short Sleeve)', po_long: 'Polo (Long Sleeve)', mu_long: 'Muslimah' };
+const SH_COL = {
+  eyelet: { Adult: {
+      rn_short: ['Black', 'Blackberry Purple', 'Dark Brown', 'Dark Green', 'Ice Mint', 'Khaki', 'Knight Grey', 'Lemon Yellow', 'Light Blue', 'Light Pink', 'Maroon', 'Navy Blue', 'Neon Green', 'Neon Orange', 'Neon Peach', 'Neon Pink', 'Neon Yellow', 'Orange', 'Red', 'Sport Royal', 'Turquoise Green', 'White'],
+      rn_long: ['Black', 'Blackberry Purple', 'Dark Brown', 'Dark Green', 'Khaki', 'Knight Grey', 'Lemon Yellow', 'Light Blue', 'Light Pink', 'Maroon', 'Navy Blue', 'Orange', 'Red', 'Sport Royal', 'Turquoise Green', 'White'],
+      po_short: ['Black', 'Blackberry Purple', 'Dark Brown', 'Dark Green', 'Ice Mint', 'Khaki', 'Knight Grey', 'Lemon Yellow', 'Light Blue', 'Light Pink', 'Maroon', 'Navy Blue', 'Orange', 'Red', 'Sport Royal', 'Turquoise Green', 'White'],
+      po_long: ['Black', 'Dark Green', 'Knight Grey', 'Maroon', 'Navy Blue', 'Red', 'Sport Royal', 'Twilight Blue', 'White'],
+      mu_long: ['Black', 'Blackberry Purple', 'Dark Brown', 'Dark Green', 'Khaki', 'Knight Grey', 'Lemon Yellow', 'Maroon', 'Navy Blue', 'Red', 'Sport Royal', 'Turquoise Green'] },
+    Kid: {
+      rn_short: ['Black', 'Blackberry Purple', 'Dark Brown', 'Dark Green', 'Ice Mint', 'Khaki', 'Knight Grey', 'Lemon Yellow', 'Light Blue', 'Light Pink', 'Maroon', 'Navy Blue', 'Neon Green', 'Neon Orange', 'Neon Peach', 'Neon Pink', 'Neon Yellow', 'Orange', 'Red', 'Sport Royal', 'Turquoise Green', 'White'],
+      rn_long: ['Black', 'Blackberry Purple', 'Dark Brown', 'Dark Green', 'Khaki', 'Knight Grey', 'Lemon Yellow', 'Maroon', 'Navy Blue', 'Orange', 'Red', 'Sport Royal', 'Turquoise Green', 'White'],
+      po_short: ['Black', 'Blackberry Purple', 'Dark Green', 'Khaki', 'Lemon Yellow', 'Maroon', 'Navy Blue', 'Red', 'Sport Royal', 'Turquoise Green', 'White'] } },
+  cvc: { Adult: { po_short: ['Black', 'Blackberry Purple', 'Dark Brown', 'Dark Green', 'Ice Mint', 'Knight Grey', 'Light Blue', 'Light Pink', 'Maroon', 'Navy Knight', 'Orange', 'Red', 'Sand', 'Sport Royal', 'Sun Yellow', 'Turquoise Green', 'White'] } },
+  siro: { Adult: {
+      rn_short: ['Black', 'Blackberry Purple', 'Dark Green', 'Grey Melange', 'Knight Grey', 'Lavender', 'Light Blue', 'Light Pink', 'Magenta', 'Maroon', 'Navy Blue', 'Ocean Blue', 'Red', 'Sand', 'Sport Royal', 'Sun Yellow', 'Turquoise Green', 'White'],
+      rn_long: ['Black', 'Dark Green', 'Maroon', 'Navy Blue', 'Red', 'Sport Royal', 'White'] },
+    Kid: { rn_short: ['Black', 'Blackberry Purple', 'Dark Green', 'Grey Melange', 'Knight Grey', 'Lavender', 'Light Blue', 'Light Pink', 'Magenta', 'Maroon', 'Navy Blue', 'Ocean Blue', 'Red', 'Sand', 'Sport Royal', 'Sun Yellow', 'Turquoise Green', 'White'] } },
+};
+const SH_FAB = { eyelet: 'Microfiber Mini Eyelet 150gsm', cvc: 'CVC Honeycomb 180gsm', siro: 'Siro Cotton 190gsm' };
+const DTF_POS = { Adult: { Front: ['A3', 'A4', '3" x 3"', '5" x 5"', '7" x 7"'], Back: ['A3', 'A4', '3" x 3"', '5" x 5"', '7" x 7"'], Left: ['3" x 3"', '5" x 5"'], Right: ['3" x 3"', '5" x 5"'] },
+  Kid: { Front: ['3" x 3"', '5" x 5"', '7" x 7"'], Back: ['3" x 3"', '5" x 5"', '7" x 7"'], Left: ['3" x 3"'], Right: ['3" x 3"'] } };
+const DTF_P = { 'A3': 7.2, 'A4': 4.5, '7" x 7"': 3.03, '5" x 5"': 2.295, '3" x 3"': 1.845 };
+const shModels = (fab, posFor) => { const out = {}; Object.keys(SH_COL[fab] || {}).forEach(cat => { out[cat] = Object.keys(SH_COL[fab][cat]).map(k => ({ key: k, label: SH_MODEL_LABEL[k], sizes: SH_SIZES[cat], colours: SH_COL[fab][cat][k], positions: posFor[cat] })); }); return out; };
+// unit price per pc for a line quantity on Excard's tiers (list keys + the 40 and 400 tiers)
+function shUnit(cv, q) {
+  const ks = Object.keys(cv).map(Number).sort((a, b) => a - b), u = k => cv[k] / k;
+  const tiers = ks.map(k => [k, u(k)]);
+  if (cv[40] == null && cv[20] != null && cv[30] != null) tiers.push([40, u(30) - (u(20) - u(30))]);
+  if (cv[400] == null && cv[500] != null) tiers.push([400, u(500)]);
+  tiers.sort((a, b) => a[0] - b[0]);
+  let r = tiers[0][1]; for (const [k, v] of tiers) if (q >= k) r = v; return r;
+}
+function dtfLinePrice(line, fab) {
+  const E = typeof window !== 'undefined' && window.PricingEngine, c = E && E.DATA.params.dtfshirt_plx;
+  const sizes = line.sizes || {}, q = Object.keys(sizes).reduce((a, k) => a + (+sizes[k] || 0), 0); if (!c || !q) return null;
+  const cv = c.curves[[line.cat, SH_MODEL_LABEL[line.model], SH_FAB[fab]].join('|')]; if (!cv) return null;
+  const k = q < 50 ? 16 / 15 : q >= 400 ? 14 / 15 : 1, basePrint = line.cat === 'Kid' ? '3" x 3"' : 'A3';
+  const unit = shUnit(cv, q) + ((line.prints || []).reduce((a, p) => a + (DTF_P[p.size] || 0), 0) - DTF_P[basePrint]) * k;
+  let tot = 0; Object.keys(sizes).forEach(s => { tot += (+sizes[s] || 0) * unit * (SH_BIG[s] ? 1.468 : 1); });
+  return Math.round(tot * 20) / 20;
+}
+const DTF_LB = {
+  fixed: [['Print Colour', '4C'], ['Compulsory', 'DTF']],
+  fabrics: { eyelet: { label: SH_FAB.eyelet, models: shModels('eyelet', DTF_POS) }, cvc: { label: SH_FAB.cvc, models: shModels('cvc', DTF_POS) }, siro: { label: SH_FAB.siro, models: shModels('siro', DTF_POS) } },
+  cats: ['Adult', 'Kid'],
+  note: 'Mixed models must share the same artwork.',
+  minTotal: 5, maxTotal: 500, maxLines: 10,
+  price: dtfLinePrice,
 };
 
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
@@ -2991,6 +3048,7 @@ const CFG_OVERRIDES = {
     priceBase: magPriceBase,
   },
   'Cap — DTF': { lineBuilder: CAP_LB },
+  'DTF Shirt — Digital': { lineBuilder: DTF_LB },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
   'Flyer (= Loose Sheet Litho)': LO_OV,
@@ -4004,7 +4062,7 @@ class Component extends DCLogic {
   // not only the priced axes. Returns { short, lines:[[label,value],…] }.
   pkOrderSpec() {
     if (this.lbCfg()) {
-      const lines = this.lbCfg().fixed.map(f => [f[0], f[1]]);
+      const lines = (this.lbFab() ? [['Fabric Type', this.lbCfg().fabrics[this.lbFab()].label]] : []).concat(this.lbCfg().fixed.map(f => [f[0], f[1]]));
       this.lbLines().forEach((l, i) => { lines.push(['Model ' + (i + 1), this.lbTitle(l)]); lines.push(['Printing ' + (i + 1), this.lbPrints(l)]); Object.keys(l.sizes || {}).forEach(sz => { if (+l.sizes[sz]) lines.push(['Qty ' + (i + 1) + ' (' + sz + ')', l.sizes[sz] + ' pcs']); }); });
       return { short: lines.map(x => x[1]).join(' · '), lines };
     }
@@ -7091,6 +7149,10 @@ class Component extends DCLogic {
   }
   // ---------- line builder (Cap / readymade apparel): the order is a list of model lines ----------
   lbCfg() { const ov = this.cfgOv(); return ov && ov.lineBuilder; }
+  lbFab() { const C = this.lbCfg(), p = this.pkProduct(); if (!C || !C.fabrics) return null; const f = (this.state.lbFab || {})[p ? p.id : 0]; return C.fabrics[f] ? f : Object.keys(C.fabrics)[0]; }
+  lbModels(cat) { const C = this.lbCfg(); if (!C) return []; return (C.fabrics ? C.fabrics[this.lbFab()].models[cat] : C.models[cat]) || []; }
+  lbCats() { const C = this.lbCfg(); return C ? C.cats.filter(c => this.lbModels(c).length) : []; }
+  lbSetFab(f) { const p = this.pkProduct(); if (!p) return; const all = Object.assign({}, this.state.lbFab || {}); all[p.id] = f; const L = Object.assign({}, this.state.lbLines || {}); L[p.id] = []; this.setState({ lbFab: all, lbLines: L, qty: 1, qtyChosen: false }); }
   lbLines() { const p = this.pkProduct(); const all = this.state.lbLines || {}; return (p && all[p.id]) || []; }
   lbQty(l) { return Object.keys(l.sizes || {}).reduce((a, k) => a + (+l.sizes[k] || 0), 0); }
   lbTotal() { return this.lbLines().reduce((a, l) => a + this.lbQty(l), 0); }
@@ -7100,13 +7162,13 @@ class Component extends DCLogic {
     const total = lines.reduce((a, l) => a + this.lbQty(l), 0);
     this.setState({ lbLines: all, qty: total || 1, qtyChosen: total > 0 });
   }
-  lbLinePrice(l) { const C = this.lbCfg(); if (!C) return null; try { return C.price(Object.assign({}, l, { qty: this.lbQty(l) })); } catch (e) { return null; } }
+  lbLinePrice(l) { const C = this.lbCfg(); if (!C) return null; try { return C.price(Object.assign({}, l, { qty: this.lbQty(l) }), this.lbFab()); } catch (e) { return null; } }
   lbValid() {
     const C = this.lbCfg(), L = this.lbLines(); if (!C || !L.length) return false;
     const t = this.lbTotal(); if (t < (C.minTotal || 1) || (C.maxTotal && t > C.maxTotal)) return false;
     return L.every(l => this.lbQty(l) > 0 && this.lbLinePrice(l) != null);
   }
-  lbModel(cat, key) { const C = this.lbCfg(); return ((C && C.models[cat]) || []).find(m => m.key === key); }
+  lbModel(cat, key) { return this.lbModels(cat).find(m => m.key === key); }
   lbTitle(l) { const m = this.lbModel(l.cat, l.model); return (l.cat !== 'Adult' ? l.cat + ' ' : '') + (m ? m.label : l.model) + ' - ' + l.colour; }
   lbPrints(l) { return (l.prints || []).map(p => p.pos + '-' + p.size).join(', '); }
   lbOpen(idx) {
@@ -7114,14 +7176,14 @@ class Component extends DCLogic {
     const L = this.lbLines();
     let d;
     if (idx != null && L[idx]) d = JSON.parse(JSON.stringify(L[idx]));
-    else { const cat = C.cats[0], m = C.models[cat][0], pos = Object.keys(m.positions)[0]; d = { cat, model: m.key, colour: m.colours[0], prints: [{ pos, size: m.positions[pos][0] }], sizes: {} }; }
+    else { const cat = this.lbCats()[0], m = this.lbModels(cat)[0], pos = Object.keys(m.positions)[0]; d = { cat, model: m.key, colour: m.colours[0], prints: [{ pos, size: m.positions[pos][0] }], sizes: {} }; }
     this.setState({ lbModal: { idx: idx == null ? null : idx, d } });
   }
   lbDraft(patch) {
     const C = this.lbCfg(), md = this.state.lbModal; if (!C || !md) return;
     const d = Object.assign({}, md.d, patch);
     // keep the draft valid when category / model changes: model, colour and positions must exist for it
-    let m = this.lbModel(d.cat, d.model); if (!m) { m = C.models[d.cat][0]; d.model = m.key; }
+    let m = this.lbModel(d.cat, d.model); if (!m) { m = this.lbModels(d.cat)[0]; d.model = m.key; }
     if (m.colours.indexOf(d.colour) < 0) d.colour = m.colours[0];
     d.prints = (d.prints || []).filter(p => m.positions[p.pos]).map(p => ({ pos: p.pos, size: m.positions[p.pos].indexOf(p.size) >= 0 ? p.size : m.positions[p.pos][0] }));
     if (!d.prints.length) { const pos = Object.keys(m.positions)[0]; d.prints = [{ pos, size: m.positions[pos][0] }]; }
@@ -7145,7 +7207,10 @@ class Component extends DCLogic {
     const btnSq = { width: 32, height: 32, border: '1px solid #e6e8eb', background: '#fff', cursor: 'pointer', fontSize: 16, lineHeight: '30px', textAlign: 'center', padding: 0 };
     const err = !L.length ? null : total < C.minTotal ? 'Order at least ' + C.minTotal + ' pcs in total.' : (C.maxTotal && total > C.maxTotal) ? 'Order up to ' + C.maxTotal + ' pcs in total.' : L.some(l => !this.lbQty(l)) ? 'Enter a quantity for every model.' : null;
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
-      h('div', { style: box }, C.fixed.map(f => h('div', { key: f[0], style: { display: 'grid', gridTemplateColumns: '180px minmax(0,1fr)', gap: 12, padding: '6px 0' } }, h('span', { style: lbl }, f[0]), h('span', { style: val }, f[1])))),
+      h('div', { style: box }, C.fabrics ? h('div', { style: { display: 'grid', gridTemplateColumns: '180px minmax(0,1fr)', gap: 12, padding: '6px 0', alignItems: 'center' } }, h('span', { style: lbl }, 'Fabric Type'),
+        h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, Object.keys(C.fabrics).map(fk => h('button', { key: fk, type: 'button', 'aria-pressed': this.lbFab() === fk ? 'true' : 'false', onClick: () => this.lbSetFab(fk),
+          style: { padding: '8px 12px', border: '1px solid ' + (this.lbFab() === fk ? '#c9191b' : '#e6e8eb'), background: this.lbFab() === fk ? '#fff5f5' : '#fff', cursor: 'pointer', font: '500 13.5px Montserrat,sans-serif', color: INK } }, C.fabrics[fk].label)))) : null,
+        C.fixed.map(f => h('div', { key: f[0], style: { display: 'grid', gridTemplateColumns: '180px minmax(0,1fr)', gap: 12, padding: '6px 0' } }, h('span', { style: lbl }, f[0]), h('span', { style: val }, f[1])))),
       h('div', { style: box },
         h('div', { style: { width: 24, height: 3, background: TEAL, marginBottom: 12 } }),
         h('div', { style: { fontSize: 20, fontWeight: 500, marginBottom: 12 } }, 'Size & Quantity'),
@@ -7154,6 +7219,8 @@ class Component extends DCLogic {
             h('div', { style: { fontWeight: 600, fontSize: 15 } }, this.lbTitle(l)),
             h('div', { style: { fontSize: 13, color: MUT, margin: '2px 0 8px' } }, 'Printing: ' + this.lbPrints(l), '  ',
               h('span', { role: 'button', tabIndex: 0, onClick: () => this.lbOpen(i), onKeyDown: e => { if (e.key === 'Enter') this.lbOpen(i); }, style: { color: TEAL, textDecoration: 'underline', cursor: 'pointer' } }, 'Edit')),
+            Object.keys(l.sizes || {}).length > 1 ? h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 6 } }, Object.keys(l.sizes).map(s => h('label', { key: s, style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, fontSize: 12.5, color: MUT } }, s,
+              h('input', { type: 'number', min: 0, 'aria-label': s + ' quantity', value: l.sizes[s] || 0, onChange: e => setN(i, s, e.target.value), style: { width: 56, height: 32, border: '1px solid #e6e8eb', textAlign: 'center', font: '400 14px Montserrat,sans-serif', color: INK } })))) :
             Object.keys(l.sizes || {}).map(s => h('div', { key: s, style: { display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 } },
               h('span', { style: { minWidth: 120, fontSize: 13.5 } }, s),
               h('button', { type: 'button', 'aria-label': 'Fewer ' + s, onClick: () => step(i, s, -1), style: btnSq }, '−'),
@@ -7171,7 +7238,7 @@ class Component extends DCLogic {
   }
   lbModalUI() {
     const md = this.state.lbModal, C = this.lbCfg(); if (!md || !C) return null;
-    const d = md.d, m = this.lbModel(d.cat, d.model) || C.models[d.cat][0];
+    const d = md.d, m = this.lbModel(d.cat, d.model) || this.lbModels(d.cat)[0];
     const close = () => this.setState({ lbModal: null });
     const sec = t => h('div', { style: { fontSize: 15, fontWeight: 600, margin: '18px 0 10px', paddingBottom: 6, borderBottom: '1px solid #e6e8eb' } }, t);
     const opt = (on, label, onClick, extra) => h('button', { type: 'button', onClick, 'aria-pressed': on ? 'true' : 'false', style: Object.assign({ padding: '10px 16px', border: '1px solid ' + (on ? '#c9191b' : '#e6e8eb'), background: on ? '#fff5f5' : '#fff', cursor: 'pointer', font: '500 14px Montserrat,sans-serif', color: INK }, extra || {}) }, label);
@@ -7179,9 +7246,9 @@ class Component extends DCLogic {
     return h('div', { onClick: close, style: { position: 'fixed', inset: 0, zIndex: 99, background: 'rgba(20,20,25,.45)', display: 'grid', placeItems: 'center', padding: 16 } },
       h('div', { role: 'dialog', 'aria-modal': 'true', 'aria-label': md.idx == null ? 'Add model' : 'Edit model', onClick: e => e.stopPropagation(), style: { background: '#fff', width: 'min(760px,100%)', maxHeight: '90vh', overflowY: 'auto', padding: '22px 24px', position: 'relative' } },
         h('span', { role: 'button', tabIndex: 0, 'aria-label': 'Close', onClick: close, onKeyDown: e => { if (e.key === 'Enter') close(); }, style: { position: 'absolute', top: 10, right: 14, fontSize: 22, cursor: 'pointer', color: MUT } }, '×'),
-        h('div', { style: { display: 'flex', gap: 10 } }, C.cats.map(c => opt(d.cat === c, c, () => this.lbDraft({ cat: c })))),
+        h('div', { style: { display: 'flex', gap: 10 } }, this.lbCats().map(c => opt(d.cat === c, c, () => this.lbDraft({ cat: c })))),
         sec('Model'),
-        h('div', { style: { display: 'flex', gap: 12, flexWrap: 'wrap' } }, C.models[d.cat].map(x => opt(d.model === x.key, x.label, () => this.lbDraft({ model: x.key }), { minWidth: 160, padding: '18px 16px' }))),
+        h('div', { style: { display: 'flex', gap: 12, flexWrap: 'wrap' } }, this.lbModels(d.cat).map(x => opt(d.model === x.key, x.label, () => this.lbDraft({ model: x.key }), { minWidth: 160, padding: '18px 16px' }))),
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, margin: '18px 0 10px', paddingBottom: 6, borderBottom: '1px solid #e6e8eb' } },
           h('span', { style: { fontSize: 15, fontWeight: 600 } }, 'Colour'), h('span', { style: { fontSize: 12.5, border: '1px dashed #c9191b', color: '#c9191b', padding: '2px 8px' } }, d.colour)),
         h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, m.colours.map(c => h('button', { key: c, type: 'button', title: c, 'aria-label': c, 'aria-pressed': d.colour === c ? 'true' : 'false', onClick: () => this.lbDraft({ colour: c }),
