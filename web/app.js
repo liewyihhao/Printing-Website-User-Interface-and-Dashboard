@@ -1448,6 +1448,40 @@ function magPriceBase(cfg, q) {
   return Math.round(magF(s) * 1.13 + 5 + 0.1 * q + (st ? 0.46 * s : 0));
 }
 
+// ---------- Line builder (Excard readymade order form: Cap / shirts). The order is a list of lines; each line = category (Adult /
+// Kid) + model + colour + printing positions (position + size) + quantity per size. Lines are priced on their own quantity and add up.
+// Config lives in CFG_OVERRIDES[name].lineBuilder (see Cap). ----------
+const LB_HEX = { 'Apple Green': '#7ac943', 'Beige': '#d8cbb0', 'Black': '#1d1d1f', 'Dark Green': '#1f5135', 'Emerald': '#15895a', 'Khaki': '#b49b6f', 'Knight Grey': '#5c6066', 'Lemon Yellow': '#f2e33a',
+  'Light Pink': '#f3b6c8', 'Magenta': '#d6237b', 'Maroon': '#7a1f2b', 'Mid Grey': '#8e9196', 'Navy Blue': '#1f2a4d', 'Ocean Blue': '#2c6db5', 'Orange': '#f07c1e', 'Purple': '#6a2ca0', 'Red': '#d7262e',
+  'Royal Blue': '#2a4dbf', 'White': '#ffffff' };
+// Cap (Excard cap, live 2026-10-08): line = base x qty (our list, Kid RM0.20/pc less) + each extra print position x qty x rate(qty)
+const CAP_POS_RATE = [[5, 2.0], [20, 1.975], [50, 1.96], [100, 1.845], [500, 1.722]];
+function capLinePrice(line) {
+  const E = typeof window !== 'undefined' && window.PricingEngine, c = E && E.DATA.params.cap_plx; const q = line.qty;
+  if (!c || !q) return null;
+  const cv = c.curves[line.model === 'bt_c' ? 'Trucker' : 'Baseball']; if (!cv) return null;
+  const ks = Object.keys(cv).map(Number).sort((a, b) => a - b); let unit;
+  if (cv[q] != null) unit = cv[q] / q; else if (q <= ks[0]) unit = cv[ks[0]] / ks[0]; else if (q >= ks[ks.length - 1]) unit = cv[ks[ks.length - 1]] / ks[ks.length - 1];
+  else { let i = 0; while (ks[i + 1] < q) i++; const a = ks[i], b = ks[i + 1]; unit = cv[a] / a + (cv[b] / b - cv[a] / a) * (q - a) / (b - a); }
+  if (line.cat === 'Kid') unit -= 0.2;
+  const R = CAP_POS_RATE; let r = R[R.length - 1][1];
+  if (q <= R[0][0]) r = R[0][1]; else for (let i = 1; i < R.length; i++) if (q <= R[i][0]) { r = R[i - 1][1] + (R[i][1] - R[i - 1][1]) * (q - R[i - 1][0]) / (R[i][0] - R[i - 1][0]); break; }
+  return Math.round(unit * q + Math.max(0, (line.prints || []).length - 1) * r * q);
+}
+const CAP_COLOURS_BB = ['Apple Green', 'Beige', 'Black', 'Dark Green', 'Emerald', 'Khaki', 'Knight Grey', 'Lemon Yellow', 'Light Pink', 'Magenta', 'Maroon', 'Mid Grey', 'Navy Blue', 'Ocean Blue', 'Orange', 'Purple', 'Red', 'Royal Blue', 'White'];
+const CAP_LB = {
+  fixed: [['Fabric Type', 'Acrylic Twill'], ['Print Colour', '4C'], ['Compulsory', 'DTF']],
+  cats: ['Adult', 'Kid'],
+  models: {
+    Adult: [{ key: 'bb_c', label: 'Baseball', sizes: ['VELCO STRAP'], colours: CAP_COLOURS_BB, positions: { Front: ['2.5" x 2.5"'], Left: ['2.5" x 2.5"'], Right: ['2.5" x 2.5"'] } },
+      { key: 'bt_c', label: 'Trucker', sizes: ['SNAP ADJUSTER'], colours: ['Black', 'Dark Green', 'Mid Grey', 'Navy Blue', 'Red', 'Royal Blue', 'White'], positions: { Front: ['2.5" x 2.5"'] } }],
+    Kid: [{ key: 'bb_c', label: 'Baseball', sizes: ['VELCO STRAP'], colours: ['Apple Green', 'Black', 'Lemon Yellow', 'Light Pink', 'Navy Blue', 'Orange', 'Purple', 'Red', 'Royal Blue', 'White'], positions: { Front: ['2.5" x 2.5"'], Left: ['2.5" x 2.5"'], Right: ['2.5" x 2.5"'] } }],
+  },
+  note: 'Mixed models must share the same artwork.',
+  minTotal: 5, maxTotal: 500, maxLines: 10,
+  price: capLinePrice,
+};
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true, 135: true, 114: true, 178: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -2956,6 +2990,7 @@ const CFG_OVERRIDES = {
     qtyOptions: MAG_QTY,
     priceBase: magPriceBase,
   },
+  'Cap — DTF': { lineBuilder: CAP_LB },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
   'Flyer (= Loose Sheet Litho)': LO_OV,
@@ -3413,6 +3448,7 @@ class Component extends DCLogic {
   // production days for the current spec (a number, or a rule of the spec — e.g. embossing adds a day)
   procDays() { const pd = this.cfgOv().processDays; if (typeof pd === 'function') { try { return pd(this.pkV()); } catch (e) { return null; } } return pd != null ? pd : null; }
   pkReady() {
+    if (this.lbCfg()) return this.lbValid();
     const sc = this.state.cfg || {}; let fields = [];
     try { fields = this.pkFields(); } catch (e) { return false; }
     const ph = this.cfgOv().placeholder || [];
@@ -3717,6 +3753,12 @@ class Component extends DCLogic {
     const E = this.pkEngine(), prod = this.pkProduct(); if (!E || !prod) return null;
     const qty = qtyOverride || this.state.qty || 1;
     const ov = this.cfgOv();
+    if (ov.lineBuilder) {   // line builder: every model line is priced on its own quantity, then added up
+      const L = this.lbLines(); if (!L.length) return { ok: false, message: 'Add a model' };
+      let g = 0; for (const l of L) { const lp = this.lbLinePrice(l); if (lp == null) return { ok: false, message: 'Enter a quantity' }; g += lp; }
+      const tq = this.lbTotal() || 1, gross = Math.round(g * 100) / 100, net = Math.round(gross * (1 - this.tierPct() / 100) * 100) / 100;
+      return { ok: true, gross, disc: Math.round((gross - net) * 100) / 100, net, unit: net / tq, weight: tq * 0.08, note: null, method: 'excard', finishing: 0 };
+    }
     try {
       const cfg = this.pkV();
       // priceSub: substitute values for the engine call only (e.g. Business Card custom size
@@ -3961,6 +4003,11 @@ class Component extends DCLogic {
   // and appends the Hot Stamping foil colours, so a placed order carries every choice —
   // not only the priced axes. Returns { short, lines:[[label,value],…] }.
   pkOrderSpec() {
+    if (this.lbCfg()) {
+      const lines = this.lbCfg().fixed.map(f => [f[0], f[1]]);
+      this.lbLines().forEach((l, i) => { lines.push(['Model ' + (i + 1), this.lbTitle(l)]); lines.push(['Printing ' + (i + 1), this.lbPrints(l)]); Object.keys(l.sizes || {}).forEach(sz => { if (+l.sizes[sz]) lines.push(['Qty ' + (i + 1) + ' (' + sz + ')', l.sizes[sz] + ' pcs']); }); });
+      return { short: lines.map(x => x[1]).join(' · '), lines };
+    }
     const ov = this.cfgOv(), cfg = this.pkV();
     let fields = []; try { fields = this.pkFields(); } catch (e) { fields = []; }
     const NONE_RE = /^(no|not required|no required|none|not applicable|no hot stamping|no hole punching|no round corner|no fold(ing)?)$/i;
@@ -7042,6 +7089,118 @@ class Component extends DCLogic {
         cur.n)
       ]);
   }
+  // ---------- line builder (Cap / readymade apparel): the order is a list of model lines ----------
+  lbCfg() { const ov = this.cfgOv(); return ov && ov.lineBuilder; }
+  lbLines() { const p = this.pkProduct(); const all = this.state.lbLines || {}; return (p && all[p.id]) || []; }
+  lbQty(l) { return Object.keys(l.sizes || {}).reduce((a, k) => a + (+l.sizes[k] || 0), 0); }
+  lbTotal() { return this.lbLines().reduce((a, l) => a + this.lbQty(l), 0); }
+  lbSetLines(lines) {
+    const p = this.pkProduct(); if (!p) return;
+    const all = Object.assign({}, this.state.lbLines || {}); all[p.id] = lines;
+    const total = lines.reduce((a, l) => a + this.lbQty(l), 0);
+    this.setState({ lbLines: all, qty: total || 1, qtyChosen: total > 0 });
+  }
+  lbLinePrice(l) { const C = this.lbCfg(); if (!C) return null; try { return C.price(Object.assign({}, l, { qty: this.lbQty(l) })); } catch (e) { return null; } }
+  lbValid() {
+    const C = this.lbCfg(), L = this.lbLines(); if (!C || !L.length) return false;
+    const t = this.lbTotal(); if (t < (C.minTotal || 1) || (C.maxTotal && t > C.maxTotal)) return false;
+    return L.every(l => this.lbQty(l) > 0 && this.lbLinePrice(l) != null);
+  }
+  lbModel(cat, key) { const C = this.lbCfg(); return ((C && C.models[cat]) || []).find(m => m.key === key); }
+  lbTitle(l) { const m = this.lbModel(l.cat, l.model); return (l.cat !== 'Adult' ? l.cat + ' ' : '') + (m ? m.label : l.model) + ' - ' + l.colour; }
+  lbPrints(l) { return (l.prints || []).map(p => p.pos + '-' + p.size).join(', '); }
+  lbOpen(idx) {
+    const C = this.lbCfg(); if (!C) return;
+    const L = this.lbLines();
+    let d;
+    if (idx != null && L[idx]) d = JSON.parse(JSON.stringify(L[idx]));
+    else { const cat = C.cats[0], m = C.models[cat][0], pos = Object.keys(m.positions)[0]; d = { cat, model: m.key, colour: m.colours[0], prints: [{ pos, size: m.positions[pos][0] }], sizes: {} }; }
+    this.setState({ lbModal: { idx: idx == null ? null : idx, d } });
+  }
+  lbDraft(patch) {
+    const C = this.lbCfg(), md = this.state.lbModal; if (!C || !md) return;
+    const d = Object.assign({}, md.d, patch);
+    // keep the draft valid when category / model changes: model, colour and positions must exist for it
+    let m = this.lbModel(d.cat, d.model); if (!m) { m = C.models[d.cat][0]; d.model = m.key; }
+    if (m.colours.indexOf(d.colour) < 0) d.colour = m.colours[0];
+    d.prints = (d.prints || []).filter(p => m.positions[p.pos]).map(p => ({ pos: p.pos, size: m.positions[p.pos].indexOf(p.size) >= 0 ? p.size : m.positions[p.pos][0] }));
+    if (!d.prints.length) { const pos = Object.keys(m.positions)[0]; d.prints = [{ pos, size: m.positions[pos][0] }]; }
+    this.setState({ lbModal: { idx: md.idx, d } });
+  }
+  lbSave() {
+    const md = this.state.lbModal; if (!md) return;
+    const m = this.lbModel(md.d.cat, md.d.model); const L = this.lbLines().slice();
+    const d = Object.assign({}, md.d); const sz = m.sizes;
+    const old = d.sizes || {}; d.sizes = {}; sz.forEach(s => { d.sizes[s] = old[s] || 0; });
+    if (md.idx == null) L.push(d); else L[md.idx] = d;
+    this.setState({ lbModal: null }, () => this.lbSetLines(L));
+  }
+  lbUI(prod, NAME) {
+    const C = this.lbCfg(), L = this.lbLines(), total = this.lbTotal();
+    const box = { background: '#fff', border: '1px solid #e6e8eb', padding: '22px 22px' };
+    const lbl = { color: MUT, fontSize: 14 }, val = { color: INK, fontSize: 14 };
+    const step = (i, s, delta) => { const N = this.lbLines().map(x => Object.assign({}, x, { sizes: Object.assign({}, x.sizes) })); N[i].sizes[s] = Math.max(0, (+N[i].sizes[s] || 0) + delta); this.lbSetLines(N); };
+    const setN = (i, s, v) => { const N = this.lbLines().map(x => Object.assign({}, x, { sizes: Object.assign({}, x.sizes) })); N[i].sizes[s] = Math.max(0, parseInt(v, 10) || 0); this.lbSetLines(N); };
+    const rm = i => this.lbSetLines(this.lbLines().filter((_, k) => k !== i));
+    const btnSq = { width: 32, height: 32, border: '1px solid #e6e8eb', background: '#fff', cursor: 'pointer', fontSize: 16, lineHeight: '30px', textAlign: 'center', padding: 0 };
+    const err = !L.length ? null : total < C.minTotal ? 'Order at least ' + C.minTotal + ' pcs in total.' : (C.maxTotal && total > C.maxTotal) ? 'Order up to ' + C.maxTotal + ' pcs in total.' : L.some(l => !this.lbQty(l)) ? 'Enter a quantity for every model.' : null;
+    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+      h('div', { style: box }, C.fixed.map(f => h('div', { key: f[0], style: { display: 'grid', gridTemplateColumns: '180px minmax(0,1fr)', gap: 12, padding: '6px 0' } }, h('span', { style: lbl }, f[0]), h('span', { style: val }, f[1])))),
+      h('div', { style: box },
+        h('div', { style: { width: 24, height: 3, background: TEAL, marginBottom: 12 } }),
+        h('div', { style: { fontSize: 20, fontWeight: 500, marginBottom: 12 } }, 'Size & Quantity'),
+        L.map((l, i) => h('div', { key: i, style: { borderTop: '1px solid #e6e8eb', padding: '14px 0', display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: 12 } },
+          h('div', null,
+            h('div', { style: { fontWeight: 600, fontSize: 15 } }, this.lbTitle(l)),
+            h('div', { style: { fontSize: 13, color: MUT, margin: '2px 0 8px' } }, 'Printing: ' + this.lbPrints(l), '  ',
+              h('span', { role: 'button', tabIndex: 0, onClick: () => this.lbOpen(i), onKeyDown: e => { if (e.key === 'Enter') this.lbOpen(i); }, style: { color: TEAL, textDecoration: 'underline', cursor: 'pointer' } }, 'Edit')),
+            Object.keys(l.sizes || {}).map(s => h('div', { key: s, style: { display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 } },
+              h('span', { style: { minWidth: 120, fontSize: 13.5 } }, s),
+              h('button', { type: 'button', 'aria-label': 'Fewer ' + s, onClick: () => step(i, s, -1), style: btnSq }, '−'),
+              h('input', { type: 'number', min: 0, 'aria-label': s + ' quantity', value: l.sizes[s] || 0, onChange: e => setN(i, s, e.target.value), style: { width: 70, height: 32, border: '1px solid #e6e8eb', textAlign: 'center', font: '400 14px Montserrat,sans-serif' } }),
+              h('button', { type: 'button', 'aria-label': 'More ' + s, onClick: () => step(i, s, 1), style: btnSq }, '+')))),
+          h('div', { style: { textAlign: 'right' } },
+            (() => { const p = this.lbLinePrice(l), q = this.lbQty(l); return [h('div', { key: 'p', style: { fontWeight: 600 } }, p != null && q ? this.money(p) : '—'), h('div', { key: 'u', style: { fontSize: 12.5, color: MUT } }, p != null && q ? this.money(p / q) + ' / pcs' : '')]; })(),
+            h('span', { role: 'button', tabIndex: 0, 'aria-label': 'Remove ' + this.lbTitle(l), onClick: () => rm(i), onKeyDown: e => { if (e.key === 'Enter') rm(i); }, style: { display: 'inline-block', marginTop: 8, color: MUT, cursor: 'pointer', fontSize: 18 } }, '×')))),
+        L.length < (C.maxLines || 10) ? h('div', { role: 'button', tabIndex: 0, onClick: () => this.lbOpen(null), onKeyDown: e => { if (e.key === 'Enter') this.lbOpen(null); },
+          style: { border: '1px dashed #c9191b', color: '#c9191b', textAlign: 'center', padding: '12px', marginTop: 10, cursor: 'pointer', fontWeight: 500 } }, '+ Add model') : null,
+        err ? h('div', { role: 'alert', style: { color: '#c9191b', fontSize: 13.5, marginTop: 10 } }, err) : null,
+        h('div', { style: { display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e6e8eb', marginTop: 12, paddingTop: 12, fontWeight: 600 } },
+          h('span', null, 'Total: ' + total + ' pcs'), h('span', null, this.money(L.reduce((a, l) => a + (this.lbLinePrice(l) || 0), 0))))),
+      this.lbModalUI());
+  }
+  lbModalUI() {
+    const md = this.state.lbModal, C = this.lbCfg(); if (!md || !C) return null;
+    const d = md.d, m = this.lbModel(d.cat, d.model) || C.models[d.cat][0];
+    const close = () => this.setState({ lbModal: null });
+    const sec = t => h('div', { style: { fontSize: 15, fontWeight: 600, margin: '18px 0 10px', paddingBottom: 6, borderBottom: '1px solid #e6e8eb' } }, t);
+    const opt = (on, label, onClick, extra) => h('button', { type: 'button', onClick, 'aria-pressed': on ? 'true' : 'false', style: Object.assign({ padding: '10px 16px', border: '1px solid ' + (on ? '#c9191b' : '#e6e8eb'), background: on ? '#fff5f5' : '#fff', cursor: 'pointer', font: '500 14px Montserrat,sans-serif', color: INK }, extra || {}) }, label);
+    const usedPos = d.prints.map(p => p.pos), freePos = Object.keys(m.positions).filter(p => usedPos.indexOf(p) < 0);
+    return h('div', { onClick: close, style: { position: 'fixed', inset: 0, zIndex: 99, background: 'rgba(20,20,25,.45)', display: 'grid', placeItems: 'center', padding: 16 } },
+      h('div', { role: 'dialog', 'aria-modal': 'true', 'aria-label': md.idx == null ? 'Add model' : 'Edit model', onClick: e => e.stopPropagation(), style: { background: '#fff', width: 'min(760px,100%)', maxHeight: '90vh', overflowY: 'auto', padding: '22px 24px', position: 'relative' } },
+        h('span', { role: 'button', tabIndex: 0, 'aria-label': 'Close', onClick: close, onKeyDown: e => { if (e.key === 'Enter') close(); }, style: { position: 'absolute', top: 10, right: 14, fontSize: 22, cursor: 'pointer', color: MUT } }, '×'),
+        h('div', { style: { display: 'flex', gap: 10 } }, C.cats.map(c => opt(d.cat === c, c, () => this.lbDraft({ cat: c })))),
+        sec('Model'),
+        h('div', { style: { display: 'flex', gap: 12, flexWrap: 'wrap' } }, C.models[d.cat].map(x => opt(d.model === x.key, x.label, () => this.lbDraft({ model: x.key }), { minWidth: 160, padding: '18px 16px' }))),
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, margin: '18px 0 10px', paddingBottom: 6, borderBottom: '1px solid #e6e8eb' } },
+          h('span', { style: { fontSize: 15, fontWeight: 600 } }, 'Colour'), h('span', { style: { fontSize: 12.5, border: '1px dashed #c9191b', color: '#c9191b', padding: '2px 8px' } }, d.colour)),
+        h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, m.colours.map(c => h('button', { key: c, type: 'button', title: c, 'aria-label': c, 'aria-pressed': d.colour === c ? 'true' : 'false', onClick: () => this.lbDraft({ colour: c }),
+          style: { width: 44, height: 44, background: LB_HEX[c] || '#ccc', border: d.colour === c ? '3px solid #c9191b' : '1px solid #d0d4d9', cursor: 'pointer', padding: 0 } }))),
+        C.note ? h('div', { style: { color: '#c9191b', fontSize: 12.5, marginTop: 16 } }, C.note) : null,
+        h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, margin: '8px 0 10px', paddingBottom: 6, borderBottom: '1px solid #e6e8eb' } },
+          h('span', { style: { fontSize: 15, fontWeight: 600 } }, 'Printing'), h('span', { style: { fontSize: 12.5, border: '1px dashed #c9191b', color: '#c9191b', padding: '2px 8px' } }, d.prints.map(p => p.pos + '-' + p.size).join(', '))),
+        d.prints.map((p, i) => h('div', { key: i, style: { display: 'grid', gridTemplateColumns: 'auto minmax(0,1fr) auto minmax(0,1fr) auto', gap: 12, alignItems: 'center', padding: '8px 0' } },
+          h('span', { style: { fontSize: 13.5, color: MUT } }, 'Printing Position'),
+          h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } }, Object.keys(m.positions).map(pos => opt(p.pos === pos, pos, () => {
+            if (p.pos === pos || (usedPos.indexOf(pos) >= 0)) return; const pr = d.prints.slice(); pr[i] = { pos, size: m.positions[pos][0] }; this.lbDraft({ prints: pr }); }, { padding: '8px 12px', opacity: p.pos !== pos && usedPos.indexOf(pos) >= 0 ? .45 : 1 }))),
+          h('span', { style: { fontSize: 13.5, color: MUT } }, 'Printing Size'),
+          h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } }, m.positions[p.pos].map(sz => opt(p.size === sz, sz, () => { const pr = d.prints.slice(); pr[i] = { pos: p.pos, size: sz }; this.lbDraft({ prints: pr }); }, { padding: '8px 12px' }))),
+          d.prints.length > 1 ? h('span', { role: 'button', tabIndex: 0, 'aria-label': 'Remove printing', onClick: () => this.lbDraft({ prints: d.prints.filter((_, k) => k !== i) }), style: { cursor: 'pointer', color: MUT, fontSize: 18 } }, '×') : h('span', null))),
+        freePos.length ? h('div', { role: 'button', tabIndex: 0, onClick: () => this.lbDraft({ prints: d.prints.concat([{ pos: freePos[0], size: m.positions[freePos[0]][0] }]) }),
+          onKeyDown: e => { if (e.key === 'Enter') this.lbDraft({ prints: d.prints.concat([{ pos: freePos[0], size: m.positions[freePos[0]][0] }]) }); },
+          style: { border: '1px dashed #c9191b', color: '#c9191b', textAlign: 'center', padding: 10, marginTop: 10, cursor: 'pointer', fontWeight: 500 } }, '+ Add printing') : null,
+        h('button', { type: 'button', onClick: () => this.lbSave(), style: { display: 'block', width: '100%', marginTop: 20, background: '#c9191b', color: '#fff', border: 0, fontSize: 16, fontWeight: 500, padding: '15px 16px', cursor: 'pointer' } }, md.idx == null ? 'Add' : 'Update')));
+  }
   s_product() {
     // (user, 2026-09-29) the configurator is for members only: log in or sign up first, then it opens
     if (!this.state.user) {
@@ -7061,7 +7220,7 @@ class Component extends DCLogic {
       h('div', { style: { fontSize: 12.5, color: FAINT, marginBottom: 14 } },
         h('span', { 'data-go': 'home', style: { color: TEAL } }, 'Home'), ' › ', h('span', { 'data-go': prod ? ('catopen:' + this.catCategoryOf(prod.id)) : 'category', style: { color: TEAL } }, prod ? this.catCategoryLabel(this.catCategoryOf(prod.id)) : 'Products'), ' › ', NAME),
       h('div', { className: 'pk-cfg-grid', style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 352px', gap: 28, alignItems: 'start' } },
-        h('div', null, this.cfgBook(groups, NAME)),
+        h('div', null, this.lbCfg() ? this.lbUI(prod, NAME) : this.cfgBook(groups, NAME)),
         h('div', { style: { position: 'sticky', top: 122, display: 'flex', flexDirection: 'column', gap: 14 } },
           // (user, 2026-09-30) styled like the cart's Summary box; Add to cart + Download Quotation only, no unit price
           (() => {
