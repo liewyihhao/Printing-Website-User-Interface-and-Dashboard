@@ -1683,6 +1683,77 @@ function sbOverride(name, engineKeys) {
   };
 }
 
+// ---------- Stamp Chop (Excard stamp-chop, live 2026-10-08): one order = any number of independent lines ("+ Add Model"): Stamp Type
+// (Pre-Inked FLASH / Self-Inked INDEX / Rubber INDEX / Stock pre-defined artwork) → Shape → Model → Ink Colours & Quantity (one qty per
+// colour; Rubber / Stock take a plain quantity) → Different Artwork? (when a line has more than one piece, price-neutral). Price = the
+// model's flat per-piece price (stored stamp_chop list; live checks DF 1340 20.00, RS 2565 9.60, SE 01 3.00 x100, CSI-30 x50 exact). ----------
+const ST_TYPES = [['Pre-Inked Stamp', 'Pre-Inked · FLASH Stamp', ['Blue', 'Black', 'Red', 'Violet', 'Green', 'Brown', 'Pink', 'Orange', 'Yellow', 'Sky Blue']],
+  ['Self-Inked Stamp', 'Self-Inked · INDEX Stamp', ['Black', 'Red', 'Blue']], ['Rubber Stamp', 'Rubber Stamp · INDEX Stamp', null], ['Stock Stamp', 'Stock Stamp · Pre-defined artwork', null]];
+const ST_INK_HEX = { Blue: '#1f4fb4', Black: '#1a1a1a', Red: '#d62828', Violet: '#6a3d9a', Green: '#2e8b57', Brown: '#7b4a2a', Pink: '#ff6fae', Orange: '#ff8c1a', Yellow: '#f4d03f', 'Sky Blue': '#5fb3e8' };
+function stData() { const E = typeof window !== 'undefined' && window.PricingEngine; return (E && E.DATA.params.stamp_chop) || {}; }
+function stShapes(t) { return Object.keys(stData()[t] || {}); }
+function stModels(t, s) { return Object.keys((stData()[t] || {})[s] || {}); }
+function stUnit(l) { const v = ((stData()[l.type] || {})[l.shape] || {})[l.model]; return v != null ? v : null; }
+function stInks(t) { const T = ST_TYPES.find(x => x[0] === t); return T ? T[2] : null; }
+function stQty(l) { return stInks(l.type) ? Object.keys(l.inks || {}).reduce((a, k) => a + (+l.inks[k] || 0), 0) : (+l.qty || 0); }
+const STAMP_LINES = {
+  key: 'stLines',
+  lines: app => { const p = app.pkProduct(); return (p && (app.state.stLines || {})[p.id]) || []; },
+  set: (app, L) => { const p = app.pkProduct(); if (!p) return; const all = Object.assign({}, app.state.stLines || {}); all[p.id] = L; const t = L.reduce((a, l) => a + stQty(l), 0); app.setState({ stLines: all, qty: t || 1, qtyChosen: t > 0 }); },
+  total: app => STAMP_LINES.lines(app).reduce((a, l) => a + stQty(l), 0),
+  err: app => { const L = STAMP_LINES.lines(app); if (!L.length) return 'Add a model.';
+    for (let i = 0; i < L.length; i++) { const l = L[i]; if (!l.type) return 'Model ' + (i + 1) + ': choose a stamp type.'; if (!l.shape) return 'Model ' + (i + 1) + ': choose a shape.'; if (!l.model) return 'Model ' + (i + 1) + ': choose a model.';
+      if (stInks(l.type) && !Object.keys(l.inks || {}).length) return 'Model ' + (i + 1) + ': choose an ink colour.'; if (!(stQty(l) > 0)) return 'Model ' + (i + 1) + ': quantity cannot be 0.'; }
+    return null; },
+  valid: app => !STAMP_LINES.err(app),
+  gross: (app, qty) => { const L = STAMP_LINES.lines(app);
+    if (!L.length) { const d = stData(); let lo = null; Object.keys(d).forEach(t => Object.keys(d[t]).forEach(sh => Object.keys(d[t][sh]).forEach(m => { const v = d[t][sh][m]; if (lo == null || v < lo) lo = v; }))); return lo != null ? lo * (qty || 1) : null; }
+    let g = 0; for (const l of L) { const u = stUnit(l), q = stQty(l); if (u == null || !(q > 0)) return null; g += u * q; } return g; },
+  spec: app => { const out = []; STAMP_LINES.lines(app).forEach((l, i) => { const n = i + 1, inks = stInks(l.type);
+      out.push(['Model ' + n, [l.type, l.shape, String(l.model || '').replace(' — ', ' · ')].filter(Boolean).join(' · ')]);
+      if (inks) Object.keys(l.inks || {}).forEach(k => { if (+l.inks[k]) out.push(['Ink ' + n + ' (' + k + ')', l.inks[k] + ' pcs']); });
+      else out.push(['Qty ' + n, (+l.qty || 0) + ' pcs']);
+      if (stQty(l) > 1) out.push(['Different Artwork ' + n, l.art === 'Yes' ? 'Yes, different artwork per piece' : 'No, same artwork for all']); });
+    return out; },
+  node: app => {
+    const L = STAMP_LINES.lines(app), err = STAMP_LINES.err(app), set = N => STAMP_LINES.set(app, N);
+    const upd = (i, patch) => set(STAMP_LINES.lines(app).map((l, k) => k === i ? Object.assign({}, l, patch) : l));
+    const ctl = { height: 38, border: '1px solid #e6e8eb', background: '#fff', font: '400 14px Montserrat,sans-serif', color: INK, padding: '0 8px', width: '100%' };
+    const btnSq = { width: 30, height: 30, border: '1px solid #e6e8eb', background: '#fff', cursor: 'pointer', fontSize: 15, lineHeight: '28px', textAlign: 'center', padding: 0, color: INK };
+    const lab = t => h('div', { style: { fontSize: 13, color: MUT, margin: '10px 0 6px' } }, t);
+    const stepper = (val, onSet, aria) => h('div', { style: { display: 'flex', alignItems: 'center', gap: 6 } },
+      h('button', { type: 'button', 'aria-label': 'Fewer ' + aria, onClick: () => onSet(Math.max(0, (+val || 0) - 1)), style: btnSq }, '−'),
+      h('input', { type: 'number', min: 0, 'aria-label': aria + ' quantity', value: val || 0, onChange: e => onSet(Math.max(0, parseInt(e.target.value, 10) || 0)), style: { width: 64, height: 30, border: '1px solid #e6e8eb', textAlign: 'center', font: '400 14px Montserrat,sans-serif', color: INK } }),
+      h('button', { type: 'button', 'aria-label': 'More ' + aria, onClick: () => onSet((+val || 0) + 1), style: btnSq }, '+'));
+    const sel = (aria, value, opts, ph, onChange) => h('select', { 'aria-label': aria, value: value || '', onChange: e => onChange(e.target.value), style: ctl },
+      [h('option', { key: '', value: '' }, ph)].concat(opts.map(o => h('option', { key: o[0], value: o[0] }, o[1]))));
+    const total = STAMP_LINES.total(app), sum = L.reduce((a, l) => { const u = stUnit(l); return a + (u != null ? u * stQty(l) : 0); }, 0);
+    return h('div', { key: 'quantity', 'data-cfgkey': 'quantity', 'data-cfgans': err ? '0' : '1', 'data-cfgsel': err ? '0' : '1', style: { padding: '15px 0', borderTop: '1px solid ' + LINE } },
+      L.map((l, i) => { const inks = stInks(l.type), u = stUnit(l), q = stQty(l);
+        return h('div', { key: i, style: { border: '1px solid #e6e8eb', padding: '12px 14px', marginBottom: 12 } },
+          h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } }, h('span', { style: { fontWeight: 600, fontSize: 15 } }, 'Model ' + (i + 1)),
+            h('span', { role: 'button', tabIndex: 0, 'aria-label': 'Remove model ' + (i + 1), onClick: () => set(STAMP_LINES.lines(app).filter((_, k) => k !== i)), onKeyDown: e => { if (e.key === 'Enter') set(STAMP_LINES.lines(app).filter((_, k) => k !== i)); }, style: { color: MUT, cursor: 'pointer', fontSize: 18 } }, '×')),
+          lab('Stamp Type'), sel('Stamp type, model ' + (i + 1), l.type, ST_TYPES.map(t => [t[0], t[1]]), 'Select Stamp Type', v => upd(i, { type: v, shape: '', model: '', inks: {}, qty: 0 })),
+          lab('Shape'), sel('Shape, model ' + (i + 1), l.shape, l.type ? stShapes(l.type).map(s => [s, s]) : [], l.type ? 'Select Shape' : 'Select Type first', v => upd(i, { shape: v, model: '' })),
+          lab('Model'), sel('Model, model ' + (i + 1), l.model, l.type && l.shape ? stModels(l.type, l.shape).map(m => [m, m.replace(' — ', ' · ')]) : [], l.shape ? 'Select Model' : 'Select Type first', v => upd(i, { model: v })),
+          l.type ? (inks ? [lab('Ink Colours & Quantity'),
+            h('div', { key: 'sw', style: { display: 'flex', gap: 6, flexWrap: 'wrap' } }, inks.map(c => { const on = (l.inks || {})[c] != null;
+              return h('button', { key: c, type: 'button', title: c, 'aria-label': c, 'aria-pressed': on ? 'true' : 'false', onClick: () => { const n = Object.assign({}, l.inks || {}); if (on) delete n[c]; else n[c] = 1; upd(i, { inks: n }); },
+                style: { width: 32, height: 32, background: ST_INK_HEX[c], border: on ? '3px solid #c9191b' : '1px solid #d0d4d9', cursor: 'pointer', padding: 0, color: '#fff', fontSize: 14 } }, on ? '✓' : ''); })),
+            h('div', { key: 'iq' }, Object.keys(l.inks || {}).map(c => h('div', { key: c, style: { display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 } },
+              h('span', { style: { minWidth: 70, fontSize: 13.5 } }, c), stepper(l.inks[c], v => { const n = Object.assign({}, l.inks); n[c] = v; upd(i, { inks: n }); }, c))))]
+            : [lab('Quantity'), h('div', { key: 'q' }, stepper(l.qty, v => upd(i, { qty: v }), 'Model ' + (i + 1)))]) : null,
+          q > 1 ? [lab('Different Artwork?'), h('div', { key: 'art' }, sel('Different artwork, model ' + (i + 1), l.art || 'No', [['No', 'No, same artwork for all'], ['Yes', 'Yes, different artwork per piece']], 'Select', v => upd(i, { art: v || 'No' })))] : null,
+          h('div', { style: { textAlign: 'right', marginTop: 10, fontWeight: 600 } }, u != null && q ? app.money(u * q) : '—',
+            u != null && q ? h('span', { style: { fontWeight: 400, fontSize: 12.5, color: MUT, marginLeft: 8 } }, app.money(u) + ' / pcs') : null)); }),
+      h('div', { role: 'button', tabIndex: 0, onClick: () => set(STAMP_LINES.lines(app).concat([{ type: '', shape: '', model: '', inks: {}, qty: 0, art: 'No' }])), onKeyDown: e => { if (e.key === 'Enter') set(STAMP_LINES.lines(app).concat([{ type: '', shape: '', model: '', inks: {}, qty: 0, art: 'No' }])); },
+        style: { border: '1px dashed #c9191b', color: '#c9191b', textAlign: 'center', padding: '10px', cursor: 'pointer', fontWeight: 500 } }, '+ Add model'),
+      err && L.length ? h('div', { role: 'alert', style: { color: '#c9191b', fontSize: 13.5, marginTop: 10 } }, err) : null,
+      h('div', { style: { display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e6e8eb', marginTop: 12, paddingTop: 12, fontWeight: 600 } },
+        h('span', null, 'Total Quantity: ' + total + ' pcs'), h('span', null, app.money(sum))));
+  },
+};
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
 const PL_EXCLUDE = { 180: true, 181: true, 182: true, 183: true, 143: true, 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true, 135: true, 114: true, 178: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
@@ -3199,6 +3270,7 @@ const CFG_OVERRIDES = {
   'Sweatshirt & Hoodies — Digital': sbOverride('Sweatshirt & Hoodies — Digital', ['model', 'sleeve', 'fabric', 'vdp_position']),
   'Corporate Shirt — Digital': sbOverride('Corporate Shirt — Digital', ['model', 'sleeve', 'fabric', 'vdp_position']),
   'Jacket — Digital': sbOverride('Jacket — Digital', ['model', 'sleeve', 'fabric', 'vdp_position']),
+  'Stamp Chop': { hide: ['inc_printmethod', 'ink_colour', 'stamp_type', 'category', 'model_key'], placeholderExact: [], customQty: STAMP_LINES },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
   'Flyer (= Loose Sheet Litho)': LO_OV,
@@ -3670,7 +3742,7 @@ class Component extends DCLogic {
       return sc[d.key] != null && sc[d.key] !== ''; });
     const qf = this.cfgOv().qtyFilter;
     if (qf) { try { if (!qf(this.pkV(), this.state.qty)) return false; } catch (e) {} }
-    return ok && (this.srCfg() ? this.srValid() : !!this.state.qtyChosen);
+    return ok && (this.srCfg() ? this.srValid() : this.cqCfg() ? this.cqCfg().valid(this) : !!this.state.qtyChosen);
   }
   // live size simulator: a proportional diagram of the selected size (standard or custom),
   // with Width/Height dimension lines — so the customer can see exactly what they picked.
@@ -3961,6 +4033,11 @@ class Component extends DCLogic {
     const E = this.pkEngine(), prod = this.pkProduct(); if (!E || !prod) return null;
     const qty = qtyOverride || this.state.qty || 1;
     const ov = this.cfgOv();
+    if (ov.customQty) {   // the product owns its quantity question (e.g. Stamp Chop order lines)
+      const C = ov.customQty, g = C.gross(this, qty); if (g == null) return { ok: false, message: 'Add a model' };
+      const tq = C.total(this) || qty, gross = Math.round(g * 100) / 100, net = Math.round(gross * (1 - this.tierPct() / 100) * 100) / 100;
+      return { ok: true, gross, disc: Math.round((gross - net) * 100) / 100, net, unit: net / (tq || 1), weight: tq * 0.1, note: null, method: 'excard', finishing: 0 };
+    }
     if (ov.sizeRows) {   // size rows: each size at its own per-piece price, added up
       const C = ov.sizeRows, V = this.pkV(), rows = this.srRows(); let g = 0, tq = 0;
       if (rows.length) { for (const r of rows) { const u = C.unit(V, r.size); if (u == null || !(+r.qty > 0)) return { ok: false, message: 'Enter a quantity' }; g += u * r.qty; tq += +r.qty; } }
@@ -4254,6 +4331,7 @@ class Component extends DCLogic {
       hs.split('+').forEach(part => { const m = part.match(/(\d)\s*C\s*\((Front|Back)\)/i); if (m) { const n = +m[1], side = /front/i.test(m[2]) ? 'Front' : 'Back'; for (let i = 1; i <= n; i++) { const v = cfg['hs_' + side.toLowerCase() + '_' + i]; if (v) lines.push(['Foil — ' + side + ' Colour ' + i, v]); } } });
     }
     if (ov.sizeRows) this.srRows().forEach(r => { if (+r.qty) lines.push(['Qty (' + r.size + ')', r.qty + ' pcs']); });
+    if (ov.customQty) ov.customQty.spec(this).forEach(l => lines.push(l));
     // short line for the cart row: the meaningful choices, geometry/colour detail trimmed
     const short = lines.filter(l => !/^(creasing|crease|foil |hot stamping block|custom size|open size)/i.test(l[0])).slice(0, 5).map(l => l[1]).join(' · ');
     return { short: short || lines.slice(0, 5).map(l => l[1]).join(' · '), lines };
@@ -4264,7 +4342,7 @@ class Component extends DCLogic {
     const { short, lines } = this.pkOrderSpec();
     // the configurator summary travels with the order: every option, quantity and production time
     const pd = this.procDays(), productionTime = pd != null ? pd + (pd === 1 ? ' working day' : ' working days') : '3 working days';
-    const item = { jobCode: this.newJobCode(), productId: prod.id, name: this.catName(prod.id), spec: short, specLines: lines, size: this.artworkTarget(), productionTime, qty: (this.srCfg() ? this.srTotal() : this.state.qty) || 1, unitPrice: q.gross / ((this.srCfg() ? this.srTotal() : this.state.qty) || 1), lineTotal: q.gross };
+    const item = { jobCode: this.newJobCode(), productId: prod.id, name: this.catName(prod.id), spec: short, specLines: lines, size: this.artworkTarget(), productionTime, qty: this.orderQty() || 1, unitPrice: q.gross / (this.orderQty() || 1), lineTotal: q.gross };
     const cart = (this.state.cart || []).concat([item]);
     this.setState({ cart }); this.saveCart(cart); this.go('cart');
   }
@@ -7170,6 +7248,7 @@ class Component extends DCLogic {
       h('span', { style: { fontSize: 15, fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', color: INK } }, sec));
     if (opts.manualQty) groups[groups.length - 1].nodes[groups[groups.length - 1].nodes.length - 1] = opts.manualQty;
     else if (ov.sizeRows && groups.length) groups[groups.length - 1].nodes[groups[groups.length - 1].nodes.length - 1] = this.srNode();
+    else if (ov.customQty && groups.length) groups[groups.length - 1].nodes[groups[groups.length - 1].nodes.length - 1] = ov.customQty.node(this);
     return { groups, sectionHeader, qtyChosen, ov };
   }
   // (user, 2026-09-30) the configurator as a guided "book": one friendly question per page, chapters
@@ -7188,7 +7267,7 @@ class Component extends DCLogic {
       [/cover.?type/, 'Which cover would you like?', 'A soft cover is flexible. A hard cover is rigid and premium.'],
       [/jawi/, 'Do you need Jawi content?', ''],
       [/duplicat/, 'Would you like to duplicate the job for multiple artworks?', 'Same settings, different designs. For example, one card for each staff member.'],
-      [/quantity/, this.srCfg() ? 'How many do you need in each size?' : 'What quantity do you need?', this.srCfg() ? 'Add a row for every size you need.' : 'Larger quantities lower the price per piece.'],
+      [/quantity/, this.srCfg() ? 'How many do you need in each size?' : this.cqCfg() ? 'Which stamps do you need?' : 'What quantity do you need?', this.srCfg() ? 'Add a row for every size you need.' : this.cqCfg() ? 'Add a model for every stamp you need.' : 'Larger quantities lower the price per piece.'],
       [/hot.?stamp|foil/, 'Do you need Hot Stamping?', 'Metallic foil, like gold or silver, pressed onto your design.'],
       [/spot/, 'Do you need Spot UV?', 'A glossy, raised coating on chosen areas so they stand out.'],
       [/emboss|deboss/, 'Do you need Embossing?', 'Raises part of your design so people can feel it.'],
@@ -7308,6 +7387,9 @@ class Component extends DCLogic {
   }
   // ---------- size rows (sublimation garments): Size & Quantity as rows of size + pcs, like the live form ----------
   srCfg() { const ov = this.cfgOv(); return ov && ov.sizeRows; }
+  cqCfg() { const ov = this.cfgOv(); return ov && ov.customQty; }
+  // pieces in the order: size rows / order lines own it where a product has them
+  orderQty() { return this.srCfg() ? this.srTotal() : this.cqCfg() ? this.cqCfg().total(this) : this.state.qty; }
   srStored() { const p = this.pkProduct(); return (p && (this.state.srRows || {})[p.id]) || []; }
   srRows() { const C = this.srCfg(); if (!C) return []; const sz = C.sizes(this.pkV()); return this.srStored().filter(r => sz.indexOf(r.size) >= 0); }
   srTotal() { return this.srRows().reduce((a, r) => a + (+r.qty || 0), 0); }
@@ -7517,7 +7599,7 @@ class Component extends DCLogic {
               h('div', { style: { width: 24, height: 3, background: TEAL, marginBottom: 12 } }),
               h('div', { style: { fontSize: 24, fontWeight: 500, letterSpacing: '-.01em', marginBottom: 14 } }, this._bookDoneNow ? 'Price' : 'Summary'),
               lines.length ? h('div', { style: { borderBottom: '1px solid #e6e8eb', paddingBottom: 8, marginBottom: 8 } }, lines.map(l => row(l[0], l[1]))) : null,
-              this._bookDoneNow ? null : row('Order Quantity', this.srCfg() ? (this.srTotal() ? this.srTotal().toLocaleString() + ' pcs' : 'Please select') : qtyChosen ? s.qty.toLocaleString() + ' pcs' : 'Please select'),
+              this._bookDoneNow ? null : row('Order Quantity', (this.srCfg() || this.cqCfg()) ? (this.orderQty() ? this.orderQty().toLocaleString() + ' pcs' : 'Please select') : qtyChosen ? s.qty.toLocaleString() + ' pcs' : 'Please select'),
               row('Production time', pt),
               quoteOnly ? h('div', { style: { borderTop: '1px solid #e6e8eb', marginTop: 8, paddingTop: 12, fontSize: 18, fontWeight: 600, color: INK } }, 'Price on request')
                 : ready ? h('div', { style: { borderTop: '1px solid #e6e8eb', marginTop: 8, paddingTop: 6 } },
