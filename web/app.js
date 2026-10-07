@@ -1527,7 +1527,7 @@ function dtfLinePrice(line, fab) {
   const cv = c.curves[[line.cat, SH_MODEL_LABEL[line.model], SH_FAB[fab]].join('|')]; if (!cv) return null;
   const k = q < 50 ? 16 / 15 : q >= 400 ? 14 / 15 : 1, basePrint = line.cat === 'Kid' ? '3" x 3"' : 'A3';
   const unit = shUnit(cv, q) + ((line.prints || []).reduce((a, p) => a + (DTF_P[p.size] || 0), 0) - DTF_P[basePrint]) * k;
-  let tot = 0; Object.keys(sizes).forEach(s => { tot += (+sizes[s] || 0) * unit * (SH_BIG[s] ? 1.468 : 1); });
+  let tot = 0; Object.keys(sizes).forEach(s => { tot += (+sizes[s] || 0) * (unit + (SH_BIG[s] ? 7.54 * k : 0)); });
   return Math.round(tot * 20) / 20;
 }
 const DTF_LB = {
@@ -1537,6 +1537,41 @@ const DTF_LB = {
   note: 'Mixed models must share the same artwork.',
   minTotal: 5, maxTotal: 500, maxLines: 10,
   price: dtfLinePrice,
+};
+
+// ---------- Silkscreen Shirt (Excard silkscreen-shirt, live 2026-10-08): Adult only, ONE model line per order, 20-500 pcs; prints
+// Front / Back (A3, A4, 3in, 5in) with effect (Emboss / Velvet count as extra colours) and 1-3 colours. Price (spec-paired live
+// samples, exact): list unit (garment + Front A3 1C) on quantity tiers; per extra colour (60 + 0.30/pc), second print (60 + rate/pc,
+// A3 1.20 / A4 0.90 / 3in & 5in 0.75), smaller first print -(1.20 - rate)/pc; all x16/15 below 50 and x14/15 from 400; 4XL-7XL
+// +7.54/pc x the same factor. Polo Long Sleeve / Muslimah = Round Neck + 8.85 / 5.82 per pc x factor (live). ----------
+const SS_RATE = { 'A3': 1.2, 'A4': 0.9, '3" x 3"': 0.75, '5" x 5"': 0.75 };
+const SS_EFFECT_COLS = { '-': ['1C', '2C', '3C'], 'Emboss': ['1C', '2C'], 'Velvet': ['1C', '2C'], 'Emboss + Velvet': ['1C'] };
+const ssEffCols = p => (parseInt(p.colour, 10) || 1) + (/Emboss/.test(p.effect || '') ? 1 : 0) + (/Velvet/.test(p.effect || '') ? 1 : 0);
+const SS_DERIVED = { po_long: ['rn_short', 8.85], mu_long: ['rn_short', 5.82] };
+function silkLinePrice(line, fab) {
+  const E = typeof window !== 'undefined' && window.PricingEngine, c = E && E.DATA.params.silkshirt_plx;
+  const sizes = line.sizes || {}, q = Object.keys(sizes).reduce((a, k) => a + (+sizes[k] || 0), 0); if (!c || !q) return null;
+  const der = SS_DERIVED[line.model], mk = der ? der[0] : line.model;
+  const cv = c.curves[['Adult', SH_MODEL_LABEL[mk], SH_FAB[fab]].join('|')]; if (!cv) return null;
+  const k = q < 50 ? 16 / 15 : q >= 400 ? 14 / 15 : 1, pr = line.prints || []; if (!pr.length) return null;
+  let tot = shUnit(cv, q) * q + (der ? der[1] * k * q : 0);
+  pr.forEach((p, i) => {
+    const r = SS_RATE[p.size] != null ? SS_RATE[p.size] : 1.2;
+    tot += (i === 0 ? -(1.2 - r) * q : 60 + r * q) * k + (ssEffCols(p) - 1) * (60 + 0.3 * q) * k;
+  });
+  Object.keys(sizes).forEach(s => { if (SH_BIG[s]) tot += (+sizes[s] || 0) * 7.54 * k; });
+  return Math.round(tot * 20) / 20;
+}
+const SS_POS = { Adult: { Front: ['A3', 'A4', '3" x 3"', '5" x 5"'], Back: ['A3', 'A4', '3" x 3"', '5" x 5"'] } };
+const ssModels = fab => { const m = shModels(fab, SS_POS); (m.Adult || []).forEach(x => { x.printFields = [{ key: 'effect', label: 'Printing Effect', options: ['-', 'Emboss', 'Velvet', 'Emboss + Velvet'] }, { key: 'colour', label: 'Printing Colour', options: p => SS_EFFECT_COLS[p.effect || '-'] }]; }); return { Adult: m.Adult }; };
+const SILK_LB = {
+  fixed: [['Print Colour', '4C'], ['Compulsory', 'Silkscreen']],
+  fabrics: { eyelet: { label: SH_FAB.eyelet, models: ssModels('eyelet') }, siro: { label: SH_FAB.siro, models: ssModels('siro') } },
+  cats: ['Adult'],
+  printText: p => p.pos + '-' + p.size + '-' + (p.colour || '1C') + (p.effect && p.effect !== '-' ? '-' + p.effect : ''),
+  note: 'Mixed models must share the same artwork.',
+  minTotal: 20, maxTotal: 500, maxLines: 1,
+  price: silkLinePrice,
 };
 
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
@@ -3049,6 +3084,7 @@ const CFG_OVERRIDES = {
   },
   'Cap — DTF': { lineBuilder: CAP_LB },
   'DTF Shirt — Digital': { lineBuilder: DTF_LB },
+  'Silkscreen Shirt — Digital': { lineBuilder: SILK_LB },
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
   'Flyer (= Loose Sheet Litho)': LO_OV,
@@ -7170,13 +7206,16 @@ class Component extends DCLogic {
   }
   lbModel(cat, key) { return this.lbModels(cat).find(m => m.key === key); }
   lbTitle(l) { const m = this.lbModel(l.cat, l.model); return (l.cat !== 'Adult' ? l.cat + ' ' : '') + (m ? m.label : l.model) + ' - ' + l.colour; }
-  lbPrints(l) { return (l.prints || []).map(p => p.pos + '-' + p.size).join(', '); }
+  lbPrintText(p) { const C = this.lbCfg(); return C && C.printText ? C.printText(p) : p.pos + '-' + p.size; }
+  lbPrints(l) { return (l.prints || []).map(p => this.lbPrintText(p)).join(', '); }
+  lbPF(m, p) { return ((m && m.printFields) || []).map(pf => ({ pf, opts: typeof pf.options === 'function' ? pf.options(p) : pf.options })); }
+  lbFixPrint(m, p) { const q = Object.assign({}, p); this.lbPF(m, q).forEach(({ pf }) => { const o = typeof pf.options === 'function' ? pf.options(q) : pf.options; if (o.indexOf(q[pf.key]) < 0) q[pf.key] = o[0]; }); return q; }
   lbOpen(idx) {
     const C = this.lbCfg(); if (!C) return;
     const L = this.lbLines();
     let d;
     if (idx != null && L[idx]) d = JSON.parse(JSON.stringify(L[idx]));
-    else { const cat = this.lbCats()[0], m = this.lbModels(cat)[0], pos = Object.keys(m.positions)[0]; d = { cat, model: m.key, colour: m.colours[0], prints: [{ pos, size: m.positions[pos][0] }], sizes: {} }; }
+    else { const cat = this.lbCats()[0], m = this.lbModels(cat)[0], pos = Object.keys(m.positions)[0]; d = { cat, model: m.key, colour: m.colours[0], prints: [this.lbFixPrint(m, { pos, size: m.positions[pos][0] })], sizes: {} }; }
     this.setState({ lbModal: { idx: idx == null ? null : idx, d } });
   }
   lbDraft(patch) {
@@ -7185,8 +7224,8 @@ class Component extends DCLogic {
     // keep the draft valid when category / model changes: model, colour and positions must exist for it
     let m = this.lbModel(d.cat, d.model); if (!m) { m = this.lbModels(d.cat)[0]; d.model = m.key; }
     if (m.colours.indexOf(d.colour) < 0) d.colour = m.colours[0];
-    d.prints = (d.prints || []).filter(p => m.positions[p.pos]).map(p => ({ pos: p.pos, size: m.positions[p.pos].indexOf(p.size) >= 0 ? p.size : m.positions[p.pos][0] }));
-    if (!d.prints.length) { const pos = Object.keys(m.positions)[0]; d.prints = [{ pos, size: m.positions[pos][0] }]; }
+    d.prints = (d.prints || []).filter(p => m.positions[p.pos]).map(p => this.lbFixPrint(m, Object.assign({}, p, { size: m.positions[p.pos].indexOf(p.size) >= 0 ? p.size : m.positions[p.pos][0] })));
+    if (!d.prints.length) { const pos = Object.keys(m.positions)[0]; d.prints = [this.lbFixPrint(m, { pos, size: m.positions[pos][0] })]; }
     this.setState({ lbModal: { idx: md.idx, d } });
   }
   lbSave() {
@@ -7255,16 +7294,19 @@ class Component extends DCLogic {
           style: { width: 44, height: 44, background: LB_HEX[c] || '#ccc', border: d.colour === c ? '3px solid #c9191b' : '1px solid #d0d4d9', cursor: 'pointer', padding: 0 } }))),
         C.note ? h('div', { style: { color: '#c9191b', fontSize: 12.5, marginTop: 16 } }, C.note) : null,
         h('div', { style: { display: 'flex', alignItems: 'center', gap: 10, margin: '8px 0 10px', paddingBottom: 6, borderBottom: '1px solid #e6e8eb' } },
-          h('span', { style: { fontSize: 15, fontWeight: 600 } }, 'Printing'), h('span', { style: { fontSize: 12.5, border: '1px dashed #c9191b', color: '#c9191b', padding: '2px 8px' } }, d.prints.map(p => p.pos + '-' + p.size).join(', '))),
+          h('span', { style: { fontSize: 15, fontWeight: 600 } }, 'Printing'), h('span', { style: { fontSize: 12.5, border: '1px dashed #c9191b', color: '#c9191b', padding: '2px 8px' } }, d.prints.map(p => this.lbPrintText(p)).join(', '))),
         d.prints.map((p, i) => h('div', { key: i, style: { display: 'grid', gridTemplateColumns: 'auto minmax(0,1fr) auto minmax(0,1fr) auto', gap: 12, alignItems: 'center', padding: '8px 0' } },
           h('span', { style: { fontSize: 13.5, color: MUT } }, 'Printing Position'),
           h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } }, Object.keys(m.positions).map(pos => opt(p.pos === pos, pos, () => {
-            if (p.pos === pos || (usedPos.indexOf(pos) >= 0)) return; const pr = d.prints.slice(); pr[i] = { pos, size: m.positions[pos][0] }; this.lbDraft({ prints: pr }); }, { padding: '8px 12px', opacity: p.pos !== pos && usedPos.indexOf(pos) >= 0 ? .45 : 1 }))),
+            if (p.pos === pos || (usedPos.indexOf(pos) >= 0)) return; const pr = d.prints.slice(); pr[i] = Object.assign({}, p, { pos, size: m.positions[pos][0] }); this.lbDraft({ prints: pr }); }, { padding: '8px 12px', opacity: p.pos !== pos && usedPos.indexOf(pos) >= 0 ? .45 : 1 }))),
           h('span', { style: { fontSize: 13.5, color: MUT } }, 'Printing Size'),
-          h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } }, m.positions[p.pos].map(sz => opt(p.size === sz, sz, () => { const pr = d.prints.slice(); pr[i] = { pos: p.pos, size: sz }; this.lbDraft({ prints: pr }); }, { padding: '8px 12px' }))),
+          h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } }, m.positions[p.pos].map(sz => opt(p.size === sz, sz, () => { const pr = d.prints.slice(); pr[i] = Object.assign({}, p, { size: sz }); this.lbDraft({ prints: pr }); }, { padding: '8px 12px' }))),
+          this.lbPF(m, p).length ? h('div', { style: { gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: 8 } }, this.lbPF(m, p).map(({ pf, opts }) => h('div', { key: pf.key, style: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' } },
+            h('span', { style: { fontSize: 13.5, color: MUT, minWidth: 118 } }, pf.label),
+            h('div', { style: { display: 'flex', gap: 6, flexWrap: 'wrap' } }, opts.map(v => opt(p[pf.key] === v, v, () => { const pr = d.prints.slice(); pr[i] = Object.assign({}, p, { [pf.key]: v }); this.lbDraft({ prints: pr }); }, { padding: '8px 12px' })))))) : null,
           d.prints.length > 1 ? h('span', { role: 'button', tabIndex: 0, 'aria-label': 'Remove printing', onClick: () => this.lbDraft({ prints: d.prints.filter((_, k) => k !== i) }), style: { cursor: 'pointer', color: MUT, fontSize: 18 } }, '×') : h('span', null))),
-        freePos.length ? h('div', { role: 'button', tabIndex: 0, onClick: () => this.lbDraft({ prints: d.prints.concat([{ pos: freePos[0], size: m.positions[freePos[0]][0] }]) }),
-          onKeyDown: e => { if (e.key === 'Enter') this.lbDraft({ prints: d.prints.concat([{ pos: freePos[0], size: m.positions[freePos[0]][0] }]) }); },
+        freePos.length ? h('div', { role: 'button', tabIndex: 0, onClick: () => this.lbDraft({ prints: d.prints.concat([this.lbFixPrint(m, { pos: freePos[0], size: m.positions[freePos[0]][0] })]) }),
+          onKeyDown: e => { if (e.key === 'Enter') this.lbDraft({ prints: d.prints.concat([this.lbFixPrint(m, { pos: freePos[0], size: m.positions[freePos[0]][0] })]) }); },
           style: { border: '1px dashed #c9191b', color: '#c9191b', textAlign: 'center', padding: 10, marginTop: 10, cursor: 'pointer', fontWeight: 500 } }, '+ Add printing') : null,
         h('button', { type: 'button', onClick: () => this.lbSave(), style: { display: 'block', width: '100%', marginTop: 20, background: '#c9191b', color: '#fff', border: 0, fontSize: 16, fontWeight: 500, padding: '15px 16px', cursor: 'pointer' } }, md.idx == null ? 'Add' : 'Update')));
   }
