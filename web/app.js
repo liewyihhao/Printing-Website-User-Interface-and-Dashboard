@@ -3554,6 +3554,111 @@ const ARTWORK_GUIDES = [["Colour, Images, Text, and Line","Understanding the min
 
 // Customized Printing Solutions — the original site's four request-for-quotation questionnaires
 // (web/content/custom-quote-forms.json, copied verbatim from printoka.com)
+// ---------- Custom packaging: Basic Boxes builder engine (measured live 2026-10-09). Open (flat) size per style from L x W x D
+// (0 mm error on 16 checks), production limit = the 740 x 510 mm press sheet, two price lanes: Standard (offset, 300-100,000 pcs,
+// every material) and Short Run (digital, 50-2,000 pcs, Gloss Art Card 250-350 only). Short Run = sheet-imposition model (mean 1.6%),
+// Standard = per-quantity fit on flat area + perimeter (mean 2.7%). Finishing deltas from live samples. ----------
+const PKG_LERP = (pts, x) => { const ks = Object.keys(pts).map(Number).sort((a, b) => a - b);
+  if (x <= ks[0]) return pts[ks[0]]; if (x >= ks[ks.length - 1]) return pts[ks[ks.length - 1]];
+  for (let i = 1; i < ks.length; i++) if (x <= ks[i]) { const a = ks[i - 1], b = ks[i]; return pts[a] + (pts[b] - pts[a]) * (x - a) / (b - a); } };
+const PKG_GLUE = W => Math.min(14, Math.max(11, W - 27));
+const PKG_TUCK = h0 => (L, W, D) => [2 * L + 2 * W + PKG_GLUE(W), D + 2 * W + h0 + (L > 150 ? 10 : 0)];
+const PKG_LOCK = (h0, k) => (L, W, D) => [2 * L + 2 * W + 14, D + k * W + h0];
+const PKG_TUCKS = ['Friction', 'Slit'];
+const PKG_STYLES = [
+  { code: 'A001', name: 'Reverse Tuck End Box', fam: 'Reverse tuck', bottom: 'tuck', min: { L: 20, W: 20, D: 50 }, max: { D: 300 }, opts: [['Top Tuck', PKG_TUCKS], ['Bottom Tuck', PKG_TUCKS]], open: PKG_TUCK(28.5) },
+  { code: 'B038', name: 'Reverse Tuck Box, Tongue Lock', fam: 'Reverse tuck', bottom: 'tuck', min: { L: 50, W: 20, D: 50 }, opts: [['Top Tuck', PKG_TUCKS], ['Bottom Tuck', PKG_TUCKS]], open: PKG_TUCK(28.5) },
+  { code: 'A002X', name: 'Straight Tuck End Box', fam: 'Straight tuck', bottom: 'tuck', min: { L: 20, W: 20, D: 50 }, max: { D: 300 }, opts: [['Top Tuck', PKG_TUCKS], ['Bottom Tuck', PKG_TUCKS]], open: PKG_TUCK(28.2) },
+  { code: 'A002BX', name: 'Straight Tuck Box, Tongue Lock', fam: 'Straight tuck', bottom: 'tuck', min: { L: 50, W: 20, D: 50 }, opts: [['Top Tuck', PKG_TUCKS], ['Bottom Tuck', PKG_TUCKS]], open: PKG_TUCK(28.2) },
+  { code: 'B044X', name: 'Semi Auto Bottom Lock, Tongue Lock', fam: 'Lock bottom', bottom: 'lock', min: { L: 50, W: 50, D: 50 }, opts: [['Top Tuck', PKG_TUCKS]], open: (L, W, D) => [2 * L + 2 * W + 14, D + 1.5 * W + 49.5 - (W < 60 ? 0.04 * (60 - W) : 0)] },
+  { code: 'B048A', name: 'Auto Bottom Lock, Tongue Lock', fam: 'Lock bottom', bottom: 'lock', min: { L: 50, W: 50, D: 50 }, opts: [['Top Tuck', PKG_TUCKS]], open: PKG_LOCK(14.5, 1.7) },
+  { code: 'C001A', name: 'Semi Auto Bottom Lock Box', fam: 'Lock bottom', bottom: 'lock', min: { L: 50, W: 50, D: 50 }, opts: [['Top Tuck', PKG_TUCKS]], open: (L, W, D) => [2 * L + 2 * W + 14, D + 1.7 * W + 14.1 + (L > 150 ? 5 : 0)] },
+  { code: 'C001AA', name: 'Semi Auto Bottom Lock', fam: 'Lock bottom', bottom: 'lock', min: { L: 50, W: 50, D: 50 }, opts: [['Top Tuck', PKG_TUCKS]], open: PKG_LOCK(14.7, 1.7) },
+  { code: 'C001AB', name: 'Semi Auto Bottom Lock, Dust Flaps', fam: 'Lock bottom', bottom: 'lock', min: { L: 50, W: 50, D: 50 }, opts: [['Top Tuck', PKG_TUCKS]], open: PKG_LOCK(14.7, 1.7) },
+  { code: 'C001AD', name: 'Auto Bottom Lock', fam: 'Lock bottom', bottom: 'lock', min: { L: 50, W: 50, D: 50 }, opts: [['Top Tuck', PKG_TUCKS]], open: PKG_LOCK(14.7, 1.7) },
+  { code: 'C001M', name: 'Auto Bottom Lock Box', fam: 'Lock bottom', bottom: 'lock', min: { L: 50, W: 50, D: 50 }, opts: [['Top Tuck', PKG_TUCKS]], open: (L, W, D) => [2 * L + 2 * W + 14, D + 1.7 * W + 14.1 + (L > 150 ? 5 : 0)] },
+  { code: 'T001', name: 'Tuck Top Box with Clasp', fam: 'Other', bottom: 'tuck', min: { L: 20, W: 20, D: 30 }, opts: [['Top Closure', ['Concealed clasp', 'Lock']], ['Bottom Closure', ['Concealed clasp', 'Lock']]],
+    open: (L, W, D) => [2 * L + 2 * W + PKG_LERP({ 30: 11.7, 50: 16.7, 80: 24.7 }, W), D + 2 * W + PKG_LERP({ 30: 23.7, 50: 33.7, 80: 49.7 }, W)] },
+];
+const PKG_MATS = { 'Gloss Art Card (1 Side Coated)': [250, 300, 350, 400], 'Boxboard Grey Back': [300, 350, 400, 450] };
+const PKG_QTYS = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 600, 700, 800, 900, 1000, 2000, 3000, 5000, 10000, 15000, 20000, 30000, 50000, 100000];
+const PKG_SHEET = [740, 510];
+// Standard lane: price(q) = a + b * area(m2) + c * (W + H)(m), per sampled quantity (Gloss Art Card 250gsm, gloss lamination)
+const PKG_STD = { 300: [726.214, 8348.84, -1069.316], 500: [740.554, 9589.724, -1176.957], 1000: [757.892, 12224.253, -1321.822], 2000: [802.854, 16962.048, -1537.881], 3000: [819.947, 20254.892, -1492.227],
+  5000: [668.559, 19706.004, -120.511], 10000: [756.746, 32462.413, 384.294], 20000: [863.07, 53856.685, 1651.521], 50000: [1214.823, 130879.9, 3587.329], 100000: [2703.898, 273150.33, 2386.851] };
+// measured flat sizes: Standard-lane correction near each one (blends back to the fit within ~25 mm)
+const PKG_STD_FIX = {"454x428.5":{"300":1.0777,"500":1.0734,"1000":1.068,"2000":1.0391,"3000":0.9847,"5000":1.0283,"10000":0.9883,"20000":0.9885,"50000":0.9892,"100000":0.9946},"91x118.5":{"300":1.0044,"500":1.0055,"1000":1.0039,"2000":0.9996,"3000":0.9941,"5000":1.0396,"10000":1.0263,"20000":1.0045,"50000":1.0018,"100000":1.0013},"193x188.5":{"300":0.9932,"500":0.9923,"1000":0.9934,"2000":1.0013,"3000":1.0114,"5000":0.9007,"10000":0.9105,"20000":0.9776,"50000":0.9897,"100000":0.9918},"294x268.5":{"300":1.007,"500":0.9997,"1000":1.0038,"2000":1.0056,"3000":1.0194,"5000":1.0797,"10000":1.1684,"20000":1.0388,"50000":1.0151,"100000":1.0156},"574x488.5":{"300":0.9658,"500":0.9635,"1000":0.967,"2000":0.9854,"3000":1.032,"5000":0.9267,"10000":0.9707,"20000":1.0027,"50000":1.0032,"100000":1.0021},"370x338.5":{"300":0.9662,"500":0.968,"1000":0.9614,"2000":0.9564,"3000":0.9737,"5000":1.0319,"10000":1.0072,"20000":0.9822,"50000":0.9893,"100000":0.9942},"374x338.5":{"300":0.9622,"500":0.9621,"1000":0.9557,"2000":0.9503,"3000":0.968,"5000":1.0263,"10000":1.0022,"20000":0.9821,"50000":0.9895,"100000":0.9943},"330x378.5":{"300":1.0465,"500":1.0601,"1000":1.075,"2000":1.0891,"3000":1.025,"5000":1.0219,"10000":0.9935,"20000":1.031,"50000":1.0247,"100000":1.007}};
+// material ratio vs Gloss Art Card 250 on the reference box (Standard), applied as an area-scaled delta
+const PKG_REF = { A: 0.1945, std: { 300: 1515.95, 500: 1682.5, 1000: 2103.35, 2000: 2852.75, 3000: 3390.85, 5000: 4520.2, 10000: 7324.65, 20000: 12650.2, 50000: 29518.55, 100000: 57636.3 } };
+const PKG_MATF = {
+  'G300': { 300: 1.060, 500: 1.071, 1000: 1.088, 2000: 1.070, 5000: 1.092, 20000: 1.107, 100000: 1.116 },
+  'G350': { 300: 1.122, 500: 1.142, 1000: 1.177, 2000: 1.139, 5000: 1.105, 20000: 1.218, 100000: 1.237 },
+  'G400': { 300: 1.184, 500: 1.214, 1000: 1.265, 2000: 1.208, 5000: 1.196, 20000: 1.325, 100000: 1.353 },
+  'B300': { 300: 0.866, 500: 0.849, 1000: 0.817, 2000: 0.805, 5000: 0.926, 20000: 0.954, 100000: 0.951 },
+  'B350': { 300: 0.896, 500: 0.884, 1000: 0.861, 2000: 0.862, 5000: 0.949, 20000: 1.038, 100000: 1.042 },
+  'B400': { 300: 0.925, 500: 0.918, 1000: 0.904, 2000: 0.917, 5000: 1.015, 20000: 1.121, 100000: 1.132 },
+  'B450': { 300: 0.955, 500: 0.953, 1000: 0.948, 2000: 0.974, 5000: 1.083, 20000: 1.205, 100000: 1.223 },
+};
+const PKG_SR_MAT = { 250: 0, 300: 0.77, 350: 1.46 };   // Short Run paper upgrade, RM per m2 of flat sheet per box
+// finishing (deltas vs matte lamination): spot UV on a small (0.0789 m2) and the reference (0.1945 m2) flat sheet
+const PKG_SUV = { As: 0.0789, Ab: 0.1945,
+  std: { s: { 300: 263.1, 500: 277.05, 1000: 320.05, 2000: 407.35, 5000: 662.85, 20000: 2007.55, 100000: 8830.95 }, b: { 300: 347.85, 500: 387.1, 1000: 488.25, 2000: 743.8, 5000: 1351, 20000: 4394.6, 100000: 20654.9 } },
+  sr: { s: { 100: 271.7, 300: 288.85, 500: 282.5, 1000: 330, 2000: 401 }, b: { 100: 278.85, 300: 321.75, 500: 343.2, 1000: 448.8, 2000: 632.5 } } };
+// hot stamping, one block: 50 x 50 mm and 100 x 100 mm; each extra block costs the same less the shared set-up
+const PKG_HS = { std: { s: { 300: 120.15, 500: 136.65, 1000: 180.85, 2000: 438.95, 5000: 718.5, 20000: 2117.6, 100000: 9616.5 }, b: { 300: 180.9, 500: 206.2, 1000: 273.2, 2000: 710.95, 5000: 1100, 20000: 3578.65, 100000: 16356.45 }, extra: 42 },
+  sr: { s: { 100: 90.05, 300: 107.25, 500: 120.1, 1000: 165, 2000: 245.4 }, b: { 100: 148.7, 300: 175.9, 500: 192.7, 1000: 261.4, 2000: 382.05 }, extra: 20 } };
+const pkgStyle = code => PKG_STYLES.find(s => s.code === code) || null;
+function pkgOpen(sp) { const s = pkgStyle(sp.style); if (!s) return null; const L = +sp.L, W = +sp.W, D = +sp.D; if (!(L > 0 && W > 0 && D > 0)) return null;
+  const o = s.open(L, W, D); return [Math.round(o[0] * 10) / 10, Math.round(o[1] * 10) / 10]; }
+// size problems, as short messages for the field they belong to
+function pkgSizeErr(sp) { const s = pkgStyle(sp.style); if (!s) return null; const E = {};
+  ['L', 'W', 'D'].forEach(k => { const v = +sp[k]; if (!(v > 0)) E[k] = 'Enter a size'; else if (v < s.min[k]) E[k] = 'Minimum ' + s.min[k] + ' mm'; else if (s.max && s.max[k] && v > s.max[k]) E[k] = 'Maximum ' + s.max[k] + ' mm'; });
+  if (!Object.keys(E).length) { const o = pkgOpen(sp); const fits = o && ((o[0] <= PKG_SHEET[0] && o[1] <= PKG_SHEET[1]) || (o[1] <= PKG_SHEET[0] && o[0] <= PKG_SHEET[1])); if (!fits) E.all = 'This box is too big to print in one piece. Make it smaller.'; }
+  return Object.keys(E).length ? E : null; }
+const pkgIsBoard = sp => /Boxboard/.test(sp.paper || '');
+function pkgCoatings(sp) { const q = +sp.qty || 0;
+  if (pkgIsBoard(sp)) return ['Gloss Lamination', 'Matte Lamination', 'Gloss Water Based Varnish', 'UV Varnish'];
+  return q > 2000 ? ['Gloss Lamination', 'Matte Lamination', 'Gloss Water Based Varnish', 'UV Varnish'] : ['Gloss Lamination', 'Matte Lamination', 'Soft Touch Lamination']; }
+const pkgSrOK = sp => !pkgIsBoard(sp) && (+sp.gsm || 250) <= 350 && (+sp.qty || 0) >= 50 && (+sp.qty || 0) <= 2000;
+const pkgStdOK = sp => (+sp.qty || 0) >= 300 && sp.coat !== 'Soft Touch Lamination';
+function pkgLerpA(t, A, q) { const s = PKG_LERP(t.s, q), b = PKG_LERP(t.b, q); return Math.max(s * 0.6, s + (b - s) * (A - PKG_SUV.As) / (PKG_SUV.Ab - PKG_SUV.As)); }
+function pkgHsBlock(t, q, mm2) { const s = PKG_LERP(t.s, q), b = PKG_LERP(t.b, q); return Math.max(s * 0.7, s + (b - s) * (mm2 - 2500) / 7500); }
+function pkgEmb(lane, q, mm2) { if (lane === 'sr') return Math.max(85.8, 78 + 0.0087 * mm2);
+  if (q <= 1000) return Math.max(129, 117.7 + 0.00911 * mm2);
+  return 313.7 + 0.0268 * mm2 + PKG_LERP({ 2000: 0, 5000: 26.6, 20000: 198.6, 100000: 1210.65 }, q); }
+// both lanes for a full spec: { std: {price, days} | null, sr: {...} | null, open }
+function pkgQuote(sp) {
+  const open = pkgOpen(sp); if (!open || pkgSizeErr(sp)) return null;
+  const q = +sp.qty || 0; if (!q) return { open, std: null, sr: null };
+  const A = open[0] * open[1] / 1e6, per = (open[0] + open[1]) / 1000, gsm = +sp.gsm || 250, board = pkgIsBoard(sp);
+  const coat = sp.coat || 'Gloss Lamination';
+  const fin = lane => { let x = 0;
+    if (coat === 'Matte Lamination' || sp.suv) x += 0.18 * A * q;
+    if (coat === 'Gloss Water Based Varnish') x -= 0.62 * A * q;
+    if (coat === 'UV Varnish') x -= 0.355 * A * q;
+    if (coat === 'Soft Touch Lamination') x += 8.5 + 1.87 * A * q;
+    if (sp.suv) x += pkgLerpA(PKG_SUV[lane], A, q);
+    if (sp.emb) x += pkgEmb(lane, q, (+sp.embH || 0) * (+sp.embW || 0));
+    (sp.hs || []).forEach((b, i) => { x += pkgHsBlock(PKG_HS[lane], q, (+b.h || 0) * (+b.w || 0)) - (i ? PKG_HS[lane].extra : 0); });
+    return x; };
+  let std = null, sr = null;
+  if (pkgStdOK(sp)) {
+    const ks = Object.keys(PKG_STD).map(Number).sort((a, b) => a - b), at = k => { const c = PKG_STD[k]; return c[0] + c[1] * A + c[2] * per; };
+    let base; if (q >= ks[ks.length - 1]) base = at(ks[ks.length - 1]) / ks[ks.length - 1] * q;
+    else { let i = 1; while (q > ks[i]) i++; const a = ks[i - 1], b = ks[i]; base = q <= a ? at(a) : at(a) + (at(b) - at(a)) * (q - a) / (b - a); }
+    let wsum = 0, fsum = 0; Object.keys(PKG_STD_FIX).forEach(k => { const o = k.split('x').map(Number), dd = Math.min(Math.hypot(o[0] - open[0], o[1] - open[1]), Math.hypot(o[0] - open[1], o[1] - open[0])), w = Math.exp(-(dd / 25) * (dd / 25)); if (w > 0.01) { wsum += w; fsum += w * PKG_LERP(PKG_STD_FIX[k], q); } });
+    if (wsum > 0) base *= (fsum + Math.max(0, 1 - wsum)) / (wsum + Math.max(0, 1 - wsum));
+    const mk = (board ? 'B' : 'G') + gsm; if (PKG_MATF[mk]) base += (PKG_LERP(PKG_MATF[mk], q) - 1) * PKG_LERP(PKG_REF.std, q) * A / PKG_REF.A;
+    std = { price: Math.round((base + fin('std')) * 20) / 20, days: 6 + ((sp.hs || []).length || coat === 'UV Varnish' ? 1 : 0) };
+  }
+  if (pkgSrOK(sp)) {
+    const ups = Math.max(Math.floor(566 / open[0]) * Math.floor(660 / open[1]), Math.floor(566 / open[1]) * Math.floor(660 / open[0]));
+    if (ups >= 1) { const S = Math.ceil(q / ups);
+      const base = 75.203 + 1.870 * S + 2.939 * Math.sqrt(S) + 0.144 * q + 1.245 * q * A + 4.271 * Math.sqrt(q) + (PKG_SR_MAT[gsm] || 0) * A * q;
+      sr = { price: Math.round((base + fin('sr')) * 20) / 20, days: 2 + (sp.suv ? 2 : 0) + (sp.emb || (sp.hs || []).length ? 1 : 0) }; }
+  }
+  return { open, std, sr };
+}
 const CUSTOM_QUOTE_FORMS = [{"id":"book","card":"Book Printing","title":"Request Custom Quote","sub":"For Book Printing","img":"Perfect-Binding-Booklets-Cropped.png","sections":[{"t":"About the Book","f":[{"l":"Book Orientation","type":"select","req":true,"o":["Portrait","Landscape"]},{"l":"Book Size (Closed Size)","type":"select","req":true,"o":["A4 Size","A5 Size","Custom Size"]},{"l":"If Custom Size","type":"dims","d":["Height","Width"]},{"l":"Printing Pages (Including Cover)","type":"text","req":true},{"l":"Binding","type":"select","req":true,"o":["Perfect Binding","Saddle Stitch (Staple Middle Binding)"]}]},{"t":"About the Book Cover","f":[{"l":"Cover Material","type":"select","req":true,"o":["Simili 80gsm","Simili 100gsm","Gloss Art Paper 100gsm","Gloss Art Paper 128gsm","Gloss Art Paper 157gsm","Gloss Art Card 230gsm (2 Side Coated)","Gloss Art Card 250gsm (2 Side Coated)","Gloss Art Card 300gsm (2 Side Coated)"]},{"l":"Cover Printing","type":"select","req":true,"o":["4C Outer Only","4C Outer + Inner"]},{"l":"Cover Finishing (For Art Card Cover Only)","type":"select","o":["Gloss Laminating","Matte Laminating","Matte Laminating + 1 Side Spot UV","Gloss Waterbase Varnish Front","Gloss Waterbase Varnish Both","UV Varnish Front","UV Varnish Both"]}]},{"t":"About the Book Content","f":[{"l":"Content Material","type":"select","req":true,"o":["Simili 80gsm","Simili 100gsm","Gloss Art Paper 100gsm","Gloss Art Paper 128gsm","Gloss Art Paper 157gsm"]},{"l":"Content Printing","type":"select","req":true,"o":["1C Both","4C Both"]}]},{"t":"Delivery Location","f":[{"l":"Delivery to","type":"select","req":true,"o":["West Malaysia","East Malaysia","Singapore","Brunei (Pickup in Miri Only)"]}]},{"t":"Contact and Quantity Required","f":[{"l":"Price Expectation (RM)","type":"text","req":true},{"l":"Phone Number","type":"phone","req":true,"key":"phone"},{"l":"Quantity","type":"number","req":true,"key":"quantity"}]}]},{"id":"loose-sheet","card":"Loose Sheet Printing","title":"Request Custom Quote","sub":"For Loose Sheet Printing","img":"Digital-Printing-Flyers-Cropped.png","sections":[{"t":"About the Item","f":[{"l":"What are you Printing?","type":"select","req":true,"o":["Book Jacket","Bookmark","Brochure","Business Card","Calendar","Certificate","Company Profile","Coupon","Direct Mailer","Flyer","Form","Join Ups","Label","Letterhead","Manual","Menu","Thank You Card","Greeting Card","Wedding Card","Invitation Card","Contact Card","Discount Card","Appointment Card","Postcard","Punch Card","Photo Card","Member Card","Privilege Card","Portfolio","Voucher","Wrapping Paper","Others"]}]},{"t":"Product Size","f":[{"l":"Open Size (mm x mm)","type":"select","req":true,"o":["594mm x 840mm (A1)","420mm x 594mm (A2)","297mm x 420mm (A3)","210mm x 297mm (A4)","148mm x 210mm (A5)","210mm x 594mm","297mm x 630mm (3 x A4)","297mm x 840mm (4 x A4)","210mm x 594mm (4 x A5)","Custom Size"]},{"l":"If its a Custom Size","type":"dims","d":["Height","Width"]}]},{"t":"Product Material","f":[{"l":"Paper Material","type":"select","o":["Simili 80gsm","Simili 100gsm","Simili 140gsm","Gloss Art Paper 100gsm","Gloss Art Paper 128gsm","Gloss Art Paper 157gsm","Matte Art Paper 130gsm","Gloss Art Card 230gsm (2 Side Coated)","Gloss Art Card 250gsm (2 Side Coated)","Gloss Art Card 310gsm (2 Side Coated)","Gloss Art Card 360gsm (2 Side Coated)"]}]},{"t":"Product Printing and Finishing","f":[{"l":"Printing","type":"select","o":["4C Front","4C Both"]},{"l":"Laminating (For Art Card Only)","type":"select","o":["Matte Lamination Front","Matte Lamination Both","Gloss Lamination Front","Gloss Lamination Both","UV Varnish Front","UV Varnish Both","Gloss Waterbase Varnish (Both)","Matte Laminating + Spot UV Front","Matte Laminating Both + Spot UV Both"]},{"l":"Folding","type":"select","o":["Not Required","Required"]}]},{"t":"Artwork References","f":[{"l":"Artwork Link (WeTransfer Link)","type":"text"}]},{"t":"Delivery Location","f":[{"l":"Delivery to","type":"select","o":["West Malaysia","East Malaysia","Singapore","Brunei (Pickup in Miri Only)"]}]},{"t":"Contact and Quantity Required","f":[{"l":"Price Expectation (RM)","type":"text","req":true},{"l":"Phone Number","type":"phone","req":true,"key":"phone"},{"l":"Quantity","type":"number","req":true,"key":"quantity"}]}]},{"id":"box","card":"Box Packaging","title":"Request Custom Quote","sub":"For Box Packaging","img":"A001.png","sections":[{"t":"About the Box","f":[{"l":"Packaging Type","type":"select","req":true,"o":["Basic Packaging","Creative Packaging"]}]},{"t":"Box Size","f":[{"l":"Box Open Size (mm x mm)","type":"dims","req":true,"d":["Height","Width"]},{"l":"Box Size When Assembled (mm x mm)","type":"dims","req":true,"d":["Length","Width","Depth"]}]},{"t":"Box Material","f":[{"l":"Paper Material","type":"select","req":true,"o":["Art Card 250gsm (1 Side Coated)","Art Card 300gsm (1 Side Coated)","Art Card 350gsm (1 Side Coated)","Art Card 400gsm (1 Side Coated)","Art Card 260gsm (1 Side Coated)","Art Card 310gsm (1 Side Coated)","Art Card 360gsm (1 Side Coated)","Box Board Grey Back 300gsm","Box Board Grey Back 350gsm","Box Board Grey Back 400gsm","Box Board Grey Back 450gsm","Silver Foil Board 250gsm","Silver Foil Board 300gsm","Art Card (1 Side Coated) 230gsm + E-Flute Brown 290gsm","Box Board Grey Back (1 Side Coated) 280gsm + E-Flute Brown 290gsm"]}]},{"t":"Box Printing","f":[{"l":"Printing Colour","type":"select","req":true,"o":["No Printing","4C Front","4C Both"]}]},{"t":"Box Finishing","f":[{"l":"Lamination","type":"select","req":true,"o":["Not Required","Gloss Lamination (Front)","Matte Lamination (Front)","Gloss Waterbase Varnish (Front)","UV Varnish (Front)","Gloss Lamination (Both)","Matte Lamination (Both)","Gloss Waterbase Varnish (Both)","UV Varnish (Both)"]},{"l":"Spot UV","type":"select","req":true,"o":["Not Required","Spot UV (Front)"]},{"l":"Embossing","type":"select","req":true,"o":["Not Required","Required"]},{"l":"Hot Stamping","type":"select","req":true,"o":["Not Required","Required"]},{"l":"Window","type":"select","req":true,"o":["Not Required","1 Window","2 Window","3 Window","4 Window","5 Window"]},{"l":"Glueing","type":"select","req":true,"o":["Not Required","Required"]},{"l":"Die-Cutting","type":"select","req":true,"o":["Compulsory"]}]},{"t":"Artwork References","f":[{"l":"Artwork Link (WeTransfer Link)","type":"text","req":true},{"l":"Dieline Link (WeTransfer Link)","type":"text","req":true}]},{"t":"Delivery Location","f":[{"l":"Delivery to","type":"select","o":["West Malaysia","East Malaysia","Singapore","Brunei (Pick Up in Miri Only)"]}]},{"t":"Contact and Quantity","f":[{"l":"Price Expectation (RM)","type":"text","req":true},{"l":"Phone Number","type":"phone","req":true,"key":"phone"},{"l":"Quantity","type":"number","req":true,"key":"quantity"}]}]},{"id":"sticker","card":"Sticker Label Printing","title":"Request Custom Quote","sub":"For Sticker Label Printing","img":"Round-Sticker-Cover.png","sections":[{"t":"About the Stickers","f":[{"l":"How is your Sticker to be Printed","type":"select","req":true,"o":["Sticker Sheets (Placed on A3 / A4 Sheets)","Kiss Cut Stickers"]}]},{"t":"Sticker Size","f":[{"l":"Sticker Size in mm x mm (Small Sticker Size)","type":"dims","req":true,"d":["Height","Width"]}]},{"t":"Sticker Material","f":[{"l":"Sticker Material","type":"select","req":true,"o":["Mirrorkorte Stickers (Best Seller)","White PP (Gloss) - Waterproof","White PP (Matte) - Waterproof","Woodfree Matte"]}]},{"t":"Sticker Finishing","f":[{"l":"Print Colour","type":"select","req":true,"o":["1C","4C"]},{"l":"Sticker Lamination","type":"select","req":true,"o":["Gloss Laminate","Matte Laminate","Not Required"]}]},{"t":"Delivery Location","f":[{"l":"Delivery to","type":"select","req":true,"o":["West Malaysia","East Malaysia","Singapore","Brunei (Pickup in Miri Only)"]}]},{"t":"Contact and Quantity","f":[{"l":"Price Expectation (RM)","type":"text","req":true},{"l":"Phone Number","type":"phone","req":true,"key":"phone"},{"l":"Quantity","type":"number","req":true,"key":"quantity"}]}]}];
 
 const BEST = [
@@ -3626,6 +3731,7 @@ class Component extends DCLogic {
       this.pushUrl('/packaging/styles');
       return this.setState({ route: 'packaging', pkTab: 'styles', pkFam: fam, pkLibTab: 'Box model', megaOpen: false });
     }
+    if (v.indexOf('pkstyle:') === 0) return this.pkbStart(v.slice(8));
     if (v.indexOf('pkgo:') === 0) { const t = v.slice(5); if (typeof window !== 'undefined') window.scrollTo(0, 0); this.pushUrl(t === 'library' ? '/packaging' : '/packaging/' + t); return this.setState({ route: 'packaging', pkTab: t, megaOpen: false }); }
     if (v.indexOf('blog:') === 0) return this.blogOpen(v.slice(5));
     if (v === 'addraddsave') return this.addressAdd();
@@ -5297,6 +5403,7 @@ class Component extends DCLogic {
     const NAMED = { cart: 'cart', checkout: 'checkout', auth: 'auth', search: 'search', learn: 'learn', 'learning-hub': 'learn', membership: 'membership', contact: 'contact', about: 'about', 'about-us': 'about', support: 'support', downloads: 'downloads', partners: 'partners', terms: 'terms', track: 'track', artwork: 'artwork', 'customized-printing-solutions': 'solutions' };
     // packaging: library landing at /packaging, configurator/quote/die-lines as their own sub-URLs
     if (segs[0] === 'download' || (segs[0] === 'downloads' && segs[1])) return this.setState({ route: 'downloads', dlCat: segs[1] || null, dlFold: null });
+    if (segs[0] === 'packaging' && segs[1] === 'configure' && pkgStyle(segs[2])) return this.pkbStart(segs[2]);
     if (segs[0] === 'packaging') return this.setState({ route: 'packaging', pkTab: segs[1] || 'library' });
     if (segs[0] === 'account' && (segs[1] === 'reset-password' || segs[1] === 'lost-password')) {
       const qs = new URLSearchParams(window.location.search);
@@ -6604,7 +6711,7 @@ class Component extends DCLogic {
   // Packaging & Boxes CATEGORY page, not the packaging homepage.
   pkBoxLibrary() {
     const st = this.state;
-    const FAMILIES = [['All boxes', 54], ['Most popular', 5], ['— Basic boxes', 13], ['— Window boxes', 11], ['— Gift & display boxes', 9], ['— Hanging boxes', 8], ['— Tray & telescope', 3], ['— Folder & envelope', 1], ['— Sleeve', 1], ['Divider boxes', 4], ['Inner holding boxes', 7]];
+    const FAMILIES = [['All boxes', 54], ['Most popular', 5], ['— Basic boxes', 12], ['— Window boxes', 11], ['— Gift & display boxes', 9], ['— Hanging boxes', 8], ['— Tray & telescope', 3], ['— Folder & envelope', 1], ['— Sleeve', 1], ['Divider boxes', 4], ['Inner holding boxes', 7]];
     const MODELS = [
       ['M015', 'Divider boxes', 'Partition', 'divider'],
       ['K003', 'Gift & display', 'Tongue lock', 'basic'],
@@ -6617,8 +6724,7 @@ class Component extends DCLogic {
       ['C012', 'Folder & envelope', 'Gift card envelope', 'sleeve'],
       ['O030', 'Window boxes', 'Window patch front', 'window'],
       ['M061', 'Inner holding', 'Four-cavity insert', 'insert'],
-      ['A001X', 'Basic boxes', 'Reverse tuck end (RTE)', 'basic'],
-    ];
+    ].concat(PKG_STYLES.map(x => [x.code, 'Basic boxes', x.name, x.bottom === 'lock' ? 'carton' : 'basic', true]));
     // fixed sidebar + flexible content (was auto-fit, which stretched the sidebar and left a
     // big empty gap). The box family filters the grid; the inner tabs switch the sub-view.
     const fam = st.pkFam || 'All boxes', libTab = st.pkLibTab || 'Box model';
@@ -6642,7 +6748,7 @@ class Component extends DCLogic {
           h('span', { style: { fontSize: 13, color: MUT } }, fam + ' · ' + famModels.length + ' style' + (famModels.length === 1 ? '' : 's')),
           h('span', { style: { fontSize: 13, color: MUT } }, 'Sort: Most popular')),
         famModels.length ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(190px,1fr))', gap: 16 } },
-          famModels.map((m, i) => h('div', { key: i, 'data-go': 'pkgo:configure', style: { border: '1px solid ' + HAIR, borderRadius: 0, background: '#fff', padding: '16px 16px 18px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 } },
+          famModels.map((m, i) => h('div', { key: i, 'data-go': m[4] ? 'pkstyle:' + m[0] : 'solutions', style: { border: '1px solid ' + HAIR, borderRadius: 0, background: '#fff', padding: '16px 16px 18px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 } },
             this.dieline(m[3]),
             h('div', { style: { fontSize: 14.5, fontWeight: 600, color: TEAL, marginTop: 8 } }, m[0]),
             h('div', { style: { fontSize: 12.5, fontWeight: 500 } }, m[1]),
@@ -6675,6 +6781,192 @@ class Component extends DCLogic {
         h('div', { style: { display: 'flex', gap: 22, borderBottom: '1px solid ' + HAIR, marginBottom: 16, flexWrap: 'wrap' } },
           INNER.map((t, i) => h('span', { key: i, 'data-go': 'set:pkLibTab:' + t, style: { padding: '0 0 12px', fontSize: 13.5, fontWeight: 600, color: libTab === t ? TEAL : MUT, borderBottom: '2px solid ' + (libTab === t ? TEAL : 'transparent'), marginBottom: -1, cursor: 'pointer' } }, t))),
         subViews[libTab] || subViews['Box model']));
+  }
+
+  // ===== CUSTOM BOX BUILDER (Basic Boxes): style -> size -> material -> quantity -> finishing -> price, live price on the right =====
+  pkbSpec() { return this.state.pkb || {}; }
+  pkbSet(patch) {
+    const sp = Object.assign({}, this.pkbSpec(), patch);
+    // keep every choice valid as the spec changes
+    if (sp.paper && !(PKG_MATS[sp.paper] || []).includes(+sp.gsm)) sp.gsm = PKG_MATS[sp.paper][0];
+    if (sp.qty && sp.coat && !pkgCoatings(sp).includes(sp.coat)) sp.coat = 'Gloss Lamination';
+    if (sp.coat !== 'Matte Lamination') sp.suv = false;
+    const q = pkgQuote(sp);
+    if (q && sp.lane && !q[sp.lane]) sp.lane = q.std ? 'std' : q.sr ? 'sr' : null;
+    this.setState({ pkb: sp });
+  }
+  pkbStart(code) {
+    const s = pkgStyle(code); if (!s) return;
+    const sp = { style: code, L: '', W: '', D: '', paper: 'Gloss Art Card (1 Side Coated)', gsm: 250, coat: 'Gloss Lamination', suv: false, emb: false, embH: '', embW: '', hs: [], qty: 0, lane: null };
+    s.opts.forEach((o, i) => { sp['opt' + i] = o[1][o[1].length - 1]; });
+    if (typeof window !== 'undefined') window.scrollTo(0, 0);
+    this.pushUrl('/packaging/configure/' + code);
+    this.setState({ route: 'packaging', pkTab: 'configure', pkb: sp, pkbStep: 1, megaOpen: false });
+  }
+  pkbLines(sp, q) {
+    const s = pkgStyle(sp.style), lane = sp.lane && q && q[sp.lane];
+    const L = [['Box Style', s.code + ' ' + s.name]];
+    s.opts.forEach((o, i) => L.push([o[0], sp['opt' + i]]));
+    if (+sp.L && +sp.W && +sp.D) L.push(['Box Size (L x W x D)', sp.L + ' x ' + sp.W + ' x ' + sp.D + ' mm']);
+    if (q && q.open) L.push(['Open Size', q.open[0] + ' x ' + q.open[1] + ' mm']);
+    L.push(['Material', sp.paper + ' ' + sp.gsm + 'gsm'], ['Printing', '4 Colour (Front)'], ['Coating', sp.coat + ' (Front)']);
+    if (sp.suv) L.push(['Spot UV', 'Front']);
+    if (sp.emb) L.push(['Embossing', sp.embH + ' x ' + sp.embW + ' mm']);
+    (sp.hs || []).forEach((b, i) => L.push(['Hot Stamping ' + (i + 1), b.c + ', ' + b.h + ' x ' + b.w + ' mm']));
+    L.push(['Die-Cutting & Gluing', 'Included']);
+    if (lane) L.push(['Production', (sp.lane === 'sr' ? 'Short Run' : 'Standard') + ', ' + lane.days + ' working days']);
+    return L;
+  }
+  pkbAddToCart() {
+    const sp = this.pkbSpec(), q = pkgQuote(sp), lane = q && sp.lane && q[sp.lane]; if (!lane) return;
+    const s = pkgStyle(sp.style), lines = this.pkbLines(sp, q), qty = +sp.qty;
+    const item = { pkg: sp, jobCode: this.newJobCode(), productId: 179, name: 'Custom Box ' + s.code, spec: lines.map(l => l[1]).join(' · '), specLines: lines,
+      size: q.open[0] + ' x ' + q.open[1] + ' mm', productionTime: lane.days + ' working days', qty, unitPrice: lane.price / qty, lineTotal: lane.price };
+    const cart = (this.state.cart || []).concat([item]);
+    this.setState({ cart }); this.saveCart(cart); this.go('cart');
+  }
+  // flat die-line drawn from the real open size: panels, flaps, cut (solid) and crease (dashed) lines
+  pkbDieline(sp, open, maxH) {
+    const s = pkgStyle(sp.style), L = +sp.L || 100, W = +sp.W || 60, D = +sp.D || 150;
+    const OW = open ? open[0] : 2 * L + 2 * W + 14, OH = open ? open[1] : D + 2 * W + 28;
+    const g = OW - 2 * L - 2 * W, pad = 6, x0 = pad, xs = [x0, x0 + g, x0 + g + L, x0 + g + L + W, x0 + g + 2 * L + W, x0 + OW];
+    const lock = s && s.bottom === 'lock', top = lock ? W + 14 : (OH - D) / 2, y0 = pad + top, y1 = y0 + D, yB = pad + OH;
+    const cut = { stroke: TEAL, strokeWidth: 1.4, fill: '#fff', vectorEffect: 'non-scaling-stroke' }, crease = { stroke: '#9aa4ad', strokeWidth: 1, strokeDasharray: '5 4', fill: 'none', vectorEffect: 'non-scaling-stroke' };
+    const P = [];
+    // glue flap + four body panels
+    P.push(h('path', { key: 'glue', d: 'M' + xs[1] + ' ' + (y0 + 6) + ' L' + xs[0] + ' ' + (y0 + 12) + ' L' + xs[0] + ' ' + (y1 - 12) + ' L' + xs[1] + ' ' + (y1 - 6), ...cut }));
+    P.push(h('rect', { key: 'body', x: xs[1], y: y0, width: OW - g, height: D, ...cut }));
+    [2, 3, 4].forEach(i => P.push(h('line', { key: 'v' + i, x1: xs[i], y1: y0, x2: xs[i], y2: y1, ...crease })));
+    P.push(h('line', { key: 'g1', x1: xs[1], y1: y0, x2: xs[1], y2: y1, ...crease }));
+    // top: tuck lid on the 2nd L panel, dust flaps on the W panels
+    const tuck = (xa, xb, y, dir, depth) => 'M' + xa + ' ' + y + ' L' + xa + ' ' + (y + dir * (depth - 12)) + ' Q' + xa + ' ' + (y + dir * depth) + ' ' + (xa + 12) + ' ' + (y + dir * depth) + ' L' + (xb - 12) + ' ' + (y + dir * depth) + ' Q' + xb + ' ' + (y + dir * depth) + ' ' + xb + ' ' + (y + dir * (depth - 12)) + ' L' + xb + ' ' + y;
+    const dust = (xa, xb, y, dir, depth) => 'M' + xa + ' ' + y + ' L' + (xa + 3) + ' ' + (y + dir * depth) + ' L' + (xb - depth * 0.45) + ' ' + (y + dir * depth) + ' L' + xb + ' ' + y;
+    const dh = d => Math.min(d, W * 0.8);
+    // top: tuck lid on the back L panel, dust flaps on both W panels
+    P.push(h('path', { key: 't1', d: tuck(xs[3], xs[4], y0, -1, top), ...cut }));
+    P.push(h('path', { key: 't2', d: dust(xs[2], xs[3], y0, -1, dh(top)), ...cut }));
+    P.push(h('path', { key: 't3', d: dust(xs[4], xs[5], y0, -1, dh(top)), ...cut }));
+    P.push(h('path', { key: 'tl', d: 'M' + xs[2] + ' ' + y0 + ' L' + xs[5] + ' ' + y0, ...crease }));
+    const bh = yB - y1;
+    if (!lock) {
+      P.push(h('path', { key: 'b1', d: tuck(xs[1], xs[2], y1, 1, bh), ...cut }));
+      P.push(h('path', { key: 'b2', d: dust(xs[2], xs[3], y1, 1, dh(bh)), ...cut }));
+      P.push(h('path', { key: 'b3', d: dust(xs[4], xs[5], y1, 1, dh(bh)), ...cut }));
+    } else {
+      const flap = (k, xa, xb, f) => P.push(h('path', { key: k, d: 'M' + xa + ' ' + y1 + ' L' + (xa + 8) + ' ' + (y1 + bh * f) + ' L' + (xb - 8) + ' ' + (y1 + bh * f) + ' L' + xb + ' ' + y1, ...cut }));
+      flap('b1', xs[1], xs[2], 1); flap('b2', xs[2], xs[3], 0.7); flap('b3', xs[3], xs[4], 1); flap('b4', xs[4], xs[5], 0.7);
+    }
+    P.push(h('path', { key: 'bl', d: 'M' + xs[1] + ' ' + y1 + ' L' + xs[5] + ' ' + y1, ...crease }));
+    return h('svg', { viewBox: '0 0 ' + (OW + 2 * pad) + ' ' + (OH + 2 * pad), width: '100%', style: { display: 'block', maxHeight: maxH || 260 }, role: 'img', 'aria-label': 'Flat die-line, ' + Math.round(OW) + ' x ' + Math.round(OH) + ' mm' }, P);
+  }
+  pkBuilder() {
+    const st = this.state, sp = this.pkbSpec(), s = pkgStyle(sp.style);
+    const RED = '#c9191b';
+    const box = (kids, extra) => h('div', { style: Object.assign({ background: '#fff', border: '1px solid #e6e8eb', padding: '22px 22px' }, extra || {}) }, kids);
+    const title = t => [h('div', { key: 'bar', style: { width: 24, height: 3, background: RED, marginBottom: 10 } }), h('div', { key: 't', style: { fontSize: 24, fontWeight: 500, marginBottom: 16 } }, t)];
+    const lab = t => h('div', { style: { fontSize: 14, fontWeight: 500, color: '#212121', margin: '0 0 8px' } }, t);
+    const chip = (label, on, click, key) => h('button', { key: key || label, type: 'button', onClick: click, 'aria-pressed': !!on,
+      style: { font: 'inherit', fontSize: 14, padding: '10px 16px', border: '1px solid ' + (on ? RED : '#e6e8eb'), background: on ? '#fdf2f2' : '#fff', color: on ? RED : '#212121', fontWeight: on ? 500 : 400, cursor: 'pointer', borderRadius: 0 } }, label);
+    const num = (label, value, onCh, err, key) => h('label', { key: key || label, style: { display: 'flex', flexDirection: 'column', gap: 6, flex: '1 1 110px', minWidth: 0 } },
+      h('span', { style: { fontSize: 13, color: '#616161' } }, label),
+      h('span', { style: { display: 'flex', border: '1px solid ' + (err ? RED : '#e6e8eb'), background: '#fff' } },
+        h('input', { type: 'number', inputMode: 'decimal', 'aria-label': label, value: value, onChange: e => onCh(e.target.value), style: { flex: 1, minWidth: 0, border: 0, outline: 0, padding: '10px 12px', fontSize: 15, font: 'inherit' } }),
+        h('span', { style: { padding: '10px 10px', fontSize: 13, color: '#616161', borderLeft: '1px solid #e6e8eb' } }, 'mm')),
+      err ? h('span', { role: 'alert', style: { fontSize: 12.5, color: RED } }, err) : null);
+    const cta = (label, on, disabled) => h('button', { type: 'button', onClick: disabled ? undefined : on, disabled: !!disabled,
+      style: { width: '100%', font: 'inherit', fontSize: 16, fontWeight: 500, padding: 15, border: 0, borderRadius: 0, background: disabled ? '#e0a3a4' : RED, color: '#fff', cursor: disabled ? 'not-allowed' : 'pointer', marginTop: 20 } }, label);
+    const back = (label, on) => h('span', { role: 'button', tabIndex: 0, onClick: on, onKeyDown: e => { if (e.key === 'Enter') on(); }, style: { display: 'inline-block', marginTop: 14, fontSize: 14, color: RED, textDecoration: 'underline', cursor: 'pointer' } }, label);
+
+    // step 0: pick a style
+    if (!s) return box([title('Choose your box style'),
+      h('div', { key: 'g', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(170px,1fr))', gap: 14 } },
+        PKG_STYLES.map(x => h('button', { key: x.code, type: 'button', onClick: () => this.pkbStart(x.code), style: { font: 'inherit', textAlign: 'left', background: '#fff', border: '1px solid #e6e8eb', padding: 14, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4, borderRadius: 0 } },
+          this.pkbDieline({ style: x.code, L: 100, W: 60, D: 150 }, null, 110),
+          h('span', { style: { fontSize: 14.5, fontWeight: 500, color: RED, marginTop: 6 } }, x.code),
+          h('span', { style: { fontSize: 13, color: '#616161', lineHeight: 1.45 } }, x.name))))]);
+
+    const step = st.pkbStep || 1, STEPS = ['Size', 'Material', 'Quantity', 'Finishing', 'Price'];
+    const q = pkgQuote(sp), errs = pkgSizeErr(sp) || {}, sizeOK = !pkgSizeErr(sp);
+    const go = n => this.setState({ pkbStep: n });
+    const reach = n => n <= 1 || (sizeOK && (n <= 3 || +sp.qty > 0));
+    const tabs = h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', borderBottom: '1px solid #e6e8eb', marginBottom: 20 } },
+      STEPS.map((t, i) => { const n = i + 1, on = n === step, ok = reach(n);
+        return h('button', { key: t, type: 'button', disabled: !ok, onClick: () => ok && go(n), 'aria-current': on ? 'step' : undefined,
+          style: { font: 'inherit', background: 'none', border: 0, borderBottom: '3px solid ' + (on ? RED : 'transparent'), padding: '10px 4px', fontSize: 13.5, fontWeight: on ? 500 : 400, color: on ? RED : ok ? '#212121' : '#bdbdbd', cursor: ok ? 'pointer' : 'default' } }, n + '. ' + t); }));
+
+    let body;
+    if (step === 1) {
+      body = [
+        s.opts.length ? h('div', { key: 'o', style: { display: 'flex', gap: 22, flexWrap: 'wrap', marginBottom: 22 } }, s.opts.map((o, i) => h('div', { key: i },
+          lab(o[0]), h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, o[1].map(v => chip(v, sp['opt' + i] === v, () => this.pkbSet({ ['opt' + i]: v }))))))) : null,
+        lab('Box size'),
+        h('div', { key: 'd', style: { display: 'flex', gap: 12, flexWrap: 'wrap' } },
+          num('Length (L)', sp.L, v => this.pkbSet({ L: v }), sp.L !== '' && errs.L, 'L'), num('Width (W)', sp.W, v => this.pkbSet({ W: v }), sp.W !== '' && errs.W, 'W'), num('Depth (D)', sp.D, v => this.pkbSet({ D: v }), sp.D !== '' && errs.D, 'D')),
+        errs.all ? h('div', { key: 'e', role: 'alert', style: { marginTop: 12, fontSize: 13.5, color: RED } }, errs.all) : null,
+        cta('Next: Material', () => go(2), !sizeOK)];
+    } else if (step === 2) {
+      body = [lab('Paper'), h('div', { key: 'p', style: { display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 22 } }, Object.keys(PKG_MATS).map(m => chip(m, sp.paper === m, () => this.pkbSet({ paper: m })))),
+        lab('Weight'), h('div', { key: 'g', style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, PKG_MATS[sp.paper].map(g => chip(g + 'gsm', +sp.gsm === g, () => this.pkbSet({ gsm: g })))),
+        cta('Next: Quantity', () => go(3))];
+    } else if (step === 3) {
+      const other = sp.qtyOther;
+      body = [lab('Quantity'),
+        h('div', { key: 'q', style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
+          PKG_QTYS.filter(n => !pkgIsBoard(sp) && +sp.gsm <= 350 ? true : n >= 300).map(n => chip(n.toLocaleString('en-US'), !other && +sp.qty === n, () => this.pkbSet({ qty: n, qtyOther: false, lane: null }), 'q' + n)),
+          chip('Other', !!other, () => this.pkbSet({ qtyOther: true, qty: 0, lane: null }), 'qo')),
+        other ? h('div', { key: 'qi', style: { maxWidth: 220, marginTop: 14 } }, h('label', { style: { display: 'flex', flexDirection: 'column', gap: 6 } },
+          h('span', { style: { fontSize: 13, color: '#616161' } }, 'Pieces (300 to 100,000)'),
+          h('input', { type: 'number', inputMode: 'numeric', value: sp.qty || '', onChange: e => { const v = Math.round(+e.target.value || 0); this.pkbSet({ qty: v >= 300 && v <= 100000 ? v : 0, qtyRaw: e.target.value, lane: null }); },
+            style: { border: '1px solid #e6e8eb', padding: '10px 12px', fontSize: 15, font: 'inherit' } }))) : null,
+        cta('Next: Finishing', () => go(4), !(+sp.qty > 0))];
+    } else if (step === 4) {
+      const hs = sp.hs || [];
+      const setHs = (i, patch) => this.pkbSet({ hs: hs.map((b, k) => k === i ? Object.assign({}, b, patch) : b) });
+      const extra = [['Spot UV', 'suv'], ['Embossing', 'emb'], ['Hot Stamping', 'hs']].filter(x => x[1] !== 'suv' || sp.coat === 'Matte Lamination');
+      body = [lab('Coating'), h('div', { key: 'c', style: { display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 22 } }, pkgCoatings(sp).map(c => chip(c, sp.coat === c, () => this.pkbSet({ coat: c })))),
+        lab('Extra finishing'), h('div', { key: 'x', style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
+          extra.map(x => { const on = x[1] === 'hs' ? hs.length > 0 : !!sp[x[1]];
+            return chip(x[0], on, () => this.pkbSet(x[1] === 'hs' ? { hs: on ? [] : [{ c: 'Gold', h: 50, w: 50 }] } : x[1] === 'emb' ? { emb: !on, embH: sp.embH || 50, embW: sp.embW || 50 } : { [x[1]]: !on })); })),
+        sp.emb ? h('div', { key: 'em', style: { marginTop: 18 } }, lab('Embossing size'), h('div', { style: { display: 'flex', gap: 12, flexWrap: 'wrap', maxWidth: 360 } },
+          num('Height', sp.embH, v => this.pkbSet({ embH: v }), !(+sp.embH >= 10) && 'Minimum 10 mm', 'eh'), num('Width', sp.embW, v => this.pkbSet({ embW: v }), !(+sp.embW >= 10) && 'Minimum 10 mm', 'ew'))) : null,
+        hs.length ? h('div', { key: 'hs', style: { marginTop: 18, display: 'flex', flexDirection: 'column', gap: 14 } },
+          hs.map((b, i) => h('div', { key: i, style: { borderTop: i ? '1px solid #e6e8eb' : 'none', paddingTop: i ? 14 : 0 } },
+            lab('Hot stamping ' + (i + 1)),
+            h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 } }, ['Gold', 'Silver'].map(c => chip(c, b.c === c, () => setHs(i, { c }), 'c' + c)),
+              i ? h('span', { role: 'button', tabIndex: 0, onClick: () => this.pkbSet({ hs: hs.filter((_, k) => k !== i) }), style: { alignSelf: 'center', marginLeft: 8, fontSize: 14, color: RED, textDecoration: 'underline', cursor: 'pointer' } }, 'Remove') : null),
+            h('div', { style: { display: 'flex', gap: 12, flexWrap: 'wrap', maxWidth: 360 } },
+              num('Height', b.h, v => setHs(i, { h: v }), !(+b.h >= 10) && 'Minimum 10 mm', 'h' + i), num('Width', b.w, v => setHs(i, { w: v }), !(+b.w >= 10) && 'Minimum 10 mm', 'w' + i)))),
+          hs.length < 5 ? h('span', { key: 'add', role: 'button', tabIndex: 0, onClick: () => this.pkbSet({ hs: hs.concat([{ c: 'Gold', h: 50, w: 50 }]) }), style: { fontSize: 14, color: RED, textDecoration: 'underline', cursor: 'pointer' } }, 'Add another hot stamping') : null) : null,
+        cta('Next: Price', () => go(5), (sp.emb && !(+sp.embH >= 10 && +sp.embW >= 10)) || hs.some(b => !(+b.h >= 10 && +b.w >= 10)))];
+    } else {
+      const lanes = [['std', 'Standard'], ['sr', 'Short Run']].filter(l => q && q[l[0]]);
+      const pick = sp.lane && q && q[sp.lane] ? sp.lane : null;
+      body = [lab('Production'),
+        lanes.length ? h('div', { key: 'l', style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12 } },
+          lanes.map(l => { const x = q[l[0]], on = pick === l[0];
+            return h('button', { key: l[0], type: 'button', onClick: () => this.pkbSet({ lane: l[0] }), 'aria-pressed': on,
+              style: { font: 'inherit', textAlign: 'left', background: on ? '#fdf2f2' : '#fff', border: '1px solid ' + (on ? RED : '#e6e8eb'), padding: '16px 16px', cursor: 'pointer', borderRadius: 0 } },
+              h('div', { style: { fontSize: 15, fontWeight: 500, color: on ? RED : '#212121' } }, l[1]),
+              h('div', { style: { fontSize: 22, fontWeight: 500, margin: '6px 0 2px' } }, this.money(x.price)),
+              h('div', { style: { fontSize: 13, color: '#616161' } }, this.money(x.price / sp.qty) + ' / pc · ' + x.days + ' working days')); }))
+          : h('div', { key: 'n', style: { fontSize: 14, color: '#616161' } }, 'Change the quantity or finishing to see a price.'),
+        cta('Add to cart', () => this.pkbAddToCart(), !pick)];
+    }
+
+    const lines = this.pkbLines(sp, q), lane = sp.lane && q && q[sp.lane];
+    const best = q && [q.std, q.sr].filter(Boolean).sort((a, b) => a.price - b.price)[0];
+    const side = box([title('Your box'),
+      h('div', { key: 'dl', style: { border: '1px solid #e6e8eb', padding: 12, marginBottom: 14, background: '#fafafa' } }, this.pkbDieline(sp, q && q.open, 220)),
+      lines.map((l, i) => h('div', { key: i, style: { display: 'grid', gridTemplateColumns: 'minmax(96px,42%) minmax(0,1fr)', gap: 12, padding: '6px 0', fontSize: 14, lineHeight: 1.45 } },
+        h('span', { style: { color: '#616161' } }, l[0]), h('span', { style: { color: '#212121' } }, l[1]))),
+      h('div', { key: 'tot', style: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', borderTop: '1px solid #e6e8eb', marginTop: 12, paddingTop: 14 } },
+        h('span', { style: { fontSize: 14, color: '#616161' } }, lane ? 'Price' : 'From'),
+        h('span', { style: { fontSize: 22, fontWeight: 500, color: '#212121' } }, lane ? this.money(lane.price) : best ? this.money(best.price) : '—'))]);
+
+    return h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,340px),1fr))', gap: 20, alignItems: 'start' } },
+      box([title(s.code + ' ' + s.name), tabs, body,
+        step > 1 ? back('Back', () => go(step - 1)) : back('Choose another style', () => this.setState({ pkb: Object.assign({}, sp, { style: null }) }))]),
+      h('div', { style: { position: 'sticky', top: 84 } }, side));
   }
 
   s_packaging() {
@@ -6986,7 +7278,7 @@ class Component extends DCLogic {
     // CONFIGURATOR / QUOTE / DIE-LINES — separate pages reached from the box styles, each with a
     // "back to box styles" link (like the product configurator being its own page).
     const HEAD = {
-      configure: ['Box configurator', 'Pick your die-cut style, dimensions, material and finishing.'],
+      configure: ['Box builder', 'Set your size, paper and finishing. Your price updates as you go.'],
       quote: ['Spec, finishing & price', 'Review the full spec and see your price at every membership tier.'],
       dielines: ['Die-lines & orders', 'Download free die-lines and re-order past packaging jobs.'],
     };
@@ -6998,10 +7290,7 @@ class Component extends DCLogic {
       h('span', { 'data-go': 'pkfam:' + (st.pkFam || 'All boxes'), style: { display: 'inline-block', fontSize: 13, fontWeight: 600, color: TEAL, cursor: 'pointer', marginBottom: 14 } }, '← Back to box styles'),
       h('h1', { style: { margin: '0 0 6px', fontSize: 28, fontWeight: 500, letterSpacing: '-.02em' } }, hd[0]),
       h('p', { style: { margin: '0 0 22px', fontSize: 14, color: MUT, maxWidth: '68ch', lineHeight: 1.7 } }, hd[1]),
-      P[tab],
-      tab === 'quote'
-        ? this.mobileBar('M015 · ' + QTY[qi] + ' pcs · ' + lane, this.money(nett), 'Submit order', 'checkout')
-        : null);
+      (tab === 'configure' || tab === 'quote') ? this.pkBuilder() : P[tab]);
   }
 
   // ===== CATEGORY LISTING =====
@@ -8175,7 +8464,7 @@ class Component extends DCLogic {
             h('label', { style: { display: 'inline-flex', alignItems: 'center', gap: 10, fontSize: 12.5, color: FAINT, cursor: 'pointer' } }, check(sel[i], on => setSel(i, on), 'Select ' + it.name), it.jobCode || ''),
             h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0 16px' } },
               h('span', { style: { fontSize: 21, fontWeight: 500 } }, it.name),
-              icon(PENCIL, () => openProd(it.productId), 'Edit'),
+              icon(PENCIL, () => it.pkg ? (this.pkbStart(it.pkg.style), this.setState({ pkb: it.pkg, pkbStep: 5 })) : openProd(it.productId), 'Edit'),
               h('span', { style: { marginLeft: 'auto' } }, icon(TRASH, () => this.rmCart(i), 'Remove from cart'))),
             h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 18, alignItems: 'flex-start' } },
               h('div', { style: { flex: '0 0 150px' } }, this.art((this.pkProducts().find(p => p.id === it.productId) || {}).name || 'card')),
@@ -8188,7 +8477,7 @@ class Component extends DCLogic {
                 this.cartArtworkBlock(it, i, row),
                 h('div', { style: { fontSize: 14.5, fontWeight: 600, color: INK, padding: '16px 0 4px' } }, 'Specification'),
                 lines.map((l, k) => h('div', { key: 'sp' + k }, row(l[0] || 'Specification', l[1]))),
-                h('div', { style: { display: 'flex', gap: 18, marginTop: 16 } }, link('Edit', () => openProd(it.productId)), link('Duplicate', () => this.dupCart(i))))))));
+                h('div', { style: { display: 'flex', gap: 18, marginTop: 16 } }, link('Edit', () => it.pkg ? (this.pkbStart(it.pkg.style), this.setState({ pkb: it.pkg, pkbStep: 5 })) : openProd(it.productId)), link('Duplicate', () => this.dupCart(i))))))));
     });
     return page(h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 30, alignItems: 'flex-start' } },
       box([title('Cart'),
