@@ -357,6 +357,14 @@ function dlsPriceBase(cfg, q) {
 const LO_SZ = { '3xA4 (297mm x 630mm)': ['3xA4', 630, 297], 'A1 (594mm x 840mm)': ['A1', 840, 594], 'A2 (420mm x 594mm)': ['A2', 594, 420],
   'A3 (297mm x 420mm)': ['A3', 420, 297], 'A4 (210mm x 297mm)': ['A4', 297, 210], 'A5 (148mm x 210mm)': ['A5', 210, 148], 'A6 (148mm x 105mm)': ['A6', 148, 105],
   '4xA4 (297mm x 840mm)': ['4xA4', 840, 297], '4xA5 (210mm x 594mm)': ['4xA5', 594, 210] };
+// smallest listed size ("…NNNmm x NNNmm…") that holds a custom height x width either way round, or null if none does
+function holdSize(sizes, h, w) {
+  h = +h; w = +w; if (!(h > 0 && w > 0)) return null;
+  const a = Math.min(h, w), b = Math.max(h, w); let best = null, ba = Infinity;
+  (sizes || []).forEach(sz => { const m = String(sz).match(/(\d+(?:\.\d+)?)\s*mm\s*[x×]\s*(\d+(?:\.\d+)?)\s*mm/i); if (!m) return;
+    const p = Math.min(+m[1], +m[2]), q = Math.max(+m[1], +m[2]); if (p >= a && q >= b && p * q < ba) { ba = p * q; best = sz; } });
+  return best;
+}
 const LO_SIZES = ['A1 (594mm x 840mm)', 'A2 (420mm x 594mm)', 'A3 (297mm x 420mm)', 'A4 (210mm x 297mm)', 'A5 (148mm x 210mm)', 'A6 (148mm x 105mm)',
   '3xA4 (297mm x 630mm)', '4xA4 (297mm x 840mm)', '4xA5 (210mm x 594mm)', 'Other (Custom Size)'];
 const LO_SIZE_LABEL = { 'A6 (148mm x 105mm)': 'A6 (105mm x 148mm)', '3xA4 (297mm x 630mm)': '3 x A4 (297mm x 630mm)', '4xA4 (297mm x 840mm)': '4 x A4 (297mm x 840mm)',
@@ -545,6 +553,8 @@ const LO_OV = {
     fold_code: DLS_FOLD9.reduce((m, c) => (m[c] = c + ' - Landscape', m), {}),
     fold_code_c: DLS_FOLD_STD.reduce((m, c) => (m[c] = c + ' - Landscape', m), {}) },
   addFields: [
+    { key: 'custom_h', label: 'Height (mm)', type: 'number', min: 50, max: 594, section: 'General', neutral: true, after: 'size', placeholder: '50 - 594', showWhen: { field: 'size', value: 'Other (Custom Size)' } },
+    { key: 'custom_w', label: 'Width (mm)', type: 'number', min: 50, max: 840, section: 'General', neutral: true, after: 'custom_h', placeholder: '50 - 840', showWhen: { field: 'size', value: 'Other (Custom Size)' } },
     { key: 'spot_front', label: 'Front Colour', options: ['Black', 'Cyan', 'Magenta'], section: 'General', neutral: true, after: 'colour', showWhen: { field: 'colour', values: ['1C (Front)', '1C (Both)'] } },
     { key: 'spot_back', label: 'Back Colour', options: ['Black', 'Cyan', 'Magenta'], section: 'General', neutral: true, after: 'colour', showWhen: { field: 'colour', value: '1C (Both)' } },
     { key: 'lam', label: 'Lamination', options: Object.keys(LO_L).map(k => LO_L[k]).concat(['Not Required']), section: 'General', after: 'package' },
@@ -592,7 +602,9 @@ const LO_OV = {
   placeholderExact: ['size', 'paper', 'colour', 'spot_front', 'spot_back', 'quantity'],
   placeholderWhen: { lam: cfg => loCard(cfg) },
   qtyOptions: cfg => loQty(cfg),
-  priceBase: loPriceBase,
+  // custom size: Excard's form has no size limits or real price for "Others"; we cap it at A1 and price it as the smallest standard sheet that holds it
+  priceBase: (cfg, q) => cfg.size === 'Other (Custom Size)' ? (s => s ? loPriceBase(Object.assign({}, cfg, { size: s }), q) : null)(holdSize(LO_SIZES, cfg.custom_h, cfg.custom_w)) : loPriceBase(cfg, q),
+  noEngineFallback: cfg => cfg.size === 'Other (Custom Size)',
   priceAddon: { hot_stamping: loHotStampCost },
 };
 
@@ -1359,11 +1371,15 @@ const csVdpFields = () => {
   }
   return out;
 };
+const CS_STD_SIZES = ['54mm x 89mm', '75mm x 75mm', '100mm x 100mm', '110mm x 90mm', '115mm x 120mm', '130mm x 170mm', '165mm x 90mm', '220mm x 90mm', '104mm x 420mm', '310mm x 445mm'];
 const csOv = (pk, extraFields) => ({
   hide: ['inc_printmethod'],
   label: { printdirection: 'Print Direction', printcolour: 'Print Colour', vdptype: 'VDP Type', vdp: 'Number of VDP', inc_paper: 'Paper' },
   order: ['size', 'inc_paper', 'cs_paper', 'printcolour', 'printdirection', 'vdptype', 'vdp'],
-  addFields: (extraFields || []).concat(csVdpFields()),
+  addFields: (extraFields || []).concat([
+    { key: 'custom_h', label: 'Height (50mm - 310mm)', type: 'number', min: 50, max: 310, section: 'General', neutral: true, after: 'size', showWhen: { field: 'size', values: ['Others', 'Other'] } },
+    { key: 'custom_w', label: 'Width (65mm - 450mm)', type: 'number', min: 65, max: 450, section: 'General', neutral: true, after: 'custom_h', showWhen: { field: 'size', values: ['Others', 'Other'] } },
+  ], csVdpFields()),
   optionsOverride: {
     printcolour: ['4C & White Base', '4C & White Base & 4C'],
     printdirection: ['Face Out View', 'Face In View', 'Both Side View'],
@@ -1373,7 +1389,9 @@ const csOv = (pk, extraFields) => ({
   hideWhen: { vdp: cfg => cfg.printdirection === 'Both Side View' || cfg.vdptype !== 'Variable Data Printing (VDP)' },
   defaultOpt: { printdirection: 'Face Out View', vdptype: 'Not Required', vdp: '1' },
   placeholderExact: ['size', 'printcolour'].concat([1, 2, 3, 4, 5, 6].reduce((a, i) => a.concat(['type', 'font', 'style', 'align'].map(k => 'cs_vdp' + i + '_' + k)), []), ['quantity']),
-  priceBase: csPriceBase(pk),
+  priceBase: (cfg, q) => { if (!/^Others?$/.test(cfg.size || '')) return csPriceBase(pk)(cfg, q);
+    const s = holdSize(CS_STD_SIZES, cfg.custom_h, cfg.custom_w); return s ? csPriceBase(pk)(Object.assign({}, cfg, { size: s }), q) : null; },
+  noEngineFallback: cfg => /^Others?$/.test(cfg.size || ''),
 });
 
 // ---------- UV DTF Sticker (Excard uv-dtf-sticker, live 2026-10-02): fixed paper / print colour / Cold Lamination, delivery sheet
@@ -2451,8 +2469,8 @@ const CFG_OVERRIDES = {
     // Custom Size inputs appear only when Size = "Other (Custom Size)"; the ranges depend on the
     // card category (Standard / Thin Fold / Fat Fold). Creasing shows for fold cards.
     addFields: [
-      { key: 'custom_h', label: 'Custom height (mm)', type: 'number', min: 40, max: 54, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 50', showWhen: { all: [{ field: 'category', value: 'Standard' }, { field: 'size', value: 'Other (Custom Size)' }] } },
-      { key: 'custom_w', label: 'Custom width (mm)', type: 'number', min: 40, max: 89, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 85', note: 'Width must be greater than height', showWhen: { all: [{ field: 'category', value: 'Standard' }, { field: 'size', value: 'Other (Custom Size)' }] } },
+      { key: 'custom_h', label: 'Custom height (mm)', type: 'number', min: 40, max: 54, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 50', showWhen: { all: [{ field: 'category', values: ['Standard', 'Custom Die Cut'] }, { field: 'size', value: 'Other (Custom Size)' }] } },
+      { key: 'custom_w', label: 'Custom width (mm)', type: 'number', min: 40, max: 89, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 85', note: 'Width must be greater than height', showWhen: { all: [{ field: 'category', values: ['Standard', 'Custom Die Cut'] }, { field: 'size', value: 'Other (Custom Size)' }] } },
       // Thin Fold custom — open card 110–178 mm wide, folds down the middle (H 52–54 mm)
       { key: 'fold_h_thin', label: 'Open Height (mm)', type: 'number', min: 52, max: 54, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 54', showWhen: { all: [{ field: 'category', value: 'Thin Fold' }, { field: 'size', value: 'Other (Custom Size)' }] } },
       { key: 'fold_w_thin', label: 'Open Width (mm)', type: 'number', min: 110, max: 178, section: 'General', neutral: true, after: 'size', placeholder: 'e.g. 178', note: 'folds to half width', showWhen: { all: [{ field: 'category', value: 'Thin Fold' }, { field: 'size', value: 'Other (Custom Size)' }] } },
@@ -2602,6 +2620,7 @@ const CFG_OVERRIDES = {
     priceBase: fbPriceBase,
   },
   'Foamboard with Magnet — Digital': {
+    hide: ['diecut_h', 'diecut_w'],
     optionsOverride: { size: cfg => [FBM_SIZE[cfg.model] || FBM_SIZE.A3] },
     addFields: [
       { key: 'fbm_material', label: 'Material', options: ['5mm Paper Foamboards 127gsm Art Paper + Magnetic Sheet'], section: 'General', neutral: true, after: 'lamination' },
@@ -2656,6 +2675,7 @@ const CFG_OVERRIDES = {
     priceBase: wfPriceBase,
   },
   'Wobbler — Digital': {
+    hide: ['diecut_h', 'diecut_w'],
     label: { inc_compulsory: 'Compulsory' },
     defaultOpt: { category: 'Rectangle', modelcategory: 'Portrait' },
     placeholderExact: ['paper', 'lamination', 'quantity'],
@@ -4346,6 +4366,14 @@ class Component extends DCLogic {
       // which the crawl engine returns "quote on request" for). Null → fall back to the engine.
       let baseOverride = null;
       if (ov.priceBase) { try { const b = ov.priceBase(cfg, qty); if (b != null && isFinite(b)) baseOverride = b; } catch (e) {} }
+      // never price a size the production partner can't make: a typed size must sit inside its field's range, and a
+      // generic size box with no maximum (no known limit for this product) is quoted by hand instead
+      for (const f of this.pkFields()) {
+        const d = f.def; if (d.type !== 'number' || !/^(custom_[hw]|diecut_[hw]|fold_[hw]_\w+|height|width|diameter|[a-z]+_custom_[hw]|mg_[hwd]|rf_[hw]|rf_dia)$/.test(d.key || '')) continue;
+        if (d.max == null) return { ok: false, contact: true, message: 'This size is quoted on request. Contact us for a price.' };
+        const v = parseFloat(cfg[d.key]); if (!(v >= (d.min != null ? +d.min : 0) && v <= +d.max)) return { ok: false, message: 'Enter a size within the range shown' };
+      }
+      if (baseOverride == null && ov.noEngineFallback && ov.noEngineFallback(cfg)) return { ok: false, message: 'Enter a size within the range shown' };
       // engine quote (price + weight/note). May throw for configs it won't quote — tolerate that
       // when priceBase covers the price; only its weight/note are then missing.
       let r = null;
@@ -7644,7 +7672,9 @@ class Component extends DCLogic {
       const set = (k, v) => this.setState(st => ({ cfg: Object.assign({}, st.cfg, { [k]: v }) }));
       const range = d => d.min != null && d.max != null ? d.min + '–' + d.max + ' mm' : d.min != null ? 'min ' + d.min + ' mm' : d.max != null ? 'max ' + d.max + ' mm' : '';
       const mustWider = /greater than height/i.test(String(wDef.note || ''));
-      const bad = mustWider && hv !== '' && wv !== '' && hv != null && wv != null && parseFloat(wv) <= parseFloat(hv);
+      const oor = d => { const v = cfg[d.key]; return v != null && v !== '' && ((d.min != null && +v < +d.min) || (d.max != null && +v > +d.max)); };
+      const rangeMsg = [[hDef, 'Height'], [wDef, 'Width']].filter(x => oor(x[0])).map(x => x[1] + ' must be ' + range(x[0])).join('. ');
+      const bad = (mustWider && hv !== '' && wv !== '' && hv != null && wv != null && parseFloat(wv) <= parseFloat(hv)) || !!rangeMsg;
       const box = (d, lbl) => h('label', { key: d.key, style: { display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 } },
         h('span', { style: { fontSize: 12.5, fontWeight: 600 } }, lbl),
         h('input', { type: 'number', min: d.min != null ? d.min : undefined, max: d.max != null ? d.max : undefined, value: cfg[d.key] || '', placeholder: range(d) || 'mm', 'aria-label': lbl,
@@ -7655,7 +7685,7 @@ class Component extends DCLogic {
         style: { marginTop: 8, background: bothFilled && !bad ? TEAL : '#e9ecef', color: bothFilled && !bad ? '#fff' : MUT, border: 'none', borderRadius: 0, padding: '10px 22px', font: '600 13.5px Montserrat,sans-serif', cursor: bothFilled && !bad ? 'pointer' : 'not-allowed' } }, 'Confirm size') : null;
       const inputs = h('div', null,
         h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 12, maxWidth: 420 } }, box(hDef, 'Height (mm)'), box(wDef, 'Width (mm)')),
-        bad ? h('div', { style: { fontSize: 12, color: TEAL, marginTop: 6 } }, 'Width must be greater than height') : null, confirmBtn);
+        bad ? h('div', { role: 'alert', style: { fontSize: 12, color: TEAL, marginTop: 6 } }, rangeMsg || 'Width must be greater than height') : null, confirmBtn);
       return h('div', { key: 'hw_' + hk, 'data-cfgkey': 'hw_' + hk, 'data-cfgpair': hk + ',' + wk + (mustWider ? ',wider' : ''), 'data-cfgcur': bothFilled ? hv + ' × ' + wv + ' mm' : '', style: opts.book ? {} : rowStyle },
         opts.book ? null : labelCell('Size', null), inputs);
     };
