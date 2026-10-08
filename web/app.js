@@ -2074,7 +2074,7 @@ function bkoContents(cfg) {
     return Object.keys(mins).filter(c => p >= mins[c]).map(c => BK_P[c]); }
   const big = cfg.orientation === 'Portrait' && (sk === 'A4' || sk === 'A5');
   const tbl = (big ? BKO.maxBig : BKO.maxSmall)[cv] || {};
-  return Object.keys(tbl).filter(c => p <= tbl[c] && (!b5 || ['S100', 'GA100', 'GA128', 'GAC250'].indexOf(c) >= 0)).map(c => BK_P[c]);
+  return Object.keys(tbl).filter(c => p <= tbl[c] && (!b5 || ['S80', 'S100', 'GA100', 'GA128', 'GAC250'].indexOf(c) >= 0)).map(c => BK_P[c]);
 }
 const BKO_CARD_CLAM = ['Gloss Lamination (Both Sides)', 'Matte Lamination (Both Sides)', 'UV Varnish (Both Sides)', 'Gloss Waterbase Varnish (Both Sides)'];
 function bkoContentLams(cfg) {
@@ -2108,7 +2108,11 @@ const BKO_CARD_CLAMD = { 'Gloss Lamination (Both Sides)': [.0364, .0364], 'Matte
 const BKO_COVER = { GAC230: [-14, -201], GAC250: [0, 0], GAC310: [0, 0], GA150: [-230, -1734], MA150: [-228, -1684], GA128: [-437, -2377], GA100: [-468, -2623], GA80: [-491, -2801],
   MA130: [-428, -2319], MA100: [-464, -2592], S100: [-460, -2562], S80: [-485, -2752] };
 const BKO_LAM = { 'Gloss Lamination (Front)': [70, 727], 'Matte Lamination (Front)': [70, 727], 'Gloss Lamination (Both)': [173, 1766], 'Matte Lamination (Both)': [173, 1766],
-  'Matte Lamination (Front) + Spot UV (Front)': [290, 1881], 'Matte Lamination (Both) + Spot UV (Front)': [393, 2920], 'UV Varnish (Front)': [18, 208], 'Gloss Waterbase Varnish (Front)': [0, 0] };
+  'Matte Lamination (Front) + Spot UV (Front)': [290, 1881], 'Matte Lamination (Both) + Spot UV (Front)': [393, 2920], 'UV Varnish (Front)': [18, 208], 'Gloss Waterbase Varnish (Front)': [0, 0],
+  'UV Varnish (Both)': [70, 727], 'Gloss Waterbase Varnish (Both)': [28, 312] };   // live 2026-10-09 (A4 16pp)
+// offset saddle-stitch card covers: Excard's full list, in its order (perfect binding / paper covers keep bkCoverLams)
+const BKO_LAM_CARD = ['Matte Lamination (Front)', 'Matte Lamination (Both)', 'Matte Lamination (Front) + Spot UV (Front)', 'Matte Lamination (Both) + Spot UV (Front)', 'Gloss Lamination (Front)', 'Gloss Lamination (Both)', 'UV Varnish (Front)', 'UV Varnish (Both)', 'Gloss Waterbase Varnish (Front)', 'Gloss Waterbase Varnish (Both)'];
+const bkoCoverLams = cfg => bkSoft(cfg) && !bkPerfect(cfg) && /^GAC/.test(BK_CODE[cfg.cover] || '') ? BKO_LAM_CARD : bkCoverLams(cfg);
 // offset presses print 8 pages per sheet side: the first 4 pages of each 8 cost only part of the 8-page step (live: 23% at 1,000
 // books, 41% at 10,000), so pages ending in 4 sit below the straight line through the grid rows
 const bkoS = q => q <= 1000 ? .226 : q >= 10000 ? .415 : .226 + (.415 - .226) * Math.log10(q / 1000);
@@ -2122,13 +2126,33 @@ function bkoSmooth(G, pp, q) {
 }
 const bkoLog2 = (v, q) => { const t = Math.log(Math.min(10000, Math.max(1000, q)) / 1000) / Math.log(10); return v[0] + (v[1] - v[0]) * t; };
 const bkoLin2 = (v, q) => v[0] + (v[1] - v[0]) * (q - 1000) / 9000;
+// A5 offset books, live Excard CASH 2026-10-09 on the reference spec (Gloss Art Card 250 + Gloss Waterbase Varnish, Gloss Art 128, 4C):
+// saddle stitch = every page count 8-64 (the price steps with the press sheet, so it is not smooth in pages);
+// perfect binding = 32-page blocks: base + step x (2 per full block, 1 for a part block of <= 8 content pages, 2 above) + per content page
+const BKO_A5_SADDLE = {8:{100:691,300:736,500:782,1000:900,3000:1424,10000:3436},12:{100:697,300:753,500:815,1000:965,3000:1613,10000:4058},16:{100:989,300:1059,500:1133,1000:1314,3000:2087,10000:5027},20:{100:708,300:793,500:878,1000:1092,3000:1988,10000:5302},24:{100:1003,300:1100,500:1197,1000:1441,3000:2461,10000:6269},28:{100:1010,300:1118,500:1229,1000:1503,3000:2648,10000:6892},32:{100:1305,300:1425,500:1548,1000:1853,3000:3123,10000:7860},36:{100:1025,300:1158,500:1293,1000:1631,3000:3023,10000:8135},40:{100:1320,300:1466,500:1614,1000:1982,3000:3499,10000:9105},44:{100:1325,300:1484,500:1644,1000:2044,3000:3685,10000:9726},48:{100:1620,300:1791,500:1964,1000:2393,3000:4158,10000:10693},52:{100:1341,300:1525,500:1708,1000:2170,3000:4060,10000:10968},56:{100:1634,300:1830,500:2028,1000:2520,3000:4534,10000:11938},60:{100:1642,300:1849,500:2059,1000:2582,3000:4720,10000:12559},64:{100:1937,300:2156,500:2379,1000:2932,3000:5195,10000:13527}};
+const BKO_A5_PERFECT = {"100":[944.29,286.936,1.643],"300":[1047.478,286.372,4.532],"500":[1162.3,287.572,7.276],"1000":[1449.018,289.458,14.165],"3000":[2594.826,287.032,42.596],"10000":[6885.179,373.824,139.008]};
+// A5 landscape saddle-stitch costs more than portrait (live; A4 landscape = portrait): extra share at [100, 1,000, 10,000] books by pages
+const BKO_A5_LAND = { 8: [.045, .086, .158], 20: [.044, .071, .102], 32: [.024, .042, .069], 48: [.019, .032, .051] };
+// A4 perfect binding, live 13 page counts x [100, 1,000, 10,000]: base + step x 16-page blocks (+1 step for a part block of <= 8 pages,
+// +2 above) + per content page + extra per page past 100 pages (fits within 1%)
+const BKO_A4_PERFECT = { 100: [388.16, 283.33, 3.36, 0.38], 1000: [1055.79, 259.27, 30.44, 3.94], 10000: [8265.77, 209.38, 299.74, 39.29] };
+const bkoA4Steps = c => { const b = Math.floor(c / 16), r = c % 16; return 2 * b + (r === 0 ? 0 : r <= 8 ? 1 : 2); };
+const bkoA5Steps = c => { const b = Math.floor(c / 32), r = c % 32; return 2 * (b - 1) + (r === 0 ? 0 : r <= 8 ? 1 : 2); };
+// price across quantity from per-quantity values (linear between sampled quantities, straight on past the last two)
+function bkoQ(row, q) { const qs = Object.keys(row).map(Number).sort((a, b) => a - b); if (q <= qs[0]) return row[qs[0]];
+  let i = 1; while (i < qs.length - 1 && q > qs[i]) i++; const a = qs[i - 1], b = qs[i]; return row[a] + (row[b] - row[a]) * (q - a) / (b - a); }
 function bkoPrice(cfg, q) {
   const pp = +cfg.page, sk = BK_SIZE_KEY[cfg.size]; if (!(pp > 0) || !sk || !(q > 0)) return null;
   const kind = !bkSoft(cfg) ? 'hard' : bkPerfect(cfg) ? 'perfect' : 'saddle';
   if (kind === 'perfect' && q > 10000) return null;
   const k = BKO_K[sk] || 1, cpages = pp - 4, G = BKOQ[kind], nodes = kind === 'hard' ? [100, 1000, 5000] : [100, 1000, 10000];
   let price;
-  if (sk === 'A4') price = bkoSmooth(G, pp, q);
+  if (sk === 'A5' && kind === 'saddle' && BKO_A5_SADDLE[pp]) { price = bkoQ(BKO_A5_SADDLE[pp], q);
+    if (cfg.orientation === 'Landscape') { const ps = Object.keys(BKO_A5_LAND).map(Number); const at = p => { const r = BKO_A5_LAND[p], t = Math.log10(Math.min(10000, Math.max(100, q)) / 100); return t <= 1 ? r[0] + (r[1] - r[0]) * t : r[1] + (r[2] - r[1]) * (t - 1); };
+      let f; if (pp <= ps[0]) f = at(ps[0]); else if (pp >= ps[ps.length - 1]) f = at(ps[ps.length - 1]); else { let i = 1; while (pp > ps[i]) i++; f = at(ps[i - 1]) + (at(ps[i]) - at(ps[i - 1])) * (pp - ps[i - 1]) / (ps[i] - ps[i - 1]); } price *= 1 + f; } }
+  else if (sk === 'A5' && kind === 'perfect' && pp >= 36) { const c = pp - 4, row = {}; Object.keys(BKO_A5_PERFECT).forEach(k => { const m = BKO_A5_PERFECT[k]; row[k] = m[0] + m[1] * bkoA5Steps(c) + m[2] * c; }); price = bkoQ(row, q); }
+  else if (sk === 'A4' && kind === 'perfect') { const c = pp - 4, row = {}; Object.keys(BKO_A4_PERFECT).forEach(k => { const m = BKO_A4_PERFECT[k]; row[k] = m[0] + m[1] * bkoA4Steps(c) + m[2] * c + m[3] * Math.max(0, pp - 100); }); price = bkoQ(row, q); }
+  else if (sk === 'A4') price = bkoSmooth(G, pp, q);
   else { const R = (BKO_RATIO[kind] || {})[sk];
     const rAt = (n, i) => { if (!R) return 1; const ps = Object.keys(R).map(Number).sort((a, b) => a - b); if (pp <= ps[0]) return R[ps[0]][i]; if (pp >= ps[ps.length - 1]) return R[ps[ps.length - 1]][i];
       for (let j = 1; j < ps.length; j++) if (pp <= ps[j]) return R[ps[j - 1]][i] + (R[ps[j]][i] - R[ps[j - 1]][i]) * (pp - ps[j - 1]) / (ps[j] - ps[j - 1]); return 1; };
@@ -2150,7 +2174,8 @@ function bkoPrice(cfg, q) {
         const sep = (cvc === 'GA150' || cvc === 'MA150') ? d : [d[0] + 180, d[1] + 437];
         d = cfg.content !== cfg.cover ? sep : (pp % 8 === 0 ? [sep[0] - 180, sep[1] - 437] : [sep[0] + 105, sep[1] + 30]);
       }
-      price += bkoLin2(d, q) * k;
+      // paper covers save at least their 1,000-copy amount on smaller runs (live A5: -147 at 300, -173 at 1,000)
+      price += (/^GAC/.test(cvc) ? bkoLin2(d, q) : bkoLin2(d, Math.max(1000, q))) * k;
     }
     if (BKO_LAM[cfg.cover_lamination]) price += bkoLin2(BKO_LAM[cfg.cover_lamination], q) * k;
     if (/Inner/.test(cfg.outer_inner || '')) price += (q <= 1000 ? 200 : 200 + 280 * (q - 1000) / 9000) * k;
@@ -2390,7 +2415,7 @@ const CFG_OVERRIDES = {
       page: cfg => bkoPagesList(cfg),
       cover: cfg => bkoCovers(cfg),
       outer_inner: cfg => bkSoft(cfg) ? ['4C : 4 Colour Outer Only', '4C : 4 Colour Outer & 4 Colour Inner'] : ['4C : 4 Colour Outer Only'],
-      cover_lamination: cfg => bkCoverLams(cfg),
+      cover_lamination: cfg => bkoCoverLams(cfg),
       hot_stamping: BKO_HS,
       content: cfg => bkoContents(cfg),
       colour: ['1C (Both Sides)', '4C (Both Sides)'],
@@ -2398,7 +2423,7 @@ const CFG_OVERRIDES = {
     },
     optLabel: { cover_lamination: { 'Not Required': 'No Required' }, content_lamination: { 'Not Required': 'No Required' }, extra_books: { 'Yes': 'Yes, add 3 extra books (+RM 30)' },
       page: bkoPagesList({ binding: 'Perfect Binding' }).concat(bkoPagesList({ ordertype: 'Hard Cover' }), bkoPagesList({ orientation: 'Portrait', size: 'A4 (210mm x 297mm)' })).reduce((m, p) => (m[p] = p + ' pages', m), {}) },
-    hideWhen: { cover_lamination: cfg => bkCoverLams(cfg).length < 2 },
+    hideWhen: { cover_lamination: cfg => bkoCoverLams(cfg).length < 2 },
     addFields: [
       { key: 'hs_size_1', label: 'H/S Size 1', options: BK_HS_SIZES, section: 'Cover', after: 'hot_stamping', showWhen: { field: 'hot_stamping', notValues: ['No Required'] } },
       { key: 'hs_colour_1', label: 'H/S Colour 1', options: BK_HS_COLOURS, section: 'Cover', neutral: true, after: 'hot_stamping', showWhen: { field: 'hot_stamping', notValues: ['No Required'] } },
@@ -2409,7 +2434,7 @@ const CFG_OVERRIDES = {
     ],
     validOpt: { content_lamination: (cfg, v) => bkoContentLams(cfg).indexOf(v) >= 0 },
     placeholderExact: ['size', 'page', 'cover', 'content', 'colour', 'hs_size_1', 'hs_colour_1', 'hs_size_2', 'hs_colour_2', 'ink_colour', 'quantity'],
-    placeholderWhen: { cover_lamination: cfg => bkCoverLams(cfg).indexOf('Not Required') < 0, content_lamination: cfg => bkoContentLams(cfg).indexOf('No Lamination') < 0 && bkoContentLams(cfg).length > 1 },
+    placeholderWhen: { cover_lamination: cfg => bkoCoverLams(cfg).indexOf('Not Required') < 0, content_lamination: cfg => bkoContentLams(cfg).indexOf('No Lamination') < 0 && bkoContentLams(cfg).length > 1 },
     qtyOptions: cfg => bkSoft(cfg) ? BKO_QTY : BKO_HQTY,
     // Excard quotes perfect-bound offset books only up to 10,000
     qtyFilter: (cfg, q) => !(bkSoft(cfg) && bkPerfect(cfg)) || q <= 10000,
