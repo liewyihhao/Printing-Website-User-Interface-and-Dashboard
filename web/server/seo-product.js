@@ -145,7 +145,7 @@ function page(slug, origin, opts) {
   const title = (h1 + ' | Printoka').slice(0, 60);
   const desc = c.intro.slice(0, 155);
   const catUrl = f.catId ? origin + '/products/' + f.catId : origin + '/products';
-  const asset = (PKI && PKI.products[f.id] && origImg(PKI.products[f.id])) || (function () { try { const p = path.join(__dirname, '..', 'assets', 'products', slugify(name) + '.png'); return fs.existsSync(p) ? '/assets/products/' + slugify(name) + '.png' : null; /* .png = clean cut-outs; the .jpg files there are old text banners */ } catch (e) { return null; } })();
+  const asset = (PKI && PKI.hero && PKI.hero(f.id) && '/' + PKI.hero(f.id)) || (PKI && PKI.products[f.id] && origImg(PKI.products[f.id])) || (function () { try { const p = path.join(__dirname, '..', 'assets', 'products', slugify(name) + '.png'); return fs.existsSync(p) ? '/assets/products/' + slugify(name) + '.png' : null; /* .png = clean cut-outs; the .jpg files there are old text banners */ } catch (e) { return null; } })();
   const ogImg = origin + (asset || '/assets/social/og-default.png');
 
   // JSON-LD
@@ -179,7 +179,7 @@ function page(slug, origin, opts) {
     + '<rect x="66" y="74" width="118" height="6" rx="3" fill="#f0f0f0"/><rect x="66" y="88" width="96" height="6" rx="3" fill="#f0f0f0"/><rect x="66" y="102" width="70" height="6" rx="3" fill="#f0f0f0"/>'
     + '</svg></div>';
   S.push('<section id="top" class="pk-hero"><div class="pk-hero-in">'
-    + (asset ? '<div class="pk-hero-img"><img src="' + esc(asset) + '" alt="' + esc(name + ' printed by Printoka') + '" width="300" height="220" fetchpriority="high"></div>' : heroFallback)
+    + (asset ? '<div class="pk-hero-img"><img src="' + esc(asset) + '" alt="' + esc(name + ' printed by Printoka') + '" ' + (asset.indexOf('/assets/products/') === 0 ? 'width="190" height="190"' : 'width="300" height="220"') + ' fetchpriority="high"></div>' : heroFallback)
     + '<div class="pk-hero-c"><h1><span class="pk-h-sm">Print Your</span><span class="pk-h-lg">' + esc(name) + '</span><span class="pk-h-md">Online Now!</span></h1>'
     + '<p class="pk-hero-tag">configure, upload and print</p></div>'
     + '<div class="pk-hero-benefits">' + heroBenefits.map(b => '<div class="pk-hb"><div class="pk-hb-h">' + esc(b[0]) + '</div><div class="pk-hb-c">' + esc(b[1]) + '</div></div>').join('') + '</div>'

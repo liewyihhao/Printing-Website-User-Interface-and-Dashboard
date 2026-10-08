@@ -1,0 +1,1691 @@
+{
+ "generatedAt": "2026-10-08T08:34:22.638Z",
+ "source": "Codex outputs/product-images/manifest.json (current files, incl. pending and archive/unapproved)",
+ "count": 90,
+ "userApproved": 5,
+ "technicalReady": 17,
+ "deferredUnchanged": [
+  {
+   "id": 142,
+   "name": "Mask Keeper"
+  },
+  {
+   "id": 163,
+   "name": "Leather Wire-O Notebooks"
+  },
+  {
+   "id": 171,
+   "name": "X-ccessories"
+  }
+ ],
+ "note": "Integrated as product hero images. Integration is not approval: only userApproved images have user sign-off; the rest carry open QA notes.",
+ "products": [
+  {
+   "id": 129,
+   "name": "Custom Mugs",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Custom Mugs.png",
+   "repoPath": "web/assets/products/Custom Mugs.png",
+   "sha256": "7936d90876eb1500f078240d7580af85881cb1556ce5ee4ce216128888d637d1",
+   "bytes": 613839,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": true,
+   "userApproved": false,
+   "remainingQA": []
+  },
+  {
+   "id": 154,
+   "name": "Foamboards",
+   "status": "needs-excard-product-verification",
+   "localSource": "archive/unapproved/Foamboards.png",
+   "repoPath": "web/assets/products/Foamboards.png",
+   "sha256": "678baacbba02a45b37be203140ab8e39f4fdb2f3931a685277ef6c12102a60a6",
+   "bytes": 635055,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "needs-excard-product-verification",
+    "Archived foamboard logo appears centred; current physical print-plane and reference verification remain incomplete.",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 112,
+   "name": "Wire-O Notebooks",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Wire-O Notebooks.png",
+   "repoPath": "web/assets/products/Wire-O Notebooks.png",
+   "sha256": "99265dff21f31208eb2e1ebf54378297f9a563f4716b5101464cc29d67d986b0",
+   "bytes": 483081,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": true,
+   "userApproved": false,
+   "remainingQA": []
+  },
+  {
+   "id": 140,
+   "name": "Tent Cards",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Tent Cards.png",
+   "repoPath": "web/assets/products/Tent Cards.png",
+   "sha256": "20fa980694431d4849c1ca6f7bd2771245e3aee15602d6ca5d254e311149b92b",
+   "bytes": 496385,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 172,
+   "name": "DTF T-Shirts",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/DTF T-Shirts.png",
+   "repoPath": "web/assets/products/DTF T-Shirts.png",
+   "sha256": "1a56a99092ff1e7a505ecde323045df12bd78bc1c36962288e2fc0e9f5356215",
+   "bytes": 1247199,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": true,
+   "userApproved": false,
+   "remainingQA": []
+  },
+  {
+   "id": 137,
+   "name": "Standing Pouches",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Standing Pouches.png",
+   "repoPath": "web/assets/products/Standing Pouches.png",
+   "sha256": "1399bda020ffb325276eed1c9c15bb47116f6bf5e11479a4aef78626578b354f",
+   "bytes": 692022,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": true,
+   "userApproved": false,
+   "remainingQA": []
+  },
+  {
+   "id": 109,
+   "name": "Bookmarks",
+   "status": "complete-user-approved",
+   "localSource": "approved/Bookmarks.png",
+   "repoPath": "web/assets/products/Bookmarks.png",
+   "sha256": "c238eee7b1367d336569323dd18b1a0a39e16e89a6ff1a3010e5ad38f7aa96f0",
+   "bytes": 696753,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": true,
+   "userApproved": true,
+   "remainingQA": []
+  },
+  {
+   "id": 170,
+   "name": "ID Cards",
+   "status": "banner-matched-draft",
+   "localSource": "archive/unapproved/ID Cards.png",
+   "repoPath": "web/assets/products/ID Cards.png",
+   "sha256": "4e9887c2bd59d9e098dc6e13d3f14e7a67dcd7940700b7763f664189eec3745b",
+   "bytes": 850494,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "banner-matched-draft",
+    "Archived sample ID headers look plausible, but current product/reference and compositing-plane verification remain incomplete.",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 151,
+   "name": "Kraft Standing Pouches",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Kraft Standing Pouches.png",
+   "repoPath": "web/assets/products/Kraft Standing Pouches.png",
+   "sha256": "a69bf2c24683352d5e27901a7bcdcf5289268bba682be473d0507e3eb937ee17",
+   "bytes": 925519,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": true,
+   "userApproved": false,
+   "remainingQA": []
+  },
+  {
+   "id": 185,
+   "name": "Custom Caps",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Custom Caps.png",
+   "repoPath": "web/assets/products/Custom Caps.png",
+   "sha256": "ae84abcfe4b31a4e908447a990c77347a58a27dd8b5f7627591a6d69b976bb88",
+   "bytes": 596424,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": true,
+   "userApproved": false,
+   "remainingQA": []
+  },
+  {
+   "id": 108,
+   "name": "L-Shape Folders",
+   "status": "complete-user-approved",
+   "localSource": "approved/L-Shape Folders.png",
+   "repoPath": "web/assets/products/L-Shape Folders.png",
+   "sha256": "47c6020ab14a31d1d263cc811b4269533819c18079db691288ae94ecf5f21162",
+   "bytes": 1000594,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": true,
+   "userApproved": true,
+   "remainingQA": []
+  },
+  {
+   "id": 1,
+   "name": "Business Cards",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Business Cards.png",
+   "repoPath": "web/assets/products/Business Cards.png",
+   "sha256": "bb16c1c59ca5869801a50a46823720f9fd863ef470bf7c90697cb384183dc3f1",
+   "bytes": 598718,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": true,
+   "userApproved": false,
+   "remainingQA": []
+  },
+  {
+   "id": 141,
+   "name": "Stamp Chops",
+   "status": "draft-needs-edge-review",
+   "localSource": "archive/unapproved/Stamp Chops.png",
+   "repoPath": "web/assets/products/Stamp Chops.png",
+   "sha256": "fbffdfb161c62e0d7ae232600b3662dfe1ba538d8bb086e44417ba7c8c61e918",
+   "bytes": 884894,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-edge-review",
+    "Archived stamp logos sit on top labels; exact physical printing boundaries and perspective provenance remain unverified.",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 177,
+   "name": "Food Trays",
+   "status": "complete-user-approved",
+   "localSource": "approved/Food Trays.png",
+   "repoPath": "web/assets/products/Food Trays.png",
+   "sha256": "99bebbcc077c3dbd2b29a8cd2e13532c74da7527665649ca8cc7827dafeb4513",
+   "bytes": 667876,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": true,
+   "userApproved": true,
+   "remainingQA": []
+  },
+  {
+   "id": 120,
+   "name": "Hard-Stand Desk Calendars",
+   "status": "complete-user-approved",
+   "localSource": "approved/Hard-Stand Desk Calendars.png",
+   "repoPath": "web/assets/products/Hard-Stand Desk Calendars.png",
+   "sha256": "c52dfe164a777fe9f4b3fb8f6367babb0e0108b6ef1878be07de6a05713b77f1",
+   "bytes": 837259,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": true,
+   "userApproved": true,
+   "remainingQA": []
+  },
+  {
+   "id": 118,
+   "name": "Wall Calendars",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Wall Calendars.png",
+   "repoPath": "web/assets/products/Wall Calendars.png",
+   "sha256": "7df4d57207e88f837b8449e4a1ac35e9c3fcc7dc6426eb1e438209bb7198d29f",
+   "bytes": 914803,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Rear-calendar header logo has little visible clearance from the foreground page edge. Review natural occlusion and rear-page margins without removing the functional calendar content.",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 122,
+   "name": "Wire-O Wall Calendars",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Wire-O Wall Calendars.png",
+   "repoPath": "web/assets/products/Wire-O Wall Calendars.png",
+   "sha256": "d53d802723a0d86cc35e9417c6f8d761e4e46ec3d13e40b611dec99cc2f8acdc",
+   "bytes": 791564,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 175,
+   "name": "Premium Desk Calendars",
+   "status": "draft-needs-stand-material-refinement",
+   "localSource": "pending/Premium Desk Calendars.png",
+   "repoPath": "web/assets/products/Premium Desk Calendars.png",
+   "sha256": "962044f86e44fd97cb9b323f269bc9a153594abd275f1423a47d630207edc7c8",
+   "bytes": 729411,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-stand-material-refinement",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 135,
+   "name": "Magnet",
+   "status": "draft-needs-shape-and-material-review",
+   "localSource": "pending/Magnet.png",
+   "repoPath": "web/assets/products/Magnet.png",
+   "sha256": "ceb5b48a4ad46c2345d2c60bdb89d28f72bf0dd58f6e8fb7c450c38b15f7a19f",
+   "bytes": 476244,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-shape-and-material-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 119,
+   "name": "Arch Files",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Arch Files.png",
+   "repoPath": "web/assets/products/Arch Files.png",
+   "sha256": "6a4c0803453ae01b65119b733bfce1a098cd6fc96f26e6a135975b0f08262158",
+   "bytes": 909580,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 149,
+   "name": "Toast Bags",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Toast Bags.png",
+   "repoPath": "web/assets/products/Toast Bags.png",
+   "sha256": "f860c21db5d741a336a025a136d5ec7dae0716546580e77788d5437a16be8439",
+   "bytes": 1500765,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 152,
+   "name": "Spouted Standing Pouches",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Spouted Standing Pouches.png",
+   "repoPath": "web/assets/products/Spouted Standing Pouches.png",
+   "sha256": "d9a20d70385a6b6237583a3e17aa5eeb00a08563abb5094d52ab38ad7d00eec1",
+   "bytes": 1194019,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 153,
+   "name": "Vacuum Bags",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Vacuum Bags.png",
+   "repoPath": "web/assets/products/Vacuum Bags.png",
+   "sha256": "772035a07f6ebeb31e24cff4bef1dfbd60ae5c976a7e30df412e554b452ce564",
+   "bytes": 992419,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 150,
+   "name": "3-Side Seal Packaging",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/3-Side Seal Packaging.png",
+   "repoPath": "web/assets/products/3-Side Seal Packaging.png",
+   "sha256": "6d7c923a056e5ca5e1df0eba7644aa155897074d4d0775e8fed69296abf0d074",
+   "bytes": 1088908,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 126,
+   "name": "Wobblers",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Wobblers.png",
+   "repoPath": "web/assets/products/Wobblers.png",
+   "sha256": "a657d3b144a7551c0d92c3d2a324b06f83e371126bc79e65d84d31adcb0de1fb",
+   "bytes": 465643,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 131,
+   "name": "Pillow",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Pillow.png",
+   "repoPath": "web/assets/products/Pillow.png",
+   "sha256": "21aaf19e59e484c69cdd6a52ea823b1fb9c5828e60a303a82d04ce558571009c",
+   "bytes": 1156920,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 144,
+   "name": "Cooler Bag",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Cooler Bag.png",
+   "repoPath": "web/assets/products/Cooler Bag.png",
+   "sha256": "3c3970bab912e1fd038ed0b0af0a42d96b4188c9efb081bc8b7e321d2a702464",
+   "bytes": 932300,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 130,
+   "name": "Papan Kopi / Sachet Board",
+   "status": "draft-needs-diecut-alpha-cleanup",
+   "localSource": "pending/Papan Kopi - Sachet Board.png",
+   "repoPath": "web/assets/products/Papan Kopi - Sachet Board.png",
+   "sha256": "b67885e93c490eefbe0cbf506b0a53a6921dfe854d1a7e74fb08396b8843104e",
+   "bytes": 862935,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-diecut-alpha-cleanup",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 145,
+   "name": "DTF Tote Bag With Zip",
+   "status": "draft-needs-transparent-edge-cleanup",
+   "localSource": "pending/DTF Tote Bag With Zip.png",
+   "repoPath": "web/assets/products/DTF Tote Bag With Zip.png",
+   "sha256": "95a569a164b6b76d30988cc0baf405e1c7455e77d0a5447397ede31db81423a3",
+   "bytes": 1435963,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-transparent-edge-cleanup",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 146,
+   "name": "Heat Transfer Tote Bag",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Heat Transfer Tote Bag.png",
+   "repoPath": "web/assets/products/Heat Transfer Tote Bag.png",
+   "sha256": "847f7819a24f0c1ce7249a56a4073beade36c6da0ee1ba6934d369c276223ad2",
+   "bytes": 1151506,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 147,
+   "name": "Laminated Non-Woven Bags",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Laminated Non-Woven Bags.png",
+   "repoPath": "web/assets/products/Laminated Non-Woven Bags.png",
+   "sha256": "b6d044e38920220096af12426ba6ab64a9d3ca19e75d90244f2cb87b19b16d63",
+   "bytes": 1397302,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 148,
+   "name": "RPET Non-Woven Bags",
+   "status": "draft-needs-material-and-transparent-edge-review",
+   "localSource": "pending/RPET Non-Woven Bags.png",
+   "repoPath": "web/assets/products/RPET Non-Woven Bags.png",
+   "sha256": "d3d864174867f417a949f6e152a4b56859436cb1840f70443dbe40a11e63bdbe",
+   "bytes": 879653,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-material-and-transparent-edge-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 127,
+   "name": "Paper Bags",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Paper Bags.png",
+   "repoPath": "web/assets/products/Paper Bags.png",
+   "sha256": "7ca9976b363526e9d441d75f75f091b8b3ec2c6ed282db3f2ca4201aa9b15530",
+   "bytes": 1226438,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 132,
+   "name": "Button Badges",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Button Badges.png",
+   "repoPath": "web/assets/products/Button Badges.png",
+   "sha256": "eb3de6b9ae15437796e98187a462e1d096c3798cb6ea36b6578bda13440a4c65",
+   "bytes": 446237,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 133,
+   "name": "Hand Fans",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Hand Fans.png",
+   "repoPath": "web/assets/products/Hand Fans.png",
+   "sha256": "45ccd9003b8d06629f4102965d54dd711a7961001652ab0d97d78e04f519c988",
+   "bytes": 673357,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 134,
+   "name": "Hanger",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Hanger.png",
+   "repoPath": "web/assets/products/Hanger.png",
+   "sha256": "eead1c072362042e839f111ce0066cbfd237c47d64054eaeeecd32aae8cfd98e",
+   "bytes": 973179,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 139,
+   "name": "Non-Woven Bags",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Non-Woven Bags.png",
+   "repoPath": "web/assets/products/Non-Woven Bags.png",
+   "sha256": "fc2f3ed61944cbef074187c5556d24bb6e94e582de7f51b89981035ed61e4fe3",
+   "bytes": 1015463,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 136,
+   "name": "Hard Cover Menus",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Hard Cover Menus.png",
+   "repoPath": "web/assets/products/Hard Cover Menus.png",
+   "sha256": "d41fccb9e232bfc1fceeb21b0ab054a98fec709ce7558f796121683489f00f00",
+   "bytes": 1068376,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 138,
+   "name": "Money Packets",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Money Packets.png",
+   "repoPath": "web/assets/products/Money Packets.png",
+   "sha256": "a94657fcd813f20239e72fad31a5df0a4c2d61c63620052dcd8ce509680348cb",
+   "bytes": 750693,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 128,
+   "name": "Canvas Tote Bags",
+   "status": "draft-needs-transparent-edge-cleanup",
+   "localSource": "pending/Canvas Tote Bags.png",
+   "repoPath": "web/assets/products/Canvas Tote Bags.png",
+   "sha256": "c882d66f0c2c88382cf580fb28a1f8f4034463df7e7d5e23cbbb801694293c1e",
+   "bytes": 1635646,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-transparent-edge-cleanup",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 105,
+   "name": "Letterheads",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Letterheads.png",
+   "repoPath": "web/assets/products/Letterheads.png",
+   "sha256": "21ac86536ae656a6dcc97e36d1ee296e06d224f22666a8f82e4aebbe8d32c8f1",
+   "bytes": 728735,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 104,
+   "name": "Notepads",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Notepads.png",
+   "repoPath": "web/assets/products/Notepads.png",
+   "sha256": "0b1530232615180fe8923ae18110b5365e65ebe87446ba6f5067b1ee51aff435",
+   "bytes": 504045,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 106,
+   "name": "Envelopes",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Envelopes.png",
+   "repoPath": "web/assets/products/Envelopes.png",
+   "sha256": "2b80255599236b5c6ee0af9f62d126b5fe368c8ca68d124c6deddb46734c539a",
+   "bytes": 748087,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 113,
+   "name": "PVC Cards",
+   "status": "complete-user-approved",
+   "localSource": "approved/PVC Cards.png",
+   "repoPath": "web/assets/products/PVC Cards.png",
+   "sha256": "83fc144c6f224be05484ec8cc01bfab841b919d8727dc55f1d719dd6135cf1e7",
+   "bytes": 540233,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": true,
+   "userApproved": true,
+   "remainingQA": []
+  },
+  {
+   "id": 178,
+   "name": "Kraft Paper Bags",
+   "status": "draft-needs-transparent-edge-cleanup",
+   "localSource": "pending/Kraft Paper Bags.png",
+   "repoPath": "web/assets/products/Kraft Paper Bags.png",
+   "sha256": "08e91fb60e6af7c468e819d895dc9dcd0a775cf16aea8474fa22bb224c6dc725",
+   "bytes": 893937,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-transparent-edge-cleanup",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 166,
+   "name": "Greeting Cards",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Greeting Cards.png",
+   "repoPath": "web/assets/products/Greeting Cards.png",
+   "sha256": "3bcd30fbb9e6fc05832bf7956099c3b3606bcd93985f2a4fe5dd257ec521c7bb",
+   "bytes": 698195,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 115,
+   "name": "Thank You Cards",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Thank You Cards.png",
+   "repoPath": "web/assets/products/Thank You Cards.png",
+   "sha256": "4caebd029179e08e2a382722893b0135e44da1cfb6e18eced8d29b41cb9fc56f",
+   "bytes": 504133,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": true,
+   "userApproved": false,
+   "remainingQA": []
+  },
+  {
+   "id": 114,
+   "name": "Wedding Invitation Cards",
+   "status": "draft-needs-shape-and-layout-review",
+   "localSource": "pending/Wedding Invitation Cards.png",
+   "repoPath": "web/assets/products/Wedding Invitation Cards.png",
+   "sha256": "e0ee7d129e96f9ce10a8ef10ad2492db1efc91b53bbcab16482a819648387b80",
+   "bytes": 955235,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-shape-and-layout-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 121,
+   "name": "Soft-Stand Desk Calendars",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Soft-Stand Desk Calendars.png",
+   "repoPath": "web/assets/products/Soft-Stand Desk Calendars.png",
+   "sha256": "f7e451572c84a992e728799c683a07dfb02d19f68463a8325395d3818c95ffe8",
+   "bytes": 671102,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 110,
+   "name": "Vouchers & Tickets",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Vouchers & Tickets.png",
+   "repoPath": "web/assets/products/Vouchers & Tickets.png",
+   "sha256": "fcc0ebff1997fc1a0f7dcebdbb64bd487c92502ed0959e5ca33b3dbc8e4176fa",
+   "bytes": 264548,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 174,
+   "name": "Lanyards",
+   "status": "draft-needs-transparent-edge-cleanup",
+   "localSource": "pending/Lanyards.png",
+   "repoPath": "web/assets/products/Lanyards.png",
+   "sha256": "375c64aed0810a43d9e78a0ff36a5bf84103ee542d1f2c9db8d86943fb5b9d8e",
+   "bytes": 431265,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-transparent-edge-cleanup",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 125,
+   "name": "Roll-Up Stands",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Roll-Up Stands.png",
+   "repoPath": "web/assets/products/Roll-Up Stands.png",
+   "sha256": "ae9b9f19130177f866db4fb1c5ae14eb154ad10b2a323241e0f4ed4735838eee",
+   "bytes": 555231,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": true,
+   "userApproved": false,
+   "remainingQA": []
+  },
+  {
+   "id": 123,
+   "name": "PVC Banners",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/PVC Banners.png",
+   "repoPath": "web/assets/products/PVC Banners.png",
+   "sha256": "383606a80296ca44a2c582f61bf5e753f361c8f2fac7686f0471cea658e81b99",
+   "bytes": 817169,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 124,
+   "name": "Buntings",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Buntings.png",
+   "repoPath": "web/assets/products/Buntings.png",
+   "sha256": "1f4f0b466438f2f466673a3ce65937f8713711eecc1a6b12bcc4e0a8b31597fb",
+   "bytes": 1135729,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 159,
+   "name": "Economy Roll-Up Stands",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Economy Roll-Up Stands.png",
+   "repoPath": "web/assets/products/Economy Roll-Up Stands.png",
+   "sha256": "f39f4b7af1e0d818b054d79e8fe52385cf3160422b95fe3399bdc77b39e7c06d",
+   "bytes": 933160,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 160,
+   "name": "Bunting — Gear X Stand",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Bunting — Gear X Stand.png",
+   "repoPath": "web/assets/products/Bunting — Gear X Stand.png",
+   "sha256": "14758eec91d7d866c89d2e5264c8d8441a482fa74c46cc48cf6fee91da90b6be",
+   "bytes": 745198,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 161,
+   "name": "Bunting — Round Base Stand",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Bunting — Round Base Stand.png",
+   "repoPath": "web/assets/products/Bunting — Round Base Stand.png",
+   "sha256": "b2adb1c6fc46a2b755a11edb63508d35e42f9bf8b46a051aaec2e6902c62e97c",
+   "bytes": 1089115,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 162,
+   "name": "Bunting — Tripod Stand",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Bunting — Tripod Stand.png",
+   "repoPath": "web/assets/products/Bunting — Tripod Stand.png",
+   "sha256": "352eb7385bd71c39324889d4a4a8606714cbb2938485e215f65c9c63e4928646",
+   "bytes": 782250,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 158,
+   "name": "Wind Flags",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Wind Flags.png",
+   "repoPath": "web/assets/products/Wind Flags.png",
+   "sha256": "2c5df1863ed4773f42a8a798581d485ab7f2b5eab5c520cd8a3d6cee4efd9768",
+   "bytes": 734303,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Flag logos require a closer check against upper seam margins and fabric curvature, especially the small right flag.",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 156,
+   "name": "Foldable POP Displays",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Foldable POP Displays.png",
+   "repoPath": "web/assets/products/Foldable POP Displays.png",
+   "sha256": "d40a59900f103dab66d0ce2253d6a43f76d737193acbe4ffa6bdea44793ee120",
+   "bytes": 841924,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 157,
+   "name": "POP Displays",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/POP Displays.png",
+   "repoPath": "web/assets/products/POP Displays.png",
+   "sha256": "3db56673db080d315995e00fc6309cab5b6cc696f822102b5e94b8f26b93ad8c",
+   "bytes": 1130752,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 155,
+   "name": "Magnetic Foamboards",
+   "status": "draft-needs-product-and-edge-review",
+   "localSource": "pending/Magnetic Foamboards.png",
+   "repoPath": "web/assets/products/Magnetic Foamboards.png",
+   "sha256": "1c76a39b879086a1daa4dee95cfc82a1a402a9a67ce4b4e87ddfad751ce968a6",
+   "bytes": 614019,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-product-and-edge-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 164,
+   "name": "Hardcover Notebooks",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Hardcover Notebooks.png",
+   "repoPath": "web/assets/products/Hardcover Notebooks.png",
+   "sha256": "47a33012ef9141611755d8d4e38b3a7b8bc4694179682e1143f4cf3510af8eac",
+   "bytes": 550334,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 165,
+   "name": "Die-Cut Creative Cards",
+   "status": "draft-needs-product-and-edge-review",
+   "localSource": "pending/Die-Cut Creative Cards.png",
+   "repoPath": "web/assets/products/Die-Cut Creative Cards.png",
+   "sha256": "ce5945be4bbb658cc8124877d8e2f81e0881e9b52237c6c4864aa260154eca06",
+   "bytes": 1064631,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-product-and-edge-review",
+    "Loose die-cut card logos are very small at catalogue scale, and sheet-piece branding is inconsistent. Review readable size and consistent placement on each printed face.",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 107,
+   "name": "Presentation Folders",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Presentation Folders.png",
+   "repoPath": "web/assets/products/Presentation Folders.png",
+   "sha256": "3b6e4f0010a6f4cdb170cd798acbbf9bd0c8b19f066ceb2caa46c8a3617dc72e",
+   "bytes": 747660,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 183,
+   "name": "Sweatshirts & Hoodies",
+   "status": "draft-needs-framing-and-edge-cleanup",
+   "localSource": "pending/Sweatshirts & Hoodies.png",
+   "repoPath": "web/assets/products/Sweatshirts & Hoodies.png",
+   "sha256": "18712bef433ef2ef43c5dd4bedb970e5847a1488f87b64cca94a3242ff673c9c",
+   "bytes": 1436941,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-framing-and-edge-cleanup",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 180,
+   "name": "Corporate Shirts",
+   "status": "draft-needs-framing-and-edge-cleanup",
+   "localSource": "pending/Corporate Shirts.png",
+   "repoPath": "web/assets/products/Corporate Shirts.png",
+   "sha256": "982439a37a60bf02989e3549010b6dcd3ba743c86f8eed8bacca51c7750ce51b",
+   "bytes": 944274,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-framing-and-edge-cleanup",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 181,
+   "name": "Custom Jackets",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Custom Jackets.png",
+   "repoPath": "web/assets/products/Custom Jackets.png",
+   "sha256": "95a139cc9d58682d3c4e6d4059a4a5dc4d62e84253bac116e31783ff6fca3483",
+   "bytes": 750360,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 182,
+   "name": "Muslimah Sublimation Wear",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Muslimah Sublimation Wear.png",
+   "repoPath": "web/assets/products/Muslimah Sublimation Wear.png",
+   "sha256": "1f020e0c70ddb20222ec60dbc644fb7ea6f7cfe983e24b77f3c863eced8d6fcb",
+   "bytes": 1123941,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 176,
+   "name": "UV DTF Stickers",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/UV DTF Stickers.png",
+   "repoPath": "web/assets/products/UV DTF Stickers.png",
+   "sha256": "c5afe1ac6560d24d63456365ea7c9cc3ccb15ac7acaa384dd32367fc1b6d0a35",
+   "bytes": 968855,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Transfer logos sit on the demonstrated printing area, but the finished mug requires cylindrical-wrap verification before authentic surface placement can be confirmed.",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 167,
+   "name": "Premium Money Packet",
+   "status": "draft-needs-flap-shape-review",
+   "localSource": "pending/Premium Money Packet.png",
+   "repoPath": "web/assets/products/Premium Money Packet.png",
+   "sha256": "11cc7929a943d520c23115f167bfaf3e057f4c36e7f434083f732c501caab989",
+   "bytes": 732026,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-flap-shape-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 168,
+   "name": "Hot Stamping Money Packet",
+   "status": "draft-needs-product-review",
+   "localSource": "pending/Hot Stamping Money Packet.png",
+   "repoPath": "web/assets/products/Hot Stamping Money Packet.png",
+   "sha256": "88ad29059bb9618194bd27d566d653b92175cd2eb4c5edaf875e4da943f941cb",
+   "bytes": 913316,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-product-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 169,
+   "name": "Envelope Money Packet",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Envelope Money Packet.png",
+   "repoPath": "web/assets/products/Envelope Money Packet.png",
+   "sha256": "0bff317b34873e2f49b36fa193d0ed9f41ba88b694379804e1acf7bd2f668276",
+   "bytes": 746332,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 24,
+   "name": "NCR Bill Books",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/NCR Bill Books.png",
+   "repoPath": "web/assets/products/NCR Bill Books.png",
+   "sha256": "1f54ab6121e7edc20ccd8ce49318f199e67e5cf387d4ef5c13c6ce7a8c49a6cf",
+   "bytes": 935434,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 111,
+   "name": "Computer Forms (NCR)",
+   "status": "draft-needs-hole-and-edge-cleanup",
+   "localSource": "pending/Computer Forms (NCR).png",
+   "repoPath": "web/assets/products/Computer Forms (NCR).png",
+   "sha256": "c8215a54d869c6969ee9b11c9fc59452b928c1c13a4b545d6cb673f90dfc3f52",
+   "bytes": 851183,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-hole-and-edge-cleanup",
+    "Header logos are noticeably skewed/compressed. Verify the physical form-plane dimensions and mapping before deciding which part is legitimate perspective.",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 19,
+   "name": "Offset Printing Booklets",
+   "status": "draft-needs-framing-review",
+   "localSource": "pending/Offset Printing Booklets.png",
+   "repoPath": "web/assets/products/Offset Printing Booklets.png",
+   "sha256": "8f6fa82dcac7a96d51fe8349cb53e6bc1a1e49f1eda07527970c4f23b7efc4e5",
+   "bytes": 944214,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-framing-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 37,
+   "name": "Digital Printing Booklets",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Digital Printing Booklets.png",
+   "repoPath": "web/assets/products/Digital Printing Booklets.png",
+   "sha256": "4b3802956dc1e0ffa17504673a675ddf8c6ab9fe06f9c5c508748de614c14469",
+   "bytes": 645779,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 21,
+   "name": "Offset Loose Sheets",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Offset Loose Sheets.png",
+   "repoPath": "web/assets/products/Offset Loose Sheets.png",
+   "sha256": "be9a9b78454c5fa43ccbf591458032a8592dbdbcf3ee4804e71f41e38a59f9d1",
+   "bytes": 939501,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 50,
+   "name": "Digital Loose Sheets",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Digital Loose Sheets.png",
+   "repoPath": "web/assets/products/Digital Loose Sheets.png",
+   "sha256": "1788fe60c04b11434deaf2730ce719ed9b78615a0be5d57a55ddd10ef852f128",
+   "bytes": 759046,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 60,
+   "name": "Digital Stickers & Labels",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Digital Stickers & Labels.png",
+   "repoPath": "web/assets/products/Digital Stickers & Labels.png",
+   "sha256": "daa8a42d566e563096733601dfca4c83e48caf82f265753a706cdebb3ef1737f",
+   "bytes": 339898,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 179,
+   "name": "Gift Boxes",
+   "status": "draft-needs-closure-review",
+   "localSource": "pending/Gift Boxes.png",
+   "repoPath": "web/assets/products/Gift Boxes.png",
+   "sha256": "019b1898bfce7a04b38c46f362a2a5f0dbb1f481af509d14c930228163e7b276",
+   "bytes": 879078,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-closure-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 184,
+   "name": "Roll Form Stickers",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Roll Form Stickers.png",
+   "repoPath": "web/assets/products/Roll Form Stickers.png",
+   "sha256": "5817d7493464274b808f55852149e2397a6a684b44527131f9b0f5608b8174da",
+   "bytes": 619467,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": true,
+   "userApproved": false,
+   "remainingQA": []
+  },
+  {
+   "id": 143,
+   "name": "Sublimation T-Shirts",
+   "status": "draft-needs-framing-and-edge-cleanup",
+   "localSource": "pending/Sublimation T-Shirts.png",
+   "repoPath": "web/assets/products/Sublimation T-Shirts.png",
+   "sha256": "a661a2060151c1dc6c61ddba421fe01173731032196ca4b5999ecd09465752ec",
+   "bytes": 1641091,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-framing-and-edge-cleanup",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 116,
+   "name": "Static Cling Window Stickers",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Static Cling Window Stickers.png",
+   "repoPath": "web/assets/products/Static Cling Window Stickers.png",
+   "sha256": "65f9bcee14c1785e40272ffedc5ce9a27daf5c16541807206eedf340e0cf9668",
+   "bytes": 617761,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 101,
+   "name": "Brochures",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Brochures.png",
+   "repoPath": "web/assets/products/Brochures.png",
+   "sha256": "f0f4577a05b53b7f22f9fd96bda483f9d83e731e07988fa32c8bf75a5a2ba299",
+   "bytes": 823262,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 117,
+   "name": "Car Window Stickers",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Car Window Stickers.png",
+   "repoPath": "web/assets/products/Car Window Stickers.png",
+   "sha256": "f1c2b9b6ed184ab9dfc86dd4292183ee361e455200c257a33e0cf9702cab6c58",
+   "bytes": 701635,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 173,
+   "name": "Silkscreen T-Shirts",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Silkscreen T-Shirts.png",
+   "repoPath": "web/assets/products/Silkscreen T-Shirts.png",
+   "sha256": "09e1071368e437eeb7882db96dd4d0c0e00626414efb63125825c402640735dd",
+   "bytes": 1108443,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": true,
+   "userApproved": false,
+   "remainingQA": []
+  },
+  {
+   "id": 61,
+   "name": "Hot Stamping Labels",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Hot Stamping Labels.png",
+   "repoPath": "web/assets/products/Hot Stamping Labels.png",
+   "sha256": "88c10ff15b5ecfeb8b85fd226cb69b858bcb977c69b95983faf86458d4fd69d4",
+   "bytes": 403977,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": true,
+   "userApproved": false,
+   "remainingQA": []
+  },
+  {
+   "id": 102,
+   "name": "Flyers & Leaflets",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Flyers & Leaflets.png",
+   "repoPath": "web/assets/products/Flyers & Leaflets.png",
+   "sha256": "034d99a67e2651ed3a15a9306fbdbd2d8fb6f221dfe5e08f079b777dc084d203",
+   "bytes": 750412,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  },
+  {
+   "id": 103,
+   "name": "Custom Printing",
+   "status": "draft-needs-user-review",
+   "localSource": "pending/Custom Printing.png",
+   "repoPath": "web/assets/products/Custom Printing.png",
+   "sha256": "b0443d538eead151866728c8bdcaa8a8250846865844404ffeb3242e20504d85",
+   "bytes": 809782,
+   "width": 1280,
+   "height": 1280,
+   "alpha": true,
+   "releaseShaMatches": true,
+   "technicalReady": false,
+   "userApproved": false,
+   "remainingQA": [
+    "draft-needs-user-review",
+    "Final palette, surface and edge review for this exact revision pending."
+   ]
+  }
+ ]
+}

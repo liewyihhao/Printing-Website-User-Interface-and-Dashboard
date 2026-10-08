@@ -3492,6 +3492,8 @@ const HOME_PRODUCT_IMG_LOCAL = {
   174: 'lanyard.png', 133: 'HFS001.png', 132: 'Button-Badge.png', 139: 'N31A.png', 128: 'C20.png',
 };
 const HOME_PRODUCT_IMG = Object.assign({}, (window.PK_IMAGES || {}).products || {}, HOME_PRODUCT_IMG_LOCAL);
+// the product's own Printoka hero image (assets/products/), or null for products that don't have one yet
+const heroOf = id => { const P = window.PK_IMAGES; return P && P.hero ? P.hero(id) : null; };
 // category rows: panel image + gradient (the original's three gradients, cycled)
 const HOME_CAT_PANEL = {
   'business-essentials': 'Standard-Business-Card.png', 'flyers-leaflets': 'Digital-Printing-Flyers-Cropped.png',
@@ -5699,8 +5701,8 @@ class Component extends DCLogic {
     const PKI = window.PK_IMAGES;
     if (PKI && typeof kind === 'string') {
       const p = this.pkProducts().find(x => x.engName === kind || x.name === kind);
-      const f = p && PKI.products[p.id];
-      if (f) return React.createElement('img', { src: window.__asset(PKI.base + f), alt: kind + ' printing', loading: 'lazy',
+      const hs = p && PKI.hero && PKI.hero(p.id), f = p && PKI.products[p.id];
+      if (hs || f) return React.createElement('img', { src: window.__asset(hs || PKI.base + f), alt: kind + ' printing', loading: 'lazy',
         style: { width: w || '100%', aspectRatio: '4 / 3', objectFit: 'contain', display: 'block', background: '#fff' } });
     }
     // (user, 2026-09-30) only clean product cut-outs — never the old "Print Your … Online Now!" banners or
@@ -6259,8 +6261,8 @@ class Component extends DCLogic {
     const open = this.state.homeCatOpen;
     const tile = p => h('a', { key: p.id, href: this.productPath(p.id) || undefined, 'data-go': 'open:' + p.id,
       style: { flex: '0 0 132px', scrollSnapAlign: 'start', padding: '14px 4px', textAlign: 'center', color: MUT, textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, borderRadius: 0 } },
-      HOME_PRODUCT_IMG[p.id]
-        ? h('img', { src: window.__asset('assets/original/' + HOME_PRODUCT_IMG[p.id]), alt: p.name, loading: 'lazy', style: { height: 116, width: '100%', objectFit: 'contain', display: 'block' } })
+      heroOf(p.id) || HOME_PRODUCT_IMG[p.id]
+        ? h('img', { src: window.__asset(heroOf(p.id) || 'assets/original/' + HOME_PRODUCT_IMG[p.id]), alt: p.name, loading: 'lazy', style: { height: 116, width: '100%', objectFit: 'contain', display: 'block' } })
         : h('div', { style: { height: 116, width: '100%', overflow: 'hidden', borderRadius: 0, display: 'grid', placeItems: 'center' } }, this.art(p.engName)),
       h('span', { style: { fontSize: 14, lineHeight: 1.35 } }, p.name));
     // sticky: the category menu stays in view while the rows scroll, until the last row ends
@@ -6279,7 +6281,7 @@ class Component extends DCLogic {
         this.btn('Sign up', 'teal', 'signup'),
         h('img', { src: this.homeImg('membership.png'), alt: '', loading: 'lazy', style: { display: 'block', width: '100%', marginTop: 18 } })));
     const rows = h('div', { style: { flex: '1 1 600px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 20 } },
-      cats.map((c, i) => { const list = this.catProducts(c.id).slice().sort((a, b) => (HOME_PRODUCT_IMG[b.id] ? 1 : 0) - (HOME_PRODUCT_IMG[a.id] ? 1 : 0));
+      cats.map((c, i) => { const list = this.catProducts(c.id).slice().sort((a, b) => (heroOf(b.id) || HOME_PRODUCT_IMG[b.id] ? 1 : 0) - (heroOf(a.id) || HOME_PRODUCT_IMG[a.id] ? 1 : 0));
         const go = c.id === 'packaging-boxes' ? 'packaging' : 'catopen:' + c.id;
         return h('div', { key: c.id, style: { background: HOME_GRADIENTS[i % 3], borderRadius: 0, display: 'flex', flexWrap: 'wrap', overflow: 'hidden', minHeight: 250 } },
           h('div', { style: { flex: '0 0 220px', position: 'relative', padding: '20px 18px', color: '#fff', minHeight: 110 } },
@@ -8092,9 +8094,9 @@ class Component extends DCLogic {
     this._bannerGrad = this._bannerGrad || {};
     if (this._bannerGrad[id] == null) this._bannerGrad[id] = Math.floor(Math.random() * HOME_GRADIENTS.length);
     const bg = HOME_GRADIENTS[this._bannerGrad[id]].replace('90deg', '115deg');
-    const PKI = window.PK_IMAGES, file = PKI && prod && PKI.products[prod.id];
+    const PKI = window.PK_IMAGES, hs = prod && heroOf(prod.id), file = hs || (PKI && prod && PKI.products[prod.id] && PKI.base + PKI.products[prod.id]);
     const img = file
-      ? h('img', { className: 'pk-cfgb-img', src: window.__asset(PKI.base + file), alt: NAME + ' printed by Printoka', fetchpriority: 'high',
+      ? h('img', { className: 'pk-cfgb-img', src: window.__asset(file), alt: NAME + ' printed by Printoka', fetchpriority: 'high',
           style: { height: 190, width: 'auto', maxWidth: '100%', display: 'block', borderRadius: 0, filter: 'drop-shadow(0 18px 30px rgba(0,0,0,.28))' } })
       : h('div', { className: 'pk-cfgb-img', style: { width: 250, borderRadius: 0, overflow: 'hidden', filter: 'drop-shadow(0 18px 30px rgba(0,0,0,.28))' } }, this.art(prod ? prod.name : 'card'));
     const benefits = [['Schedule your delivery', 'Door-to-door, nationwide'], ['Satisfaction guaranteed', 'Quality you can rely on'], ['Exclusive member pricing', 'Save 5–15% as a member']];
