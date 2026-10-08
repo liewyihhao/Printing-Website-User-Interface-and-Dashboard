@@ -2256,7 +2256,10 @@ const CFG_OVERRIDES = {
     optionsOverride: {
       colour: ['4C', '4C & White', '1C'],
       sheet_size: cfg => cfg.category === 'Kiss Cut' ? STICKER_KISS_SHEETS : ['A3+', 'A4', 'A5'],
+      // every die-cut shape shows Cutting Method fixed to Die-Cutting; only Rectangle/Square can be cut to size
+      cutting_method: cfg => cfg.category === 'Rectangle/Square' ? ['Cut To Size', 'Die-Cutting'] : ['Die-Cutting'],
     },
+    sectionOf: { sheet_size: 'Optional Finishing', dielines: 'Optional Finishing' },
     optLabel: { sheet_size: { 'A3+': '317mm x 425mm (A3+)', 'A4': '210mm x 297mm (A4)', 'A5': '148mm x 210mm (A5)' } },
     validOpt: {
       paper: (cfg, v) => !((cfg.category === 'Multiple Dieline' && (v === 'Brown Craft Paper' || v === 'Warranty Sticker'))
@@ -2274,19 +2277,19 @@ const CFG_OVERRIDES = {
       width: cfg => ['Multiple Dieline', 'Kiss Cut', 'No Cut'].indexOf(cfg.category) >= 0,
       dielines: cfg => cfg.category !== 'Multiple Dieline',
       finishing: cfg => stkLams(cfg.paper).length < 2,
-      cutting_method: cfg => cfg.category !== 'Rectangle/Square',
+      cutting_method: cfg => cfg.category === 'No Cut',
       waste_removal: cfg => ['Round', 'Custom Die-Cut', 'Standard Shape'].indexOf(cfg.category) < 0 || cfg.paper === 'Warranty Sticker',
       delivery_sheet: cfg => !((cfg.category === 'Rectangle/Square' && cfg.cutting_method === 'Die-Cutting') || ['Round', 'Custom Die-Cut', 'Standard Shape'].indexOf(cfg.category) >= 0)
         || cfg.paper === 'White PE (Polyethylene)',
     },
     addFields: [
-      { key: 'ink_colour', label: 'Ink Colour', options: ['Black', 'Cyan', 'Magenta', 'White'], section: 'General', neutral: true, after: 'colour', showWhen: { field: 'colour', value: '1C' } },
-      { key: 'cutting_method', label: 'Cutting Method', options: ['Cut To Size', 'Die-Cutting'], section: 'General', neutral: true, after: 'finishing' },
-      { key: 'waste_removal', label: 'Waste Removal', options: ['Not Required', 'Required'], section: 'General', neutral: true, after: 'finishing' },
-      { key: 'delivery_sheet', label: 'Delivery Sheet Size', options: STK_DS8, section: 'General', neutral: true, after: 'finishing' },
+      { key: 'ink_colour', label: 'Ink Colour', options: ['Black', 'Cyan', 'Magenta', 'White'], section: 'Product Spec', neutral: true, after: 'colour', showWhen: { field: 'colour', value: '1C' } },
+      { key: 'cutting_method', label: 'Cutting Method', options: ['Cut To Size', 'Die-Cutting'], section: 'Product Spec', neutral: true, after: 'finishing' },
+      { key: 'waste_removal', label: 'Waste Removal', options: ['Not Required', 'Required'], section: 'Optional Finishing', neutral: true },
+      { key: 'delivery_sheet', label: 'Delivery Sheet Size', options: STK_DS8, section: 'Optional Finishing', neutral: true },
       // No Cut has no size question on Excard: it prints on full sheets, cut to size (live slip 2026-10-09)
-      { key: 'nc_cutting', label: 'Cutting Method', options: ['Cut To Size'], section: 'General', neutral: true, after: 'finishing', showWhen: { field: 'category', value: 'No Cut' } },
-      { key: 'nc_sheet', label: 'Delivery Sheet Size', options: ['300mm x 420mm'], section: 'General', neutral: true, after: 'finishing', showWhen: { field: 'category', value: 'No Cut' } },
+      { key: 'nc_cutting', label: 'Cutting Method', options: ['Cut To Size'], section: 'Product Spec', neutral: true, after: 'finishing', showWhen: { field: 'category', value: 'No Cut' } },
+      { key: 'nc_sheet', label: 'Delivery Sheet Size', options: ['300mm x 420mm'], section: 'Optional Finishing', neutral: true, after: 'nc_cutting', showWhen: { field: 'category', value: 'No Cut' } },
     ],
     // Excard asks only these with "Please Select"; Cut Type, Print Colour, Lamination, Cutting Method,
     // Waste Removal and the die-cut Delivery Sheet Size come preset
@@ -4067,6 +4070,8 @@ class Component extends DCLogic {
       if (vo && options.length) { try { const keep = options.filter(o => vo(cfg, Array.isArray(o) ? o[0] : o)); if (keep.length) options = keep; } catch (e) {} }
       // (user, 2026-09-29) Silkscreen Spot UV is a finishing: always under Optional Finishing, on every product
       if (/spot_?uv|silkscreen/i.test(f.key) && f.section !== 'Optional Finishing') f = Object.assign({}, f, { section: 'Optional Finishing' });
+      // ov.sectionOf moves an engine question into the section the live form shows it in
+      if (ov.sectionOf && ov.sectionOf[f.key] && f.section !== ov.sectionOf[f.key]) f = Object.assign({}, f, { section: ov.sectionOf[f.key] });
       // (user, 2026-09-29) the N-in-1 "Package" question is "Duplicate with Same Configuration" (2 … 10 artworks)
       if (f.key === 'package' && options.some(o => /^\d+\s*in\s*1\b/i.test(String(Array.isArray(o) ? o[0] : o))))
         return { def: Object.assign({}, f, { label: 'Duplicate with Same Configuration', note: f.note ? 'Normal is priced exactly; 2 or more artworks are quoted on request.' : f.note }), options };
