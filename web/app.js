@@ -7535,7 +7535,7 @@ class Component extends DCLogic {
             // fixed values (one option for this combination, e.g. Printing "1440 dpi solvent") — shown, not editable
             (() => { let lines = []; try { lines = this.pkOrderSpec().lines || []; } catch (e) {}
               const asked = {}; flat.forEach(e => { asked[String(labelOf(e.key)).toLowerCase()] = 1; });
-              return lines.filter(l => l[0] && !asked[String(l[0]).toLowerCase()] && !/quantity|size$/i.test(l[0]) && !/^(height|width)/i.test(l[0]))
+              return lines.filter(l => l[0] && !asked[String(l[0]).toLowerCase()] && !/^(quantity|size|custom size|open size|die-cut size)$/i.test(l[0]) && !/^(height|width)/i.test(l[0]))
                 .map(l => h('div', { key: 'fx-' + l[0], style: { display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderTop: '1px solid ' + LINE, fontSize: 13.5 } },
                   h('span', { style: { flex: '0 0 40%', color: MUT } }, l[0]), h('span', { style: { flex: 1, fontWeight: 500, color: INK } }, l[1]), h('span', { style: { flex: 'none', width: 30 } }))); })()))]);
     }
