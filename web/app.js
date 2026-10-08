@@ -1885,6 +1885,12 @@ const ID_CARD_OV = {
 
 // ---------- Pillow (Excard www spec/Litho/Pillow, live 2026-10-09, West Malaysia): every spec fixed (400mm x 400mm, Velvet Cloth,
 // White pillow case, 4C (Both), Machine Side Stitching), quantity 10-500 in tens. Price = live CASH (19 points, exact; linear between). ----------
+// East Malaysia (Sabah, Sarawak, Labuan): Excard charges a different Pillow price itself (live, East selected)
+const PILLOW_PTS_EM = { 10: 748, 20: 1482, 30: 2216, 40: 2951, 50: 3685, 60: 4419, 70: 5154, 80: 5888, 90: 6622, 100: 7165, 110: 7880, 120: 8594, 150: 10740, 200: 14316, 250: 17893, 300: 21468, 400: 28620, 500: 35772 };
+// a 'Delivery To' question for products whose Excard price depends on the region (kept off products where both match)
+const DL_REGION = { key: 'dl_region', label: 'Delivery To', options: ['West Malaysia', 'East Malaysia (Sabah, Sarawak, Labuan)'], default: 'West Malaysia', section: 'General' };
+const isEastRegion = v => /^East/.test(v || '');
+const isEastAddr = a => !!a && (/sabah|sarawak|labuan/i.test(a.state || '') || /^(8[7-9]|9[01]|9[3-8])\d{3}$/.test(String(a.postcode || '').trim()));
 const PILLOW_PTS = { 10: 282, 20: 548, 30: 813, 40: 1081, 50: 1347, 70: 1881, 100: 2487, 120: 2981, 150: 3722, 180: 4464, 190: 4712, 200: 4959, 210: 5206, 250: 6195, 300: 7431, 350: 8667, 400: 9904, 450: 11139, 500: 12376 };
 function ptsPrice(P, q) {
   const ks = Object.keys(P).map(Number).sort((a, b) => a - b); q = +q || 0; if (!q) return null;
@@ -1901,10 +1907,11 @@ const PILLOW_OV = {
     { key: 'pl_case', label: 'Pillow Case', options: ['White'], section: 'General', neutral: true },
     { key: 'pl_colour', label: 'Print Colour', options: ['4C (Both)'], section: 'General', neutral: true },
     { key: 'pl_comp', label: 'Compulsory', options: ['Machine Side Stitching'], section: 'General', neutral: true },
+    DL_REGION,
   ],
   placeholderExact: [],
   qtyOptions: Array.from({ length: 50 }, (_, i) => (i + 1) * 10),
-  priceBase: (cfg, qty) => ptsPrice(PILLOW_PTS, qty),
+  priceBase: (cfg, qty) => ptsPrice(isEastRegion(cfg.dl_region) ? PILLOW_PTS_EM : PILLOW_PTS, qty),
 };
 
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
@@ -4499,7 +4506,7 @@ class Component extends DCLogic {
     const { short, lines } = this.pkOrderSpec();
     // the configurator summary travels with the order: every option, quantity and production time
     const pd = this.procDays(), productionTime = pd != null ? pd + (pd === 1 ? ' working day' : ' working days') : '3 working days';
-    const item = { jobCode: this.newJobCode(), productId: prod.id, name: this.catName(prod.id), spec: short, specLines: lines, size: this.artworkTarget(), productionTime, qty: this.orderQty() || 1, unitPrice: q.gross / (this.orderQty() || 1), lineTotal: q.gross };
+    const item = { region: this.pkV().dl_region ? (isEastRegion(this.pkV().dl_region) ? 'East' : 'West') : null, jobCode: this.newJobCode(), productId: prod.id, name: this.catName(prod.id), spec: short, specLines: lines, size: this.artworkTarget(), productionTime, qty: this.orderQty() || 1, unitPrice: q.gross / (this.orderQty() || 1), lineTotal: q.gross };
     const cart = (this.state.cart || []).concat([item]);
     this.setState({ cart }); this.saveCart(cart); this.go('cart');
   }
@@ -8279,16 +8286,20 @@ class Component extends DCLogic {
     const outs = this.state.pickupOutlets;
     if (ful === 'pickup' && !outs && typeof fetch === 'function' && !this._poLoading) { this._poLoading = true; fetch('/api/ops/outlets').then(r => r.json()).then(d => this.setState({ pickupOutlets: d.outlets || [] })).catch(() => {}); }
     const readAddr = pre => ({ line1: String(val(pre + 'Line1')).trim(), line2: String(val(pre + 'Line2')).trim(), postcode: String(val(pre + 'Postcode')).trim(), city: String(val(pre + 'City')).trim(), state: String(val(pre + 'State')).trim(), country: this.cc() });
+    const regionErr = a => { const east = isEastAddr(a), bad = (this.state.cart || []).find(it => it.region && (it.region === 'East') !== east);
+      return bad ? (bad.name || 'An item') + ' was priced for ' + (bad.region === 'East' ? 'East' : 'West') + ' Malaysia. Use a ' + (bad.region === 'East' ? 'Sabah, Sarawak or Labuan' : 'Peninsular Malaysia') + ' address, or add it again for ' + (bad.region === 'East' ? 'West' : 'East') + ' Malaysia.' : null; };
     const s2next = () => {
       if (ful === 'pickup') { if (!this.state.coOutlet) return this.setState({ coErr: 'Choose the outlet you will collect from.' }); return goStep(3); }
       if (ful === 'direct') {
         const a = readAddr('coRcv');
         if (!String(val('coRcvName')).trim() || !String(val('coRcvPhone')).trim() || !a.line1 || !a.postcode || !a.city) return this.setState({ coErr: 'Please fill in the receiver’s name, contact number and address.' });
+        { const re = regionErr(a); if (re) return this.setState({ coErr: re }); }
         return goStep(3);
       }
-      if (!newAddr) { if (!selId) return this.setState({ coErr: 'Choose a delivery address.' }); this.setState({ coAddrId: selId }); return goStep(3); }
+      if (!newAddr) { if (!selId) return this.setState({ coErr: 'Choose a delivery address.' }); { const re = regionErr(addrs.find(x => x.id === selId)); if (re) return this.setState({ coErr: re }); } this.setState({ coAddrId: selId }); return goStep(3); }
       const a = readAddr('coAd');
       if (!a.line1 || !a.postcode || !a.city) return this.setState({ coErr: 'Please fill in the address, postcode and city.' });
+      { const re = regionErr(a); if (re) return this.setState({ coErr: re }); }
       // a new address is saved to the customer's address book, then used for this order
       this.setState({ coErr: null, coSaving: true });
       fetch('/api/account/addresses', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify(Object.assign({ label: 'Address ' + (addrs.length + 1) }, a)) })
