@@ -2034,9 +2034,13 @@ function bkDigiPrice(cfg, q) {
   const sized = n => bkGrid(BKQ[kind], pp, n) * bkRatio((BK_RATIO[kind] || {})[sk], pp, n);
   const a4 = n => bkGrid(BKQ[kind], pp, n), seg = (n0, n1) => sized(n0) + (sized(n1) - sized(n0)) * (a4(q) - a4(n0)) / (a4(n1) - a4(n0));
   // between the sampled quantities, follow the A4 price curve's shape
-  let price = sk === 'A4' ? a4(q) : q <= 100 ? seg(10, 100) : seg(100, 500);
+  // A5 / A6 small runs: the 10 to 20 step costs ~8% of the 10 to 100 rise, then straight to 100
+  const small = () => sized(10) + (sized(100) - sized(10)) * (q <= 20 ? .08 * (q - 10) / 10 : .08 + .92 * (q - 20) / 80);
+  let price = sk === 'A4' ? a4(q) : q <= 100 ? (/^A[56]$/.test(sk) ? small() : seg(10, 100)) : seg(100, 500);
   const cc = BK_CODE[cfg.content]; if (cc && BK_CONT[cc] != null) price += BK_CONT[cc] * cpages * q * k;
   if (/^1C/.test(cfg.colour || '')) price -= 0.12 * cpages * q * k;
+  // A5 / A6 runs under 20: 1C and Simili 80 inner pages save a little more per page
+  if (/^A[56]$/.test(sk) && q < 20) price -= ((/^1C/.test(cfg.colour || '') ? .14 : 0) + (cc === 'S80' ? .25 : 0)) * cpages * (20 - q) / 10;
   if (BK_CLAM[cfg.content_lamination]) price += BK_CLAM[cfg.content_lamination] * cpages * q * k;
   const per = t => t ? bkLin2(t, q, 100, 500) * k : 0;
   if (kind === 'hard') price += per(BK_HARD_LAM[cfg.cover_lamination]);
@@ -2120,7 +2124,7 @@ const bkoCoverLams = cfg => bkSoft(cfg) && !bkPerfect(cfg) && /^GAC/.test(BK_COD
 // books, 41% at 10,000), so pages ending in 4 sit below the straight line through the grid rows
 const bkoS = q => q <= 1000 ? .226 : q >= 10000 ? .415 : .226 + (.415 - .226) * Math.log10(q / 1000);
 function bkoSmooth(G, pp, q) {
-  const ps = Object.keys(G).map(Number).sort((a, b) => a - b), vals = ps.map(p => bkGridAt(G[p], q));
+  const ps = Object.keys(G).map(Number).sort((a, b) => a - b), vals = ps.map(p => bkoQ(G[p], q));
   const slope = (vals[vals.length - 1] - vals[0]) / (ps[ps.length - 1] - ps[0]), dev = (0.5 - bkoS(q)) * slope * 8;
   const adj = ps.map((p, i) => vals[i] + (p % 8 === 4 ? dev : 0));
   let i = 1; while (i < ps.length - 1 && pp > ps[i]) i++;
@@ -2143,7 +2147,9 @@ const bkoA4Steps = c => { const b = Math.floor(c / 16), r = c % 16; return 2 * b
 const bkoA5Steps = c => { const b = Math.floor(c / 32), r = c % 32; return 2 * (b - 1) + (r === 0 ? 0 : r <= 8 ? 1 : 2); };
 // price across quantity from per-quantity values (linear between sampled quantities, straight on past the last two)
 function bkoQ(row, q) { const qs = Object.keys(row).map(Number).sort((a, b) => a - b); if (q <= qs[0]) return row[qs[0]];
-  let i = 1; while (i < qs.length - 1 && q > qs[i]) i++; const a = qs[i - 1], b = qs[i]; return row[a] + (row[b] - row[a]) * (q - a) / (b - a); }
+  let i = 1; while (i < qs.length - 1 && q > qs[i]) i++; const a = qs[i - 1], b = qs[i]; return row[a] + (row[b] - row[a]) * bkoF(q, a, b); }
+// between 100 and 1,000 copies Excard's price rises a little slower at first (300 sits ~19% of the way, not 22%)
+const bkoF = (q, a, b) => a === 100 && b === 1000 && q > 100 && q < 1000 ? Math.pow((q - 100) / 900, 1.104) : (q - a) / (b - a);
 function bkoPrice(cfg, q) {
   const pp = +cfg.page, sk = BK_SIZE_KEY[cfg.size]; if (!(pp > 0) || !sk || !(q > 0)) return null;
   const kind = !bkSoft(cfg) ? 'hard' : bkPerfect(cfg) ? 'perfect' : 'saddle';
@@ -2160,12 +2166,13 @@ function bkoPrice(cfg, q) {
     const rAt = (n, i) => { if (!R) return 1; const ps = Object.keys(R).map(Number).sort((a, b) => a - b); if (pp <= ps[0]) return R[ps[0]][i]; if (pp >= ps[ps.length - 1]) return R[ps[ps.length - 1]][i];
       for (let j = 1; j < ps.length; j++) if (pp <= ps[j]) return R[ps[j - 1]][i] + (R[ps[j]][i] - R[ps[j - 1]][i]) * (pp - ps[j - 1]) / (ps[j] - ps[j - 1]); return 1; };
     const v = nodes.map((n, i) => bkoSmooth(G, pp, n) * rAt(n, i));
-    price = q <= nodes[1] ? v[0] + (v[1] - v[0]) * (q - nodes[0]) / (nodes[1] - nodes[0]) : v[1] + (v[2] - v[1]) * (q - nodes[1]) / (nodes[2] - nodes[1]); }
+    price = q <= nodes[1] ? v[0] + (v[1] - v[0]) * bkoF(q, nodes[0], nodes[1]) : v[1] + (v[2] - v[1]) * (q - nodes[1]) / (nodes[2] - nodes[1]); }
   const cc = BK_CODE[cfg.content];
   if (BKO_CONT[cc]) price += bkoLog2(BKO_CONT[cc], q) * cpages * q * k;
   if (/^GAC/.test(cc || '')) { const d = BKO_CARD_CLAMD[cfg.content_lamination]; if (d) price += bkoLog2(d, q) * cpages * q * k; }
   else if (BKO_CLAM[cfg.content_lamination]) price += bkoLog2(BKO_CLAM[cfg.content_lamination], q) * cpages * q * k;
-  if (/^1C/.test(cfg.colour || '')) { const per = q <= 1000 ? -8.1 + (-8.25 + 8.1) * Math.log(Math.max(100, q) / 100) / Math.log(10) : -8.25 + (-11.9 + 8.25) * Math.log(Math.min(10000, q) / 1000) / Math.log(10); price += per * cpages * k; }
+  // 1C inner pages: a flat saving per page up to 3,000 copies (fewer plates), growing towards 10,000 (live A4 / A5 100pp)
+  if (/^1C/.test(cfg.colour || '')) { const t = Math.max(0, Math.log(Math.min(10000, Math.max(3000, q)) / 3000) / Math.log(10000 / 3000)); const kc = sk === 'A5' ? .5 - .12 * t : k; price -= (6.875 + 3.75 * t) * cpages * kc; }
   if (kind === 'hard') { if (/Spot UV/.test(cfg.cover_lamination || '')) price += 225 + (640 - 225) * (q - 1000) / 4000; }
   else {
     const cvc = BK_CODE[cfg.cover];
