@@ -3572,19 +3572,20 @@ const PKG_STYLES = [
   { code: 'B038', name: 'Reverse Tuck Box, Tongue Lock', fam: 'Reverse tuck', bottom: 'tuck', min: { L: 50, W: 20, D: 50 }, opts: [['Top Tuck', PKG_TUCKS], ['Bottom Tuck', PKG_TUCKS]], open: PKG_TUCK(28.5) },
   { code: 'A002X', name: 'Straight Tuck End Box', fam: 'Straight tuck', bottom: 'tuck', min: { L: 20, W: 20, D: 50 }, max: { D: 300 }, opts: [['Top Tuck', PKG_TUCKS], ['Bottom Tuck', PKG_TUCKS]], open: PKG_TUCK(28.2) },
   { code: 'A002BX', name: 'Straight Tuck Box, Tongue Lock', fam: 'Straight tuck', bottom: 'tuck', min: { L: 50, W: 20, D: 50 }, opts: [['Top Tuck', PKG_TUCKS], ['Bottom Tuck', PKG_TUCKS]], open: PKG_TUCK(28.2) },
-  { code: 'B044X', name: 'Semi Auto Bottom Lock, Tongue Lock', fam: 'Lock bottom', bottom: 'lock', min: { L: 50, W: 50, D: 50 }, opts: [['Top Tuck', PKG_TUCKS]], open: (L, W, D) => [2 * L + 2 * W + 14, D + 1.5 * W + 49.5 - (W < 60 ? 0.04 * (60 - W) : 0)] },
-  { code: 'B048A', name: 'Auto Bottom Lock, Tongue Lock', fam: 'Lock bottom', bottom: 'lock', min: { L: 50, W: 50, D: 50 }, opts: [['Top Tuck', PKG_TUCKS]], open: PKG_LOCK(14.5, 1.7) },
+  { code: 'B044X', name: 'Semi Auto Bottom Lock, Tongue Lock', fam: 'Lock bottom', bottom: 'lock', min: { L: 50, W: 50, D: 50 }, opts: [['Top Tuck', PKG_TUCKS]], open: (L, W, D) => [2 * L + 2 * W + 14, D + 1.5 * W + PKG_LERP({ 50: 40.5, 60: 44.5, 65: 45.5, 70: 47.5, 75: 49.5 }, D) - (W < 60 ? 0.04 * (60 - W) : 0)] },
+  { code: 'B048A', name: 'Auto Bottom Lock, Tongue Lock', fam: 'Lock bottom', bottom: 'lock', min: { L: 50, W: 50, D: 50 }, wMaxL: true, opts: [['Top Tuck', PKG_TUCKS]], open: PKG_LOCK(14.5, 1.7) },
   { code: 'C001A', name: 'Semi Auto Bottom Lock Box', fam: 'Lock bottom', bottom: 'lock', min: { L: 50, W: 50, D: 50 }, opts: [['Top Tuck', PKG_TUCKS]], open: (L, W, D) => [2 * L + 2 * W + 14, D + 1.7 * W + 14.1 + (L > 150 ? 5 : 0)] },
   { code: 'C001AA', name: 'Semi Auto Bottom Lock', fam: 'Lock bottom', bottom: 'lock', min: { L: 50, W: 50, D: 50 }, opts: [['Top Tuck', PKG_TUCKS]], open: PKG_LOCK(14.7, 1.7) },
   { code: 'C001AB', name: 'Semi Auto Bottom Lock, Dust Flaps', fam: 'Lock bottom', bottom: 'lock', min: { L: 50, W: 50, D: 50 }, opts: [['Top Tuck', PKG_TUCKS]], open: PKG_LOCK(14.7, 1.7) },
   { code: 'C001AD', name: 'Auto Bottom Lock', fam: 'Lock bottom', bottom: 'lock', min: { L: 50, W: 50, D: 50 }, opts: [['Top Tuck', PKG_TUCKS]], open: PKG_LOCK(14.7, 1.7) },
-  { code: 'C001M', name: 'Auto Bottom Lock Box', fam: 'Lock bottom', bottom: 'lock', min: { L: 50, W: 50, D: 50 }, opts: [['Top Tuck', PKG_TUCKS]], open: (L, W, D) => [2 * L + 2 * W + 14, D + 1.7 * W + 14.1 + (L > 150 ? 5 : 0)] },
-  { code: 'T001', name: 'Tuck Top Box with Clasp', fam: 'Other', bottom: 'tuck', min: { L: 20, W: 20, D: 30 }, opts: [['Top Closure', ['Concealed clasp', 'Lock']], ['Bottom Closure', ['Concealed clasp', 'Lock']]],
-    open: (L, W, D) => [2 * L + 2 * W + PKG_LERP({ 30: 11.7, 50: 16.7, 80: 24.7 }, W), D + 2 * W + PKG_LERP({ 30: 23.7, 50: 33.7, 80: 49.7 }, W)] },
+  { code: 'C001M', name: 'Auto Bottom Lock Box', fam: 'Lock bottom', bottom: 'lock', min: { L: 50, W: 50, D: 50 }, wMaxL: true, opts: [['Top Tuck', PKG_TUCKS]], open: (L, W, D) => [2 * L + 2 * W + 14, D + 1.7 * W + 14.1 + (L > 150 ? 5 : 0)] },
+  { code: 'T001', name: 'Tuck Top Box with Clasp', fam: 'Other', bottom: 'tuck', min: { L: 20, W: 20, D: 20 }, opts: [['Top Closure', ['Concealed clasp', 'Lock']], ['Bottom Closure', ['Concealed clasp', 'Lock']]],
+    open: (L, W, D) => [2 * L + 2 * W + PKG_LERP({ 30: 11.7, 40: 13.7, 50: 16.7, 60: 19.7, 70: 23.7, 80: 24.7 }, W), D + 2 * W + 9.7 + 2 * Math.min(20, PKG_LERP({ 30: 7, 40: 9, 50: 12, 60: 15, 80: 20 }, W), Math.floor((D - 10) / 2))] },
 ];
 const PKG_MATS = { 'Gloss Art Card (1 Side Coated)': [250, 300, 350, 400], 'Boxboard Grey Back': [300, 350, 400, 450] };
 const PKG_QTYS = [50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 600, 700, 800, 900, 1000, 2000, 3000, 5000, 10000, 15000, 20000, 30000, 50000, 100000];
-const PKG_SHEET = [740, 510];
+// largest flat sheet Excard will produce (either way round): the 740 x 510 press sheet less its margins, tested live to the mm
+const PKG_SHEET = [730, 490];
 // Standard lane: price(q) = a + b * area(m2) + c * (W + H)(m), per sampled quantity (Gloss Art Card 250gsm, gloss lamination)
 const PKG_STD = { 300: [743.175, 8621.882, -1153.376], 500: [761.661, 9927.445, -1281.59], 1000: [785.823, 12668.551, -1461.278], 2000: [843.509, 17603.02, -1743.487], 3000: [862.671, 20936.273, -1711.574],
   5000: [674.547, 19798.248, -150.994], 10000: [694.185, 31487.08, 709.105], 20000: [784.466, 52605.831, 2068.299], 50000: [1006.475, 127673.343, 4697.406], 100000: [2260.473, 266530.518, 4740.238] };
@@ -3615,6 +3616,7 @@ function pkgOpen(sp) { const s = pkgStyle(sp.style); if (!s) return null; const 
 // size problems, as short messages for the field they belong to
 function pkgSizeErr(sp) { const s = pkgStyle(sp.style); if (!s) return null; const E = {};
   ['L', 'W', 'D'].forEach(k => { const v = +sp[k]; if (!(v > 0)) E[k] = 'Enter a size'; else if (v < s.min[k]) E[k] = 'Minimum ' + s.min[k] + ' mm'; else if (s.max && s.max[k] && v > s.max[k]) E[k] = 'Maximum ' + s.max[k] + ' mm'; });
+  if (!E.W && !E.L && s.wMaxL && +sp.W > +sp.L) E.W = 'No wider than the length';
   if (!Object.keys(E).length) { const o = pkgOpen(sp); const fits = o && ((o[0] <= PKG_SHEET[0] && o[1] <= PKG_SHEET[1]) || (o[1] <= PKG_SHEET[0] && o[0] <= PKG_SHEET[1])); if (!fits) E.all = 'This box is too big to print in one piece. Make it smaller.'; }
   return Object.keys(E).length ? E : null; }
 const pkgIsBoard = sp => /Boxboard/.test(sp.paper || '');
@@ -6923,6 +6925,10 @@ class Component extends DCLogic {
         cta('Next: Finishing', () => go(4), !(+sp.qty > 0))];
     } else if (step === 4) {
       const hs = sp.hs || [];
+      // a mark (emboss / foil) must fit on the box's largest face
+      const face = [+sp.L, +sp.W, +sp.D].sort((a, b) => b - a).slice(0, 2);
+      const markErr = (mh, mw, which) => { const v = which ? +mw : +mh; if (!(v >= 10)) return 'Minimum 10 mm';
+        const m = [+mh || 0, +mw || 0].sort((a, b) => b - a); return m[0] > face[0] || m[1] > face[1] ? 'Max ' + face[0] + ' x ' + face[1] + ' mm' : null; };
       const setHs = (i, patch) => this.pkbSet({ hs: hs.map((b, k) => k === i ? Object.assign({}, b, patch) : b) });
       const extra = [['Spot UV', 'suv'], ['Embossing', 'emb'], ['Hot Stamping', 'hs']].filter(x => x[1] !== 'suv' || sp.coat === 'Matte Lamination');
       body = [lab('Coating'), h('div', { key: 'c', style: { display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 22 } }, pkgCoatings(sp).map(c => chip(c, sp.coat === c, () => this.pkbSet({ coat: c })))),
@@ -6930,16 +6936,16 @@ class Component extends DCLogic {
           extra.map(x => { const on = x[1] === 'hs' ? hs.length > 0 : !!sp[x[1]];
             return chip(x[0], on, () => this.pkbSet(x[1] === 'hs' ? { hs: on ? [] : [{ c: 'Gold', h: 50, w: 50 }] } : x[1] === 'emb' ? { emb: !on, embH: sp.embH || 50, embW: sp.embW || 50 } : { [x[1]]: !on })); })),
         sp.emb ? h('div', { key: 'em', style: { marginTop: 18 } }, lab('Embossing size'), h('div', { style: { display: 'flex', gap: 12, flexWrap: 'wrap', maxWidth: 360 } },
-          num('Height', sp.embH, v => this.pkbSet({ embH: v }), !(+sp.embH >= 10) && 'Minimum 10 mm', 'eh'), num('Width', sp.embW, v => this.pkbSet({ embW: v }), !(+sp.embW >= 10) && 'Minimum 10 mm', 'ew'))) : null,
+          num('Height', sp.embH, v => this.pkbSet({ embH: v }), markErr(sp.embH, sp.embW, 0), 'eh'), num('Width', sp.embW, v => this.pkbSet({ embW: v }), markErr(sp.embH, sp.embW, 1), 'ew'))) : null,
         hs.length ? h('div', { key: 'hs', style: { marginTop: 18, display: 'flex', flexDirection: 'column', gap: 14 } },
           hs.map((b, i) => h('div', { key: i, style: { borderTop: i ? '1px solid #e6e8eb' : 'none', paddingTop: i ? 14 : 0 } },
             lab('Hot stamping ' + (i + 1)),
             h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 } }, ['Gold', 'Silver'].map(c => chip(c, b.c === c, () => setHs(i, { c }), 'c' + c)),
               i ? h('span', { role: 'button', tabIndex: 0, onClick: () => this.pkbSet({ hs: hs.filter((_, k) => k !== i) }), style: { alignSelf: 'center', marginLeft: 8, fontSize: 14, color: RED, textDecoration: 'underline', cursor: 'pointer' } }, 'Remove') : null),
             h('div', { style: { display: 'flex', gap: 12, flexWrap: 'wrap', maxWidth: 360 } },
-              num('Height', b.h, v => setHs(i, { h: v }), !(+b.h >= 10) && 'Minimum 10 mm', 'h' + i), num('Width', b.w, v => setHs(i, { w: v }), !(+b.w >= 10) && 'Minimum 10 mm', 'w' + i)))),
+              num('Height', b.h, v => setHs(i, { h: v }), markErr(b.h, b.w, 0), 'h' + i), num('Width', b.w, v => setHs(i, { w: v }), markErr(b.h, b.w, 1), 'w' + i)))),
           hs.length < 5 ? h('span', { key: 'add', role: 'button', tabIndex: 0, onClick: () => this.pkbSet({ hs: hs.concat([{ c: 'Gold', h: 50, w: 50 }]) }), style: { fontSize: 14, color: RED, textDecoration: 'underline', cursor: 'pointer' } }, 'Add another hot stamping') : null) : null,
-        cta('Next: Price', () => go(5), (sp.emb && !(+sp.embH >= 10 && +sp.embW >= 10)) || hs.some(b => !(+b.h >= 10 && +b.w >= 10)))];
+        cta('Next: Price', () => go(5), (sp.emb && (markErr(sp.embH, sp.embW, 0) || markErr(sp.embH, sp.embW, 1))) || hs.some(b => markErr(b.h, b.w, 0) || markErr(b.h, b.w, 1)))];
     } else {
       const lanes = [['std', 'Standard'], ['sr', 'Short Run']].filter(l => q && q[l[0]]);
       const pick = sp.lane && q && q[sp.lane] ? sp.lane : null;
