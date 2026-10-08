@@ -1298,15 +1298,24 @@ function kkBase(cfg, q) {
   const reg = ks.filter(k => !dip(k)), hasDip1000 = dip(1000);
   if (q === 2000 && hasDip1000) return Math.round(cv[1000] * 1.586 * 100) / 100;
   let rate;
-  if (q > reg[reg.length - 1]) { const a = reg[reg.length - 2], b = reg[reg.length - 1]; rate = r(b) + (r(b) - r(a)) * (Math.log(q) - Math.log(b)) / (Math.log(b) - Math.log(a)); }
+  // above the last list point the per-piece rate keeps falling at ~0.55x the curve's last log-slope (fitted on Excard's full 10-2,000 lists)
+  if (q > reg[reg.length - 1]) { const a = reg[reg.length - 2], b = reg[reg.length - 1], al = -(Math.log(r(b)) - Math.log(r(a))) / (Math.log(b) - Math.log(a)); rate = r(b) * Math.pow(q / b, -0.55 * Math.max(0, al)); }
   else { let i = 0; while (reg[i + 1] < q) i++; const a = reg[i], b = reg[i + 1]; rate = r(a) + (r(b) - r(a)) * (Math.log(q) - Math.log(a)) / (Math.log(b) - Math.log(a)); }
   return Math.round(rate * q * 20) / 20;
 }
+// Custom Die Cut Kad Kahwin (Excard price list, live 2026-10-09): the Standard price for the same size / paper / colour / lamination
+// plus a die-cut charge of RM13.30 + per card RM0.1992 (DL, A6, A7) or RM0.2656 (2DL, A4, A5, Square). Exact on 10 lists
+// (7 sizes, Gloss Art / Vellum / Linen papers, both colours, with and without lamination). No hot stamping or folding on the die-cut form.
+const KK_DC = 'Custom Die Cut Kad Kahwin';
+const KK_DC_PAPERS = ['Gloss Art Card 230gsm (2 sides coated)', 'Gloss Art Card 260gsm (2 sides coated)', 'Gloss Art Card 310gsm (2 sides coated)', 'Super White 240gsm', 'Vellum 220gsm', 'Metal Ice 250gsm', 'Linen 240gsm', 'Suwen 240gsm'];
+const kkDieCut = (size, q) => 13.3 + (/^(DL|A6|A7)/.test(size || '') ? 0.1992 : 0.2656) * q;
 function kkPriceBase(cfg, q) {
   if (!cfg.size || !cfg.paper || !cfg.printcolour) return null;
   if (KK_GAC.test(cfg.paper) && !cfg.lamination) return null;
+  const dc = cfg.category === KK_DC;
   let p = kkBase(cfg, q); if (p == null) return null;
-  const n = /^2C/.test(cfg.hot_stamping || '') ? 2 : /^1C/.test(cfg.hot_stamping || '') ? 1 : 0;
+  if (dc) p = Math.round((p + kkDieCut(cfg.size, q)) * 20) / 20;
+  const n = dc ? 0 : /^2C/.test(cfg.hot_stamping || '') ? 2 : /^1C/.test(cfg.hot_stamping || '') ? 1 : 0;
   for (let i = 1; i <= n; i++) {
     const t = KK_HS_ADD[cfg['kk_hs_size_' + i]]; if (!t) continue;
     p += kkLerp(t, q);
@@ -3250,7 +3259,7 @@ const CFG_OVERRIDES = {
     priceBase: voPriceBase,
   },
   'Kad Kahwin — Digital': {
-    hide: ['hot_stamping_colour', 'hot_stamping_w', 'hot_stamping_h'],
+    hide: ['hot_stamping_colour', 'hot_stamping_w', 'hot_stamping_h', 'diecut_h', 'diecut_w'],
     order: ['category', 'size', 'paper', 'printcolour', 'lamination', 'kk_finish', 'kk_fold', 'hot_stamping', 'kk_hs_size_1', 'kk_hs_colour_1', 'kk_hs_size_2', 'kk_hs_colour_2', 'envelope'],
     addFields: [
       { key: 'kk_finish', label: 'Finishing', options: ['-'], section: 'Optional Finishing', neutral: true, after: 'lamination', showWhen: { field: 'size', values: ['DL (99mm x 210mm)', '2DL (198mm x 210mm)', 'A4 (210mm x 297mm)', 'A5 (148mm x 210mm)', 'A6 (105mm x 148mm)', 'Square (140mm x 280mm)'] } },
@@ -3259,16 +3268,17 @@ const CFG_OVERRIDES = {
     ].concat(kkHsFields()),
     optionsOverride: {
       size: ['DL (99mm x 210mm)', '2DL (198mm x 210mm)', 'A4 (210mm x 297mm)', 'A5 (148mm x 210mm)', 'A6 (105mm x 148mm)', 'A7 (74mm x 105mm)', 'Square (140mm x 280mm)'],
-      paper: KK_PAPERS,
+      paper: cfg => cfg.category === KK_DC ? KK_DC_PAPERS : KK_PAPERS,
       lamination: ['Gloss Lamination (Front)', 'Gloss Lamination (Both)', 'Matte Lamination (Front)', 'Matte Lamination (Both)'],
-      kk_fold: cfg => KK_FOLD[cfg.size] || ['Not Required'],
+      kk_fold: cfg => cfg.category === KK_DC ? ['Not Required'] : (KK_FOLD[cfg.size] || ['Not Required']),
       kk_finish: cfg => [kkFolded(cfg) ? 'Creasing' : '-'],
       kk_hs_size_1: cfg => KK_HS_BY[cfg.size] || KK_HS_ALL,
       kk_hs_size_2: cfg => KK_HS_BY[cfg.size] || KK_HS_ALL,
       envelope: kkEnvelopes,
     },
-    hideWhen: { lamination: cfg => !KK_GAC.test(cfg.paper || '') },
+    hideWhen: { lamination: cfg => !KK_GAC.test(cfg.paper || ''), hot_stamping: cfg => cfg.category === KK_DC },
     defaultOpt: { category: 'Standard Kad Kahwin', hot_stamping: 'Not Required', envelope: 'Not Required' },
+    noteOverride: { category: null },
     placeholderExact: ['size', 'paper', 'printcolour', 'lamination', 'kk_hs_size_1', 'kk_hs_colour_1', 'kk_hs_size_2', 'kk_hs_colour_2', 'quantity'],
     qtyOptions: KK_QTY,
     priceBase: kkPriceBase,
@@ -4068,7 +4078,7 @@ class Component extends DCLogic {
     // Height × Width (mm); a custom die-cut / shape → the die-cut size; numbering → the number it starts from; a custom
     // design → a short brief. Skipped where the product already opens its own follow-up for that answer.
     const opensOwn = (key, v) => list.some(x => { const s = JSON.stringify(x.def.showWhen || {}); return x.def.key !== key && s.indexOf('"' + key + '"') >= 0 && s.indexOf(JSON.stringify(v)) >= 0; });
-    const follow = (dep, defs) => { let at = list.findIndex(x => x.def.key === dep.key); defs.forEach(d => { if (list.some(x => x.def.key === d.key)) return; at++; list.splice(at, 0, { def: Object.assign({ __added: true, __followUp: true, section: dep.section }, d), options: null }); }); };
+    const follow = (dep, defs) => { let at = list.findIndex(x => x.def.key === dep.key); defs.forEach(d => { if (list.some(x => x.def.key === d.key) || this.pkHidden(d.key)) return; at++; list.splice(at, 0, { def: Object.assign({ __added: true, __followUp: true, section: dep.section }, d), options: null }); }); };
     list.slice().forEach(({ def }) => {
       if (def.__added) return;
       const v = String(cfg[def.key] == null ? '' : cfg[def.key]);
