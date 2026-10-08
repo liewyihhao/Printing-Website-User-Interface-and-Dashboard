@@ -1874,8 +1874,32 @@ const ID_CARD_OV = {
   priceBase: (cfg, qty) => idcPrice(cfg, qty),
 };
 
+// ---------- Pillow (Excard www spec/Litho/Pillow, live 2026-10-09, West Malaysia): every spec fixed (400mm x 400mm, Velvet Cloth,
+// White pillow case, 4C (Both), Machine Side Stitching), quantity 10-500 in tens. Price = live CASH (19 points, exact; linear between). ----------
+const PILLOW_PTS = { 10: 282, 20: 548, 30: 813, 40: 1081, 50: 1347, 70: 1881, 100: 2487, 120: 2981, 150: 3722, 180: 4464, 190: 4712, 200: 4959, 210: 5206, 250: 6195, 300: 7431, 350: 8667, 400: 9904, 450: 11139, 500: 12376 };
+function ptsPrice(P, q) {
+  const ks = Object.keys(P).map(Number).sort((a, b) => a - b); q = +q || 0; if (!q) return null;
+  if (P[q] != null) return P[q];
+  if (q < ks[0]) return P[ks[0]] / ks[0] * q;
+  for (let i = 1; i < ks.length; i++) if (q < ks[i]) { const a = ks[i - 1], b = ks[i]; return P[a] + (P[b] - P[a]) * (q - a) / (b - a); }
+  const a = ks[ks.length - 2], b = ks[ks.length - 1]; return P[b] + (P[b] - P[a]) / (b - a) * (q - b);
+}
+const PILLOW_OV = {
+  hide: ['inc_printmethod'],
+  addFields: [
+    { key: 'pl_size', label: 'Size', options: ['400mm x 400mm'], section: 'General', neutral: true, first: true },
+    { key: 'pl_material', label: 'Material', options: ['Velvet Cloth'], section: 'General', neutral: true },
+    { key: 'pl_case', label: 'Pillow Case', options: ['White'], section: 'General', neutral: true },
+    { key: 'pl_colour', label: 'Print Colour', options: ['4C (Both)'], section: 'General', neutral: true },
+    { key: 'pl_comp', label: 'Compulsory', options: ['Machine Side Stitching'], section: 'General', neutral: true },
+  ],
+  placeholderExact: [],
+  qtyOptions: Array.from({ length: 50 }, (_, i) => (i + 1) * 10),
+  priceBase: (cfg, qty) => ptsPrice(PILLOW_PTS, qty),
+};
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
-const PL_EXCLUDE = { 170: true, 184: true, 180: true, 181: true, 182: true, 183: true, 143: true, 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true, 135: true, 114: true, 178: true };
+const PL_EXCLUDE = { 131: true, 170: true, 184: true, 180: true, 181: true, 182: true, 183: true, 143: true, 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true, 135: true, 114: true, 178: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
 // Softcover: binding (saddle / perfect) → size → pages → the cover papers Excard offers for that size and page count →
 // the content papers it allows for that cover at that page count (A4-type sizes vs A5 portrait tables). Hardcover:
@@ -3393,6 +3417,7 @@ const CFG_OVERRIDES = {
   'Stamp Chop': { hide: ['inc_printmethod', 'ink_colour', 'stamp_type', 'category', 'model_key'], placeholderExact: [], customQty: STAMP_LINES },
   'Roll Form Sticker — Litho': ROLL_STICKER_OV,
   'ID Card — Digital': ID_CARD_OV,
+  'Pillow — Litho': PILLOW_OV,
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
   'Flyer (= Loose Sheet Litho)': LO_OV,
