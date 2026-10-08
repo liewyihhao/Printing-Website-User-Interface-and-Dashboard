@@ -1832,8 +1832,50 @@ const ROLL_STICKER_OV = {
   priceBase: (cfg, qty) => rfPrice(cfg, qty),
 };
 
+// ---------- ID Card (Excard www spec/Digital/ID_Card, live 2026-10-09): Size Orientation (Portrait 86x54 / Landscape 54x86), fixed
+// 0.80mm Gloss PVC Card, Print Colour 4C (Front) / 4C (Both), Quantity 20-200, compulsory Round Cornering, Hole Punching (Portrait
+// only), Other Finishing for the variable-data card (Background / BarCode / QR Code / Picture sides) and a font for each VDP field
+// (4 on the front, 4 more on the back for 4C Both). Price = Excard CASH per quantity (live, exact); orientation and colour are
+// price-neutral, Hole Punching +RM0.10 / card. ----------
+const IDC_QTY = { 20: 100, 40: 122.10, 60: 144, 80: 168, 100: 190, 120: 228, 140: 266, 160: 272, 180: 306, 200: 300 };
+const IDC_FONTS = ['None', 'Arial', 'Century Gothic', 'Times New Roman', 'Allergro', 'Bazooka', 'Calligrapher', 'Chaucer', 'Cloister Black BT', 'Comic Sans MS', 'English 111 Vivace'];
+function idcPrice(cfg, qty) {
+  const q = +qty || 0; if (!q) return null;
+  let base = IDC_QTY[q];
+  if (base == null) { const ks = Object.keys(IDC_QTY).map(Number).sort((a, b) => a - b);
+    if (q < ks[0]) base = IDC_QTY[ks[0]] * q / ks[0];
+    else if (q > ks[ks.length - 1]) base = IDC_QTY[ks[ks.length - 1]] / ks[ks.length - 1] * q;
+    else { for (let i = 1; i < ks.length; i++) if (q < ks[i]) { const a = ks[i - 1], b = ks[i]; base = IDC_QTY[a] + (IDC_QTY[b] - IDC_QTY[a]) * (q - a) / (b - a); break; } } }
+  return base + (cfg.idc_orient === 'Portrait' && cfg.idc_hole === 'Hole Punching' ? 0.1 * q : 0);
+}
+const IDC_SIDE = (k, label, ink) => ({ key: k, label, options: [ink + ' (Front)', ink + ' (Back)', ink + ' (Both)'], default: ink + ' (Front)', section: 'Other Finishing', neutral: true });
+const IDC_FONT = (k, side, n) => ({ key: k, label: 'VDP ' + n + ' Font (' + side + ')', options: IDC_FONTS, section: 'Other Finishing', neutral: true,
+  showWhen: side === 'Back' ? { field: 'idc_colour', value: '4C (Both)' } : undefined });
+const ID_CARD_OV = {
+  hide: ['orientation', 'colour', 'quantity_hint'],
+  placeholderExact: ['idc_orient', 'idc_colour', 'idc_f1', 'idc_f2', 'idc_f3', 'idc_f4', 'idc_b1', 'idc_b2', 'idc_b3', 'idc_b4'],
+  addFields: [
+    { key: 'idc_orient', label: 'Size Orientation', options: ['Portrait', 'Landscape'], section: 'General', first: true },
+    { key: 'idc_size_p', label: 'Size', options: ['86mm x 54mm'], section: 'General', neutral: true, showWhen: { field: 'idc_orient', value: 'Portrait' } },
+    { key: 'idc_size_l', label: 'Size', options: ['54mm x 86mm'], section: 'General', neutral: true, showWhen: { field: 'idc_orient', value: 'Landscape' } },
+    { key: 'idc_material', label: 'Material', options: ['0.80mm Gloss PVC Card'], section: 'General', neutral: true },
+    { key: 'idc_colour', label: 'Print Colour', options: ['4C (Front)', '4C (Both)'], section: 'General' },
+    { key: 'idc_comp', label: 'Compulsory', options: ['Round Cornering'], section: 'General', neutral: true },
+    { key: 'idc_hole', label: 'Hole Punching', options: ['Not Required', 'Hole Punching'], default: 'Not Required', section: 'Optional Finishing', showWhen: { field: 'idc_orient', value: 'Portrait' } },
+    IDC_SIDE('idc_bg', 'Background', '4C'), IDC_SIDE('idc_bar', 'BarCode', '1C'), IDC_SIDE('idc_qr', 'QR Code', '1C'), IDC_SIDE('idc_pic', 'Picture', '4C'),
+    IDC_FONT('idc_f1', 'Front', 1), IDC_FONT('idc_f2', 'Front', 2), IDC_FONT('idc_f3', 'Front', 3), IDC_FONT('idc_f4', 'Front', 4),
+    IDC_FONT('idc_b1', 'Back', 1), IDC_FONT('idc_b2', 'Back', 2), IDC_FONT('idc_b3', 'Back', 3), IDC_FONT('idc_b4', 'Back', 4),
+  ],
+  // a front-only card prints its variable-data elements on the front
+  validOpt: { idc_bg: (V, o) => V.idc_colour === '4C (Both)' || /Front/.test(o), idc_bar: (V, o) => V.idc_colour === '4C (Both)' || /Front/.test(o),
+    idc_qr: (V, o) => V.idc_colour === '4C (Both)' || /Front/.test(o), idc_pic: (V, o) => V.idc_colour === '4C (Both)' || /Front/.test(o) },
+  remark: { idc_f1: 'Choose None to skip a variable-data field.' },
+  qtyOptions: [20, 40, 60, 80, 100, 120, 140, 160, 180, 200],
+  priceBase: (cfg, qty) => idcPrice(cfg, qty),
+};
+
 // price-list products whose options, quantities and prices come entirely from their own override (LO_OV for the litho loose sheets)
-const PL_EXCLUDE = { 180: true, 181: true, 182: true, 183: true, 143: true, 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true, 135: true, 114: true, 178: true };
+const PL_EXCLUDE = { 170: true, 184: true, 180: true, 181: true, 182: true, 183: true, 143: true, 1: true, 21: true, 101: true, 102: true, 103: true, 123: true, 154: true, 158: true, 24: true, 111: true, 107: true, 118: true, 120: true, 121: true, 149: true, 144: true, 147: true, 151: true, 138: true, 167: true, 168: true, 164: true, 165: true, 135: true, 114: true, 178: true };
 // ---------- Booklet — Digital: Excard's v4 order forms (softcover + hardcover), live capture 2026-10-01 ----------
 // Softcover: binding (saddle / perfect) → size → pages → the cover papers Excard offers for that size and page count →
 // the content papers it allows for that cover at that page count (A4-type sizes vs A5 portrait tables). Hardcover:
@@ -3350,6 +3392,7 @@ const CFG_OVERRIDES = {
   'Jacket — Digital': sbOverride('Jacket — Digital', ['model', 'sleeve', 'fabric', 'vdp_position']),
   'Stamp Chop': { hide: ['inc_printmethod', 'ink_colour', 'stamp_type', 'category', 'model_key'], placeholderExact: [], customQty: STAMP_LINES },
   'Roll Form Sticker — Litho': ROLL_STICKER_OV,
+  'ID Card — Digital': ID_CARD_OV,
   // Litho loose sheets (Excard lo-loose-sheet): one configuration for all four products — see LO_OV
   'Loose Sheet — Litho (Offset)': LO_OV,
   'Flyer (= Loose Sheet Litho)': LO_OV,
@@ -7361,7 +7404,7 @@ class Component extends DCLogic {
       [/varnish|coat/, 'Would you like a protective coating?', 'A clear layer that protects the print.'],
       [/height/, 'What height do you need?', 'In millimetres.'],
       [/width/, 'What width do you need?', 'In millimetres.'],
-      [/size/, 'Please select your size for your ' + n + '.', 'Pick a standard size, or choose a custom size and enter your own.'],
+      [/^(?!.*orient).*size/, 'Please select your size for your ' + n + '.', 'Pick a standard size, or choose a custom size and enter your own.'],
       [/orient/, 'Do you prefer it to be Landscape or Portrait layout?', 'Landscape is wider than it is tall. Portrait is taller than it is wide.'],
       [/paper|material|stock/, 'What material would you prefer?', 'Heavier card feels thicker and more premium.'],
       [/fold|crease/, 'How should it be folded?', 'Choose the fold that suits how it will be read.'],
