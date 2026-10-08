@@ -2284,6 +2284,9 @@ const CFG_OVERRIDES = {
       { key: 'cutting_method', label: 'Cutting Method', options: ['Cut To Size', 'Die-Cutting'], section: 'General', neutral: true, after: 'finishing' },
       { key: 'waste_removal', label: 'Waste Removal', options: ['Not Required', 'Required'], section: 'General', neutral: true, after: 'finishing' },
       { key: 'delivery_sheet', label: 'Delivery Sheet Size', options: STK_DS8, section: 'General', neutral: true, after: 'finishing' },
+      // No Cut has no size question on Excard: it prints on full sheets, cut to size (live slip 2026-10-09)
+      { key: 'nc_cutting', label: 'Cutting Method', options: ['Cut To Size'], section: 'General', neutral: true, after: 'finishing', showWhen: { field: 'category', value: 'No Cut' } },
+      { key: 'nc_sheet', label: 'Delivery Sheet Size', options: ['300mm x 420mm'], section: 'General', neutral: true, after: 'finishing', showWhen: { field: 'category', value: 'No Cut' } },
     ],
     // Excard asks only these with "Please Select"; Cut Type, Print Colour, Lamination, Cutting Method,
     // Waste Removal and the die-cut Delivery Sheet Size come preset
