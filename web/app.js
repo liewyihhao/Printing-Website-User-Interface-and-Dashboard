@@ -2101,6 +2101,30 @@ function bkoContents(cfg) {
 const bkoEmbossOn = cfg => { const c = bkoV4Cover(cfg); return !!(c && Array.isArray(c.emboss)); };
 // emboss block: a flat charge per block size, the same on every book size, page count and quantity (live v4 2026-10-10)
 const BKO_EMB = { '90mm x 30mm': 58, '90mm x 70mm': 78, '95mm x 206mm': 138, '101mm x 144mm': 114, '144mm x 206mm': 182, '194mm x 206mm': 226, '206mm x 294mm': 312 };
+// Book Spine (live v4 2026-10-10): softcover = ceil(inside leaves x paper thickness), hardcover = ceil(pages / 2 x thickness) + 5 mm
+// for the boards (fits all 51 softcover and 31 of 32 hardcover readings); thickness in mm per leaf
+const BKO_SPINE_S = { S80: .1069, S100: .1345, GA80: .0744, GA100: .0864, GA128: .1151, GA150: .138, MA100: .1003, MA130: .1297, MA150: .1584 };
+const BKO_SPINE_H = { S80: .0993, S100: .1216, GA100: .0811, GA128: .1049, GA150: .1266, MA100: .0929, MA130: .1182, MA150: .1414 };
+function bkoSpine(cfg) {
+  const pp = +cfg.page, c = BK_CODE[cfg.content]; if (!(pp > 0) || !c || !bkPerfect(cfg)) return null;
+  if (!bkSoft(cfg)) return BKO_SPINE_H[c] ? Math.ceil(pp / 2 * BKO_SPINE_H[c]) + 5 : null;
+  return BKO_SPINE_S[c] ? Math.ceil((pp - 4) / 2 * BKO_SPINE_S[c]) : null;
+}
+// process days (live v4 2026-10-10, sweeps over quantity x binding x cover finishes; 1C and size / pages make no difference).
+// n = cover finishes among Spot UV, embossing and hot stamping
+const BKO_PD_PERFECT = [[20000, 12], [16000, 11], [15000, 10], [11000, 9], [10000, 8], [5000, 7], [2000, 6], [0, 4]];
+const BKO_PD_HARD = [[5000, 9], [4000, 7], [0, 6]];
+function bkoDays(cfg, q) {
+  q = +q || 0; const hs = optOn(cfg.hot_stamping);
+  const n = [/Spot UV/.test(cfg.cover_lamination || ''), cfg.cover_embossing === 'Add Emboss' && bkoEmbossOn(cfg), hs].filter(Boolean).length;
+  if (!bkSoft(cfg)) { const H = BKO_PD_HARD.find(r => q >= r[0])[1]; return q <= 2000 ? 6 + Math.max(0, n - 1) : H + n; }
+  if (bkPerfect(cfg)) { const P = BKO_PD_PERFECT.find(r => q >= r[0])[1];
+    if (q < 300) return hs ? 7 : P;
+    if (q < 2000) return P + [0, 2, 2, 3][n];
+    return q <= 5000 ? P + Math.max(0, n - 1) : P + n; }
+  const S = q > 5000 ? 5 : 4;
+  return q < 300 ? (hs ? 7 : S) : S + n;
+}
 const BKO_CARD_CLAM = ['Gloss Lamination (Both Sides)', 'Matte Lamination (Both Sides)', 'UV Varnish (Both Sides)', 'Gloss Waterbase Varnish (Both Sides)'];
 function bkoContentLams(cfg) {
   if (!bkSoft(cfg)) return ['Not Required'];
@@ -2406,6 +2430,8 @@ function stkLams(paper) {
 }
 const STICKER_KISS_SHEETS = ['148mm x 148mm', '111mm x 148mm', '89mm x 148mm', '112mm x 98mm', '74mm x 98mm'];
 const optOn = v => v != null && v !== '' && !/^(-\s*)?(not required|no required|none|n\/a|not applicable|no\b.*|without\b.*|0)(\s*-)?$/i.test(String(v).trim());
+// an added field's options: a list, or a function of the spec (e.g. a computed display value like a book's spine)
+const afOpts = (a, cfg) => { if (typeof a.options !== 'function') return a.options; try { return a.options(cfg) || []; } catch (e) { return []; } };
 const CFG_OVERRIDES = {
   // (user, 2026-09-30) Label Sticker: stickers only (no CD), no sample-proof or print-method questions.
   // (2026-10-01, Excard live walk of every cut type × material × print colour × finishing, 1,389 states) the form
@@ -2561,6 +2587,7 @@ const CFG_OVERRIDES = {
       { key: 'back_colour_k', label: 'Back Colour', options: ['EX BLK 01'], section: 'Content', neutral: true, after: 'ink_colour', showWhen: { all: [{ field: 'colour', value: '1C (Both Sides)' }, { field: 'ink_colour', value: 'EX BLK 01' }] } },
       { key: 'back_colour_c', label: 'Back Colour', options: ['EX CYN 01'], section: 'Content', neutral: true, after: 'ink_colour', showWhen: { all: [{ field: 'colour', value: '1C (Both Sides)' }, { field: 'ink_colour', value: 'EX CYN 01' }] } },
       { key: 'back_colour_m', label: 'Back Colour', options: ['EX MAG 01'], section: 'Content', neutral: true, after: 'ink_colour', showWhen: { all: [{ field: 'colour', value: '1C (Both Sides)' }, { field: 'ink_colour', value: 'EX MAG 01' }] } },
+      { key: 'book_spine', label: 'Book Spine', options: cfg => { const v = bkoSpine(cfg); return v ? [v + 'mm'] : []; }, section: 'Content', neutral: true, after: 'colour', showWhen: { field: 'binding', value: 'Perfect Binding' } },
       // Compulsory Finishing (display only, as on the live form)
       { key: 'cf_cover_ss_card', label: 'Compulsory Finishing', options: ['Creasing, Saddle Stitching + Folding'], section: 'Cover', neutral: true, after: 'hot_stamping', showWhen: { all: [{ field: 'binding', value: 'Saddle Stitching' }, { field: 'cover', values: ['GAC230', 'GAC250', 'GAC310'].map(c => BK_P[c]) }] } },
       { key: 'cf_cover_ss', label: 'Compulsory Finishing', options: ['Saddle Stitching + Folding'], section: 'Cover', neutral: true, after: 'hot_stamping', showWhen: { all: [{ field: 'binding', value: 'Saddle Stitching' }, { field: 'cover', notValues: ['GAC230', 'GAC250', 'GAC310'].map(c => BK_P[c]) }] } },
@@ -2574,11 +2601,14 @@ const CFG_OVERRIDES = {
     placeholderExact: ['size', 'page', 'cover', 'content', 'colour', 'emboss_size', 'hs_size_1', 'hs_colour_1', 'hs_size_2', 'hs_colour_2', 'ink_colour', 'quantity'],
     placeholderWhen: { cover_lamination: cfg => bkoCoverLams(cfg).indexOf('Not Required') < 0, content_lamination: cfg => bkoContentLams(cfg).indexOf('No Lamination') < 0 && bkoContentLams(cfg).length > 1 },
     qtyOptions: cfg => bkSoft(cfg) ? BKO_QTY : BKO_HQTY,
-    // hardcover with hot stamping starts at 300 books (live v4); softcover offers every quantity with every finish
-    qtyFilter: (cfg, q) => bkSoft(cfg) || !optOn(cfg.hot_stamping) || q >= 300,
+    // hardcover with hot stamping or Spot UV starts at 300 books (live v4); softcover offers every quantity with every finish
+    qtyFilter: (cfg, q) => bkSoft(cfg) || !(optOn(cfg.hot_stamping) || /Spot UV/.test(cfg.cover_lamination || '')) || q >= 300,
+    processDays: (cfg, q) => bkoDays(cfg, q),
     priceBase: bkoPrice,
     // every option is priced by bkoPrice (incl. finishes the old crawled price list lacks, e.g. Gloss Waterbase Varnish (Both))
     ownsOptions: true,
+    // the live form's question order (Binding before Book Size)
+    order: ['ordertype', 'orientation', 'binding', 'size', 'page', 'cover', 'outer_inner', 'cover_lamination', 'cover_embossing', 'emboss_size', 'hot_stamping'],
   },
   'Bunting — Gear X Stand': { addFields: [
     { key: 'size', label: 'Size', options: ['6ft x 2ft'], section: 'General', neutral: true, first: true },
@@ -4213,7 +4243,7 @@ class Component extends DCLogic {
     const p = this.pkProduct(); const ov = (p && CFG_OVERRIDES[p.name]) || {};
     if (!p) return ov;
     if (!this._ovCache || this._ovCache.p !== p) {
-      const optional = f => (f.options || []).some(isNoneOpt);
+      const optional = f => (Array.isArray(f.options) ? f.options : []).some(isNoneOpt);
       const keys = (p.fields || []).filter(f => f.key && !optional(f)).map(f => f.key)
         .concat((ov.addFields || []).filter(a => a.type !== 'number' && !a.widget && !optional(a)).map(a => a.key))
         .concat(['quantity']);
@@ -4232,7 +4262,7 @@ class Component extends DCLogic {
   // has the customer chosen every option field currently on screen, plus quantity? (gates the
   // live price, like the source form). Fields hidden for the current spec don't block.
   // production days for the current spec (a number, or a rule of the spec — e.g. embossing adds a day)
-  procDays() { const pd = this.cfgOv().processDays; if (typeof pd === 'function') { try { return pd(this.pkV()); } catch (e) { return null; } } return pd != null ? pd : null; }
+  procDays() { const pd = this.cfgOv().processDays; if (typeof pd === 'function') { try { return pd(this.pkV(), this.state.qty); } catch (e) { return null; } } return pd != null ? pd : null; }
   pkReady() {
     if (this.lbCfg()) return this.lbValid();
     const sc = this.state.cfg || {}; let fields = [];
@@ -4398,7 +4428,10 @@ class Component extends DCLogic {
     let list = (prod.fields || []).filter(f => f.key && !hidden(f) && this.pkShown(f, cfg)).map(f => {
       let options = [];
       try { options = E.localOptions(prod, f.key, cfg) || []; } catch (e) { options = f.options || []; }
-      if (options.length) options = this.plOptions(prod, f.key, cfg, options);
+      // ownsOptions: the override is the live form's option list, so it also supplies questions the engine has no list for
+      // (offset booklet pages / cover / content / print colour)
+      if (!options.length && ov.ownsOptions && ov.optionsOverride && ov.optionsOverride[f.key]) { const oo = ov.optionsOverride[f.key]; try { options = (typeof oo === 'function' ? oo(cfg, []) : oo) || []; } catch (e) { options = []; } }
+      else if (options.length) options = this.plOptions(prod, f.key, cfg, options);
       // conditional validity: when a field's gate fails, offer only its first (safe) option
       if (gates[f.key] && options.length) { try { if (!gates[f.key](cfg, this.state.qty)) options = [options[0]]; } catch (e) {} }
       // per-option validity (e.g. Back-side hot stamping needs Gloss Art Card): invalid answers are not offered
@@ -4418,7 +4451,7 @@ class Component extends DCLogic {
     (ov.addFields || []).forEach(af => {
       if (af.showWhen && !this.pkShown(af, cfg)) return;
       if (hideWhen[af.key]) { try { if (hideWhen[af.key](cfg)) return; } catch (e) {} }
-      const node = { def: af, options: (af.options || null) };
+      const node = { def: af, options: (afOpts(af, cfg) || null) };
       const depKey = af.after || (af.showWhen && (af.showWhen.field || (af.showWhen.all && af.showWhen.all[0] && af.showWhen.all[0].field)));
       let at = depKey ? list.findIndex(x => x.def.key === depKey) : -1;
       if (af.first) list.unshift(Object.assign(node, { def: Object.assign({ __added: true }, af) }));   // e.g. a fixed Size Excard shows first
@@ -4469,7 +4502,8 @@ class Component extends DCLogic {
         try { disp = typeof disp === 'function' ? (disp(cfg, options) || options) : (disp || options); } catch (e) { disp = options; }
         const valid = {}; options.forEach(o => { valid[val(o)] = 1; });
         const shown = {}; disp.forEach(o => { shown[val(o)] = 1; });
-        const reliable = Object.keys(valid).every(v => shown[v]);
+        // ownsOptions: the override lists are the live form's own valid set, so nothing is greyed
+        const reliable = !ov.ownsOptions && Object.keys(valid).every(v => shown[v]);
         const isPh = ph.indexOf(def.key) >= 0;
         return { key: def.key, label, type: 'select', required: isPh, value: isPh ? (sc[def.key] != null ? sc[def.key] : '') : (cfg[def.key] != null ? cfg[def.key] : ''),
           options: disp.map(o => ({ value: val(o), label: cleanOpt(optLabel[val(o)] || val(o)), avail: reliable ? !!valid[val(o)] : true })) };
@@ -4526,11 +4560,11 @@ class Component extends DCLogic {
       try { if (cfg[k] != null && cfg[k] !== '' && !ov.validOpt[k](cfg, cfg[k])) { const src = E.localOptions(prod, k, cfg) || [], af0 = (ov.addFields || []).find(a => a.key === k); const o = (src.length ? src : ((af0 && af0.options) || [])).map(x => Array.isArray(x) ? x[0] : x).filter(v => ov.validOpt[k](cfg, v)); if (o.length) cfg[k] = o.find(v => !optOn(v)) || o[0]; } } catch (e) {}
     }
     // an added question with one valid option left (e.g. Creasing on a custom fold size) takes that value
-    (ov.addFields || []).forEach(a => { if (!a.options || !a.options.length || (a.showWhen && !this.pkShown(a, cfg))) return; const vo = (ov.validOpt || {})[a.key]; const l = a.options.filter(v => { try { return !vo || vo(cfg, v); } catch (e) { return true; } }); if (l.length === 1) cfg[a.key] = l[0]; });
+    (ov.addFields || []).forEach(a => { const ao = afOpts(a, cfg); if (!ao || !ao.length || (a.showWhen && !this.pkShown(a, cfg))) return; const vo = (ov.validOpt || {})[a.key]; const l = ao.filter(v => { try { return !vo || vo(cfg, v); } catch (e) { return true; } }); if (l.length === 1) cfg[a.key] = l[0]; });
     { const ph0 = ov.placeholder || [], oo0 = ov.optionsOverride || {};
       (ov.addFields || []).forEach(a => {
-        if (!a.options || a.options.length < 2 || ph0.indexOf(a.key) >= 0 || (a.showWhen && !this.pkShown(a, cfg))) return;
-        let l = a.options; if (typeof oo0[a.key] === 'function') { try { const x = oo0[a.key](cfg); if (x && x.length) l = x; } catch (e) {} }
+        const ao = afOpts(a, cfg); if (!ao || ao.length < 2 || ph0.indexOf(a.key) >= 0 || (a.showWhen && !this.pkShown(a, cfg))) return;
+        let l = ao; if (typeof oo0[a.key] === 'function') { try { const x = oo0[a.key](cfg); if (x && x.length) l = x; } catch (e) {} }
         const vo = (ov.validOpt || {})[a.key]; if (vo) l = l.filter(v => { try { return vo(cfg, v); } catch (e) { return true; } });
         if (l.length && (cfg[a.key] == null || cfg[a.key] === '' || l.indexOf(cfg[a.key]) < 0)) cfg[a.key] = (a.default != null && l.indexOf(a.default) >= 0) ? a.default : (l.find(isNoneOpt) || l[0]);
       }); }
@@ -7865,7 +7899,7 @@ class Component extends DCLogic {
       // (fold "Open Size" presets, plastic-card sets), the engine set is disjoint, so trust the
       // override and show every option as available (don't falsely grey them).
       const dispSet = {}; dispOptions.forEach(v => { dispSet[Array.isArray(v) ? v[0] : v] = 1; });
-      const reliable = validVals.length > 0 && validVals.every(v => dispSet[v]);
+      const reliable = !ov.ownsOptions && validVals.length > 0 && validVals.every(v => dispSet[v]);
       const fk = def.key + ' ' + (def.label || ''), isPrintQ = /print|colou?r/i.test(fk) && !/stamp|foil|emboss/i.test(fk), isMatQ = /paper|material|stock/i.test(fk);
       const items = dispOptions.map(v => { const val = Array.isArray(v) ? v[0] : v;
         return { val: val, label: opts.book ? bookOptLabel(cleanOpt(optLabel[val] || val), isPrintQ).replace(/\s*\(2 sides? coated\)/i, '') : cleanOpt(optLabel[val] || val), desc: null, on: chosen === val, avail: reliable ? !!availSet[val] : true, img: pkOptImg(def.key, val),
@@ -8006,6 +8040,11 @@ class Component extends DCLogic {
     const k = (String(key) + ' ' + String(label || '')).toLowerCase(), n = NAME || 'your print';
     const Q = [
       [/^hw_/, 'What size do you need?', ''],
+      [/emboss.?size/, 'Which size is the emboss area?', 'Raises part of your design so people can feel it.'],
+      [/^hs_size|h\/s size|stamping size/, 'Which size is the hot stamping area?', 'Metallic foil, like gold or silver, pressed onto your design.'],
+      [/^hs_colou?r|h\/s colou?r|foil colou?r/, 'Which foil colour would you like?', ''],
+      [/extra.?books?/, 'Do you need 3 extra books for sampling?', 'Extra copies to check before the full run (+RM30).'],
+      [/^ink_colou?r/, 'Which ink colour would you like?', 'Single Colour prints both sides in this one ink.'],
       [/cut type/, 'Which cut would you like?', 'How each sticker is cut from the sheet.'],
       [/categor|product type/, 'Which type of ' + n + ' would you like?', 'Each type has its own sizes and finishes.'],
       [/shape/, 'Which shape would you like?', ''],
@@ -8038,7 +8077,10 @@ class Component extends DCLogic {
       [/page/, 'How many pages do you need?', 'Count every printed page.'],
       [/print|colou?r|side/, 'How is the printing to be done?', 'Colourful prints in full colour (CMYK). Single Colour uses one ink.'],
     ];
-    const hit = Q.find(q => q[0].test(k)), L = String(label || key);
+    let hit = Q.find(q => q[0].test(k)); const L = String(label || key);
+    // the size step mentions a custom size only when the product offers one
+    if (hit && /custom size/.test(hit[2])) { let custom = true; try { const f = this.pkFields().find(x => x.def.key === key); if (f && f.options && f.options.length) custom = f.options.some(o => /other|custom/i.test(String(Array.isArray(o) ? o[0] : o))); } catch (e) {}
+      if (!custom) hit = [hit[0], hit[1], 'Pick a standard size.']; }
     if (!hit) return /^add\b/i.test(L) ? ['Would you like to ' + L.charAt(0).toLowerCase() + L.slice(1) + '?', ''] : ['Choose your ' + L, ''];
     // booklets ask the same question for the cover and the inside pages: say which one
     const part = /cover.?type/i.test(L) ? null : /^cover\b/i.test(L) ? 'cover' : /^(content|inner|inside|text)\b/i.test(L) ? 'inside pages' : null;
@@ -8048,7 +8090,7 @@ class Component extends DCLogic {
     const s = this.state, prod = this.pkProduct(), pid = prod ? prod.id : 0, fields = this.pkFields();
     const same = s.bookProd === pid;
     const bookKey = same ? s.bookKey : null;
-    const labelOf = k => { if (k === 'quantity') return 'Quantity'; if (/^hw_/.test(k)) return 'Size'; const f = fields.find(x => x.def.key === k); return f ? niceLabel(f.def.label || k, k) : k; };
+    const labelOf = k => { if (k === 'quantity') return 'Quantity'; if (/^hw_/.test(k)) return 'Size'; const f = fields.find(x => x.def.key === k), ovl = this.cfgOv().label || {}; return f ? niceLabel(ovl[k] || f.def.label || k, k) : k; };
     const onQtyPage = k => k === 'quantity' || /duplicat/i.test(k + ' ' + labelOf(k));
     // chapters: the engine's sections (General, Optional Finishing, …), then Quantity (+ duplicate job) last
     const pages = [];
