@@ -2156,6 +2156,15 @@ function bkoQ(row, q) { const qs = Object.keys(row).map(Number).sort((a, b) => a
   let i = 1; while (i < qs.length - 1 && q > qs[i]) i++; const a = qs[i - 1], b = qs[i]; return row[a] + (row[b] - row[a]) * bkoF(q, a, b); }
 // within 1,000-10,000 Excard's price rises a little slower at first (3,000 sits ~20.8% of the way, not 22%); 100-1,000 is straight
 const bkoF = (q, a, b) => a === 1000 && b === 10000 && q > a && q < b ? Math.pow((q - a) / (b - a), 1.05) : (q - a) / (b - a);
+// 1C saddle stitch: [pages per plate set, RM per copy per set above 3,000 copies] (live 1C sweep)
+// paper cover saving per size: [fixed part, share of the A4 per-copy part] (A4 / A5 sweeps; B5 from the 1C self-cover sweep)
+const BKO_COVF = { B5: [-75, .52], A6: [-120, .37] };
+// [saddle pages per set, RM per copy per set above 3,000, perfect inside pages per set]
+// inside-paper cost share vs A4 where it differs from BKO_K (A6 from the GA100 1C sweep)
+const BKO_KCONT = { A6: .26 };
+const BKO_1C = { A4: [8, .0045, 8], B5: [8, .0043, 8], 'B5+': [8, .0045, 8], A5: [16, .00136, 16], A6: [32, 0, 32] };
+// A6 saddle 1C saving by page count (RM, flat across quantities; live sweep)
+const BKO_1C_A6 = { 8: 66, 16: 132, 24: 132, 32: 197, 40: 113, 48: 197, 56: 171, 64: 234, 72: 165, 80: 220 };
 const bkoContD = (code, q, cp, k) => BKO_CONT[code] ? bkoLog2(BKO_CONT[code], q) * cp * (q + 320) * k : 0;
 // T = { page: [inner paper code, { qty: price }] }; exact page rows, straight line between sampled pages, null outside the table
 // allPages: a self-cover table (cover printed on the same paper as the pages), so its paper counts on every page
@@ -2198,8 +2207,11 @@ function bkoPrice(cfg, q) {
   let price;
   // measured Excard reference tables (Gloss Art Card 250 + varnish, 4C) by orientation | binding | size, normalised to Gloss Art 128 inside
   const tkey = (cfg.orientation === 'Landscape' ? 'L' : 'P') + '|' + kind[0].toUpperCase() + '|' + sk;
-  const selfCover = kind === 'saddle' && !/^GAC/.test(BK_CODE[cfg.cover] || 'GAC') && cfg.cover === cfg.content && !!BKO_SC[tkey];
-  const tab = selfCover ? bkoTabAt(BKO_SC[tkey], pp, q, k, true) : bkoTabAt(BKO_TAB[tkey], pp, q, k);
+  const oneC = /^1C/.test(cfg.colour || '');
+  // a self-cover in 1C cannot share the 4C plates with its pages: the cover prints on its own (live 1C sweep)
+  const selfCover = kind === 'saddle' && !oneC && !/^GAC/.test(BK_CODE[cfg.cover] || 'GAC') && cfg.cover === cfg.content && !!BKO_SC[tkey];
+  const kp = BKO_KCONT[sk] || k;   // inside-paper share of the A4 per-page paper cost for this size
+  const tab = selfCover ? bkoTabAt(BKO_SC[tkey], pp, q, kp, true) : bkoTabAt(BKO_TAB[tkey], pp, q, kp);
   const scUsed = selfCover && tab != null;
   if (tab != null) price = tab;
   else if (sk === 'A5' && kind === 'saddle' && BKO_A5_SADDLE[pp]) { price = bkoQ(BKO_A5_SADDLE[pp], q);
@@ -2216,11 +2228,22 @@ function bkoPrice(cfg, q) {
     const v = nodes.map((n, i) => bkoSmooth(G, pp, n) * rAt(n, i));
     price = q <= nodes[1] ? v[0] + (v[1] - v[0]) * bkoF(q, nodes[0], nodes[1]) : v[1] + (v[2] - v[1]) * bkoF(q, nodes[1], nodes[2]); }
   const cc = BK_CODE[cfg.content];
-  if (BKO_CONT[cc]) price += bkoLog2(BKO_CONT[cc], q) * (scUsed ? pp : cpages) * (q + 320) * k;
+  if (BKO_CONT[cc]) price += bkoLog2(BKO_CONT[cc], q) * (scUsed ? pp : cpages) * (q + 320) * kp;
   if (/^GAC/.test(cc || '')) { const d = BKO_CARD_CLAMD[cfg.content_lamination]; if (d) price += bkoLog2(d, q) * cpages * q * k; }
   else if (BKO_CLAM[cfg.content_lamination]) price += bkoLog2(BKO_CLAM[cfg.content_lamination], q) * cpages * q * k;
   // 1C inner pages: a flat saving per page up to 3,000 copies (fewer plates), growing towards 10,000 (live A4 / A5 100pp)
-  if (/^1C/.test(cfg.colour || '')) { const t = Math.max(0, Math.log(Math.min(10000, Math.max(3000, q)) / 3000) / Math.log(10000 / 3000)); const kc = sk === 'A5' ? .5 - .12 * t : k; price -= (6.875 + 3.75 * t) * cpages * kc; }
+  // 1C inner pages save ~RM65.3 per plate set, plus a small per-copy ink saving above 3,000 (live 1C sweeps).
+  // Saddle: one set per 8 pages on A4 / B5 / B5+, A5 floor(pages/16) + 1, A6 measured per page count.
+  // Perfect: one set per 8 inside pages on A4 / B5 / B5+, per 16 on A5, per 32 on A6 (rounded up).
+  if (oneC && BKO_1C[sk]) {
+    // lighter inside papers (100gsm and below) save ~85% as much (live A4 100pp GA100 vs GA128)
+    const pf = /^(S80|S100|GA80|GA100|MA100)$/.test(cc || '') ? 0.846 : 1;
+    const c1 = BKO_1C[sk], perSet = (65.3 + c1[1] * Math.max(0, q - 3000)) * pf;
+    if (kind === 'perfect') price -= Math.ceil(cpages / c1[2]) * perSet;
+    else if (sk === 'A6') { const T = BKO_1C_A6, ps = Object.keys(T).map(Number); let v; if (T[pp] != null) v = T[pp]; else { let a = ps[0], b = ps[ps.length - 1]; ps.forEach(x => { if (x <= pp && x > a) a = x; if (x >= pp && x < b) b = x; }); v = a === b ? T[a] : T[a] + (T[b] - T[a]) * (pp - a) / (b - a); } price -= v; }
+    else price -= (sk === 'A5' ? Math.floor(pp / 16) + 1 : Math.floor(pp / c1[0])) * perSet;
+  }
+  else if (oneC) { const t = Math.max(0, Math.log(Math.min(10000, Math.max(3000, q)) / 3000) / Math.log(10000 / 3000)); const kc = sk === 'A5' ? .5 - .12 * t : k; price -= (6.875 + 3.75 * t) * cpages * kc; }
   if (kind === 'hard') { if (/Spot UV/.test(cfg.cover_lamination || '')) price += 225 + (640 - 225) * (q - 1000) / 4000; }
   else {
     const cvc = BK_CODE[cfg.cover];
@@ -2230,11 +2253,11 @@ function bkoPrice(cfg, q) {
       let d = BKO_COVER[cvc];
       if (!/^GAC/.test(cvc)) {
         const sep = (cvc === 'GA150' || cvc === 'MA150') ? d : [d[0] + 180, d[1] + 437];
-        d = cfg.content !== cfg.cover ? sep : (pp % 8 === 0 ? [sep[0] - 180, sep[1] - 437] : [sep[0] + 105, sep[1] + 30]);
+        d = cfg.content !== cfg.cover || /^1C/.test(cfg.colour || '') ? sep : (pp % 8 === 0 ? [sep[0] - 180, sep[1] - 437] : [sep[0] + 105, sep[1] + 30]);
         // a paper cover's saving = a fixed part (plates / makeready, same on every size: ~RM108 printed separately, ~RM288
         // ganged with the content) + a per-copy part that scales with size (live A4 + A5 GA150 / GA128 sweeps)
-        const F = -108 + (d[0] - sep[0]), v = [d[0] - F, d[1] - F];
-        price += F + (q < 1000 ? v[0] * q / 1000 : bkoLin2(v, q)) * k;
+        const cf = BKO_COVF[sk] || [-108, k], F = cf[0] + (d[0] - sep[0]), v = [d[0] - (-108 + d[0] - sep[0]), d[1] - (-108 + d[0] - sep[0])];
+        price += F + (q < 1000 ? v[0] * q / 1000 : bkoLin2(v, q)) * cf[1];
       } else price += bkoLin2(d, q) * k;
     }
     // cover finish: free up to ~330 copies, then straight up to its 1,000-copy price (live A4 matte lamination sweep)
