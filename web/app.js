@@ -2150,8 +2150,8 @@ const bkoA5Steps = c => { const b = Math.floor(c / 32), r = c % 32; return 2 * (
 // price across quantity from per-quantity values (linear between sampled quantities, straight on past the last two)
 function bkoQ(row, q) { const qs = Object.keys(row).map(Number).sort((a, b) => a - b); if (q <= qs[0]) return row[qs[0]];
   let i = 1; while (i < qs.length - 1 && q > qs[i]) i++; const a = qs[i - 1], b = qs[i]; return row[a] + (row[b] - row[a]) * bkoF(q, a, b); }
-// within 100-1,000 and 1,000-10,000 Excard's price rises a little slower at first (300 / 3,000 sit ~20.5% of the way, not 22%)
-const bkoF = (q, a, b) => ((a === 100 && b === 1000) || (a === 1000 && b === 10000)) && q > a && q < b ? Math.pow((q - a) / (b - a), 1.05) : (q - a) / (b - a);
+// within 1,000-10,000 Excard's price rises a little slower at first (3,000 sits ~20.8% of the way, not 22%); 100-1,000 is straight
+const bkoF = (q, a, b) => a === 1000 && b === 10000 && q > a && q < b ? Math.pow((q - a) / (b - a), 1.05) : (q - a) / (b - a);
 function bkoPrice(cfg, q) {
   const pp = +cfg.page, sk = BK_SIZE_KEY[cfg.size]; if (!(pp > 0) || !sk || !(q > 0)) return null;
   const kind = !bkSoft(cfg) ? 'hard' : bkPerfect(cfg) ? 'perfect' : 'saddle';
