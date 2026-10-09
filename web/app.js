@@ -2102,7 +2102,7 @@ const BKOQ = {
 };
 // size ratio to A4 at [100, 1,000, 10,000] books (hardcover: [100, 1,000, 5,000])
 const BKO_RATIO = {
-  saddle: { A5: { 8: [.9746, .8303, .6059], 44: [.6736, .6201, .5377], 80: [.6406, .5994, .5283] }, A6: { 8: [.9901, .768, .4549], 16: [.9623, .7378, .4236], 24: [.7438, .5947, .3838], 32: [.7859, .6104, .3792], 48: [.583, .4812, .3462], 64: [.5642, .4677, .3287] },
+  saddle: { A5: { 8: [.9746, .8303, .6059], 44: [.6736, .6201, .5377], 80: [.6406, .5994, .5283] }, A6: { 8: [.9966, .7902, .459], 16: [.973, .7527, .4266], 24: [.7545, .6066, .386], 32: [.7865, .6203, .3811], 48: [.596, .4886, .3476], 64: [.5642, .4677, .3287] },
     B5: { 8: [.9337, .8321, .7115], 16: [.9519, .8756, .7883], 24: [.9617, .8995, .8267], 44: [.9725, .9226, .8695], 64: [.9884, .9375, .891] }, 'B5+': { 44: [.997, .9815, .9627] }, '210x210': { 44: [.9954, .9709, .9423] } },
   perfect: { A5: { 100: [.5467, .5552, .5417] }, A6: { 100: [.3269, .3399, .3337] }, B5: { 100: [.984, .9485, .9128] }, 'B5+': { 100: [.997, .9815, .9627] }, '210x210': { 100: [.9954, .9709, .9423] } },
   hard: { A5: { 100: [.6012, .6414, .6529] }, B5: { 100: [.9174, .6758, .5546] }, 'B5+': { 100: [.9957, .9789, .9708] } },
@@ -2190,16 +2190,19 @@ function bkoPrice(cfg, q) {
       if (!/^GAC/.test(cvc)) {
         const sep = (cvc === 'GA150' || cvc === 'MA150') ? d : [d[0] + 180, d[1] + 437];
         d = cfg.content !== cfg.cover ? sep : (pp % 8 === 0 ? [sep[0] - 180, sep[1] - 437] : [sep[0] + 105, sep[1] + 30]);
-      }
-      // paper covers save at least their 1,000-copy amount on smaller runs (live A5: -147 at 300, -173 at 1,000)
-      // paper covers below 1,000 copies: the saving shrinks at ~0.74x its above-1,000 rate (live A4 GA150 / GA128 sweeps)
-      price += (/^GAC/.test(cvc) || q >= 1000 ? bkoLin2(d, q) : d[0] + 0.74 * (d[1] - d[0]) / 9000 * (q - 1000)) * k;
+        // a paper cover's saving = a fixed part (plates / makeready, same on every size: ~RM108 printed separately, ~RM288
+        // ganged with the content) + a per-copy part that scales with size (live A4 + A5 GA150 / GA128 sweeps)
+        const F = -108 + (d[0] - sep[0]), v = [d[0] - F, d[1] - F];
+        price += F + (q < 1000 ? v[0] * q / 1000 : bkoLin2(v, q)) * k;
+      } else price += bkoLin2(d, q) * k;
     }
     // cover finish: free up to ~330 copies, then straight up to its 1,000-copy price (live A4 matte lamination sweep)
     if (BKO_LAM[cfg.cover_lamination]) { const v = BKO_LAM[cfg.cover_lamination], spot = /Spot UV/.test(cfg.cover_lamination);
       // below 1,000 copies a finish costs its 1,000-copy rate minus RM35 (free on short runs); Spot UV adds a screen, min ~RM149
-      const fin = w => Math.max(0, (w + 35) * q / 1000 - 35), lv = spot ? v[0] - 220 : v[0];
-      price += (q >= 1000 ? bkoLin2(v, q) : fin(lv) + (spot ? Math.max(149, 220 - 0.106 * (1000 - q)) : 0)) * k; }
+      // the RM35 allowance is fixed, the rest scales with size (live A5 matte both sides)
+      const S = spot ? [220, 1154] : [0, 0], L = [v[0] - S[0] + 35, v[1] - S[1] + 35];
+      const lam = Math.max(0, k * (q < 1000 ? L[0] * q / 1000 : bkoLin2(L, q)) - 35);
+      price += lam + (spot ? (q >= 1000 ? bkoLin2(S, q) : Math.max(149, 220 - 0.106 * (1000 - q))) * k : 0); }
     if (/Inner/.test(cfg.outer_inner || '')) price += (q <= 1000 ? 200 : 200 + 280 * (q - 1000) / 9000) * k;
     if (BK_CODE[cfg.cover] === 'GAC310') price *= 1.05;
   }
