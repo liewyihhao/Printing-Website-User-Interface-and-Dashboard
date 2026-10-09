@@ -2161,10 +2161,10 @@ const bkoF = (q, a, b) => a === 1000 && b === 10000 && q > a && q < b ? Math.pow
 const BKO_COVF = { B5: [-75, .52], A6: [-120, .37] };
 // [saddle pages per set, RM per copy per set above 3,000, perfect inside pages per set]
 // inside-paper cost share vs A4 where it differs from BKO_K (A6 from the GA100 1C sweep)
-const BKO_KCONT = { A6: .26 };
+const BKO_KCONT = { A6: .26, A5: .51 };
 const BKO_1C = { A4: [8, .0045, 8], B5: [8, .0043, 8], 'B5+': [8, .0045, 8], A5: [16, .00136, 16], A6: [32, 0, 32] };
-// A6 saddle 1C saving by page count (RM, flat across quantities; live sweep)
-const BKO_1C_A6 = { 8: 66, 16: 132, 24: 132, 32: 197, 40: 113, 48: 197, 56: 171, 64: 234, 72: 165, 80: 220 };
+// A6 saddle 1C plate sets saved by page count (live every-4-page sweep)
+const BKO_1C_A6 = { 8: 1, 12: 1, 16: 2, 20: 1, 24: 2, 28: 2, 32: 3, 36: 1, 40: 2, 44: 2, 48: 3, 52: 2, 56: 3, 60: 3, 64: 4, 68: 2, 72: 3, 76: 3, 80: 4 };   // plate sets saved, by page count
 const bkoContD = (code, q, cp, k) => BKO_CONT[code] ? bkoLog2(BKO_CONT[code], q) * cp * (q + 320) * k : 0;
 // T = { page: [inner paper code, { qty: price }] }; exact page rows, straight line between sampled pages, null outside the table
 // allPages: a self-cover table (cover printed on the same paper as the pages), so its paper counts on every page
@@ -2240,8 +2240,10 @@ function bkoPrice(cfg, q) {
     const pf = /^(S80|S100|GA80|GA100|MA100)$/.test(cc || '') ? 0.846 : 1;
     const c1 = BKO_1C[sk], perSet = (65.3 + c1[1] * Math.max(0, q - 3000)) * pf;
     if (kind === 'perfect') price -= Math.ceil(cpages / c1[2]) * perSet;
-    else if (sk === 'A6') { const T = BKO_1C_A6, ps = Object.keys(T).map(Number); let v; if (T[pp] != null) v = T[pp]; else { let a = ps[0], b = ps[ps.length - 1]; ps.forEach(x => { if (x <= pp && x > a) a = x; if (x >= pp && x < b) b = x; }); v = a === b ? T[a] : T[a] + (T[b] - T[a]) * (pp - a) / (b - a); } price -= v; }
-    else price -= (sk === 'A5' ? Math.floor(pp / 16) + 1 : Math.floor(pp / c1[0])) * perSet;
+    else if (sk === 'A6') price -= (BKO_1C_A6[pp] != null ? BKO_1C_A6[pp] : Math.floor(pp / 16) + 1) * perSet;
+    // A5: one more set every 16 pages, except pages 20 / 36 / 52 / 68 (pp % 16 === 4) which need one fewer (live every-4-page sweep)
+    else if (sk === 'A5') price -= (Math.floor(pp / 16) + (pp % 16 === 4 ? 0 : 1)) * perSet;
+    else price -= Math.floor(pp / c1[0]) * perSet;
   }
   else if (oneC) { const t = Math.max(0, Math.log(Math.min(10000, Math.max(3000, q)) / 3000) / Math.log(10000 / 3000)); const kc = sk === 'A5' ? .5 - .12 * t : k; price -= (6.875 + 3.75 * t) * cpages * kc; }
   if (kind === 'hard') { if (/Spot UV/.test(cfg.cover_lamination || '')) price += 225 + (640 - 225) * (q - 1000) / 4000; }
