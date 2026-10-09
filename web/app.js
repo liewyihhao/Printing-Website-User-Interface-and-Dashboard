@@ -2093,7 +2093,8 @@ function bkoContentLams(cfg) {
 // price — reference: A4, Gloss Art Card 250 cover + Gloss Waterbase Varnish, Gloss Art 128 content, 4C (hardcover: Gloss Art 150
 // cover + Gloss Lamination (Front)). Pages × quantity grids, sampled size ratios, per-content-page paper deltas, per-book add-ons.
 const BKOQ = {
-  saddle: { 8: { 100: 709, 200: 747, 500: 873, 1000: 1084, 2000: 1555, 3000: 2045, 5000: 3084, 10000: 5671, 20000: 10769 }, 24: { 100: 1330, 500: 1686, 1000: 2130, 2000: 3071, 5000: 6124, 10000: 11293, 20000: 21556 },
+  saddle: { 8: { 100: 709, 200: 747, 500: 873, 1000: 1084, 2000: 1555, 3000: 2045, 5000: 3084, 10000: 5671, 20000: 10769 }, 16: { 100: 1018, 200: 1084, 300: 1149, 400: 1216, 500: 1280, 600: 1346, 700: 1412, 800: 1478, 900: 1544, 1000: 1608, 2000: 2313, 3000: 3038, 5000: 4604, 10000: 8480, 20000: 16160 }, 24: { 100: 1330, 500: 1686, 1000: 2130, 2000: 3071, 5000: 6124, 10000: 11293, 20000: 21556 },
+    40: { 100: 1954, 300: 2225, 500: 2497, 1000: 3177, 3000: 6012, 10000: 16916 },
     44: { 100: 1967, 500: 2558, 1000: 3296, 2000: 4823, 5000: 9751, 10000: 18088, 20000: 34686 }, 80: { 100: 3517, 500: 4527, 1000: 5794, 2000: 8377, 5000: 16765, 10000: 30970, 20000: 59309 } },
   perfect: { 36: { 100: 1628, 1000: 3052, 5000: 9852, 10000: 18552 }, 100: { 100: 4114, 1000: 7125, 5000: 21451, 10000: 39917 }, 200: { 100: 8163, 1000: 13883, 5000: 41002, 10000: 76037 }, 288: { 100: 11615, 1000: 19792, 5000: 58492, 10000: 108495 } },
   hard: { 56: { 100: 3298, 1000: 8471, 5000: 32245 }, 100: { 100: 4864, 1000: 11129, 5000: 40048 }, 200: { 100: 8914, 1000: 17887, 5000: 59599 }, 292: { 100: 12379, 1000: 23921, 5000: 77711 } },
@@ -2101,14 +2102,15 @@ const BKOQ = {
 // size ratio to A4 at [100, 1,000, 10,000] books (hardcover: [100, 1,000, 5,000])
 const BKO_RATIO = {
   saddle: { A5: { 8: [.9746, .8303, .6059], 44: [.6736, .6201, .5377], 80: [.6406, .5994, .5283] }, A6: { 8: [.9901, .768, .4549], 16: [.9623, .7378, .4236], 24: [.7438, .5947, .3838], 32: [.7859, .6104, .3792], 48: [.583, .4812, .3462], 64: [.5642, .4677, .3287] },
-    B5: { 44: [.9725, .9227, .8695] }, 'B5+': { 44: [.997, .9815, .9627] }, '210x210': { 44: [.9954, .9709, .9423] } },
+    B5: { 8: [.9337, .8321, .7115], 16: [.9519, .8756, .7883], 24: [.9617, .8995, .8267], 44: [.9725, .9226, .8695], 64: [.9884, .9375, .891] }, 'B5+': { 44: [.997, .9815, .9627] }, '210x210': { 44: [.9954, .9709, .9423] } },
   perfect: { A5: { 100: [.5467, .5552, .5417] }, A6: { 100: [.3269, .3399, .3337] }, B5: { 100: [.984, .9485, .9128] }, 'B5+': { 100: [.997, .9815, .9627] }, '210x210': { 100: [.9954, .9709, .9423] } },
   hard: { A5: { 100: [.6012, .6414, .6529] }, B5: { 100: [.9174, .6758, .5546] }, 'B5+': { 100: [.9957, .9789, .9708] } },
 };
 const BKO_K = { A4: 1, '210x210': .95, B5: .9, 'B5+': .97, A5: .55, A6: .34 };
 // content paper vs Gloss Art 128, RM per content page per book at [1,000, 10,000] books (card stock includes its varnish)
-const BKO_CONT = { S80: [-.01183, -.00941], GA80: [-.01345, -.01063], GA100: [-.00775, -.0062], S100: [-.00575, -.004675], GA128: [0, 0], GA150: [.0062, .00487], MA100: [-.00675, -.00544],
-  MA130: [.00183, .00144], MA150: [.00768, .00602], GAC250: [.060, .0523], GAC230: [.0696, .0505] };
+// inner paper vs Gloss Art 128, RM per page per (book + 320): the 320 covers makeready waste sheets (live A4 sweeps)
+const BKO_CONT = { S80: [-.00914, -.00914], GA80: [-.01019, -.0103], GA100: [-.00606, -.00603], S100: [-.00436, -.00453], GA128: [0, 0], GA150: [0.0047, .00472], MA100: [-.00511, -.00527],
+  MA130: [0.00139, .0014], MA150: [0.00582, .00583], GAC250: [0.04545, .05068], GAC230: [0.05273, .04893] };
 const BKO_CLAM = { 'Gloss Lamination (Both Sides)': [.0535, .0511], 'Matte Lamination (Both Sides)': [.0553, .0523] };
 const BKO_CARD_CLAMD = { 'Gloss Lamination (Both Sides)': [.0364, .0364], 'Matte Lamination (Both Sides)': [.0376, .0376], 'UV Varnish (Both Sides)': [.0104, .0104], 'Gloss Waterbase Varnish (Both Sides)': [0, 0] };
 // cover paper vs Gloss Art Card 250 + varnish, per book: [at 1,000, at 10,000]
@@ -2148,8 +2150,8 @@ const bkoA5Steps = c => { const b = Math.floor(c / 32), r = c % 32; return 2 * (
 // price across quantity from per-quantity values (linear between sampled quantities, straight on past the last two)
 function bkoQ(row, q) { const qs = Object.keys(row).map(Number).sort((a, b) => a - b); if (q <= qs[0]) return row[qs[0]];
   let i = 1; while (i < qs.length - 1 && q > qs[i]) i++; const a = qs[i - 1], b = qs[i]; return row[a] + (row[b] - row[a]) * bkoF(q, a, b); }
-// between 100 and 1,000 copies Excard's price rises a little slower at first (300 sits ~19% of the way, not 22%)
-const bkoF = (q, a, b) => a === 100 && b === 1000 && q > 100 && q < 1000 ? Math.pow((q - 100) / 900, 1.104) : (q - a) / (b - a);
+// within 100-1,000 and 1,000-10,000 Excard's price rises a little slower at first (300 / 3,000 sit ~20.5% of the way, not 22%)
+const bkoF = (q, a, b) => ((a === 100 && b === 1000) || (a === 1000 && b === 10000)) && q > a && q < b ? Math.pow((q - a) / (b - a), 1.05) : (q - a) / (b - a);
 function bkoPrice(cfg, q) {
   const pp = +cfg.page, sk = BK_SIZE_KEY[cfg.size]; if (!(pp > 0) || !sk || !(q > 0)) return null;
   const kind = !bkSoft(cfg) ? 'hard' : bkPerfect(cfg) ? 'perfect' : 'saddle';
@@ -2166,9 +2168,9 @@ function bkoPrice(cfg, q) {
     const rAt = (n, i) => { if (!R) return 1; const ps = Object.keys(R).map(Number).sort((a, b) => a - b); if (pp <= ps[0]) return R[ps[0]][i]; if (pp >= ps[ps.length - 1]) return R[ps[ps.length - 1]][i];
       for (let j = 1; j < ps.length; j++) if (pp <= ps[j]) return R[ps[j - 1]][i] + (R[ps[j]][i] - R[ps[j - 1]][i]) * (pp - ps[j - 1]) / (ps[j] - ps[j - 1]); return 1; };
     const v = nodes.map((n, i) => bkoSmooth(G, pp, n) * rAt(n, i));
-    price = q <= nodes[1] ? v[0] + (v[1] - v[0]) * bkoF(q, nodes[0], nodes[1]) : v[1] + (v[2] - v[1]) * (q - nodes[1]) / (nodes[2] - nodes[1]); }
+    price = q <= nodes[1] ? v[0] + (v[1] - v[0]) * bkoF(q, nodes[0], nodes[1]) : v[1] + (v[2] - v[1]) * bkoF(q, nodes[1], nodes[2]); }
   const cc = BK_CODE[cfg.content];
-  if (BKO_CONT[cc]) price += bkoLog2(BKO_CONT[cc], q) * cpages * q * k;
+  if (BKO_CONT[cc]) price += bkoLog2(BKO_CONT[cc], q) * cpages * (q + 320) * k;
   if (/^GAC/.test(cc || '')) { const d = BKO_CARD_CLAMD[cfg.content_lamination]; if (d) price += bkoLog2(d, q) * cpages * q * k; }
   else if (BKO_CLAM[cfg.content_lamination]) price += bkoLog2(BKO_CLAM[cfg.content_lamination], q) * cpages * q * k;
   // 1C inner pages: a flat saving per page up to 3,000 copies (fewer plates), growing towards 10,000 (live A4 / A5 100pp)
