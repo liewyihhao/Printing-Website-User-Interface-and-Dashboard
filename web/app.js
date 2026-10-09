@@ -2192,10 +2192,14 @@ function bkoPrice(cfg, q) {
         d = cfg.content !== cfg.cover ? sep : (pp % 8 === 0 ? [sep[0] - 180, sep[1] - 437] : [sep[0] + 105, sep[1] + 30]);
       }
       // paper covers save at least their 1,000-copy amount on smaller runs (live A5: -147 at 300, -173 at 1,000)
-      price += (/^GAC/.test(cvc) ? bkoLin2(d, q) : bkoLin2(d, Math.max(1000, q))) * k;
+      // paper covers below 1,000 copies: the saving shrinks at ~0.74x its above-1,000 rate (live A4 GA150 / GA128 sweeps)
+      price += (/^GAC/.test(cvc) || q >= 1000 ? bkoLin2(d, q) : d[0] + 0.74 * (d[1] - d[0]) / 9000 * (q - 1000)) * k;
     }
     // cover finish: free up to ~330 copies, then straight up to its 1,000-copy price (live A4 matte lamination sweep)
-    if (BKO_LAM[cfg.cover_lamination]) { const v = BKO_LAM[cfg.cover_lamination]; price += (q >= 1000 ? bkoLin2(v, q) : v[0] * Math.max(0, (q - 333) / 667)) * k; }
+    if (BKO_LAM[cfg.cover_lamination]) { const v = BKO_LAM[cfg.cover_lamination], spot = /Spot UV/.test(cfg.cover_lamination);
+      // below 1,000 copies a finish costs its 1,000-copy rate minus RM35 (free on short runs); Spot UV adds a screen, min ~RM149
+      const fin = w => Math.max(0, (w + 35) * q / 1000 - 35), lv = spot ? v[0] - 220 : v[0];
+      price += (q >= 1000 ? bkoLin2(v, q) : fin(lv) + (spot ? Math.max(149, 220 - 0.106 * (1000 - q)) : 0)) * k; }
     if (/Inner/.test(cfg.outer_inner || '')) price += (q <= 1000 ? 200 : 200 + 280 * (q - 1000) / 9000) * k;
     if (BK_CODE[cfg.cover] === 'GAC310') price *= 1.05;
   }
