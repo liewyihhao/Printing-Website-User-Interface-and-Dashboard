@@ -2112,7 +2112,7 @@ const BKO_CONT = { S80: [-.01183, -.00941], GA80: [-.01345, -.01063], GA100: [-.
 const BKO_CLAM = { 'Gloss Lamination (Both Sides)': [.0535, .0511], 'Matte Lamination (Both Sides)': [.0553, .0523] };
 const BKO_CARD_CLAMD = { 'Gloss Lamination (Both Sides)': [.0364, .0364], 'Matte Lamination (Both Sides)': [.0376, .0376], 'UV Varnish (Both Sides)': [.0104, .0104], 'Gloss Waterbase Varnish (Both Sides)': [0, 0] };
 // cover paper vs Gloss Art Card 250 + varnish, per book: [at 1,000, at 10,000]
-const BKO_COVER = { GAC230: [-14, -201], GAC250: [0, 0], GAC310: [0, 0], GA150: [-230, -1734], MA150: [-228, -1684], GA128: [-437, -2377], GA100: [-468, -2623], GA80: [-491, -2801],
+const BKO_COVER = { GAC230: [-16, -201], GAC250: [0, 0], GAC310: [0, 0], GA150: [-230, -1734], MA150: [-228, -1684], GA128: [-437, -2377], GA100: [-468, -2623], GA80: [-491, -2801],
   MA130: [-428, -2319], MA100: [-464, -2592], S100: [-460, -2562], S80: [-485, -2752] };
 const BKO_LAM = { 'Gloss Lamination (Front)': [70, 727], 'Matte Lamination (Front)': [70, 727], 'Gloss Lamination (Both)': [173, 1766], 'Matte Lamination (Both)': [173, 1766],
   'Matte Lamination (Front) + Spot UV (Front)': [290, 1881], 'Matte Lamination (Both) + Spot UV (Front)': [393, 2920], 'UV Varnish (Front)': [18, 208], 'Gloss Waterbase Varnish (Front)': [0, 0],
@@ -2187,7 +2187,8 @@ function bkoPrice(cfg, q) {
       // paper covers save at least their 1,000-copy amount on smaller runs (live A5: -147 at 300, -173 at 1,000)
       price += (/^GAC/.test(cvc) ? bkoLin2(d, q) : bkoLin2(d, Math.max(1000, q))) * k;
     }
-    if (BKO_LAM[cfg.cover_lamination]) price += bkoLin2(BKO_LAM[cfg.cover_lamination], q) * k;
+    // cover finish: free up to ~330 copies, then straight up to its 1,000-copy price (live A4 matte lamination sweep)
+    if (BKO_LAM[cfg.cover_lamination]) { const v = BKO_LAM[cfg.cover_lamination]; price += (q >= 1000 ? bkoLin2(v, q) : v[0] * Math.max(0, (q - 333) / 667)) * k; }
     if (/Inner/.test(cfg.outer_inner || '')) price += (q <= 1000 ? 200 : 200 + 280 * (q - 1000) / 9000) * k;
     if (BK_CODE[cfg.cover] === 'GAC310') price *= 1.05;
   }
