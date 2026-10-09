@@ -2264,9 +2264,11 @@ function bkoPrice(cfg, q) {
     if (BKO_LAM[cfg.cover_lamination]) { const v = BKO_LAM[cfg.cover_lamination], spot = /Spot UV/.test(cfg.cover_lamination);
       // below 1,000 copies a finish costs its 1,000-copy rate minus RM35 (free on short runs); Spot UV adds a screen, min ~RM149
       // the RM35 allowance is fixed, the rest scales with size (live A5 matte both sides)
-      const S = spot ? [220, 1154] : [0, 0], L = [v[0] - S[0] + 35, v[1] - S[1] + 35];
+      // the Spot UV part at 1,000 / 10,000 copies and its short-run slope: larger over matte lamination on both sides (live A4 24pp)
+      const both = /\(Both\) \+ Spot UV/.test(cfg.cover_lamination), S = spot ? (both ? [323, 2193] : [220, 1154]) : [0, 0], slope = both ? 0.209 : 0.106;
+      const L = [v[0] - (spot ? (both ? 220 : 220) : 0) + 35, v[1] - (spot ? 1154 : 0) + 35];
       const lam = Math.max(0, k * (q < 1000 ? L[0] * q / 1000 : bkoLin2(L, q)) - 35);
-      price += lam + (spot ? (q >= 1000 ? bkoLin2(S, q) : Math.max(149, 220 - 0.106 * (1000 - q))) * k : 0); }
+      price += lam + (spot ? (q >= 1000 ? bkoLin2(S, q) : Math.max(149, S[0] - slope * (1000 - q))) * k : 0); }
     // printing inside the cover costs extra on a card cover; a self-cover already prints both sides of every page
     if (/Inner/.test(cfg.outer_inner || '') && !scUsed) price += (q <= 1000 ? 200 : 200 + 280 * (q - 1000) / 9000) * k;
     if (BK_CODE[cfg.cover] === 'GAC310') price *= 1.05;
@@ -2529,6 +2531,8 @@ const CFG_OVERRIDES = {
     // Excard quotes perfect-bound offset books only up to 10,000
     qtyFilter: (cfg, q) => !(bkSoft(cfg) && bkPerfect(cfg)) || q <= 10000,
     priceBase: bkoPrice,
+    // every option is priced by bkoPrice (incl. finishes the old crawled price list lacks, e.g. Gloss Waterbase Varnish (Both))
+    ownsOptions: true,
   },
   'Bunting — Gear X Stand': { addFields: [
     { key: 'size', label: 'Size', options: ['6ft x 2ft'], section: 'General', neutral: true, first: true },
@@ -4074,9 +4078,10 @@ class Component extends DCLogic {
     return out.length ? out : null;
   }
   // after every other rule: each axis value must be one a curve allows (in axis order, so earlier answers win)
-  plEnforce(prod, cfg) {
+  plEnforce(prod, cfg, skip) {
     const info = this.plInfo(prod), E = this.pkEngine();
     for (const f of (prod.fields || [])) {
+      if (skip && skip.indexOf(f.key) >= 0) continue;
       const vals = (f.options || []).map(o => Array.isArray(o) ? o[0] : o);
       if (!vals.length) continue;
       const ok = this.plValidity(prod, f.key, cfg, vals);
@@ -4084,6 +4089,7 @@ class Component extends DCLogic {
     }
     if (!info) return cfg;
     info.af.forEach((k, i) => {
+      if (skip && skip.indexOf(k) >= 0) return;
       const a = this.plAllowed(prod, k, cfg); if (!a || !a.length) return;
       const v = cfg[k];
       if (v != null && v !== '' && !info.known[i].has(v)) return;                // pass-through value (e.g. custom size)
@@ -4482,7 +4488,8 @@ class Component extends DCLogic {
         const vo = (ov.validOpt || {})[a.key]; if (vo) l = l.filter(v => { try { return vo(cfg, v); } catch (e) { return true; } });
         if (l.length && (cfg[a.key] == null || cfg[a.key] === '' || l.indexOf(cfg[a.key]) < 0)) cfg[a.key] = (a.default != null && l.indexOf(a.default) >= 0) ? a.default : (l.find(isNoneOpt) || l[0]);
       }); }
-    this.plEnforce(prod, cfg);
+    // a product that prices every option itself (ownsOptions) keeps its own lists: the crawled price list must not reset them
+    this.plEnforce(prod, cfg, ov.ownsOptions ? Object.keys(ov.optionsOverride || {}) : null);
     return cfg;
   }
   pkQuote(qtyOverride) {
