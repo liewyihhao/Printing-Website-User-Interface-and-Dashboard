@@ -250,6 +250,8 @@ function uploadMedia(b, actor) {
   if (!MEDIA_OK[ext]) return { error: 'Only PNG, JPG, WEBP, GIF, SVG or PDF files.' };
   const m = String(b.data || '').match(/^data:[^;]+;base64,(.+)$/); if (!m) return { error: 'No file data.' };
   const buf = Buffer.from(m[1], 'base64'); if (buf.length > 8 * 1024 * 1024) return { error: 'Files must be 8 MB or smaller.' };
+  // media is served publicly from /assets/uploads: the bytes must really be that type, and an SVG must carry no script
+  { const tp = require('./security').fileTypeProblem(buf, ext); if (tp) return { error: tp }; }
   const dir = path.join(__dirname, '..', 'assets', 'uploads'); fs.mkdirSync(dir, { recursive: true });
   const file = Date.now().toString(36) + '-' + name; fs.writeFileSync(path.join(dir, file), buf);
   log(actor, 'media_upload', file + ' (' + Math.round(buf.length / 1024) + ' KB)'); return { file: 'assets/uploads/' + file, name: file };

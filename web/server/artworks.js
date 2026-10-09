@@ -31,6 +31,7 @@ function save(me, b) {
   if (!EXT[ext]) return { error: 'Artwork must be PDF, AI, EPS, PSD, TIFF, JPG, PNG, SVG, CDR, INDD, ZIP or RAR.' };
   const m = String(b.data || '').match(/^data:[^;]*;base64,(.+)$/); if (!m) return { error: 'No file received.' };
   const buf = Buffer.from(m[1], 'base64');
+  const tp = require('./security').fileTypeProblem(buf, ext); if (tp) return { error: tp };
   if (buf.length > MAX_MB * 1024 * 1024) return { error: 'File is larger than ' + MAX_MB + ' MB.' };
   const thumb = /^data:image\/(jpeg|png|webp);base64,/.test(String(b.thumb || '')) && String(b.thumb).length < 400000 ? String(b.thumb) : null;
   const id = 'A' + crypto.randomBytes(6).toString('hex').toUpperCase();

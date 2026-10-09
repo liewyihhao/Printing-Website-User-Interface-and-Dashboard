@@ -2171,6 +2171,9 @@ const BKO_TAB = {
   'P|S|B5': { 8: ['GA128', {100:662,300:713,1000:902,3000:1531,10000:4035,20000:7525}], 12: ['GA128', {100:673,300:747,1000:1013,3000:1860,10000:5127,20000:9709}], 16: ['GA128', {100:969,300:1067,1000:1408,3000:2475,10000:6685,20000:12598}], 20: ['GA128', {100:980,300:1101,1000:1520,3000:2804,10000:7778,20000:14782}], 24: ['GA128', {100:1279,300:1420,1000:1916,3000:3419,10000:9336,20000:17670}], 28: ['GA128', {100:1291,300:1454,1000:2026,3000:3746,10000:10427,20000:19853}], 32: ['GA128', {100:1590,300:1775,1000:2423,3000:4362,10000:11986,20000:22743}], 36: ['GA128', {100:1602,300:1809,1000:2535,3000:4690,10000:13078,20000:24926}], 40: ['GA128', {100:1902,300:2130,1000:2931,3000:5307,10000:14637,20000:27816}], 44: ['GA128', {100:1913,300:2164,1000:3041,3000:5633,10000:15728,20000:29998}], 48: ['GA128', {100:2211,300:2484,1000:3438,3000:6249,10000:17287,20000:32887}], 52: ['GA128', {100:2225,300:2519,1000:3549,3000:6578,10000:18379,20000:35072}], 56: ['GA128', {100:2522,300:2837,1000:3944,3000:7193,10000:19938,20000:37962}], 60: ['GA128', {100:2534,300:2871,1000:4054,3000:7520,10000:21029,20000:40144}], 64: ['GA128', {100:2833,300:3192,1000:4451,3000:8136,10000:22588,20000:43034}], 68: ['GA100', {100:2693,300:3005,1000:4094,3000:7277,10000:19995,20000:37958}], 72: ['GA100', {100:2976,300:3305,1000:4455,3000:7810,10000:21315,20000:40386}], 76: ['GA100', {100:2986,300:3331,1000:4544,3000:8071,10000:22185,20000:42124}], 80: ['GA100', {100:3268,300:3633,1000:4904,3000:8607,10000:23506,20000:44552}] },
   'L|S|A5': { 8: ['GA128', {100:722,300:778,1000:977,3000:1605,10000:3978,20000:7438}], 12: ['GA128', {100:728,300:795,1000:1042,3000:1794,10000:4600,20000:8679}], 16: ['GA128', {100:1020,300:1101,1000:1391,3000:2268,10000:5569,20000:10389}], 20: ['GA128', {100:739,300:835,1000:1169,3000:2169,10000:5844,20000:11166}], 24: ['GA128', {100:1034,300:1142,1000:1518,3000:2642,10000:6811,20000:12874}], 28: ['GA128', {100:1041,300:1160,1000:1580,3000:2829,10000:7434,20000:14116}], 32: ['GA128', {100:1336,300:1467,1000:1930,3000:3304,10000:8402,20000:15825}], 36: ['GA128', {100:1056,300:1200,1000:1708,3000:3204,10000:8677,20000:16601}], 40: ['GA128', {100:1351,300:1508,1000:2059,3000:3680,10000:9647,20000:18312}], 44: ['GA128', {100:1356,300:1526,1000:2121,3000:3866,10000:10268,20000:19552}], 48: ['GA128', {100:1651,300:1833,1000:2470,3000:4339,10000:11235,20000:21262}], 52: ['GA128', {100:1372,300:1567,1000:2247,3000:4241,10000:11510,20000:22037}], 56: ['GA128', {100:1665,300:1872,1000:2597,3000:4715,10000:12480,20000:23748}], 60: ['GA128', {100:1673,300:1891,1000:2659,3000:4901,10000:13101,20000:24989}], 64: ['GA128', {100:1968,300:2198,1000:3009,3000:5376,10000:14069,20000:26698}], 68: ['GA100', {100:1611,300:1817,1000:2538,3000:4640,10000:12361,20000:23564}], 72: ['GA100', {100:1889,300:2105,1000:2863,3000:5064,10000:13194,20000:25017}], 76: ['GA100', {100:1896,300:2121,1000:2915,3000:5215,10000:13698,20000:26020}], 80: ['GA100', {100:2175,300:2412,1000:3238,3000:5640,10000:14530,20000:27474}] },
   'L|S|A4': { 8: ['GA128', {100:709,300:790,1000:1084,3000:2046,10000:5674,20000:10774}], 12: ['GA128', {100:720,300:826,1000:1204,3000:2399,10000:6847,20000:13118}], 16: ['GA128', {100:1018,300:1149,1000:1608,3000:3039,10000:8485,20000:16167}], 20: ['GA128', {100:1030,300:1185,1000:1727,3000:3390,10000:9659,20000:18512}], 24: ['GA128', {100:1330,300:1508,1000:2130,3000:4029,10000:11296,20000:21561}], 28: ['GA128', {100:1342,300:1544,1000:2250,3000:4382,10000:12469,20000:23904}], 32: ['GA128', {100:1643,300:1867,1000:2654,3000:5022,10000:14107,20000:26954}], 36: ['GA128', {100:1656,300:1903,1000:2773,3000:5373,10000:15280,20000:29298}], 40: ['GA128', {100:1954,300:2225,1000:3177,3000:6013,10000:16919,20000:32348}], 44: ['GA128', {100:1967,300:2263,1000:3296,3000:6365,10000:18091,20000:34691}], 48: ['GA128', {100:2267,300:2584,1000:3700,3000:7005,10000:19729,20000:37741}], 52: ['GA128', {100:2280,300:2622,1000:3819,3000:7356,10000:20902,20000:40085}], 56: ['GA128', {100:2579,300:2943,1000:4223,3000:7997,10000:22541,20000:43135}], 60: ['GA128', {100:2592,300:2980,1000:4342,3000:8349,10000:23711,20000:45476}], 64: ['GA128', {100:2891,300:3302,1000:4747,3000:8988,10000:25351,20000:48526}], 68: ['GA100', {100:2750,300:3111,1000:4369,3000:8069,10000:22557,20000:43050}], 72: ['GA100', {100:3033,300:3412,1000:4735,3000:8620,10000:23940,20000:45604}], 76: ['GA100', {100:3044,300:3440,1000:4832,3000:8901,10000:24873,20000:47467}], 80: ['GA100', {100:3327,300:3742,1000:5198,3000:9454,10000:26256,20000:50020}] },
+  'P|S|B5+': { 8: ['GA128', {100:708,300:786,1000:1069,3000:1982,10000:5462,20000:10349}], 12: ['GA128', {100:718,300:820,1000:1183,3000:2318,10000:6582,20000:12590}], 16: ['GA128', {100:1015,300:1142,1000:1582,3000:2944,10000:8169,20000:15537}], 20: ['GA128', {100:1027,300:1176,1000:1697,3000:3280,10000:9290,20000:17778}], 24: ['GA128', {100:1327,300:1496,1000:2094,3000:3902,10000:10877,20000:20724}], 28: ['GA128', {100:1338,300:1532,1000:2208,3000:4240,10000:11997,20000:22964}], 32: ['GA128', {100:1638,300:1852,1000:2608,3000:4863,10000:13584,20000:25910}], 36: ['GA128', {100:1650,300:1888,1000:2722,3000:5201,10000:14704,20000:28150}], 40: ['GA128', {100:1950,300:2209,1000:3122,3000:5825,10000:16294,20000:31099}], 44: ['GA128', {100:1961,300:2245,1000:3235,3000:6162,10000:17413,20000:33338}], 48: ['GA128', {100:2261,300:2565,1000:3633,3000:6785,10000:19000,20000:36284}], 52: ['GA128', {100:2273,300:2599,1000:3747,3000:7121,10000:20121,20000:38525}], 56: ['GA128', {100:2572,300:2921,1000:4146,3000:7747,10000:21709,20000:41472}], 60: ['GA128', {100:2583,300:2955,1000:4260,3000:8082,10000:22828,20000:43712}], 64: ['GA128', {100:2884,300:3277,1000:4660,3000:8707,10000:24415,20000:46659}], 68: ['GA100', {100:2743,300:3088,1000:4295,3000:7826,10000:21750,20000:41439}], 72: ['GA100', {100:3026,300:3388,1000:4657,3000:8366,10000:23095,20000:43914}], 76: ['GA100', {100:3035,300:3416,1000:4749,3000:8634,10000:23985,20000:45695}], 80: ['GA100', {100:3318,300:3717,1000:5111,3000:9176,10000:25329,20000:48168}] },
+  'P|P|B5': { 40: ['GA128', {100:1873,1000:3203,10000:17841}], 44: ['GA128', {100:1884,1000:3307,10000:18863}], 48: ['GA128', {100:2181,1000:3697,10000:20352}], 52: ['GA128', {100:2194,300:2547,1000:3801,3000:7452,10000:21374}], 56: ['GA128', {100:2491,1000:4189,10000:22862}], 60: ['GA128', {100:2502,1000:4292,10000:23884}], 64: ['GA128', {100:2800,1000:4682,10000:25373}], 68: ['GA128', {100:2812,300:3246,1000:4786,3000:9255,10000:26394}], 72: ['GA128', {100:3110,1000:5176,10000:27883}], 76: ['GA128', {100:3120,1000:5279,10000:28905}], 80: ['GA128', {100:3419,1000:5669,10000:30393}], 84: ['GA128', {100:3430,300:3945,1000:5773,3000:11057,10000:31415}], 88: ['GA128', {100:3728,1000:6162,10000:32904}], 92: ['GA128', {100:3739,1000:6266,10000:33926}], 96: ['GA128', {100:4038,1000:6654,10000:35414}], 100: ['GA128', {100:4048,300:4646,1000:6758,3000:12860,10000:36437}], 104: ['GA128', {100:4346,1000:7148,10000:37926}], 108: ['GA128', {100:4358,1000:7251,10000:38948}], 112: ['GA128', {100:4656,1000:7641,10000:40437}], 116: ['GA128', {100:4667,300:5345,1000:7745,3000:14663,10000:41458}], 120: ['GA128', {100:4964,1000:8134,10000:42947}], 124: ['GA128', {100:4977,1000:8238,10000:43969}], 128: ['GA128', {100:5274,1000:8628,10000:45457}], 132: ['GA128', {100:5285,300:6050,1000:8744,3000:16503,10000:46599}], 136: ['GA128', {100:5584,1000:9148,10000:48228}], 140: ['GA128', {100:5595,1000:9263,10000:49389}], 144: ['GA128', {100:5894,1000:9667,10000:51018}], 148: ['GA128', {100:5905,300:6766,1000:9785,3000:18474,10000:52180}], 152: ['GA128', {100:6207,1000:10189,10000:53809}], 156: ['GA128', {100:6218,1000:10306,10000:54970}], 160: ['GA128', {100:6518,1000:10710,10000:56600}], 164: ['GA128', {100:6531,300:7484,1000:10829,3000:20446,10000:57762}], 168: ['GA128', {100:6830,1000:11231,10000:59389}], 172: ['GA128', {100:6843,1000:11349,10000:60551}], 176: ['GA128', {100:7143,1000:11753,10000:62180}], 180: ['GA128', {100:7154,300:8199,1000:11869,3000:22415,10000:63341}], 184: ['GA128', {100:7454,1000:12273,10000:64970}], 188: ['GA128', {100:7466,1000:12390,10000:66132}], 192: ['GA128', {100:7767,1000:12794,10000:67761}], 196: ['GA128', {100:7779,300:8917,1000:12912,3000:24386,10000:68923}], 200: ['GA128', {100:8077,1000:13316,10000:70553}], 204: ['GA128', {100:8092,1000:13433,10000:71714}], 208: ['GA128', {100:8390,1000:13837,10000:73343}], 212: ['GA128', {100:8403,300:9634,1000:13955,3000:26358,10000:74505}], 216: ['GA128', {100:8702,1000:14358,10000:76133}], 220: ['GA128', {100:8715,1000:14476,10000:77295}], 224: ['GA128', {100:9015,1000:14878,10000:78924}], 228: ['GA128', {100:9026,300:10351,1000:14996,3000:28329,10000:80085}], 232: ['GA128', {100:9328,1000:15400,10000:81715}], 236: ['GA128', {100:9339,1000:15518,10000:82876}], 240: ['GA128', {100:9638,1000:15921,10000:84505}], 244: ['GA128', {100:9651,300:11068,1000:16039,3000:30300,10000:85666}], 248: ['GA128', {100:9951,1000:16442,10000:87295}], 252: ['GA128', {100:9964,1000:16560,10000:88457}], 256: ['GA128', {100:10262,1000:16964,10000:90085}], 260: ['GA128', {100:10275,300:11784,1000:17081,3000:32271,10000:91247}], 264: ['GA128', {100:10575,1000:17484,10000:92876}], 268: ['GA128', {100:10587,1000:17601,10000:94037}], 272: ['GA128', {100:10887,1000:18006,10000:95666}], 276: ['GA128', {100:10900,300:12501,1000:18123,3000:34243,10000:96828}], 280: ['GA128', {100:11198,1000:18526,10000:98456}], 284: ['GA128', {100:11211,1000:18644,10000:99618}], 288: ['GA128', {100:11511,1000:19048,10000:101247}] },
+  'P|P|B5+': { 40: ['GA128', {100:1921,1000:3394,10000:19498}], 48: ['GA128', {100:2231,1000:3892,10000:22065}], 52: ['GA128', {100:2242,300:2627,1000:3999,3000:7995,10000:23116}], 56: ['GA128', {100:2541,1000:4391,10000:24633}], 60: ['GA128', {100:2551,1000:4498,10000:25683}], 64: ['GA128', {100:2851,1000:4891,10000:27200}], 68: ['GA128', {100:2861,300:3331,1000:4996,3000:9833,10000:28250}], 72: ['GA128', {100:3161,1000:5389,10000:29768}], 76: ['GA128', {100:3171,1000:5495,10000:30818}], 80: ['GA128', {100:3470,1000:5888,10000:32336}], 84: ['GA128', {100:3481,300:4035,1000:5995,3000:11671,10000:33387}], 88: ['GA128', {100:3779,1000:6386,10000:34904}], 92: ['GA128', {100:3791,1000:6493,10000:35954}], 96: ['GA128', {100:4089,1000:6885,10000:37471}], 100: ['GA128', {100:4101,300:4738,1000:6992,3000:13508,10000:38521}], 104: ['GA128', {100:4399,1000:7385,10000:40039}], 108: ['GA128', {100:4411,1000:7490,10000:41089}], 112: ['GA128', {100:4709,1000:7883,10000:42606}], 116: ['GA128', {100:4721,300:5442,1000:7989,10000:43656}], 120: ['GA128', {100:5018,1000:8382,10000:45173}] },
   'P|S|A4': { 8: ['GA128', {100:709,300:790,1000:1084,3000:2046,10000:5674,20000:10774}], 12: ['GA128', {100:720,300:826,1000:1204,3000:2399,10000:6847,20000:13118}], 16: ['GA128', {100:1018,300:1149,1000:1608,3000:3039,10000:8485,20000:16167}], 20: ['GA128', {100:1030,300:1185,1000:1727,3000:3390,10000:9659,20000:18512}], 24: ['GA128', {100:1330,300:1508,1000:2130,3000:4029,10000:11296,20000:21561}], 28: ['GA128', {100:1342,300:1544,1000:2250,3000:4382,10000:12469,20000:23904}], 32: ['GA128', {100:1643,300:1867,1000:2654,3000:5022,10000:14107,20000:26954}], 36: ['GA128', {100:1656,300:1903,1000:2773,3000:5373,10000:15280,20000:29298}], 40: ['GA128', {100:1954,300:2225,1000:3177,3000:6013,10000:16919,20000:32348}], 44: ['GA128', {100:1967,300:2263,1000:3296,3000:6365,10000:18091,20000:34691}], 48: ['GA128', {100:2267,300:2584,1000:3700,3000:7005,10000:19729,20000:37741}], 52: ['GA128', {100:2280,300:2622,1000:3819,3000:7356,10000:20902,20000:40085}], 56: ['GA128', {100:2579,300:2943,1000:4223,3000:7997,10000:22541,20000:43135}], 60: ['GA128', {100:2592,300:2980,1000:4342,3000:8349,10000:23711,20000:45476}], 64: ['GA128', {100:2891,300:3302,1000:4747,3000:8988,10000:25351,20000:48526}], 68: ['GA100', {100:2750,300:3111,1000:4369,3000:8069,10000:22557,20000:43050}], 72: ['GA100', {100:3033,300:3412,1000:4735,3000:8620,10000:23940,20000:45604}], 76: ['GA100', {100:3044,300:3440,1000:4832,3000:8901,10000:24873,20000:47467}], 80: ['GA100', {100:3327,300:3742,1000:5198,3000:9454,10000:26256,20000:50020}] }
 };
 function bkoPrice(cfg, q) {
@@ -4762,7 +4765,7 @@ class Component extends DCLogic {
     const { short, lines } = this.pkOrderSpec();
     // the configurator summary travels with the order: every option, quantity and production time
     const pd = this.procDays(), productionTime = pd != null ? pd + (pd === 1 ? ' working day' : ' working days') : '3 working days';
-    const item = { region: this.pkV().dl_region ? (isEastRegion(this.pkV().dl_region) ? 'East' : 'West') : null, jobCode: this.newJobCode(), productId: prod.id, name: this.catName(prod.id), spec: short, specLines: lines, size: this.artworkTarget(), productionTime, qty: this.orderQty() || 1, unitPrice: q.gross / (this.orderQty() || 1), lineTotal: q.gross };
+    const item = { region: this.pkV().dl_region ? (isEastRegion(this.pkV().dl_region) ? 'East' : 'West') : null, jobCode: this.newJobCode(), productId: prod.id, name: this.catName(prod.id), spec: short, specLines: lines, size: this.artworkTarget(), productionTime, qty: this.orderQty() || 1, unitPrice: q.gross / (this.orderQty() || 1), lineTotal: q.gross, pricing: this.pricingSnapshot() };
     const cart = (this.state.cart || []).concat([item]);
     this.setState({ cart }); this.saveCart(cart); this.go('cart');
   }
@@ -4912,7 +4915,7 @@ class Component extends DCLogic {
       fulfillment: { method, address: addrText, addressId: method === 'delivery' && picked ? picked.id : null, outlet: outlet ? outlet.id : '', outletName: outlet ? outlet.name : '', receiver: method === 'direct' ? { name: shipTo.name, phone: shipTo.phone } : null },
       shipTo,
       payment: { method: this.state.coPay },
-      items: cart.map(it => ({ jobCode: it.jobCode || null, productId: it.productId, product: it.name, spec: it.spec, specLines: it.specLines || null, productionTime: it.productionTime || null, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal,
+      items: cart.map(it => ({ jobCode: it.jobCode || null, productId: it.productId, product: it.name, spec: it.spec, specLines: it.specLines || null, productionTime: it.productionTime || null, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal, pricing: it.pricing || null, pkg: it.pkg || null,
         artworkRefs: (it.artworks || []).filter(Boolean).map(a => ({ id: a.id })) })),
       subtotal: t.subtotal, memberDiscount: t.memberDiscount, coupon: t.couponCode, couponDiscount: t.couponDiscount, tax: t.tax, shipping: t.shipping, total: t.total, creditApplied, tier: this.tier(),
     };
@@ -4922,11 +4925,23 @@ class Component extends DCLogic {
     const send = cq ? { customer: body.customer, fulfillment: body.fulfillment, shipTo: body.shipTo, payment: body.payment } : body;
     fetch(url, { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify(send) })
       .then(r => r.json()).then(d => {
+        // card / FPX / e-wallet: continue on the gateway's own payment page (the order is paid when the gateway confirms it)
+        if (d && d.order && d.pay && this.goToPayment(d.pay)) { this.saveCart(cq ? (this.state.cart || []) : []); return; }
         if (d && d.order && cq) { this.setState({ order: d.order, placing: false, coQuote: null, coStep: 1, coPay: null, route: 'track', trackInput: d.order.id, trackOrder: null }); if (typeof window !== 'undefined') window.scrollTo(0, 0); this.trackLookup(d.order.id); this.loadUserOrders(); this.loadQuotes(); this.loadAccount(); return; }
         if (d && d.order) { this.setState({ order: d.order, placing: false, cart: [], coupon: null, cartCoupon: '', couponMsg: null, coStep: 1, coPay: null }); this.saveCart([]); if (typeof window !== 'undefined') window.scrollTo(0, 0); this.setState({ route: 'track', trackInput: d.order.id, trackOrder: null }); this.trackLookup(d.order.id); this.loadUserOrders(); this.loadAccount();
           fetch('/api/auth/me', { headers: this.authHeaders() }).then(r => r.ok ? r.json() : null).then(m => { if (m && m.customer) this.setState({ user: m.customer }); }).catch(() => {}); }
         else this.setState({ placing: false, orderErr: (d && d.error) || 'Could not place the order.' });
       }).catch(() => this.setState({ placing: false, orderErr: 'Network error — please try again.' }));
+  }
+  goToPayment(pay) {
+    if (typeof window === 'undefined' || typeof document === 'undefined' || !pay) return false;
+    if (pay.redirect && /^https:\/\/checkout\.stripe\.com\//.test(pay.redirect)) { window.location.assign(pay.redirect); return true; }
+    if (pay.form && /^https:\/\/payment\.ipay88\.com\.my\//.test(pay.form.action)) {
+      const f = document.createElement('form'); f.method = 'POST'; f.action = pay.form.action;
+      Object.keys(pay.form.fields || {}).forEach(k => { const i = document.createElement('input'); i.type = 'hidden'; i.name = k; i.value = String(pay.form.fields[k]); f.appendChild(i); });
+      document.body.appendChild(f); f.submit(); return true;
+    }
+    return false;
   }
   // reorder a past order: the same jobs (spec, quantity, price) and the same artworks from Artwork Storage
   reorder(o) {
@@ -4934,7 +4949,7 @@ class Component extends DCLogic {
     const lib = {}; (this.state.agList || []).forEach(a => { lib[a.id] = a; });
     const items = (o.items || []).map((it, i) => {
       const refs = (o.files || []).filter(f => f.kind === 'artwork' && (f.line || 1) === i + 1 && f.libraryId).map(f => ({ id: f.libraryId, name: f.name }));
-      return { jobCode: this.newJobCode(), productId: it.productId, name: it.product, spec: it.spec, specLines: it.specLines || null, productionTime: it.productionTime || null, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal, artworks: refs };
+      return { jobCode: this.newJobCode(), productId: it.productId, name: it.product, spec: it.spec, specLines: it.specLines || null, productionTime: it.productionTime || null, qty: it.qty, unitPrice: it.unitPrice, lineTotal: it.lineTotal, pricing: it.pricing || null, pkg: it.pkg || null, artworks: refs };
     });
     const cart = (this.state.cart || []).concat(items);
     this.setState({ cart }); this.saveCart(cart); this.agLoad(true); this.go('cart');
@@ -5133,13 +5148,47 @@ class Component extends DCLogic {
             this.state.nu_err ? h('div', { style: { fontSize: 12.5, color: '#c0392b' } }, this.state.nu_err) : null,
             h('span', { onClick: () => this.submitNewUser(), style: { alignSelf: 'flex-start', background: '#E52220', color: '#fff', fontWeight: 600, fontSize: 14, padding: '11px 26px', borderRadius: 999, cursor: this.state.nu_busy ? 'wait' : 'pointer' } }, this.state.nu_busy ? 'Creating…' : 'Create user')))));
   }
+  // ---- two-step sign-in set-up (authenticator app) ----
+  twofaStart() {
+    this.setState({ twofa: { busy: true }, twofaCode: '', twofaErr: null });
+    fetch('/api/auth/2fa/setup', { method: 'POST', headers: this.authHeaders() }).then(r => r.json()).then(d => {
+      if (!d.secret) return this.setState({ twofa: { error: d.error || 'Could not start set-up.' } });
+      this.setState({ twofa: { secret: d.secret, uri: d.uri } });
+      if (typeof window !== 'undefined' && !window.QRCode && !this._qrLoading) { this._qrLoading = true; const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js'; s.onload = () => this.forceUpdate(); document.head.appendChild(s); }
+    }).catch(() => this.setState({ twofa: { error: 'Network error.' } }));
+  }
+  twofaEnable() {
+    this.setState({ twofaErr: null, twofaBusy: true });
+    fetch('/api/auth/2fa/enable', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify({ code: this.state.twofaCode }) })
+      .then(r => r.json()).then(d => {
+        if (!d.ok) return this.setState({ twofaErr: d.error || 'That code is not right.', twofaBusy: false });
+        this.setState({ user: d.customer, twofa: null, twofaBusy: false, twofaCode: '', route: this.homeFor(d.customer) });
+      }).catch(() => this.setState({ twofaErr: 'Network error.', twofaBusy: false }));
+  }
+  twofaCard() {
+    const t = this.state.twofa || {};
+    const inp = { border: '1px solid ' + HAIR, borderRadius: 0, padding: '12px 14px', font: '400 18px Montserrat,sans-serif', letterSpacing: '.3em', width: '100%', background: '#f4f6fb', textAlign: 'center' };
+    const qr = el => { if (el && t.uri && window.QRCode && el.getAttribute('data-u') !== t.uri) { el.innerHTML = ''; el.setAttribute('data-u', t.uri); new window.QRCode(el, { text: t.uri, width: 176, height: 176 }); } };
+    return h('div', { style: { maxWidth: 460, margin: '40px auto', padding: '0 16px' } },
+      h('div', { style: { background: '#fff', border: '1px solid ' + HAIR, padding: '28px 30px 30px', display: 'flex', flexDirection: 'column', gap: 16 } },
+        h('h2', { style: { fontSize: 22, fontWeight: 600, margin: 0 } }, 'Two-step sign-in'),
+        h('div', { style: { fontSize: 14, color: MUT, lineHeight: 1.6 } }, 'Scan this code with Google Authenticator or Microsoft Authenticator, then enter the 6-digit code it shows.'),
+        t.error ? h('div', { role: 'alert', style: { fontSize: 13, color: '#c0392b' } }, t.error) : null,
+        t.uri ? h('div', { ref: qr, style: { alignSelf: 'center', minHeight: 176, minWidth: 176 } }) : h('div', { style: { fontSize: 13, color: FAINT } }, 'Preparing…'),
+        t.secret ? h('div', { style: { fontSize: 12.5, color: MUT, textAlign: 'center', wordBreak: 'break-all', userSelect: 'all' } }, 'Key: ' + t.secret.replace(/(.{4})/g, '$1 ').trim()) : null,
+        h('input', { id: 'twofa-code', type: 'text', inputMode: 'numeric', autoComplete: 'one-time-code', maxLength: 6, 'aria-label': 'Authenticator code', value: this.state.twofaCode || '', onChange: e => this.setField('twofaCode', e.target.value.replace(/\D/g, '')), style: inp }),
+        this.state.twofaErr ? h('div', { role: 'alert', style: { fontSize: 13, color: '#c0392b' } }, this.state.twofaErr) : null,
+        h('button', { type: 'button', disabled: this.state.twofaBusy || String(this.state.twofaCode || '').length !== 6, onClick: () => this.twofaEnable(),
+          style: { background: '#c9191b', color: '#fff', border: 'none', padding: '15px', font: '500 16px Montserrat,sans-serif', cursor: 'pointer', opacity: String(this.state.twofaCode || '').length === 6 ? 1 : .6 } }, this.state.twofaBusy ? 'Checking…' : 'Turn on two-step sign-in')));
+  }
   authSetSession(d) {
     this.setAuthToken(d.token);
     // return to the page that sent the customer to sign in (e.g. the custom quote page), else their home
     const home = (d.customer && d.customer.type === 'customer' && this.state.afterAuth) || this.homeFor(d.customer);
     if (this.state.afterAuth) this.setState({ afterAuth: null });
     // set user + route together so access checks see the new identity synchronously
-    this.setState({ user: d.customer, route: home, authErr: null, authBusy: false, megaOpen: false, ops: null });
+    this.setState({ user: d.customer, route: d.enroll2fa ? 'auth' : home, authErr: null, authBusy: false, megaOpen: false, ops: null, lg2fa: false, lgCode: '' });
+    if (d.enroll2fa) { this.twofaStart(); return; }
     this.loadUserOrders();
     this.loadAccount();
     this.loadNotifications();
@@ -5156,7 +5205,7 @@ class Component extends DCLogic {
     return map[u && u.role] || 'production_director';
   }
   // ---------- outsource / vendor quotation flow ----------
-  loadVendors() { if (this.state.vendors) return; fetch('/api/vendors').then(r => r.json()).then(d => this.setState({ vendors: d.vendors || [] })).catch(() => {}); }
+  loadVendors() { if (this.state.vendors) return; fetch('/api/vendors', { headers: this.authHeaders() }).then(r => r.json()).then(d => this.setState({ vendors: d.vendors || [] })).catch(() => {}); }
   opsRequestQuotes(jobId, vendorIds) {
     fetch('/api/jobs/' + jobId + '/request-quotes', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, this.authHeaders()), body: JSON.stringify({ vendorIds }) })
       .then(r => r.json()).then(() => { this.setState({ quoteDialog: null }); this.opsLoad(this.opsActingRole()); }).catch(() => {});
@@ -5434,8 +5483,8 @@ class Component extends DCLogic {
   }
   login() {
     this.setState({ authBusy: true, authErr: null });
-    fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: this.state.lgEmail, password: this.state.lgPass }) })
-      .then(r => r.json()).then(d => d.token ? this.authSetSession(d) : this.setState({ authErr: d.error || 'Could not sign in.', authBusy: false }))
+    fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: this.state.lgEmail, password: this.state.lgPass, code: this.state.lg2fa ? this.state.lgCode : undefined }) })
+      .then(r => r.json()).then(d => d.token ? this.authSetSession(d) : this.setState({ authErr: d.error || 'Could not sign in.', authBusy: false, lg2fa: !!(d.need2fa || this.state.lg2fa) }))
       .catch(() => this.setState({ authErr: 'Network error.', authBusy: false }));
   }
   logout() {
@@ -6587,6 +6636,7 @@ class Component extends DCLogic {
 
   // ===== AUTHENTICATION =====
   s_auth() {
+    if (this.state.user && this.state.twofa) return this.twofaCard();
     if (this.state.user) return h('div', { style: { maxWidth: 560, margin: '0 auto', padding: '20px' } },
       this.card([
         h('div', { key: 'a', style: { fontSize: 18, fontWeight: 600, marginBottom: 6 } }, 'You are signed in'),
@@ -6619,6 +6669,7 @@ class Component extends DCLogic {
           h('div', { key: 'pw' }, lbl('Password'), h('div', { style: { position: 'relative' } },
             h('input', { type: this.state.lgShow ? 'text' : 'password', value: this.state.lgPass || '', onChange: e => this.setField('lgPass', e.target.value), style: inp }),
             h('span', { onClick: () => this.setField('lgShow', !this.state.lgShow), style: { position: 'absolute', right: 12, top: 12, cursor: 'pointer', color: FAINT, fontSize: 14 } }, this.state.lgShow ? '🙈' : '👁'))),
+          this.state.lg2fa ? h('div', { key: 'otp' }, lbl('Authenticator code', true), h('input', { id: 'lg-otp', type: 'text', inputMode: 'numeric', autoComplete: 'one-time-code', maxLength: 6, value: this.state.lgCode || '', onChange: e => this.setField('lgCode', e.target.value.replace(/\D/g, '')), style: inp })) : null,
           h('div', { key: 'fp', style: { fontSize: 13 } }, h('span', { onClick: () => { this.pushUrl('/account/lost-password/'); this.setState({ authTab: 'lost', authErr: null, lostDone: false }); }, style: { color: '#2f6fd0', cursor: 'pointer' } }, 'Forgot your password?')),
           h('label', { key: 'rm', style: { display: 'flex', gap: 8, alignItems: 'center', fontSize: 13, color: MUT, cursor: 'pointer' } }, h('input', { type: 'checkbox', checked: !!this.state.lgRemember, onChange: e => this.setField('lgRemember', e.target.checked) }), 'Remember me?'),
           h('span', { key: 'b', 'data-go': 'dologin', style: { display: 'block', textAlign: 'center', background: PT.accent, color: '#fff', fontWeight: 600, fontSize: 15, padding: '13px', borderRadius: 0, cursor: 'pointer' } }, this.state.authBusy ? 'Signing in…' : 'Login'),
@@ -7992,6 +8043,9 @@ class Component extends DCLogic {
   srCfg() { const ov = this.cfgOv(); return ov && ov.sizeRows; }
   cqCfg() { const ov = this.cfgOv(); return ov && ov.customQty; }
   // pieces in the order: size rows / order lines own it where a product has them
+  // the configurator state a cart line was priced from; the server prices the line again from it at checkout
+  pricingSnapshot() { const s = this.state, o = { prodId: s.prodId, cfg: Object.assign({}, s.cfg || {}), qty: s.qty };
+    ['srRows', 'lbLines', 'lbFab', 'cqv'].forEach(k => { if (s[k] != null) o[k] = JSON.parse(JSON.stringify(s[k])); }); return o; }
   orderQty() { return this.srCfg() ? this.srTotal() : this.cqCfg() ? this.cqCfg().total(this) : this.state.qty; }
   srStored() { const p = this.pkProduct(); return (p && (this.state.srRows || {})[p.id]) || []; }
   srRows() { const C = this.srCfg(); if (!C) return []; const sz = C.sizes(this.pkV()); return this.srStored().filter(r => sz.indexOf(r.size) >= 0); }

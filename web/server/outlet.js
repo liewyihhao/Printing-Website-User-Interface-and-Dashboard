@@ -93,6 +93,7 @@ function saveQuoteArtwork(q, b, me) {
   const name = String(b.artworkFileName || b.artworkName || 'artwork').replace(/[\\/:*?"<>|\u0000-\u001f]+/g, '-').slice(0, 120);
   const m = String(b.artworkData).match(/^data:[^;]*;base64,(.+)$/); if (!m) return null;
   const buf = Buffer.from(m[1], 'base64'); if (buf.length > 60 * 1024 * 1024) return { error: 'Artwork must be 60 MB or smaller.' };
+  { const tp = require('./security').fileTypeProblem(buf, name.split('.').pop()); if (tp) return { error: tp }; }
   const dir = path.join(QROOT, q.id); fs.mkdirSync(dir, { recursive: true });
   const id = 'F' + crypto.randomBytes(5).toString('hex').toUpperCase(); fs.writeFileSync(path.join(dir, id + '-' + name), buf);
   q.artwork = { id, name: b.artworkName || name, file: name, stored: id + '-' + name, size: buf.length, at: now(), by: me.name };
@@ -363,8 +364,20 @@ function performance(me, individual, staffId) {
   }
   return { performance: out };
 }
-function customerDetail(id) {
+// an outlet sees the customers it serves (its quotes and orders), plus a walk-in it found by their exact email or phone
+// (that one stays open to the staff member for 30 minutes); admins see everyone
+const FOUND = new Map();
+function servedIds(me) {
+  const oid = outletOf(me), ids = new Set();
+  store.quotes().forEach(q => { if (q.outlet === oid) { if (q.userId) ids.add(q.userId); const c = q.customer && q.customer.email && store.customers().find(x => x.email === q.customer.email); if (c) ids.add(c.id); } });
+  outletOrders(me).forEach(o => { if (o.userId) ids.add(o.userId); });
+  store.customers().forEach(c => { if (c.createdByOutlet === oid) ids.add(c.id); });
+  const f = FOUND.get(me.id); if (f) Object.keys(f).forEach(id => { if (Date.now() - f[id] < 30 * 60e3) ids.add(id); });
+  return ids;
+}
+function customerDetail(id, me) {
   const c = store.findCustomer(id); if (!c || c.type !== 'customer') return { error: 'Customer not found.' };
+  if (me && me.type !== 'admin' && !servedIds(me).has(c.id)) return { error: 'Customer not found.' };
   return { customer: { id: c.id, name: c.name, email: c.email, phone: c.phone || '', company: c.company || '',
     addresses: (c.addresses || []).map(a => ({ id: a.id, label: a.label || '', name: a.name || c.name, phone: a.phone || c.phone || '', line1: a.line1 || '', line2: a.line2 || '', postcode: a.postcode || '', city: a.city || '', state: a.state || '', country: a.country || 'MY', isDefault: !!a.isDefault })) } };
 }
@@ -384,9 +397,16 @@ function quoteDelivery(b, cust, me) {
   }
   return { method: 'delivery', address: { name: a.name || cust.name, phone: a.phone || cust.phone || '', line1: a.line1, line2: a.line2 || '', postcode: a.postcode, city: a.city, state: a.state, country: a.country || 'MY' } };
 }
-function searchCustomers(q) {
-  const s = String(q || '').toLowerCase();
-  return store.customers().filter(c => c.type === 'customer' && (!s || [c.name, c.email, c.phone].join(' ').toLowerCase().indexOf(s) >= 0)).slice(0, 20).map(c => ({ value: c.id, label: c.name + ' (' + c.email + ')' }));
+function searchCustomers(q, me) {
+  const s = String(q || '').trim().toLowerCase(), digits = s.replace(/\D/g, '');
+  const all = store.customers().filter(c => c.type === 'customer');
+  if (!me || me.type === 'admin') return all.filter(c => !s || [c.name, c.email, c.phone].join(' ').toLowerCase().indexOf(s) >= 0).slice(0, 20).map(c => ({ value: c.id, label: c.name + ' (' + c.email + ')' }));
+  const served = servedIds(me);
+  const exact = s && all.filter(c => (c.email && c.email === s) || (digits.length >= 8 && String(c.phone || '').replace(/\D/g, '').slice(-digits.length) === digits && String(c.phone || '').replace(/\D/g, '').length - digits.length <= 2));
+  if (exact && exact.length) { const f = FOUND.get(me.id) || {}; exact.forEach(c => { f[c.id] = Date.now(); }); FOUND.set(me.id, f); }
+  const mask = e => String(e || '').replace(/^(.).*(@.*)$/, '$1***$2');
+  const list = all.filter(c => served.has(c.id) && (!s || [c.name, c.email, c.phone].join(' ').toLowerCase().indexOf(s) >= 0)).concat((exact || []).filter(c => !served.has(c.id)));
+  return list.slice(0, 20).map(c => ({ value: c.id, label: c.name + ' (' + (served.has(c.id) ? c.email : mask(c.email)) + ')' }));
 }
 
 module.exports = { outletName, staffName, customerDetail, saveQuoteArtwork, acceptByOutlet, amendQuote, stageOf, listQuotes, getQuote, saveSpec, onIssued, outletPrice, followUp, rejectQuote, quoteArtwork, onAccepted, onPaid, outletOrders, orderListView, orderDetail, orderAction, orderNote, orderAddress, dashboard, performance, staffList, searchCustomers, refreshFollowUp };

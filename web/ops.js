@@ -72,8 +72,8 @@
   P.login = function () {
     this.setState({ authBusy: true, authErr: null });
     const portal = this.state.authRole || 'member';
-    fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: this.state.lgEmail, password: this.state.lgPass, portal }) })
-      .then(r => r.json()).then(d => d.token ? this.authSetSession(d) : this.setState({ authErr: d.error || 'Could not sign in.', authErrPortal: d.portal || null, authBusy: false }))
+    fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: this.state.lgEmail, password: this.state.lgPass, portal, code: this.state.lg2fa ? this.state.lgCode : undefined }) })
+      .then(r => r.json()).then(d => d.token ? this.authSetSession(d) : this.setState({ authErr: d.error || 'Could not sign in.', authErrPortal: d.portal || null, authBusy: false, lg2fa: !!(d.need2fa || this.state.lg2fa) }))
       .catch(() => this.setState({ authErr: 'Network error.', authBusy: false }));
   };
 

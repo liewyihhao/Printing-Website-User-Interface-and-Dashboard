@@ -21,19 +21,34 @@ const chat = require('./chat');
 ops.migrate();
 const content = require('./content');
 const seoProduct = require('./seo-product');
+const sec = require('./security');
+const payments = require('./payments');
+const reprice = require('./reprice');
 
 const PORT = process.env.PORT || 4611;
 const WEB_ROOT = path.join(__dirname, '..'); // web/
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.map': 'application/json', '.pdf': 'application/pdf', '.webp': 'image/webp', '.gif': 'image/gif', '.ico': 'image/x-icon' };
 
 function send(res, code, body, type) {
-  res.writeHead(code, { 'Content-Type': type || 'application/json; charset=utf-8', 'Cache-Control': 'no-cache' });
+  const h = Object.assign(sec.baseHeaders(res.req), { 'Content-Type': type || 'application/json; charset=utf-8', 'Cache-Control': type ? 'no-cache' : 'no-store' });
+  if (/text\/html/.test(type || '') && body) h['Content-Security-Policy'] = sec.cspFor(String(body));
+  res.writeHead(code, h);
   res.end(typeof body === 'string' || Buffer.isBuffer(body) ? body : JSON.stringify(body));
 }
-function readBody(req) {
-  return new Promise(resolve => { let b = ''; req.on('data', c => b += c); req.on('end', () => { try { resolve(b ? JSON.parse(b) : {}); } catch (e) { resolve({}); } }); });
+// JSON bodies are capped (1 MB; base64 file uploads 90 MB) — a larger request is refused with 413
+async function readBody(req) {
+  if (req._body) return req._body;
+  const raw = await sec.readRaw(req, sec.bodyLimit(req));
+  let b = {}; try { b = raw ? JSON.parse(raw) : {}; } catch (e) { b = {}; }
+  req._body = b && typeof b === 'object' ? b : {}; return req._body;
 }
 
+// the site's public origin (behind a proxy, from its forwarded headers)
+function reqOrigin(req) {
+  const proto = String(req.headers['x-forwarded-proto'] || 'http').split(',')[0].trim();
+  const host = String(req.headers['x-forwarded-host'] || req.headers.host || ('localhost:' + PORT)).split(',')[0].trim();
+  return proto + '://' + host;
+}
 // enrich a job for the client (queue label + actions available to the given role)
 function jobView(j, role) {
   if (ops.normalizeJob(j)) store.save();
@@ -59,9 +74,22 @@ function payStatus(j) {
 
 async function api(req, res, pathname, query) {
   const seg = pathname.replace(/^\/api\//, '').split('/').filter(Boolean);
-  const token = req.headers['x-token'] || query.token;
+  // any stored file this API streams gets safe headers: never rendered as a page in our origin (SVG/HTML forced to download,
+  // a sandbox CSP, nosniff) — see security.fileHeaders
+  const wh = res.writeHead.bind(res);
+  res.writeHead = (code, h) => {
+    if (h && h['Content-Disposition']) {
+      const name = (/filename="([^"]*)"/.exec(h['Content-Disposition']) || [])[1] || '';
+      const f = sec.fileHeaders(name, h['Content-Type'], h['Content-Length'], /^attachment/.test(h['Content-Disposition']));
+      if (h['Content-Length'] === undefined) delete f['Content-Length'];
+      h = Object.assign(sec.baseHeaders(req), h, f);
+    }
+    return wh(code, h);
+  };
+  const token = req.headers['x-token'] || null;   // never from the URL (it would end up in logs and referrers)
   const staffMe = () => { const m = store.sessionCustomer(token); return m && m.type !== 'customer' ? m : null; };
   // ops endpoints: staff session required; role + actor are derived server-side from it
+  if (token && seg[0] !== 'auth' && seg[0] !== 'health') { const gm = store.sessionCustomer(token); if (gm && sec.require2fa(gm) && !gm.totpEnabled) return send(res, 403, { error: 'Turn on two-step sign-in to continue.', enroll2fa: true }); }
   const OPS = { queues: 1, jobs: 1, audit: 1, ops: 1, users: 1 };
   let role = null, actor = 'system', me0 = null;
   if (OPS[seg[0]] && !(seg[0] === 'ops' && seg[1] === 'outlets')) {
@@ -73,6 +101,15 @@ async function api(req, res, pathname, query) {
     actor = me0.name || me0.email;
   }
 
+  // payment gateway callbacks (server to server, signed) — the only way an online payment marks an order paid
+  if (seg[0] === 'payments' && seg[1] === 'stripe' && seg[2] === 'webhook' && req.method === 'POST') {
+    const raw = await sec.readRaw(req, 1024 * 1024); const r = payments.stripeWebhook(raw, req.headers['stripe-signature']);
+    return send(res, r.code, r.ok ? { received: true } : { error: r.error });
+  }
+  if (seg[0] === 'payments' && seg[1] === 'ipay88' && seg[2] === 'backend' && req.method === 'POST') {
+    const raw = await sec.readRaw(req, 64 * 1024); const f = {}; new URLSearchParams(raw).forEach((v, k) => { f[k] = v; });
+    const r = payments.ipay88Backend(f); return send(res, r.code, r.text, 'text/plain; charset=utf-8');
+  }
   // GET /api/health
   if (seg[0] === 'health') return send(res, 200, { ok: true, ts: store.now() });
   // POST /api/seed  — reset demo data (administrators only)
@@ -225,17 +262,24 @@ async function api(req, res, pathname, query) {
 
   // ---- auth: customer accounts + sessions ----
   if (seg[0] === 'auth' && seg[1] === 'register' && req.method === 'POST') {
-    const r = store.registerCustomer(await readBody(req));
+    if (sec.tooMany(req, 'register', 10)) return send(res, 429, { error: 'Too many sign-ups from here. Please try again later.' });
+    const rb = await readBody(req); const pp = sec.passwordProblem(rb.password, rb.email); if (pp) return send(res, 400, { error: pp });
+    const r = store.registerCustomer(rb);
     return send(res, r.error ? 400 : 200, r);
   }
   // account activation / password reset (original form-reset-password.php + lx_reset_password_content)
   if (seg[0] === 'auth' && seg[1] === 'reset-password') {
-    if (req.method === 'POST') { const b = await readBody(req); const r = store.resetPassword(b.login, b.key, b.password_1, b.password_2); return send(res, r.error ? 400 : 200, r); }
+    if (req.method === 'POST') { const b = await readBody(req);
+      if (sec.tooMany(req, 'reset', 20)) return send(res, 429, { error: 'Too many attempts. Please try again later.' });
+      const pp = b.password_1 && b.password_1 === b.password_2 ? sec.passwordProblem(b.password_1, b.login) : null; if (pp) return send(res, 400, { error: pp });
+      const r = store.resetPassword(b.login, b.key, b.password_1, b.password_2); return send(res, r.error ? 400 : 200, r); }
     const r = store.resetCheck(query.login, query.key); if (r.error) return send(res, 400, { error: r.error });
     return send(res, 200, r.activate ? { title: 'Activate Your Account', subtitle: 'Set your password below to finalize your registration.', button: 'Activate your account', activate: true }
       : { title: 'Reset Password', subtitle: 'Enter a new password below.', button: 'Save', activate: false });
   }
-  if (seg[0] === 'auth' && seg[1] === 'lost-password' && req.method === 'POST') { const b = await readBody(req); return send(res, 200, store.requestPasswordReset(b.email)); }
+  if (seg[0] === 'auth' && seg[1] === 'lost-password' && req.method === 'POST') { const b = await readBody(req);
+    if (sec.tooMany(req, 'lost', 10)) return send(res, 429, { error: 'Too many requests. Please try again later.' });
+    return send(res, 200, store.requestPasswordReset(b.email)); }
   if (seg[0] === 'auth' && seg[1] === 'login' && req.method === 'POST') {
     const lb = await readBody(req);
     // login portals: each sign-in page only admits its own kind of account
@@ -246,8 +290,39 @@ async function api(req, res, pathname, query) {
       return send(res, 403, { error: 'This sign-in page is for ' + ({ member: 'customers', printer: 'printers', hub: 'hub staff', outlet: 'outlet staff', production: 'production staff', admin: 'administrators' })[lb.portal] + '. Please use the ' + ({ member: 'customer', printer: 'Printer', hub: 'Hub', outlet: 'Outlet', production: 'Production', admin: 'Admin' })[home] + ' login.', portal: home });
     }
     if (who && who.disabled) return send(res, 403, { error: 'This account has been disabled. Please contact your administrator.' });
+    const em = String(lb.email || '').trim().toLowerCase();
+    if (sec.loginBlocked(req, em)) return send(res, 429, { error: 'Too many sign-in attempts. Please wait 15 minutes or reset your password.' });
+    // a staff account still on the shared starter password cannot sign in on the live site
+    if (sec.isProd() && who && who.type !== 'customer' && store.verifyPassword('printoka', who.salt, who.passHash)) return send(res, 403, { error: 'This account still has its starter password. Use Forgot password to set your own.' });
+    // two-step sign-in: with the right password, an account that has it on must also give its authenticator code
+    if (who && who.totpEnabled && store.verifyPassword(lb.password, who.salt, who.passHash)) {
+      if (!lb.code) return send(res, 401, { need2fa: true, error: 'Enter the 6-digit code from your authenticator app.' });
+      const st = sec.totpCheck(who.totpSecret, lb.code, who.totpLastStep);
+      if (st < 0) { sec.loginFailed(req, em); return send(res, 401, { need2fa: true, error: 'That code is not right. Check the time on your phone and try again.' }); }
+      who.totpLastStep = st; store.save();
+    }
     const r = store.loginCustomer(lb);
+    if (r.error) sec.loginFailed(req, em); else { sec.loginOk(em); if (sec.require2fa(r.customer) && !r.customer.totpEnabled) r.enroll2fa = true; }
     return send(res, r.error ? 401 : 200, r);
+  }
+  // two-step sign-in set-up: /api/auth/2fa/setup → secret + otpauth link; /enable { code }; /disable { password, code }
+  if (seg[0] === 'auth' && seg[1] === '2fa' && req.method === 'POST') {
+    const me2 = store.sessionCustomer(token); if (!me2) return send(res, 401, { error: 'Please sign in.' });
+    const c2 = store.findCustomer(me2.id); const b = await readBody(req);
+    if (seg[2] === 'setup') { c2.totpPending = sec.totpNewSecret(); store.save(); return send(res, 200, { secret: c2.totpPending, uri: sec.totpUri(c2.totpPending, c2.email) }); }
+    if (seg[2] === 'enable') {
+      const st = sec.totpCheck(c2.totpPending, b.code, null); if (st < 0) return send(res, 400, { error: 'That code is not right. Check the time on your phone and try again.' });
+      c2.totpSecret = c2.totpPending; c2.totpPending = null; c2.totpEnabled = true; c2.totpLastStep = st; store.endSessions(c2.id, token);
+      store.logEvent({ actor: c2.email, role: c2.type, action: '2fa_enabled', jobId: null, from: null, to: null, note: c2.email }); store.save();
+      return send(res, 200, { ok: true, customer: store.publicCustomer(c2) });
+    }
+    if (seg[2] === 'disable') {
+      if (sec.require2fa(me2)) return send(res, 403, { error: 'Two-step sign-in is required for this account.' });
+      if (!store.verifyPassword(b.password, c2.salt, c2.passHash) || sec.totpCheck(c2.totpSecret, b.code, c2.totpLastStep) < 0) return send(res, 400, { error: 'Check your password and code.' });
+      c2.totpSecret = null; c2.totpEnabled = false; store.logEvent({ actor: c2.email, role: c2.type, action: '2fa_disabled', jobId: null, from: null, to: null, note: c2.email }); store.save();
+      return send(res, 200, { ok: true, customer: store.publicCustomer(c2) });
+    }
+    return send(res, 404, { error: 'unknown route' });
   }
   if (seg[0] === 'auth' && seg[1] === 'logout' && req.method === 'POST') { store.logout(token); return send(res, 200, { ok: true }); }
   // a new browser tab that picked up the last login gets its own session for the same user, so logging out in one
@@ -276,6 +351,7 @@ async function api(req, res, pathname, query) {
       const tu = (store.load().topups || []).find(x => x.id === seg[2] && x.userId === me.id); if (!tu || tu.status !== 'pending') return send(res, 400, { error: 'Top-up not found.' });
       const b = await readBody(req); const nm = String(b.name || 'slip').replace(/[\\/:*?"<>|]+/g, '-').slice(0, 100); const mm = String(b.data || '').match(/^data:[^;]*;base64,(.+)$/);
       if (!mm || !/\.(pdf|png|jpe?g|webp|heic)$/i.test(nm)) return send(res, 400, { error: 'The slip must be a PDF or an image.' });
+      { const tp = sec.fileTypeProblem(Buffer.from(mm[1], 'base64'), nm.split('.').pop()); if (tp) return send(res, 400, { error: tp }); }
       const dir = path.join(__dirname, '..', '..', 'private-files', 'topups'); fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, tu.id + '-' + nm), Buffer.from(mm[1], 'base64'));
       tu.slip = tu.id + '-' + nm; tu.slipAt = store.now(); store.notify({ type: 'role', role: 'admin' }, { kind: 'topup_slip', title: 'Wallet top-up slip received', body: (me.name || me.email) + ' uploaded a bank transfer slip for top-up ' + tu.id + ' (RM ' + tu.amount.toFixed(2) + ').' }); store.save();
       return send(res, 200, { ok: true, topup: tu });
@@ -295,7 +371,7 @@ async function api(req, res, pathname, query) {
     // POST /api/account/coupon {code, subtotal} → is this member code valid for this cart?
     if (seg[1] === 'coupon' && req.method === 'POST') { const b = await readBody(req); return send(res, 200, admin.checkAnyCoupon(me.id, b.code, b.subtotal)); }
     if (seg[1] === 'profile' && req.method === 'POST') return send(res, 200, store.updateProfile(me.id, await readBody(req)));
-    if (seg[1] === 'password' && req.method === 'POST') { const b = await readBody(req); const r = store.changePassword(me.id, b.current, b.next); return send(res, r.error ? 400 : 200, r); }
+    if (seg[1] === 'password' && req.method === 'POST') { const b = await readBody(req); const r = store.changePassword(me.id, b.current, b.next); if (!r.error) store.endSessions(me.id, token); return send(res, r.error ? 400 : 200, r); }
     return send(res, 404, { error: 'unknown account route' });
   }
 
@@ -317,6 +393,12 @@ async function api(req, res, pathname, query) {
       if (Math.abs((Number(body.couponDiscount) || 0) - r.discount) > 0.01) return send(res, 400, { error: 'Your discount code amount has changed. Please refresh your cart and try again.' });
       body.coupon = r.code; body.couponDiscount = r.discount;
     } else { body.couponDiscount = 0; }
+    // every line is priced again on the server from its configurator choices; the browser's price is display only
+    const rp = reprice.verifyCart(body, me);
+    if (rp.error) return send(res, 400, rp);
+    body.subtotal = Math.round((body.items || []).reduce((a, it) => a + (Number(it.lineTotal) || 0), 0) * 100) / 100;
+    const pm = (body.payment && body.payment.method) || 'bank_transfer';
+    if (!payments.methodAvailable(pm)) return send(res, 400, { error: 'That payment method is not available right now. Please choose another.' });
     const vt = admin.verifyTotals(body, me && me.type === 'customer' ? me : null);
     if (vt.error) return send(res, 400, vt);
     const walletPay = body.payment && body.payment.method === 'wallet';
@@ -332,14 +414,20 @@ async function api(req, res, pathname, query) {
     if (walletPay) store.creditEntry(me.id, { reason: 'ORDER_PAYMENT', amount: -o.total, actor: 'customer', orderId: o.id });
     if (body._storeCoupon) admin.recordCouponUse(body._storeCoupon, body.userId);
     ops.onOrderCreated(o);
-    return send(res, 200, { ok: true, order: store.order(o.id) });
+    // card / FPX / e-wallet: hand over to the gateway's hosted page; the order is paid when its signed callback arrives
+    const pay = await payments.start(store.order(o.id), reqOrigin(req));
+    return send(res, 200, { ok: true, order: store.order(o.id), pay: pay && !pay.error ? pay : null, payError: pay && pay.error || null });
   }
   if (seg[0] === 'orders' && !seg[1]) {
     const me = store.sessionCustomer(token);
     // a customer's orders carry each job's progress, so My Orders shows where the order is (not only the payment)
     if (me && me.type === 'customer') return send(res, 200, { orders: store.ordersForUser(me.id).map(o => Object.assign({}, o, {
       jobStages: (o.jobIds || []).map(jid => { const j = store.job(jid); return j ? { id: j.id, status: j.status, dest: (j.finalDestination || {}).type || null } : null; }).filter(Boolean) })) });
-    return send(res, 200, { orders: store.orders() });
+    if (!me) return send(res, 401, { error: 'Please sign in.' });
+    if (me.type === 'admin' || me.type === 'production') return send(res, 200, { orders: store.orders() });
+    if (me.type === 'outlet') return send(res, 200, { orders: outlet.outletOrders(me) });
+    // printers: orders with a job awarded to them (spec only); hubs: orders routed through them (shipping only)
+    return send(res, 200, { orders: store.orders().map(o => { const lv = sec.orderAccess(o, me); return lv ? sec.orderForAccess(store.orderView(o.id), lv, me) : null; }).filter(Boolean) });
   }
   // ---- admin backoffice data (require an admin session) ----
   if (seg[0] === 'admin') {
@@ -434,10 +522,12 @@ async function api(req, res, pathname, query) {
   if (seg[0] === 'orders' && seg[1] && !seg[2]) {
     if (store.order(seg[1])) { (store.order(seg[1]).jobIds || []).forEach(jid => { const jj = store.job(jid); if (jj) ops.normalizeJob(jj); }); ops.syncOrder(seg[1]); }
     const o = store.orderView(seg[1]); if (!o) return send(res, 404, { error: 'order not found' });
-    // a signed-in customer may only read their own order; staff and public order-number tracking see it
+    // signed in: what this account may see of the order; not signed in (order-number tracking): progress only, nothing personal
     const me = store.sessionCustomer(token);
-    if (me && me.type === 'customer' && o.userId && o.userId !== me.id) return send(res, 403, { error: 'not your order' });
-    return send(res, 200, { order: o });
+    if (!me) { if (sec.tooMany(req, 'track', 60)) return send(res, 429, { error: 'Too many lookups. Please try again later.' }); return send(res, 200, { order: sec.publicTracking(o) }); }
+    const lvl = sec.orderAccess(store.order(seg[1]), me);
+    if (!lvl) return send(res, me.type === 'customer' ? 200 : 403, me.type === 'customer' ? { order: sec.publicTracking(o) } : { error: 'Not allowed.' });
+    return send(res, 200, { order: sec.orderForAccess(o, lvl, me) });
   }
   // POST /api/orders/:id/pay-now { method } — the customer pays their pending order from My Orders (user, 2026-09-29)
   if (seg[0] === 'orders' && seg[2] === 'pay-now' && req.method === 'POST') {
@@ -607,8 +697,8 @@ async function api(req, res, pathname, query) {
     const b = req.method === 'POST' ? await readBody(req) : {};
     const out = r => send(res, r && r.error ? 400 : 200, r);
     if (seg[1] === 'dashboard') return out(outlet.dashboard(me));
-    if (seg[1] === 'customers' && seg[2]) return out(outlet.customerDetail(seg[2]));
-    if (seg[1] === 'customers') return out({ customers: outlet.searchCustomers(query.q) });
+    if (seg[1] === 'customers' && seg[2]) return out(outlet.customerDetail(seg[2], me));
+    if (seg[1] === 'customers') return out({ customers: outlet.searchCustomers(query.q, me) });
     if (seg[1] === 'staff') return out({ staff: outlet.staffList(me) });
     if (seg[1] === 'performance') return out(outlet.performance(me, query.individual === '1', query.staff || null));
     if (seg[1] === 'quotes' && !seg[2] && req.method === 'POST') return out(outlet.saveSpec(null, b, me));
@@ -632,6 +722,7 @@ async function api(req, res, pathname, query) {
   if (seg[0] === 'quotes' && seg[2] === 'accept' && req.method === 'POST') {
     // (user, 2026-09-30) Accept & pay goes through the checkout: the customer's details, delivery and payment come with it
     const me = store.sessionCustomer(token); const b = await readBody(req);
+    if (b && b.payment && !payments.methodAvailable(b.payment.method)) return send(res, 400, { error: 'That payment method is not available right now. Please choose another.' });
     const co = b && b.payment ? { payment: b.payment, fulfillment: b.fulfillment || null, shipTo: b.shipTo || null, customer: b.customer || null } : null;
     const q0 = store.quote(seg[1]);
     if (co && co.payment.method === 'wallet' && me && q0 && store.getCredit(me.id).balance + 0.001 < Number(q0.price || 0)) return send(res, 400, { error: 'Your wallet balance is not enough for this order. Top up your wallet or choose another payment method.' });
@@ -639,6 +730,7 @@ async function api(req, res, pathname, query) {
     if (r.order) {
       if (co && co.payment.method === 'wallet' && me) store.creditEntry(me.id, { reason: 'ORDER_PAYMENT', amount: -r.order.total, actor: 'customer', orderId: r.order.id });
       outlet.onAccepted(r.quote, store.order(r.order.id)); ops.onOrderCreated(r.order);
+      const pay = await payments.start(store.order(r.order.id), reqOrigin(req)); if (pay && !pay.error) r.pay = pay;
     }
     return send(res, r.error ? 400 : 200, r.quote ? Object.assign({}, r, { quote: pubQuote(r.quote, me) }) : r);
   }
@@ -648,7 +740,7 @@ async function api(req, res, pathname, query) {
 
   // ---- outsource / vendor quotation flow ----
   // printer companies; ?job=ID → only the printers that make this product and can do its finishing (+ who is left out)
-  if (seg[0] === 'vendors' && !seg[1]) { const vj = query.job && store.job(query.job); if (vj) return send(res, 200, supplier.vendorsForJob(vj)); return send(res, 200, { vendors: store.vendorAccounts().filter(v => !v.vendorId).map(v => ({ id: v.id, name: v.name, internal: !!v.internal })) }); }
+  if (seg[0] === 'vendors' && !seg[1]) { if (!staffMe() || ['admin', 'production', 'outlet'].indexOf(staffMe().type) < 0) return send(res, 401, { error: 'staff sign-in required' }); const vj = query.job && store.job(query.job); if (vj) return send(res, 200, supplier.vendorsForJob(vj)); return send(res, 200, { vendors: store.vendorAccounts().filter(v => !v.vendorId).map(v => ({ id: v.id, name: v.name, internal: !!v.internal })) }); }
   // ---- web chat: visitors / customers chat from the website; staff answer from the Chat inbox ----
   if (seg[0] === 'chat') {
     const cm = store.sessionCustomer(token);
@@ -759,7 +851,9 @@ function sendStatic(req, res, data, type) {
   if (GZIP_RE.test(type || '') && /\bgzip\b/.test(ae) && data && data.length > 512) {
     return zlib.gzip(data, (e, gz) => {
       if (e) return send(res, 200, data, type);
-      res.writeHead(200, { 'Content-Type': type, 'Content-Encoding': 'gzip', 'Vary': 'Accept-Encoding', 'Cache-Control': 'no-cache' });
+      const h = Object.assign(sec.baseHeaders(req), { 'Content-Type': type, 'Content-Encoding': 'gzip', 'Vary': 'Accept-Encoding', 'Cache-Control': 'no-cache' });
+      if (/text\/html/.test(type || '')) h['Content-Security-Policy'] = sec.cspFor(String(data));
+      res.writeHead(200, h);
       res.end(gz);
     });
   }
@@ -810,5 +904,9 @@ http.createServer(async (req, res) => {
     const pm = parsed.pathname.match(/^\/([a-z0-9-]+-printing)\/?$/);
     if (pm) { try { const html = seoProduct.page(pm[1], origin); if (html) return sendStatic(req, res, Buffer.from(html), MIME['.html']); } catch (e) { /* fall through to SPA */ } }
     return serveStatic(req, res, parsed.pathname);
-  } catch (e) { send(res, 500, { error: String(e && e.message || e) }); }
+  } catch (e) {
+    if (e && e.status === 413) return send(res, 413, { error: 'That upload is too large.' });
+    console.error(new Date().toISOString(), req.method, parsed.pathname, e && e.stack || e);
+    send(res, 500, { error: 'Something went wrong on our side. Please try again.' });
+  }
 }).listen(PORT, () => console.log('Printoka dev server on http://localhost:' + PORT + ' (static + /api)'));

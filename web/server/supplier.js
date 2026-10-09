@@ -57,7 +57,8 @@ function statusFor(j, me) { const co = coOf(me); const o = j.outsource || {}; if
 function saveBlob(dir, b, prefix) {
   const m = String(b.data || '').match(/^data:[^;]*;base64,(.+)$/); if (!m) return { error: 'No file received.' };
   const buf = Buffer.from(m[1], 'base64'); if (buf.length > 60 * 1024 * 1024) return { error: 'File is larger than 60 MB.' };
-  const name = safe(b.name); const id = (prefix || 'F') + crypto.randomBytes(5).toString('hex').toUpperCase();
+  const name = safe(b.name);
+  { const tp = require('./security').fileTypeProblem(buf, name.split('.').pop()); if (tp) return { error: tp }; } const id = (prefix || 'F') + crypto.randomBytes(5).toString('hex').toUpperCase();
   fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, id + '-' + name), buf);
   return { id, name, stored: id + '-' + name, size: buf.length, at: now() };
 }

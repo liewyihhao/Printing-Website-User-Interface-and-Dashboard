@@ -82,6 +82,7 @@ function pay(vid, me, b) {
   if (!MIME[ext]) return { error: 'The transfer slip must be a PDF or an image.' };
   const m = String(b.slipData).match(/^data:[^;]*;base64,(.+)$/); if (!m) return { error: 'No file received.' };
   const buf = Buffer.from(m[1], 'base64'); if (buf.length > 10 * 1024 * 1024) return { error: 'The transfer slip must be 10 MB or smaller.' };
+  { const tp = require('./security').fileTypeProblem(buf, ext); if (tp) return { error: tp }; }
   const id = 'PAY-' + crypto.randomBytes(3).toString('hex').toUpperCase();
   fs.mkdirSync(ROOT, { recursive: true }); const stored = id + '-' + name; fs.writeFileSync(path.join(ROOT, stored), buf);
   const p = { id, vendorId: vid, amount: r2(list.reduce((s, j) => s + (j.outsource.billAmount || 0), 0)), jobIds: list.map(j => j.id), reference: String(b.reference || '').slice(0, 80),

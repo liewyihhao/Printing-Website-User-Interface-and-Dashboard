@@ -8,11 +8,11 @@ const path = require('path');
 const crypto = require('crypto');
 const D = require('./domain');
 
-const DATA_FILE = path.join(__dirname, 'data.json');
+const DATA_FILE = process.env.PRINTOKA_DATA || path.join(__dirname, 'data.json');   // override for test copies
 let db = null;
 
 function now() { return new Date().toISOString(); }
-function id(prefix) { return prefix + '-' + Math.random().toString(36).slice(2, 8).toUpperCase(); }
+function id(prefix) { return prefix + '-' + crypto.randomBytes(4).toString('hex').toUpperCase(); }
 
 function seed() {
   const t = Date.parse('2026-09-10T09:00:00+08:00');
@@ -312,11 +312,15 @@ function createOrder(body) {
     productionTime: it.productionTime ? String(it.productionTime).slice(0, 40) : null,
     qty: Number(it.qty) || 1, unitPrice: Number(it.unitPrice) || 0, lineTotal: Number(it.lineTotal) || 0,
     artworks: it.artworks || (it.artworkFile ? [it.artworkFile] : []),
+    // what the line was priced from, so a reorder can be priced again on the server (bounded in size)
+    pricing: it.pricing && JSON.stringify(it.pricing).length < 20000 ? it.pricing : null, pkg: it.pkg && JSON.stringify(it.pkg).length < 5000 ? it.pkg : null,
   }));
   // payment: real gateways (stripe/ipay88/fpx/tng) are stubbed to test-mode; bank_transfer stays pending admin validation
   const method = (body.payment && body.payment.method) || 'bank_transfer';
   const GATEWAY = { card_test: 'Stripe', stripe: 'Stripe', ipay88: 'iPay88', fpx: 'iPay88 · FPX', tng: "Touch 'n Go eWallet", bank_transfer: 'Direct bank transfer', credit_term: 'Credit terms', wallet: 'Printoka Wallet' };
-  const paid = method !== 'bank_transfer' && method !== 'credit_term';
+  // paid at once only from the wallet (debited on the server) or a simulated test payment outside production;
+  // a real card / FPX / e-wallet payment is confirmed later by the gateway's signed callback (payments.js)
+  const paid = require('./payments').paidAtPlacement(method);
   const jobIds = [];
   // Every order (website, or converted from an outlet quote) lands in prepress as a New Order: prepress checks the
   // order details, the payment and the customer, then marks it processed → Preflight (user, 2026-09-25).
@@ -336,7 +340,7 @@ function createOrder(body) {
   const o = {
     id: oid, userId: body.userId || null, channel: 'online', customer: cust, fulfillment: ful,
     billing: body.billing || shipTo || null, shipTo,
-    payment: { method, gateway: GATEWAY[method] || method, reference: (body.payment && body.payment.reference) || (paid ? (method === 'ipay88' ? 'T' + Date.now() : 'ch_' + Math.random().toString(36).slice(2, 12)) : null), proof: (body.payment && body.payment.proof) || null, status: paid ? 'validated' : 'pending', paidAt: paid ? now() : null },
+    payment: { method, gateway: GATEWAY[method] || method, reference: paid ? (method === 'wallet' ? 'WALLET-' + oid : 'TEST-' + crypto.randomBytes(5).toString('hex')) : null, proof: (body.payment && body.payment.proof) || null, status: paid ? 'validated' : 'pending', paidAt: paid ? now() : null },
     items, subtotal: Number(body.subtotal) || 0, memberDiscount: Number(body.memberDiscount) || 0,
     coupon: body.coupon || null, couponDiscount: Number(body.couponDiscount) || 0,   // already verified by the route (checkCoupon)
     tax: Number(body.tax) || 0, shipping: Number(body.shipping) || 0, total: Number(body.total) || 0,
@@ -391,8 +395,8 @@ function updateProfile(userId, body) {
 function changePassword(userId, current, next) {
   const c = findCustomer(userId); if (!c) return { error: 'not signed in' };
   if (!verifyPassword(current, c.salt, c.passHash)) return { error: 'Your current password is incorrect.' };
-  if (!next || String(next).length < 6) return { error: 'New password must be at least 6 characters.' };
-  const { salt, hash } = hashPassword(next); c.salt = salt; c.passHash = hash; save();
+  const pp = require('./security').passwordProblem(next, c.email); if (pp) return { error: pp };
+  const { salt, hash } = hashPassword(next); c.salt = salt; c.passHash = hash; c.passwordChangedAt = now(); save();
   return { ok: true };
 }
 // order + live status of each linked job (for confirmation & tracking) + customer history (management view)
@@ -407,7 +411,14 @@ function orderView(oid) {
 
 // ---- customer accounts + sessions (dependency-free auth via node:crypto) ----
 function customers() { const db = load(); if (!db.customers) db.customers = []; return db.customers; }
-function sessions() { const db = load(); if (!db.sessions) db.sessions = {}; return db.sessions; }
+// sessions are stored by a SHA-256 of the token, never the token itself (a copy of data.json gives no live logins)
+const tokenKey = t => crypto.createHash('sha256').update(String(t)).digest('hex');
+function sessions() { const db = load(); if (!db.sessions) db.sessions = {};
+  if (!db._sessMigrated) { Object.keys(db.sessions).forEach(k => { if (k.length === 48) { db.sessions[tokenKey(k)] = db.sessions[k]; delete db.sessions[k]; } }); db._sessMigrated = true; }
+  return db.sessions; }
+// idle and absolute limits per account type (security plan §9)
+const SESSION_LIMITS = { admin: [30, 8 * 60], production: [30, 8 * 60], outlet: [60, 12 * 60], vendor: [120, 12 * 60], hub: [120, 12 * 60], customer: [14 * 24 * 60, 30 * 24 * 60] };
+const MIN = 60e3;
 function hashPassword(pw, salt) {
   salt = salt || crypto.randomBytes(16).toString('hex');
   const hash = crypto.scryptSync(String(pw), salt, 64).toString('hex');
@@ -421,13 +432,23 @@ function verifyPassword(pw, salt, hash) {
 }
 function publicCustomer(c) {
   if (!c) return null;
-  const { passHash, salt, ...rest } = c; return rest;
+  const { passHash, salt, resetKeyHash, resetKeyExp, totpSecret, totpPending, ...rest } = c; return rest;
 }
 function newSession(userId) {
-  const token = crypto.randomBytes(24).toString('hex');
-  sessions()[token] = { userId, createdAt: now() };
+  const token = crypto.randomBytes(32).toString('hex');
+  const ss = sessions(), t = Date.now();
+  // tidy expired sessions now and then
+  Object.keys(ss).forEach(k => { const x = ss[k]; if (x && x.exp && Date.parse(x.exp) < t) delete ss[k]; });
+  const c = findCustomer(userId), lim = SESSION_LIMITS[(c && c.type) || 'customer'] || SESSION_LIMITS.customer;
+  ss[tokenKey(token)] = { userId, createdAt: now(), lastSeen: now(), exp: new Date(t + lim[1] * MIN).toISOString() };
   save();
   return token;
+}
+// end every session of a user (password changed or reset, account disabled, role changed); keep one if given
+function endSessions(userId, keepToken) {
+  const ss = sessions(), keep = keepToken ? tokenKey(keepToken) : null; let n = 0;
+  Object.keys(ss).forEach(k => { if (ss[k] && ss[k].userId === userId && k !== keep) { delete ss[k]; n++; } });
+  if (n) save(); return n;
 }
 // Member promo code issued at sign-up (the original printoka.com offer): 15% off, no expiry,
 // reusable, on all products, for purchases of RM 800 or more. Each account gets its own code.
@@ -485,11 +506,16 @@ function loginCustomer(body) {
   return { customer: publicCustomer(c), token: newSession(c.id) };
 }
 function sessionCustomer(token) {
-  const s = token && sessions()[token]; if (!s) return null;
+  if (!token || typeof token !== 'string' || token.length > 128) return null;
+  const ss = sessions(), k = tokenKey(token), s = ss[k]; if (!s) return null;
   const c = customers().find(x => x.id === s.userId);
-  return c && !c.disabled ? publicCustomer(c) : null;
+  if (!c || c.disabled) { delete ss[k]; save(); return null; }
+  const t = Date.now(), lim = SESSION_LIMITS[c.type] || SESSION_LIMITS.customer, last = Date.parse(s.lastSeen || s.createdAt);
+  if ((s.exp && Date.parse(s.exp) < t) || t - last > lim[0] * MIN || t - Date.parse(s.createdAt) > lim[1] * MIN) { delete ss[k]; save(); return null; }
+  if (t - last > 5 * MIN) { s.lastSeen = now(); save(); } else s.lastSeen = now();   // persisted at most every 5 minutes
+  return publicCustomer(c);
 }
-function logout(token) { if (token && sessions()[token]) { delete sessions()[token]; save(); } return { ok: true }; }
+function logout(token) { const k = token && tokenKey(token); if (k && sessions()[k]) { delete sessions()[k]; save(); } return { ok: true }; }
 function ordersForUser(userId) { return orders().filter(o => o.userId === userId); }
 function findCustomer(userId) { return customers().find(c => c.id === userId); }
 
@@ -692,7 +718,7 @@ function createWalkinQuote(body, staff) {
     cust = findCustomer(reg.customer.id); createdAccount = true;
     if (cust) { cust.adminCreated = true; cust.createdByOutlet = staff && staff.outlet; cust.createdByStaffId = staff && staff.id; cust.walkinCreated = true; if (email) sendActivation(cust); }
   }
-  const qid = 'QT-' + (1000 + Math.floor(Math.random() * 8999));
+  let qid; do { qid = 'QT-' + crypto.randomBytes(3).toString('hex').toUpperCase(); } while (quotes().some(x => x.id === qid));
   const q = {
     id: qid, userId: cust.id, channel: 'outlet', walkin: true, outlet: (staff && staff.outlet) || null, requestedByStaff: (staff && staff.name) || 'Outlet', assignedTo: 'scheduler',
     customer: { name: cust.name, email: cust.email, phone: cust.phone, company: cust.company || '' },
@@ -731,7 +757,8 @@ function resetPassword(login, key, p1, p2) {
   if (!p1 || String(p1).length < 6) return { error: 'Password must be at least 6 characters.' };
   if (p1 !== p2) return { error: 'Passwords do not match.' };
   const c = r.customer, hp = hashPassword(String(p1)); c.salt = hp.salt; c.passHash = hp.hash;
-  c.resetKeyHash = null; c.resetKeyExp = null; if (c.adminCreated && !c.activatedAt) c.activatedAt = now();
+  c.resetKeyHash = null; c.resetKeyExp = null; c.passwordChangedAt = now(); if (c.adminCreated && !c.activatedAt) c.activatedAt = now();
+  endSessions(c.id);   // a reset signs the account out everywhere
   logEvent({ actor: c.email, role: c.type, action: r.activate ? 'account_activated' : 'password_reset', jobId: null, from: null, to: null, note: c.email });
   save(); return { ok: true, activated: r.activate };
 }
@@ -852,7 +879,7 @@ function createStaffAccount(b, actor) {
 function updateStaffAccount(id, b, actor) {
   const c = customers().find(x => x.id === id && x.type !== 'customer'); if (!c) return { error: 'Staff account not found.' };
   const before = c.role + (c.disabled ? ' (disabled)' : '');
-  if (b.role) { if ((STAFF_ROLES[c.type] || []).indexOf(b.role) < 0) return { error: 'That role does not fit a ' + c.type + ' account.' }; c.role = b.role; }
+  if (b.role) { if ((STAFF_ROLES[c.type] || []).indexOf(b.role) < 0) return { error: 'That role does not fit a ' + c.type + ' account.' }; if (c.role !== b.role) endSessions(c.id); c.role = b.role; }   // a role change signs the account out
   ['name', 'phone', 'outlet', 'hub', 'vendorId'].forEach(k => { if (b[k] !== undefined) c[k] = b[k]; });
   if (b.location !== undefined && c.type === 'vendor') c.location = String(b.location || '').slice(0, 120); // printer company city / state
   if (b.capabilities && c.type === 'vendor' && !c.vendorId) c.capabilities = b.capabilities; // products + finishing this printer can do
@@ -862,4 +889,4 @@ function updateStaffAccount(id, b, actor) {
   save(); return { staff: publicCustomer(c) };
 }
 module.exports = { newQuoteId,
-  productName, newSession, resetCheck, resetPassword, requestPasswordReset, STAFF_ROLES, createStaffAccount, updateStaffAccount, hashPassword, checkCoupon, load, save, reset, jobs, job, users, audit, applyTransition, logEvent, now, id, catalogue, setOverride, createJob, orders, order, createOrder, validateOrderPayment, orderView, registerCustomer, loginCustomer, sessionCustomer, logout, ordersForUser, publicCustomer, customers, findCustomer, getAddresses, addAddress, deleteAddress, setDefaultAddress, getCredit, creditEntry, vendorAccounts, requestVendorQuotes, submitVendorQuote, awardVendorPO, vendorRequests, quotes, quote, quotesForUser, createQuote, priceQuote, rejectQuote, acceptQuote, createManualQuote, setQuoteRemark, customInvoices, customInvoice, customInvoicesForUser, createCustomInvoice, updateCustomInvoice, notifications, notify, notificationsFor, markNotificationRead, viewQuote, createWalkinQuote, recordQuoteDecision, createCustomerByStaff, updateProfile, changePassword, settings, updateSettings, emailTemplates, emailOutbox, emailStats, setEmailActive, sendEmail };
+  productName, newSession, endSessions, verifyPassword, tokenKey, resetCheck, resetPassword, requestPasswordReset, STAFF_ROLES, createStaffAccount, updateStaffAccount, hashPassword, checkCoupon, load, save, reset, jobs, job, users, audit, applyTransition, logEvent, now, id, catalogue, setOverride, createJob, orders, order, createOrder, validateOrderPayment, orderView, registerCustomer, loginCustomer, sessionCustomer, logout, ordersForUser, publicCustomer, customers, findCustomer, getAddresses, addAddress, deleteAddress, setDefaultAddress, getCredit, creditEntry, vendorAccounts, requestVendorQuotes, submitVendorQuote, awardVendorPO, vendorRequests, quotes, quote, quotesForUser, createQuote, priceQuote, rejectQuote, acceptQuote, createManualQuote, setQuoteRemark, customInvoices, customInvoice, customInvoicesForUser, createCustomInvoice, updateCustomInvoice, notifications, notify, notificationsFor, markNotificationRead, viewQuote, createWalkinQuote, recordQuoteDecision, createCustomerByStaff, updateProfile, changePassword, settings, updateSettings, emailTemplates, emailOutbox, emailStats, setEmailActive, sendEmail };

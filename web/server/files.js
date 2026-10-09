@@ -31,6 +31,7 @@ function saveFile(oid, b, me) {
   if (kind === 'proof' && !PROOF_EXT[ext]) return { error: 'Payment proof must be a PDF or an image.' };
   const m = String(b.data || '').match(/^data:[^;]*;base64,(.+)$/); if (!m) return { error: 'No file received.' };
   const buf = Buffer.from(m[1], 'base64');
+  const tp = require('./security').fileTypeProblem(buf, ext); if (tp) return { error: tp };
   const max = kind === 'proof' ? 10 : 60;
   if (buf.length > max * 1024 * 1024) return { error: 'File is larger than ' + max + ' MB.' };
   const line = Number(b.line) || 1; const it = (o.items || [])[line - 1];
