@@ -115,7 +115,8 @@ function load() {
   catch (e) { db = seed(); save(); }
   return db;
 }
-function save() { fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2)); }
+// write to a temp file and rename it over the store, so a crash mid-write never leaves a half-written data.json
+function save() { const tmp = DATA_FILE + '.tmp'; fs.writeFileSync(tmp, JSON.stringify(db, null, 2)); fs.renameSync(tmp, DATA_FILE); }
 function reset() { db = seed(); save(); return db; }
 
 function jobs() { return load().jobs; }

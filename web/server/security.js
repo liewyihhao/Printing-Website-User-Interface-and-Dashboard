@@ -92,7 +92,8 @@ function passwordProblem(pw, email) {
 // 'full' (customer owner, outlet of the order, production, admin) · 'spec' (printer awarded a job) · 'ship' (hub routing a job) · null
 function orderAccess(o, me) {
   if (!o || !me) return null;
-  if (me.type === 'admin' || me.type === 'production') return 'full';
+  if (me.type === 'admin') return 'full';
+  if (me.type === 'production') return hidesContact(me) ? 'work' : 'full';
   if (me.type === 'customer') return o.userId && o.userId === me.id ? 'full' : null;
   if (me.type === 'outlet') { try { return require('./outlet').outletOrders(me).some(x => x.id === o.id) ? 'full' : null; } catch (e) { return null; } }
   const jobs = (o.jobIds || []).map(id => store.job(id)).filter(Boolean);
@@ -101,8 +102,16 @@ function orderAccess(o, me) {
   return null;
 }
 // a printer sees the job spec, never the customer; a hub sees where to ship, never prices or files
+// production roles that only work on the print (prepress, scheduling) see the customer's name, not how to reach them;
+// the production director and logistics (who ship the parcels) keep full contact details
+const CONTACT_ROLES = ['production_director', 'logistics', 'logistics_manager'];
+function hidesContact(me) { return !!me && me.type === 'production' && CONTACT_ROLES.indexOf(me.role) < 0; }
+function maskPerson(p) { if (!p) return p; if (typeof p === 'string') return p; return { name: p.name || '', company: p.company || '' }; }
+function maskAddr(a) { if (!a) return a; return { city: a.city || '', state: a.state || '', country: a.country || '' }; }
 function orderForAccess(v, level, me) {
   if (level === 'full') return v;
+  if (level === 'work') return Object.assign({}, v, { customer: maskPerson(v.customer), billing: null, shipTo: maskAddr(v.shipTo),
+    payment: v.payment ? { status: v.payment.status, method: v.payment.method } : null });
   const jobsOf = me && me.type === 'vendor' ? (v.jobs || []).filter(j => j.outsource && j.outsource.awardedTo === (me.vendorId || me.id)) : (v.jobs || []);
   if (level === 'spec') return { id: v.id, createdAt: v.createdAt, status: v.status, items: (v.items || []).map(it => ({ lineNo: it.lineNo, product: it.product, spec: it.spec, specLines: it.specLines, qty: it.qty, productionTime: it.productionTime })),
     jobs: jobsOf.map(j => ({ id: j.id, product: j.product, spec: j.spec, specLines: j.specLines, qty: j.qty, status: j.status, deadline: j.deadline })) };
@@ -158,7 +167,7 @@ function fileHeaders(name, type, size, wantDownload) {
   };
 }
 
-module.exports = { baseHeaders, cspFor, bodyLimit, readRaw, loginBlocked, loginFailed, loginOk, tooMany, clientIp, passwordProblem, orderAccess, orderForAccess, publicTracking, sniff, fileTypeProblem, fileHeaders, isProd };
+module.exports = { hidesContact, maskPerson, maskAddr, baseHeaders, cspFor, bodyLimit, readRaw, loginBlocked, loginFailed, loginOk, tooMany, clientIp, passwordProblem, orderAccess, orderForAccess, publicTracking, sniff, fileTypeProblem, fileHeaders, isProd };
 
 // ---------- two-step sign-in: authenticator-app codes (TOTP, RFC 6238: SHA-1, 6 digits, 30 s) ----------
 const B32 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';

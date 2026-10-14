@@ -1,1 +1,5 @@
 private-files/
+backups/
+web/server/data.json.tmp
+wp-config.php
+error_log

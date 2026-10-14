@@ -28,6 +28,13 @@ What the server enforces, and what has to be set when it goes live. Full plan: "
   is served with `nosniff`, a sandbox CSP and (for SVG, ZIP and design files) as a download.
 - **Headers**: Content-Security-Policy (inline scripts by hash only), HSTS on HTTPS, `X-Frame-Options: DENY`,
   `nosniff`, Referrer-Policy, Permissions-Policy. API responses are `no-store`.
+- **Contact details by role**: prepress and scheduling staff see a customer's name and city, not their email, phone,
+  street address, billing address or payment reference (orders, order lists, job lists and job pages). The production
+  director and logistics, who arrange delivery, keep full details (`security.js` `hidesContact`).
+- **Backups** (`backup.js`): with `PRINTOKA_BACKUP_KEY` set, the server writes an AES-256-GCM encrypted, gzipped copy
+  of the store at start-up and every 24 hours, keeping the last 30. `node web/server/backup.js verify <file>` is the
+  monthly restore test; `restore <file> <out>` never overwrites the live store without `--force`. Altered files and
+  wrong keys are refused. The store itself is saved atomically (temp file, then rename).
 - **Limits**: JSON bodies 1 MB for anonymous requests, 90 MB for signed-in uploads. Server errors return a generic
   message; the detail goes to the server log.
 
@@ -40,6 +47,7 @@ What the server enforces, and what has to be set when it goes live. Full plan: "
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` | Stripe Checkout and webhook signing secret |
 | `IPAY88_MERCHANT_CODE`, `IPAY88_MERCHANT_KEY` | iPay88 hosted page and backend post |
 | `PRINTOKA_DATA` | path of the data store (keep it outside the web folder and outside OneDrive) |
+| `PRINTOKA_BACKUP_KEY` | 64 hex characters; turns on encrypted daily backups (`PRINTOKA_BACKUP_DIR`, `PRINTOKA_BACKUP_KEEP` optional) |
 | `PRINTOKA_TEST_PAYMENTS` / `PRINTOKA_REQUIRE_2FA` | `1` / `0` to override the defaults for a staging copy |
 
 Keep these in the host's secret manager, never in the repository.
@@ -51,6 +59,9 @@ Keep these in the host's secret manager, never in the repository.
 - Central logs and alerts; daily encrypted backups with a monthly restore test.
 - Confirm the iPay88 signature formula and payment ids against the merchant's current iPay88 integration guide.
 - Independent penetration test before the domain switches.
+- Copy the encrypted backups off the server (separate storage or bucket) and run `verify` on one each month.
+- The old WordPress `wp-config.php` was in this public repository until 14 Oct 2026. Change the MySQL password for
+  `prin_admin` and regenerate the WordPress keys and salts on the old host; the old values remain in git history.
 
 ## Testing
 

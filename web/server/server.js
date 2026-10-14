@@ -59,7 +59,12 @@ function jobView(j, role) {
     requestedBy: ops.requestedBy(j),
     orderedBy: ops.ordererOf(j),
     payStatus: payStatus(j),
-  });
+  }, /^(prepress|scheduler)/.test(String(role || '')) ? jobContactHidden(j) : {});
+}
+// prepress and scheduling staff work on the print, not the delivery: names stay, emails, phones and street addresses go
+function jobContactHidden(j) {
+  const who = ops.ordererOf(j) || {}, dest = d => d ? { type: d.type, name: d.name || '', city: d.city || '', state: d.state || '' } : d;
+  return { orderedBy: { type: who.type, name: who.name || '' }, finalDestination: dest(j.finalDestination), destination: dest(j.destination) };
 }
 // the order's payment as the customer sees it (user, 2026-09-29): Pending payment → Paid (iPay88 / Stripe / wallet,
 // with the gateway's reference) or Payment received (a bank transfer prepress confirmed)
@@ -156,6 +161,11 @@ async function api(req, res, pathname, query) {
     const acct = o && o.userId ? store.findCustomer(o.userId) : null;
     // the other items on the same order (an order goes to the scheduler only when every artwork is approved)
     const siblings = j.orderId ? store.jobs().filter(x => x.orderId === j.orderId && x.id !== j.id).map(x => ({ id: x.id, product: x.product, status: x.status, statusLabel: (D.STATUS[x.status] || {}).label || x.status })) : [];
+    const hide = sec.hidesContact(me0);
+    if (hide) return send(res, 200, { job: jobView(j, role), siblings, handlers: ops.handlers(j), deliverTo: null, printing: supplier.view(j, me0), audit: store.audit({ jobId: seg[1] }),
+      order: o ? { id: o.id, customer: sec.maskPerson(o.customer), shipTo: sec.maskAddr(o.shipTo), fulfillment: o.fulfillment || null, payment: o.payment ? { status: o.payment.status, method: o.payment.method } : null,
+        fromQuote: o.fromQuote || null, outlet: o.outlet || null, channel: o.channel || 'online',
+        account: acct ? { name: acct.name, tier: acct.tier || 'Standard', since: acct.createdAt || null, disabled: !!acct.disabled } : null } : null });
     return send(res, 200, { job: jobView(j, role), siblings, handlers: ops.handlers(j), deliverTo: ops.ordererDestination(j), printing: supplier.view(j, me0), audit: store.audit({ jobId: seg[1] }), order: o && me0.type !== 'hub' ? { id: o.id, customer: o.customer, shipTo: o.shipTo, fulfillment: o.fulfillment, payment: o.payment, total: o.total, progressLabel: o.progressLabel, createdAt: o.createdAt, items: o.items, files: (o.files || []).filter(f => f.kind === 'artwork'),
       fromQuote: o.fromQuote || null, outlet: o.outlet || null, channel: o.channel || 'online', account: acct ? { name: acct.name, email: acct.email, phone: acct.phone || '', tier: acct.tier || 'Standard', since: acct.createdAt || null, disabled: !!acct.disabled } : null } : null });
   }
@@ -424,7 +434,8 @@ async function api(req, res, pathname, query) {
     if (me && me.type === 'customer') return send(res, 200, { orders: store.ordersForUser(me.id).map(o => Object.assign({}, o, {
       jobStages: (o.jobIds || []).map(jid => { const j = store.job(jid); return j ? { id: j.id, status: j.status, dest: (j.finalDestination || {}).type || null } : null; }).filter(Boolean) })) });
     if (!me) return send(res, 401, { error: 'Please sign in.' });
-    if (me.type === 'admin' || me.type === 'production') return send(res, 200, { orders: store.orders() });
+    if (me.type === 'admin' || (me.type === 'production' && !sec.hidesContact(me))) return send(res, 200, { orders: store.orders() });
+    if (me.type === 'production') return send(res, 200, { orders: store.orders().map(o => sec.orderForAccess(o, 'work', me)) });
     if (me.type === 'outlet') return send(res, 200, { orders: outlet.outletOrders(me) });
     // printers: orders with a job awarded to them (spec only); hubs: orders routed through them (shipping only)
     return send(res, 200, { orders: store.orders().map(o => { const lv = sec.orderAccess(o, me); return lv ? sec.orderForAccess(store.orderView(o.id), lv, me) : null; }).filter(Boolean) });
@@ -909,4 +920,4 @@ http.createServer(async (req, res) => {
     console.error(new Date().toISOString(), req.method, parsed.pathname, e && e.stack || e);
     send(res, 500, { error: 'Something went wrong on our side. Please try again.' });
   }
-}).listen(PORT, () => console.log('Printoka dev server on http://localhost:' + PORT + ' (static + /api)'));
+}).listen(PORT, () => { console.log('Printoka dev server on http://localhost:' + PORT + ' (static + /api)'); require('./backup').schedule(m => console.log(m)); });
