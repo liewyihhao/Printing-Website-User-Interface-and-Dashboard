@@ -5656,7 +5656,7 @@ class Component extends DCLogic {
   }
   loadUserOrders() {
     if (!this.authToken()) return;
-    fetch('/api/orders', { headers: this.authHeaders() }).then(r => r.json()).then(d => this.setState({ userOrders: d.orders || [] })).catch(() => {});
+    fetch('/api/orders', { headers: this.authHeaders() }).then(r => r.json()).then(d => this.setState({ userOrders: d.orders || [], userPastOrders: d.pastOrders || [] })).catch(() => {});
   }
   // ---------- address book + credit ledger ----------
   loadAccount() {
@@ -9549,6 +9549,13 @@ class Component extends DCLogic {
       content = [stitle('Orders'),
         this.filterRow({ searchKey: 'coSearch', dateKey: 'coDate', statusKey: 'coStatus', statuses: ['Pending payment', 'Order received', 'Artwork check', 'In production', 'Shipped', 'Delivered'] }),
         this.dataCard([{ label: 'Date' }, { label: 'Order' }, { label: 'Status' }, { label: 'Items' }, { label: 'Amount', right: true }, { label: '', right: true }], rows, { empty: 'No orders yet.', minWidth: 760 })];
+      // orders placed on the previous Printoka website, carried over when the account moved
+      const past = this.state.userPastOrders || [];
+      if (past.length) content.push(h('h2', { key: 'ph', style: { fontSize: 18, fontWeight: 500, margin: '28px 0 10px' } }, 'Earlier orders'),
+        this.dataCard([{ label: 'Date' }, { label: 'Order' }, { label: 'Status' }, { label: 'Items' }, { label: 'Amount', right: true }],
+          past.map(o => [(o.createdAt || '').slice(0, 10), '#' + o.wpOrderId, String(o.status || '').replace(/^./, c => c.toUpperCase()),
+            h('div', { style: { display: 'flex', flexDirection: 'column', gap: 4 } }, o.items.map((it, i) => h('span', { key: i, style: { fontSize: 12.5 } }, it.name + (it.qty > 1 ? ' × ' + it.qty : '')))),
+            this.money(o.total)]), { minWidth: 640 }));
     } else if (tab === 'Invoices') {
       // (user, 2026-09-29) an invoice exists only once the order is paid (online, or confirmed by prepress)
       const orderInv = orders.filter(o => (o.payment && o.payment.status === 'validated')).map(o => ({ date: (o.createdAt || '').slice(0, 10), inv: 'INV-' + o.id.replace('PO-', ''), order: o.id, job: (o.items || []).map(it => it.product).join(', '), amount: o.total, open: () => this.openDoc(o.id, 'invoice') }));

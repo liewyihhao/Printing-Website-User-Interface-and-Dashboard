@@ -432,7 +432,7 @@ async function api(req, res, pathname, query) {
     const me = store.sessionCustomer(token);
     // a customer's orders carry each job's progress, so My Orders shows where the order is (not only the payment)
     if (me && me.type === 'customer') return send(res, 200, { orders: store.ordersForUser(me.id).map(o => Object.assign({}, o, {
-      jobStages: (o.jobIds || []).map(jid => { const j = store.job(jid); return j ? { id: j.id, status: j.status, dest: (j.finalDestination || {}).type || null } : null; }).filter(Boolean) })) });
+      jobStages: (o.jobIds || []).map(jid => { const j = store.job(jid); return j ? { id: j.id, status: j.status, dest: (j.finalDestination || {}).type || null } : null; }).filter(Boolean) })), pastOrders: store.pastOrdersForUser(me.id) });
     if (!me) return send(res, 401, { error: 'Please sign in.' });
     if (me.type === 'admin' || (me.type === 'production' && !sec.hidesContact(me))) return send(res, 200, { orders: store.orders() });
     if (me.type === 'production') return send(res, 200, { orders: store.orders().map(o => sec.orderForAccess(o, 'work', me)) });

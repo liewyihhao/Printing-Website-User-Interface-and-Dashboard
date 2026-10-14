@@ -397,7 +397,7 @@ function changePassword(userId, current, next) {
   const c = findCustomer(userId); if (!c) return { error: 'not signed in' };
   if (!verifyPassword(current, c.salt, c.passHash)) return { error: 'Your current password is incorrect.' };
   const pp = require('./security').passwordProblem(next, c.email); if (pp) return { error: pp };
-  const { salt, hash } = hashPassword(next); c.salt = salt; c.passHash = hash; c.passwordChangedAt = now(); save();
+  const { salt, hash } = hashPassword(next); c.salt = salt; c.passHash = hash; delete c.wpHash; c.passwordChangedAt = now(); save();
   return { ok: true };
 }
 // order + live status of each linked job (for confirmation & tracking) + customer history (management view)
@@ -433,7 +433,7 @@ function verifyPassword(pw, salt, hash) {
 }
 function publicCustomer(c) {
   if (!c) return null;
-  const { passHash, salt, resetKeyHash, resetKeyExp, totpSecret, totpPending, ...rest } = c; return rest;
+  const { passHash, salt, wpHash, resetKeyHash, resetKeyExp, totpSecret, totpPending, ...rest } = c; return rest;
 }
 function newSession(userId) {
   const token = crypto.randomBytes(32).toString('hex');
@@ -502,8 +502,12 @@ function registerCustomer(body) {
 function loginCustomer(body) {
   const email = String(body.email || '').trim().toLowerCase();
   const c = customers().find(x => x.email === email);
-  // NOTE: migrated WP users would verify against their phpass hash here, then re-hash into scrypt (audit §9).
-  if (!c || !verifyPassword(body.password, c.salt, c.passHash)) return { error: 'Wrong email or password.' };
+  if (!c) return { error: 'Wrong email or password.' };
+  // a customer carried over from the old WordPress site signs in with their old password once; it is then re-hashed into scrypt
+  if (!c.passHash && c.wpHash) {
+    if (!require('./wppass').verify(body.password, c.wpHash)) return { error: 'Wrong email or password.' };
+    const { salt, hash } = hashPassword(body.password); c.salt = salt; c.passHash = hash; delete c.wpHash; save();
+  } else if (!verifyPassword(body.password, c.salt, c.passHash)) return { error: 'Wrong email or password.' };
   return { customer: publicCustomer(c), token: newSession(c.id) };
 }
 function sessionCustomer(token) {
@@ -518,6 +522,8 @@ function sessionCustomer(token) {
 }
 function logout(token) { const k = token && tokenKey(token); if (k && sessions()[k]) { delete sessions()[k]; save(); } return { ok: true }; }
 function ordersForUser(userId) { return orders().filter(o => o.userId === userId); }
+// orders from the old WordPress site (import-wp.js): read-only history, never part of the live order chain
+function pastOrdersForUser(userId) { return (load().legacyOrders || []).filter(o => o.userId === userId).map(o => ({ id: o.id, wpOrderId: o.wpOrderId, status: o.status, total: o.total, currency: o.currency, createdAt: o.createdAt, items: o.items || [] })).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt))); }
 function findCustomer(userId) { return customers().find(c => c.id === userId); }
 
 // ---- address book (B8) ----
@@ -757,7 +763,7 @@ function resetPassword(login, key, p1, p2) {
   const r = resetCheck(login, key); if (r.error) return r;
   if (!p1 || String(p1).length < 6) return { error: 'Password must be at least 6 characters.' };
   if (p1 !== p2) return { error: 'Passwords do not match.' };
-  const c = r.customer, hp = hashPassword(String(p1)); c.salt = hp.salt; c.passHash = hp.hash;
+  const c = r.customer, hp = hashPassword(String(p1)); c.salt = hp.salt; c.passHash = hp.hash; delete c.wpHash;
   c.resetKeyHash = null; c.resetKeyExp = null; c.passwordChangedAt = now(); if (c.adminCreated && !c.activatedAt) c.activatedAt = now();
   endSessions(c.id);   // a reset signs the account out everywhere
   logEvent({ actor: c.email, role: c.type, action: r.activate ? 'account_activated' : 'password_reset', jobId: null, from: null, to: null, note: c.email });
@@ -890,4 +896,4 @@ function updateStaffAccount(id, b, actor) {
   save(); return { staff: publicCustomer(c) };
 }
 module.exports = { newQuoteId,
-  productName, newSession, endSessions, verifyPassword, tokenKey, resetCheck, resetPassword, requestPasswordReset, STAFF_ROLES, createStaffAccount, updateStaffAccount, hashPassword, checkCoupon, load, save, reset, jobs, job, users, audit, applyTransition, logEvent, now, id, catalogue, setOverride, createJob, orders, order, createOrder, validateOrderPayment, orderView, registerCustomer, loginCustomer, sessionCustomer, logout, ordersForUser, publicCustomer, customers, findCustomer, getAddresses, addAddress, deleteAddress, setDefaultAddress, getCredit, creditEntry, vendorAccounts, requestVendorQuotes, submitVendorQuote, awardVendorPO, vendorRequests, quotes, quote, quotesForUser, createQuote, priceQuote, rejectQuote, acceptQuote, createManualQuote, setQuoteRemark, customInvoices, customInvoice, customInvoicesForUser, createCustomInvoice, updateCustomInvoice, notifications, notify, notificationsFor, markNotificationRead, viewQuote, createWalkinQuote, recordQuoteDecision, createCustomerByStaff, updateProfile, changePassword, settings, updateSettings, emailTemplates, emailOutbox, emailStats, setEmailActive, sendEmail };
+  productName, newSession, endSessions, verifyPassword, pastOrdersForUser, tokenKey, resetCheck, resetPassword, requestPasswordReset, STAFF_ROLES, createStaffAccount, updateStaffAccount, hashPassword, checkCoupon, load, save, reset, jobs, job, users, audit, applyTransition, logEvent, now, id, catalogue, setOverride, createJob, orders, order, createOrder, validateOrderPayment, orderView, registerCustomer, loginCustomer, sessionCustomer, logout, ordersForUser, publicCustomer, customers, findCustomer, getAddresses, addAddress, deleteAddress, setDefaultAddress, getCredit, creditEntry, vendorAccounts, requestVendorQuotes, submitVendorQuote, awardVendorPO, vendorRequests, quotes, quote, quotesForUser, createQuote, priceQuote, rejectQuote, acceptQuote, createManualQuote, setQuoteRemark, customInvoices, customInvoice, customInvoicesForUser, createCustomInvoice, updateCustomInvoice, notifications, notify, notificationsFor, markNotificationRead, viewQuote, createWalkinQuote, recordQuoteDecision, createCustomerByStaff, updateProfile, changePassword, settings, updateSettings, emailTemplates, emailOutbox, emailStats, setEmailActive, sendEmail };
