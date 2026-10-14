@@ -897,6 +897,11 @@ http.createServer(async (req, res) => {
   const proto = (req.headers['x-forwarded-proto'] || 'http').split(',')[0].trim();
   const host = (req.headers['x-forwarded-host'] || req.headers.host || ('localhost:' + PORT)).split(',')[0].trim();
   const origin = proto + '://' + host;
+  // production behind a proxy: plain-HTTP requests are sent to HTTPS (HSTS then keeps browsers there). Payment callbacks
+  // are exempt so a gateway that posts over HTTP is never broken by a redirect.
+  if (process.env.NODE_ENV === 'production' && req.headers['x-forwarded-proto'] && proto === 'http' && !/^\/api\/payments\//.test(parsed.pathname)) {
+    res.writeHead(301, { Location: 'https://' + host + req.url, 'Cache-Control': 'no-store' }); return res.end();
+  }
   try {
     if (parsed.pathname.indexOf('/api/') === 0) return await api(req, res, parsed.pathname, parsed.query);
     if (parsed.pathname === '/sitemap.xml') return send(res, 200, content.sitemapXml(origin), 'application/xml; charset=utf-8');
