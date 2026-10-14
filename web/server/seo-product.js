@@ -11,7 +11,7 @@ const path = require('path');
 const vm = require('vm');
 // original printoka.com product + option photos (shared with the SPA)
 const PKI = (function () { try { return require(path.join(__dirname, '..', 'product-images.js')); } catch (e) { return null; } })();
-const origImg = f => f ? '/assets/original/' + f : null;
+const origImg = f => f ? (/^assets\//.test(f) ? '/' + f : '/assets/original/' + f) : null;
 const optImg = (key, val, id) => PKI ? origImg(PKI.option(key, val, id)) : null;
 // finishing type → original finishing photo
 const FIN_IMG = [[/spot uv/i, 'matte-laminationspot-uv.jpg'], [/hot stamp/i, 'hot-stamping-gold.jpg'], [/round corner/i, 'round-corner.jpg'], [/emboss/i, 'emboss-finishing.jpg'],
@@ -366,7 +366,7 @@ function css() {
     '.pk-size{border:1px solid ' + T.hairline + ';border-radius:0;padding:12px;text-align:center}.pk-size-box{height:128px;display:flex;align-items:center;justify-content:center}.pk-size-box span{background:#fff;border:1.5px solid ' + T.brand + ';border-radius:2px;display:block}.pk-size-na{width:60px;height:40px;border-style:dashed!important;border-color:' + T.hairline + '!important}.pk-size-l{font-size:12.5px;font-weight:500;margin-top:8px}',
     '.pk-mat{border:1px solid ' + T.hairline + ';border-radius:0;padding:14px}.pk-mat-l{font-size:13.5px;font-weight:500}.pk-bars{display:flex;gap:4px;margin:9px 0 5px}.pk-bars span{height:6px;flex:1;border-radius:3px;background:' + T.hairline + '}.pk-bars span.on{background:' + T.brand + '}.pk-mat-c{font-size:11.5px;color:' + T.muted + '}.pk-mat-c-neutral{color:#9e9e9e}',
     '.pk-has-img{padding:0 0 12px;overflow:hidden}.pk-has-img>*:not(img){padding-left:14px;padding-right:14px}.pk-tile-img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;margin-bottom:10px;border-bottom:1px solid ' + T.hairline + '}.pk-fin.pk-has-img{border-left:1px solid ' + T.hairline + ';padding-bottom:12px}',
-    '.pk-size-box img{max-height:128px;max-width:100%;object-fit:contain}.pk-type-photo{padding:0;background:#fff}.pk-type-photo img{height:150px;width:100%;object-fit:contain;opacity:1}',
+    'img[src^="/assets/configuration/"]{object-fit:contain!important}.pk-size-box img{max-height:128px;max-width:100%;object-fit:contain}.pk-type-photo{padding:0;background:#fff}.pk-type-photo img{height:150px;width:100%;object-fit:contain;opacity:1}',
     '.pk-fin{border:1px solid ' + T.hairline + ';border-left:3px solid ' + T.brand + ';border-radius:0;padding:12px 14px;font-size:13.5px;font-weight:500}',
     // delivery banner (attention-catching: gradient band, white text, check-circle states, CTA)
     '.pk-deliver{background:linear-gradient(90deg,#FF9A2E,#F02B29);color:#fff;border-radius:0;margin:40px 0;box-shadow:0 18px 40px rgba(229,34,32,.18)}',

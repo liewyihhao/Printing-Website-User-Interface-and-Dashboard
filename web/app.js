@@ -4683,7 +4683,8 @@ class Component extends DCLogic {
     // captured Excard live price tables → EXCARD_PRICES (drives priceBase). forceUpdate so any
     // already-rendered configurator re-prices once the table lands.
     if (typeof fetch === 'function')
-      [['Business Card', 'excard_bc.json'], ['Flyer', 'excard_flyer.json']].forEach(([name, file]) =>
+      // (the Flyer table loader was never wired to pricing and its file was never added: Loose Sheet Litho prices from LO_PL / LO_FIX)
+      [['Business Card', 'excard_bc.json']].forEach(([name, file]) =>
         fetch('/pricing/' + file).then(r => r.ok ? r.json() : null).then(d => { if (d) { EXCARD_PRICES[name] = d; if (this.state.route === 'product') this.forceUpdate(); } }).catch(() => {}));
     // the ~20MB pricing engine loads async (after first paint); re-render prices when it lands,
     // and re-resolve the URL (a product deep-link can't map its slug→id until products exist)
@@ -7842,7 +7843,7 @@ class Component extends DCLogic {
           style: { display: 'flex', flexDirection: 'column', textAlign: 'left', width: '100%', font: 'inherit', padding: 0, overflow: 'hidden',
             border: '1px solid ' + (on ? TEAL : HAIR), borderRadius: 0, background: on ? '#fdf2f2' : (avail ? '#fff' : ALT),
             boxShadow: on ? '0 0 0 1px ' + TEAL : 'none', cursor: avail ? 'pointer' : 'default', opacity: avail ? 1 : 0.6, outlineOffset: '2px' } },
-          it.img ? h('img', { src: it.img, alt: '', loading: 'lazy', style: { width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', display: 'block', background: '#fff', borderBottom: '1px solid ' + LINE, filter: avail ? 'none' : 'grayscale(1)' } })
+          it.img ? h('img', { src: it.img, alt: '', loading: 'lazy', style: { width: '100%', aspectRatio: '4 / 3', objectFit: /assets\/configuration\//.test(it.img) ? 'contain' : 'cover', display: 'block', background: '#fff', borderBottom: '1px solid ' + LINE, filter: avail ? 'none' : 'grayscale(1)' } })
             : h('div', { 'aria-hidden': 'true', style: { width: '100%', aspectRatio: '4 / 3', background: ALT, borderBottom: '1px solid ' + LINE, display: 'grid', placeItems: 'center', color: FAINT, fontSize: 12, fontWeight: 600, padding: 8, textAlign: 'center' } }, it.label),
           h('span', { style: { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 11px' } },
             opts.book ? null : h('span', { 'aria-hidden': 'true', style: { flex: 'none', width: 16, height: 16, borderRadius: '50%', border: '2px solid ' + (on ? TEAL : '#cfcfcf'), background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
@@ -7906,7 +7907,7 @@ class Component extends DCLogic {
     const activeDims = () => { for (const p of DIM_PAIRS) { const hv = cfg[p[0]], wv = cfg[p[1]]; if (hv != null && hv !== '' && wv != null && wv !== '') return { hk: p[0], wk: p[1], h: hv, w: wv }; } return null; };
     // original printoka.com option photos (materials, finishing, sizes, folds…) — product-images.js
     const PKI = window.PK_IMAGES, prodId = prod && prod.id;
-    const pkOptImg = (key, val) => { const f = PKI && PKI.option(key, val, prodId); return f ? window.__asset(PKI.base + f) : null; };
+    const pkOptImg = (key, val) => { const f = PKI && PKI.option(key, val, prodId); return f ? window.__asset(/^assets\//.test(f) ? f : PKI.base + f) : null; };
     const optCards = (def, options, sel) => {
       const label = niceLabel((ov.label && ov.label[def.key]) || def.label, def.key);
       const isSizeField = def.key === 'size';

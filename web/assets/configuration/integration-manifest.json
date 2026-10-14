@@ -1,0 +1,6856 @@
+{
+ "generatedAt": "2026-10-14T16:40:16.266Z",
+ "source": "Codex outputs/configuration-images/manifest.json (current files on disk)",
+ "sourceUpdatedAt": "2026-10-11T07:42:09.342Z",
+ "assets": 145,
+ "mappings": 528,
+ "userApproved": 0,
+ "note": "Integrated as configurator option images. Integration is not approval: every asset is \"created-pending-user-review\" and none carries user sign-off. No exported review file was found to match against.",
+ "supplierWarning": "Booklets 19/37 cover_lamination \"UV Varnish (Both)\": the two-face UV image does not establish that the cover option can be sold. Current Excard cover menus offer UV Front only. The offset booklet (19) no longer offers it; this integration did not enable, disable or change any option. Content UV Both is separate.",
+ "unresolvedFromSource": [
+  {
+   "id": "envelope-a6-order",
+   "productId": 106,
+   "field": "ex_size",
+   "option": "162mm x 114mm (Fit A6 Size)",
+   "status": "pending-reference-clarification",
+   "note": "Configurator catalogue option uses 162 x 114 but official OP6344NW dimensions are height114 x width162. Confirm model and display-order semantics before producing or mapping this thumbnail."
+  }
+ ],
+ "items": [
+  {
+   "assetId": "sticker-category-no-cut",
+   "name": "No Cut",
+   "sha256": "01b0b53e1fa002a2bbae19b6aafc1ac3820522348d0b321f9c9d30cc66fe232b",
+   "source": "assets/No Cut.png",
+   "destination": "web/assets/configuration/No Cut.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 176070
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 60,
+     "fieldKey": "category",
+     "option": "No Cut",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-white-pe",
+   "name": "White PE (Polyethylene)",
+   "sha256": "e8d406ef078165ac5c4002ef265ea362233720f20dd39e726f8421eaf906ebb5",
+   "source": "assets/White PE (Polyethylene).png",
+   "destination": "web/assets/configuration/White PE (Polyethylene).png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 162197
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 60,
+     "fieldKey": "paper",
+     "option": "White PE (Polyethylene)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "finish-soft-touch-front",
+   "name": "Soft Touch Lamination (Front)",
+   "sha256": "82fcfcf5de0289d0b4235a4ca393b7bd11328d8fcc3f864c97dab7fe63aae2bf",
+   "source": "assets/Soft Touch Lamination (Front).png",
+   "destination": "web/assets/configuration/Soft Touch Lamination (Front).png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 202353
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 60,
+     "fieldKey": "finishing",
+     "option": "Soft Touch Laminate (Front)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 126,
+     "fieldKey": "lamination",
+     "option": "Soft Touch Lamination (Front)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 135,
+     "fieldKey": "lamination",
+     "option": "Soft Touch Lamination (Front)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 132,
+     "fieldKey": "finishing",
+     "option": "Soft Touch",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 165,
+     "fieldKey": "lamination",
+     "option": "Soft Touch Lamination (Front)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 138,
+     "fieldKey": "finishing",
+     "option": "Soft Touch Lamination",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 169,
+     "fieldKey": "finishing",
+     "option": "Soft Touch Lamination",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 168,
+     "fieldKey": "lamination",
+     "option": "Soft Touch Lamination",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 167,
+     "fieldKey": "finishing",
+     "option": "Soft Touch Lamination",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "finish-uv-varnish-front",
+   "name": "UV Varnish (Front)",
+   "sha256": "4ee4c2e41f0bb1993957af9d0c6617558422004fc8ff55d47241fbd7e4a8288c",
+   "source": "assets/UV Varnish (Front).png",
+   "destination": "web/assets/configuration/UV Varnish (Front).png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 180908
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 60,
+     "fieldKey": "finishing",
+     "option": "UV Varnish",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "cover_lamination",
+     "option": "UV Varnish (Front)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "cover_lamination",
+     "option": "UV Varnish (Front)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 179,
+     "fieldKey": "lamination",
+     "option": "UV Varnish (Front)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "finish-soft-touch-both-business-card",
+   "name": "Soft Touch Lamination (Both)",
+   "sha256": "f39691a5aad22495f15446fd45f5e7fab6c37db2a0f1f1aebba163e90cc6ad4e",
+   "source": "assets/Soft Touch Lamination (Both).png",
+   "destination": "web/assets/configuration/Soft Touch Lamination (Both).png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 123906
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 1,
+     "fieldKey": "lamination",
+     "option": "Soft Touch Lamination (Both)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 165,
+     "fieldKey": "lamination",
+     "option": "Soft Touch Lamination (Both)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-custom-business-card",
+   "name": "Other (Custom Size)",
+   "sha256": "440596da4b755dc8d077e12941cdf835d2175447e4a091394aa1adfd2ce334d5",
+   "source": "assets/Other (Custom Size).png",
+   "destination": "web/assets/configuration/Other (Custom Size).png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 185161
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 1,
+     "fieldKey": "size",
+     "option": "Other (Custom Size)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-a0-foamboard",
+   "name": "A0 - 841mm x 1189mm",
+   "sha256": "e654a5891453c02c81124e534c24f892b1871eab22444792b6f29e8d0a8e4449",
+   "source": "assets/A0 - 841mm x 1189mm.png",
+   "destination": "web/assets/configuration/A0 - 841mm x 1189mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 160350
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 154,
+     "fieldKey": "size",
+     "option": "841mm x 1189mm (A0)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-b4-carbonless-form",
+   "name": "B4 - 250mm x 353mm",
+   "sha256": "f86579009f6498245ce192c9a6f3f77e1fddf4f7406453769579a03cb9ba4b59",
+   "source": "assets/B4 - 250mm x 353mm.png",
+   "destination": "web/assets/configuration/B4 - 250mm x 353mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 157775
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "B4 (250mm x 353mm)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-ncr-white-50gsm",
+   "name": "NCR White 50gsm",
+   "sha256": "7c273b08153ab548cdb743974f97f0a17ff58fd8cd91480033a7e442367cc510",
+   "source": "assets/NCR White 50gsm.png",
+   "destination": "web/assets/configuration/NCR White 50gsm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69547
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_1",
+     "option": "NCR White 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_2",
+     "option": "NCR White 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_3",
+     "option": "NCR White 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_4",
+     "option": "NCR White 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_5",
+     "option": "NCR White 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_6",
+     "option": "NCR White 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-ncr-green-50gsm",
+   "name": "NCR Green 50gsm",
+   "sha256": "74c9c61929ced3330ee0d7354c74f71484372158c88114206404ff755b9846a5",
+   "source": "assets/NCR Green 50gsm.png",
+   "destination": "web/assets/configuration/NCR Green 50gsm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69547
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_1",
+     "option": "NCR Green 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_2",
+     "option": "NCR Green 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_3",
+     "option": "NCR Green 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_4",
+     "option": "NCR Green 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_5",
+     "option": "NCR Green 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_6",
+     "option": "NCR Green 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-ncr-blue-50gsm",
+   "name": "NCR Blue 50gsm",
+   "sha256": "2075814af314b5e8dda1ecada869f273c31038da6c9a6770016ef05ce067ea90",
+   "source": "assets/NCR Blue 50gsm.png",
+   "destination": "web/assets/configuration/NCR Blue 50gsm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69547
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_1",
+     "option": "NCR Blue 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_2",
+     "option": "NCR Blue 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_3",
+     "option": "NCR Blue 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_4",
+     "option": "NCR Blue 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_5",
+     "option": "NCR Blue 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_6",
+     "option": "NCR Blue 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-ncr-yellow-50gsm",
+   "name": "NCR Yellow 50gsm",
+   "sha256": "2d67b96a7f7d628b49118e9b6d1d53aba89f2fb078b76fcfe068a9456a375cd5",
+   "source": "assets/NCR Yellow 50gsm.png",
+   "destination": "web/assets/configuration/NCR Yellow 50gsm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69547
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_1",
+     "option": "NCR Yellow 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_2",
+     "option": "NCR Yellow 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_3",
+     "option": "NCR Yellow 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_4",
+     "option": "NCR Yellow 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_5",
+     "option": "NCR Yellow 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_6",
+     "option": "NCR Yellow 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-ncr-pink-50gsm",
+   "name": "NCR Pink 50gsm",
+   "sha256": "2176fbbd5e68f0a69bd32c429d3f7207d3af4a129fd4c2133d3db65069697731",
+   "source": "assets/NCR Pink 50gsm.png",
+   "destination": "web/assets/configuration/NCR Pink 50gsm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69547
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_1",
+     "option": "NCR Pink 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_2",
+     "option": "NCR Pink 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_3",
+     "option": "NCR Pink 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_4",
+     "option": "NCR Pink 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_5",
+     "option": "NCR Pink 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_6",
+     "option": "NCR Pink 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-bond-blue-50gsm",
+   "name": "Bond Blue 50gsm",
+   "sha256": "2b733073b926847c744aec71542a11a905553d9c3fdd73ad70342eff62875b73",
+   "source": "assets/Bond Blue 50gsm.png",
+   "destination": "web/assets/configuration/Bond Blue 50gsm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69547
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_1",
+     "option": "Bond Blue 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_2",
+     "option": "Bond Blue 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_3",
+     "option": "Bond Blue 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_4",
+     "option": "Bond Blue 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_5",
+     "option": "Bond Blue 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_6",
+     "option": "Bond Blue 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-bond-green-50gsm",
+   "name": "Bond Green 50gsm",
+   "sha256": "959628ec74b30dc9d2ef854aaa497ef4eba4a572432039a1cb597bd34c2f82cd",
+   "source": "assets/Bond Green 50gsm.png",
+   "destination": "web/assets/configuration/Bond Green 50gsm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69547
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_1",
+     "option": "Bond Green 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_2",
+     "option": "Bond Green 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_3",
+     "option": "Bond Green 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_4",
+     "option": "Bond Green 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_5",
+     "option": "Bond Green 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_6",
+     "option": "Bond Green 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-bond-pink-50gsm",
+   "name": "Bond Pink 50gsm",
+   "sha256": "3dd6550444c3a262816c2e5fada12d713cfc9aaf1ec13ceab7fb9844db5899b8",
+   "source": "assets/Bond Pink 50gsm.png",
+   "destination": "web/assets/configuration/Bond Pink 50gsm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69547
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_1",
+     "option": "Bond Pink 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_2",
+     "option": "Bond Pink 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_3",
+     "option": "Bond Pink 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_4",
+     "option": "Bond Pink 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_5",
+     "option": "Bond Pink 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_6",
+     "option": "Bond Pink 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-bond-yellow-50gsm",
+   "name": "Bond Yellow 50gsm",
+   "sha256": "2cf8b2688a7e50d3ef302144963384cd9d6acf7169d2f9cbf2c14d372b182ac7",
+   "source": "assets/Bond Yellow 50gsm.png",
+   "destination": "web/assets/configuration/Bond Yellow 50gsm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69547
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_1",
+     "option": "Bond Yellow 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_2",
+     "option": "Bond Yellow 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_3",
+     "option": "Bond Yellow 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_4",
+     "option": "Bond Yellow 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_5",
+     "option": "Bond Yellow 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_6",
+     "option": "Bond Yellow 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-newsprint-50gsm",
+   "name": "Newsprint 50gsm",
+   "sha256": "e4bcc89bf51b1af3eb0394eab3add41346565269e3598788632200cccff7b712",
+   "source": "assets/Newsprint 50gsm.png",
+   "destination": "web/assets/configuration/Newsprint 50gsm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69547
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_1",
+     "option": "Newsprint 50gsm",
+     "condition": "Only when this layer is the last selected layer in Normal Paper mode",
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_2",
+     "option": "Newsprint 50gsm",
+     "condition": "Only when this layer is the last selected layer in Normal Paper mode",
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_3",
+     "option": "Newsprint 50gsm",
+     "condition": "Only when this layer is the last selected layer in Normal Paper mode",
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_4",
+     "option": "Newsprint 50gsm",
+     "condition": "Only when this layer is the last selected layer in Normal Paper mode",
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_5",
+     "option": "Newsprint 50gsm",
+     "condition": "Only when this layer is the last selected layer in Normal Paper mode",
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_6",
+     "option": "Newsprint 50gsm",
+     "condition": "Only when this layer is the last selected layer in Normal Paper mode",
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-custom-bill-book",
+   "name": "NCR Bill Books - Other (Custom Size)",
+   "sha256": "770f7c73ae10a3369e606321183d69efb2f49543b7e9e5ba4713c7cf35d6b793",
+   "source": "assets/NCR Bill Books - Other (Custom Size).png",
+   "destination": "web/assets/configuration/NCR Bill Books - Other (Custom Size).png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 157888
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "Other (Custom Size)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-foamboard-305-457",
+   "name": "Foamboard - 305mm x 457mm",
+   "sha256": "9baf69a25f6a00a086826dccdef75ba32bbf06c15084ce4a6f82ac21bca3a47f",
+   "source": "assets/Foamboard - 305mm x 457mm.png",
+   "destination": "web/assets/configuration/Foamboard - 305mm x 457mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 165899
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 154,
+     "fieldKey": "size",
+     "option": "305mm x 457mm (12 x 18 inch)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-foamboard-610-1219",
+   "name": "Foamboard - 610mm x 1219mm",
+   "sha256": "9c38b314b18348171f04ec3af716b8377bb318dd7a936d94d5e454465d9d79f7",
+   "source": "assets/Foamboard - 610mm x 1219mm.png",
+   "destination": "web/assets/configuration/Foamboard - 610mm x 1219mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 186515
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 154,
+     "fieldKey": "size",
+     "option": "610mm x 1219mm (2ft x 4ft)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-foamboard-762-1524",
+   "name": "Foamboard - 762mm x 1524mm",
+   "sha256": "c648cac138e57c7910b23f664ba3cedf9e11fd79e3e28be4f73b401a7e512164",
+   "source": "assets/Foamboard - 762mm x 1524mm.png",
+   "destination": "web/assets/configuration/Foamboard - 762mm x 1524mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 186487
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 154,
+     "fieldKey": "size",
+     "option": "762mm x 1524mm (2.5ft x 5ft)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-foamboard-762-1829",
+   "name": "Foamboard - 762mm x 1829mm",
+   "sha256": "68b1d0d56460edadc20b16fb5326f1a8bf441eff86309375f26b7360d63b7aa5",
+   "source": "assets/Foamboard - 762mm x 1829mm.png",
+   "destination": "web/assets/configuration/Foamboard - 762mm x 1829mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 195578
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 154,
+     "fieldKey": "size",
+     "option": "762mm x 1829mm (2.5ft x 6ft)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-foamboard-914-1524",
+   "name": "Foamboard - 914mm x 1524mm",
+   "sha256": "3f2a946a0af480495e87c839e4b984bf71c0a4fe98b6eda6ac460b0bbcc2864a",
+   "source": "assets/Foamboard - 914mm x 1524mm.png",
+   "destination": "web/assets/configuration/Foamboard - 914mm x 1524mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 173876
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 154,
+     "fieldKey": "size",
+     "option": "914mm x 1524mm (3ft x 5ft)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-foamboard-914-1829",
+   "name": "Foamboard - 914mm x 1829mm",
+   "sha256": "85368c4fbfdfce24aa7507aec4fce365f6bbd745116a2fbac1ebb07208243799",
+   "source": "assets/Foamboard - 914mm x 1829mm.png",
+   "destination": "web/assets/configuration/Foamboard - 914mm x 1829mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 186457
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 154,
+     "fieldKey": "size",
+     "option": "914mm x 1829mm (3ft x 6ft)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-tarpaulin-300gsm",
+   "name": "Tarpaulin 300gsm",
+   "sha256": "eb01e07680c4c53ce0a1303efc8ee10b9e5d45cdde1c3d89be7501ebf2f319fe",
+   "source": "assets/Tarpaulin 300gsm.png",
+   "destination": "web/assets/configuration/Tarpaulin 300gsm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 190415
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 124,
+     "fieldKey": "material",
+     "option": "Tarpaulin 300gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 160,
+     "fieldKey": "material",
+     "option": "Tarpaulin 300gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 161,
+     "fieldKey": "material",
+     "option": "Tarpaulin 300gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 162,
+     "fieldKey": "material",
+     "option": "Tarpaulin 300gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-envelope-114-248",
+   "name": "Envelope - 114mm x 248mm",
+   "sha256": "9b2f18d164199b2a70f53987d0ae0443dbc50d02b10d051cf1f0a50ea433f2e4",
+   "source": "assets/Envelope - 114mm x 248mm.png",
+   "destination": "web/assets/configuration/Envelope - 114mm x 248mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 189766
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 106,
+     "fieldKey": "ex_size",
+     "option": "114mm x 248mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-envelope-229-324",
+   "name": "Envelope - 229mm x 324mm",
+   "sha256": "6d08d764d941c67878633df8f9f0fee56d64b5f6333134f369b49efe38c55efe",
+   "source": "assets/Envelope - 229mm x 324mm.png",
+   "destination": "web/assets/configuration/Envelope - 229mm x 324mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 159427
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 106,
+     "fieldKey": "ex_size",
+     "option": "229mm x 324mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-envelope-102-229",
+   "name": "Envelope - 102mm x 229mm",
+   "sha256": "ea83ed8420ffd2aef2d94d49fcd2b867eb582a72110b57dd4abfd7b5044c8b47",
+   "source": "assets/Envelope - 102mm x 229mm.png",
+   "destination": "web/assets/configuration/Envelope - 102mm x 229mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 191439
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 106,
+     "fieldKey": "ex_size",
+     "option": "102mm x 229mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-envelope-162-229",
+   "name": "Envelope - 162mm x 229mm",
+   "sha256": "f17ec8188ef457dfc1de0e53fac4646af2afb5c6b28189e20d82309d68f86204",
+   "source": "assets/Envelope - 162mm x 229mm.png",
+   "destination": "web/assets/configuration/Envelope - 162mm x 229mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 159441
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 106,
+     "fieldKey": "ex_size",
+     "option": "162mm x 229mm (Fit A5 Size)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-envelope-178-254",
+   "name": "Envelope - 178mm x 254mm",
+   "sha256": "d7c470b92852b47b919afff4b8bd48e52ca4aff7810c8fcbbc5930b0a048c5fe",
+   "source": "assets/Envelope - 178mm x 254mm.png",
+   "destination": "web/assets/configuration/Envelope - 178mm x 254mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 160168
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 106,
+     "fieldKey": "ex_size",
+     "option": "178mm x 254mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-envelope-254-381",
+   "name": "Envelope - 254mm x 381mm",
+   "sha256": "4b3c82c0188f1d97c498d55aa0b785546a5e4668da97a20e5f877d90daf4c9dc",
+   "source": "assets/Envelope - 254mm x 381mm.png",
+   "destination": "web/assets/configuration/Envelope - 254mm x 381mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 164372
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 106,
+     "fieldKey": "ex_size",
+     "option": "254mm x 381mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-90-177",
+   "name": "Bill Book - 90mm x 177mm",
+   "sha256": "1ce43ca41ec4815857d7b1b063eeaf277be49e41a4a962ead5b78b39c7abb449",
+   "source": "assets/Bill Book - 90mm x 177mm.png",
+   "destination": "web/assets/configuration/Bill Book - 90mm x 177mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 185973
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "90mm x 177mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-95-210",
+   "name": "Bill Book - 95mm x 210mm",
+   "sha256": "3a6270cb46c642c6944db1f1956b5d6109b3d2b11db88ac82fea06ce72489a06",
+   "source": "assets/Bill Book - 95mm x 210mm.png",
+   "destination": "web/assets/configuration/Bill Book - 95mm x 210mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 192571
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "95mm x 210mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-105-175",
+   "name": "Bill Book - 105mm x 175mm",
+   "sha256": "f71e5d4325f7e3f1c1a7e0241159e16dc94eefca9313c3276d5c80122c8e2a3a",
+   "source": "assets/Bill Book - 105mm x 175mm.png",
+   "destination": "web/assets/configuration/Bill Book - 105mm x 175mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 174332
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "105mm x 175mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-110-210",
+   "name": "Bill Book - 110mm x 210mm",
+   "sha256": "a9bbc714698bfeb8e337bf30c847c7f798fe95029784508b014dcb94c3a30da6",
+   "source": "assets/Bill Book - 110mm x 210mm.png",
+   "destination": "web/assets/configuration/Bill Book - 110mm x 210mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 183457
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "110mm x 210mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-120-210",
+   "name": "Bill Book - 120mm x 210mm",
+   "sha256": "93b61f819e30ba7e96d33f18e8936b20c2b728e1eb0214bdcd10e2e90e150b74",
+   "source": "assets/Bill Book - 120mm x 210mm.png",
+   "destination": "web/assets/configuration/Bill Book - 120mm x 210mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 177815
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "120mm x 210mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-135-210",
+   "name": "Bill Book - 135mm x 210mm",
+   "sha256": "14285fc41867581b727cb7f4262be8d7af82165c6e8b18a3eb35ccbd0af07ded",
+   "source": "assets/Bill Book - 135mm x 210mm.png",
+   "destination": "web/assets/configuration/Bill Book - 135mm x 210mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 169453
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "135mm x 210mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-145-148",
+   "name": "Bill Book - 145mm x 148mm",
+   "sha256": "2d44f724009eef41539cca22fce91f29f05cabd725b8de3f2eb91afacbe36603",
+   "source": "assets/Bill Book - 145mm x 148mm.png",
+   "destination": "web/assets/configuration/Bill Book - 145mm x 148mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 128835
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "145mm x 148mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-145-190",
+   "name": "Bill Book - 145mm x 190mm",
+   "sha256": "4ca6cb595885e531b05322bec6b60a89a6852069d164e89d697225deca8fbc1e",
+   "source": "assets/Bill Book - 145mm x 190mm.png",
+   "destination": "web/assets/configuration/Bill Book - 145mm x 190mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 155753
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "145mm x 190mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-148-190",
+   "name": "Bill Book - 148mm x 190mm",
+   "sha256": "79c96a2c198c8dcca174ea1c0eef95903d22f8178974ddf58ceff762198cd8f9",
+   "source": "assets/Bill Book - 148mm x 190mm.png",
+   "destination": "web/assets/configuration/Bill Book - 148mm x 190mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 152596
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "148mm x 190mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-148-291",
+   "name": "Bill Book - 148mm x 291mm",
+   "sha256": "719bef1163be263ab6f565152f82e2b506634bfa26e5e286d58585e4b27b3ae4",
+   "source": "assets/Bill Book - 148mm x 291mm.png",
+   "destination": "web/assets/configuration/Bill Book - 148mm x 291mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 185859
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "148mm x 291mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-160-240",
+   "name": "Bill Book - 160mm x 240mm",
+   "sha256": "e489ee21ba384455c1eceee39c4a9f5e79120a85e1605f03098ff242ba589a18",
+   "source": "assets/Bill Book - 160mm x 240mm.png",
+   "destination": "web/assets/configuration/Bill Book - 160mm x 240mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 166599
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "160mm x 240mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-165-210",
+   "name": "Bill Book - 165mm x 210mm",
+   "sha256": "2a4cc98972f8dbc34aace46ee835e521b8e1ee460eaa2cc86af5feefc1dea50a",
+   "source": "assets/Bill Book - 165mm x 210mm.png",
+   "destination": "web/assets/configuration/Bill Book - 165mm x 210mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 152263
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "165mm x 210mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-170-190",
+   "name": "Bill Book - 170mm x 190mm",
+   "sha256": "44687ffae8ff8ba80d139b1fb6f063fab602cde2be3ac2fee211383c58a393f9",
+   "source": "assets/Bill Book - 170mm x 190mm.png",
+   "destination": "web/assets/configuration/Bill Book - 170mm x 190mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 138623
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "170mm x 190mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-173-206",
+   "name": "Bill Book - 173mm x 206mm",
+   "sha256": "d277ba1f7d677096adfe80c6b2d97773e7011da6fab2513cbe627e494df25be1",
+   "source": "assets/Bill Book - 173mm x 206mm.png",
+   "destination": "web/assets/configuration/Bill Book - 173mm x 206mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 145612
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "173mm x 206mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-180-280",
+   "name": "Bill Book - 180mm x 280mm",
+   "sha256": "9d337c133db8fd85c011581cb3545093212ea88e54a72c3747812f9c1e701c1b",
+   "source": "assets/Bill Book - 180mm x 280mm.png",
+   "destination": "web/assets/configuration/Bill Book - 180mm x 280mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 169379
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "180mm x 280mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-190-210",
+   "name": "Bill Book - 190mm x 210mm",
+   "sha256": "6b9001e881b45e540d651326cbef71f3b3368cbeb8aa72a0d4e8aa2715e92c04",
+   "source": "assets/Bill Book - 190mm x 210mm.png",
+   "destination": "web/assets/configuration/Bill Book - 190mm x 210mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 137945
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "190mm x 210mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-190-270",
+   "name": "Bill Book - 190mm x 270mm",
+   "sha256": "aece0eb96858563b2446cd2965531262d8a82a0ccee4fe14ce9ddba948426723",
+   "source": "assets/Bill Book - 190mm x 270mm.png",
+   "destination": "web/assets/configuration/Bill Book - 190mm x 270mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 161695
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "190mm x 270mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-190-290",
+   "name": "Bill Book - 190mm x 290mm",
+   "sha256": "638b97367afdb0df9a14b127bfd48ff0017e29713923e2449eaa171193923035",
+   "source": "assets/Bill Book - 190mm x 290mm.png",
+   "destination": "web/assets/configuration/Bill Book - 190mm x 290mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 167983
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "190mm x 290mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-190-297",
+   "name": "Bill Book - 190mm x 297mm",
+   "sha256": "ca53c354e589d247d10a0df008dedeaba37db5e9492f333b2ccc884f9733025c",
+   "source": "assets/Bill Book - 190mm x 297mm.png",
+   "destination": "web/assets/configuration/Bill Book - 190mm x 297mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 169380
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "190mm x 297mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-192-268",
+   "name": "Bill Book - 192mm x 268mm",
+   "sha256": "8cedc5955b968e747cf0b3d1c8ec8011e8045e39f8d4ca74a885bd8578adad18",
+   "source": "assets/Bill Book - 192mm x 268mm.png",
+   "destination": "web/assets/configuration/Bill Book - 192mm x 268mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 160616
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "192mm x 268mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-194-205",
+   "name": "Bill Book - 194mm x 205mm",
+   "sha256": "16ca88f0b719dbb7221fb1b7b8c26d90a663c347437fdba0239738a6d98afaf8",
+   "source": "assets/Bill Book - 194mm x 205mm.png",
+   "destination": "web/assets/configuration/Bill Book - 194mm x 205mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 132280
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "194mm x 205mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-206-240",
+   "name": "Bill Book - 206mm x 240mm",
+   "sha256": "471f4414b43d5981ce889022c5b3d54eba12dafae01cdf6c2f3646ec523ab72a",
+   "source": "assets/Bill Book - 206mm x 240mm.png",
+   "destination": "web/assets/configuration/Bill Book - 206mm x 240mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 143461
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "206mm x 240mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-206-330",
+   "name": "Bill Book - 206mm x 330mm",
+   "sha256": "d32ba480e6efb482e8ee947ba3a7d167146bab07804c67938ea66e8d71281176",
+   "source": "assets/Bill Book - 206mm x 330mm.png",
+   "destination": "web/assets/configuration/Bill Book - 206mm x 330mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 172477
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "206mm x 330mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-210-270",
+   "name": "Bill Book - 210mm x 270mm",
+   "sha256": "184b3ecec4f89c30276d0cf313b14d78a138387a946e2dfd5ccf7e784a10fe6a",
+   "source": "assets/Bill Book - 210mm x 270mm.png",
+   "destination": "web/assets/configuration/Bill Book - 210mm x 270mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 154018
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "210mm x 270mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-210-291",
+   "name": "Bill Book - 210mm x 291mm",
+   "sha256": "76021c913018ea5d0e84f5cff4dbea029225f65b7aec82d5033cff8870f586dd",
+   "source": "assets/Bill Book - 210mm x 291mm.png",
+   "destination": "web/assets/configuration/Bill Book - 210mm x 291mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 159974
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "210mm x 291mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-291-420",
+   "name": "Bill Book - 291mm x 420mm",
+   "sha256": "1da46726cf5868e77f5755cc7fe90ddb7be6d8841f46dbd05fa4a568eea810e2",
+   "source": "assets/Bill Book - 291mm x 420mm.png",
+   "destination": "web/assets/configuration/Bill Book - 291mm x 420mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 163448
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "291mm x 420mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-bill-book-330-420",
+   "name": "Bill Book - 330mm x 420mm",
+   "sha256": "03f3209b9b440cb8e7df0cfcfd27df040ada6acc145806df0b366eff534ab290",
+   "source": "assets/Bill Book - 330mm x 420mm.png",
+   "destination": "web/assets/configuration/Bill Book - 330mm x 420mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 152220
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "size",
+     "option": "F3 (330mm x 420mm)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "bag-colour-red",
+   "name": "Non-Woven Bag - Red",
+   "sha256": "c116c1adb974cd49338a19df00ce2d1a4058a3518ca510677ef5f02c869e2e77",
+   "source": "assets/Non-Woven Bag - Red.png",
+   "destination": "web/assets/configuration/Non-Woven Bag - Red.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 154698
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 139,
+     "fieldKey": "bag_colour",
+     "option": "Red",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 139,
+     "fieldKey": "handle_colour",
+     "option": "Same as bag colour",
+     "condition": "Illustrative matching handles; actual handle colour follows the selected body colour. Do not force red for other bag colours.",
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "bag-colour-green",
+   "name": "Non-Woven Bag - Green",
+   "sha256": "0eb0fb8969e293196f5c6d27c9d9ec292fdad4d7bf9fdfdccc39a01d3799f389",
+   "source": "assets/Non-Woven Bag - Green.png",
+   "destination": "web/assets/configuration/Non-Woven Bag - Green.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 153858
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 139,
+     "fieldKey": "bag_colour",
+     "option": "Green",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-colour-paper-blue-75gsm",
+   "name": "Colour Paper Blue 75gsm",
+   "sha256": "a886bcaf4359cea3ede72d52beecd70b1cddd066878dc8b51571a9f1fb3924ef",
+   "source": "assets/Colour Paper Blue 75gsm.png",
+   "destination": "web/assets/configuration/Colour Paper Blue 75gsm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69547
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 110,
+     "fieldKey": "paper",
+     "option": "Colour Paper Blue 75gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-colour-paper-green-75gsm",
+   "name": "Colour Paper Green 75gsm",
+   "sha256": "4d3f33aa85bc7c7cb678ef845a967764ffb967ea0158a9b11c57b5ad608674dc",
+   "source": "assets/Colour Paper Green 75gsm.png",
+   "destination": "web/assets/configuration/Colour Paper Green 75gsm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69547
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 110,
+     "fieldKey": "paper",
+     "option": "Colour Paper Green 75gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-colour-paper-pink-75gsm",
+   "name": "Colour Paper Pink 75gsm",
+   "sha256": "83e09d8f0af098a333dfbf59f1197149802ad33443688dde38641f6dd8d85b79",
+   "source": "assets/Colour Paper Pink 75gsm.png",
+   "destination": "web/assets/configuration/Colour Paper Pink 75gsm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69547
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 110,
+     "fieldKey": "paper",
+     "option": "Colour Paper Pink 75gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-colour-paper-yellow-75gsm",
+   "name": "Colour Paper Yellow 75gsm",
+   "sha256": "e13b8bf346868b7c49a265029906be3fb02d71fe6db56c00e14d067aa1a80a3f",
+   "source": "assets/Colour Paper Yellow 75gsm.png",
+   "destination": "web/assets/configuration/Colour Paper Yellow 75gsm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69547
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 110,
+     "fieldKey": "paper",
+     "option": "Colour Paper Yellow 75gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "bag-colour-pastel-blue",
+   "name": "Non-Woven Bag - Pastel Blue",
+   "sha256": "4f16e3c56836635a366af1c0f30126aa3116da90ad33e0ef281fed5224d48521",
+   "source": "assets/Non-Woven Bag - Pastel Blue.png",
+   "destination": "web/assets/configuration/Non-Woven Bag - Pastel Blue.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 154136
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 139,
+     "fieldKey": "bag_colour",
+     "option": "Pastel Blue",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "bag-colour-med-blue",
+   "name": "Non-Woven Bag - Med Blue",
+   "sha256": "4dc7737e904f5b34f98cfaedfed4287dbce5f6b4958cf8a5ff47f39c797c42a4",
+   "source": "assets/Non-Woven Bag - Med Blue.png",
+   "destination": "web/assets/configuration/Non-Woven Bag - Med Blue.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 153849
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 139,
+     "fieldKey": "bag_colour",
+     "option": "Med Blue",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-window-sticker-75-75",
+   "name": "Window Sticker - 75mm x 75mm",
+   "sha256": "3ff1ca87003a5b5972347f035c502a93fd9ae3d2cfe806d43bcd6b4da6ba0879",
+   "source": "assets/Window Sticker - 75mm x 75mm.png",
+   "destination": "web/assets/configuration/Window Sticker - 75mm x 75mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 123714
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 116,
+     "fieldKey": "size",
+     "option": "75mm x 75mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 117,
+     "fieldKey": "size",
+     "option": "75mm x 75mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-window-sticker-100-100",
+   "name": "Window Sticker - 100mm x 100mm",
+   "sha256": "c330e8480c917aa8e70f6fcc0ffc6c4c95385abd1868879cd23a4b5bc08adcd3",
+   "source": "assets/Window Sticker - 100mm x 100mm.png",
+   "destination": "web/assets/configuration/Window Sticker - 100mm x 100mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 123572
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 116,
+     "fieldKey": "size",
+     "option": "100mm x 100mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 117,
+     "fieldKey": "size",
+     "option": "100mm x 100mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-window-sticker-110-90",
+   "name": "Window Sticker - 110mm x 90mm",
+   "sha256": "6e08a181a90e45c9c68dbe202b10a939629468b3470ab832b1c9c93e70bf0383",
+   "source": "assets/Window Sticker - 110mm x 90mm.png",
+   "destination": "web/assets/configuration/Window Sticker - 110mm x 90mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 147184
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 116,
+     "fieldKey": "size",
+     "option": "110mm x 90mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 117,
+     "fieldKey": "size",
+     "option": "110mm x 90mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-window-sticker-115-120",
+   "name": "Window Sticker - 115mm x 120mm",
+   "sha256": "e3fa66552a0f80a481fdc76cc2daca40fda3db21b7aedd5848433065c3db9a18",
+   "source": "assets/Window Sticker - 115mm x 120mm.png",
+   "destination": "web/assets/configuration/Window Sticker - 115mm x 120mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 129945
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 116,
+     "fieldKey": "size",
+     "option": "115mm x 120mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 117,
+     "fieldKey": "size",
+     "option": "115mm x 120mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-window-sticker-130-170",
+   "name": "Window Sticker - 130mm x 170mm",
+   "sha256": "906f58d1833782308ce21c27fe78c260ddb484d6bb5d28988cc0584e428cfa3a",
+   "source": "assets/Window Sticker - 130mm x 170mm.png",
+   "destination": "web/assets/configuration/Window Sticker - 130mm x 170mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 152473
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 116,
+     "fieldKey": "size",
+     "option": "130mm x 170mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 117,
+     "fieldKey": "size",
+     "option": "130mm x 170mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-window-sticker-165-90",
+   "name": "Window Sticker - 165mm x 90mm",
+   "sha256": "7cbd3a7f77f789adaec142c3907d3530132406800648724d093786e6e5771f7c",
+   "source": "assets/Window Sticker - 165mm x 90mm.png",
+   "destination": "web/assets/configuration/Window Sticker - 165mm x 90mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 179207
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 116,
+     "fieldKey": "size",
+     "option": "165mm x 90mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 117,
+     "fieldKey": "size",
+     "option": "165mm x 90mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-window-sticker-220-90",
+   "name": "Window Sticker - 220mm x 90mm",
+   "sha256": "ce557078ebf7f7e7dfe9db5007d29f9ccd49b00bfbc1c061655df76388e1e9f2",
+   "source": "assets/Window Sticker - 220mm x 90mm.png",
+   "destination": "web/assets/configuration/Window Sticker - 220mm x 90mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 196100
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 116,
+     "fieldKey": "size",
+     "option": "220mm x 90mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 117,
+     "fieldKey": "size",
+     "option": "220mm x 90mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-window-sticker-104-420",
+   "name": "Window Sticker - 104mm x 420mm",
+   "sha256": "4472f2abbb8b40a7e6ad536bc0c02acedade29d2b9ebe0925b198abbda15847e",
+   "source": "assets/Window Sticker - 104mm x 420mm.png",
+   "destination": "web/assets/configuration/Window Sticker - 104mm x 420mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 215780
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 116,
+     "fieldKey": "size",
+     "option": "104mm x 420mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 117,
+     "fieldKey": "size",
+     "option": "104mm x 420mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-window-sticker-310-445",
+   "name": "Window Sticker - 310mm x 445mm",
+   "sha256": "aea630a3c7d5c0c81c710f10f40e39d7972f628740cbf7a2da05e6913b3ed431",
+   "source": "assets/Window Sticker - 310mm x 445mm.png",
+   "destination": "web/assets/configuration/Window Sticker - 310mm x 445mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 160871
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 116,
+     "fieldKey": "size",
+     "option": "310mm x 445mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 117,
+     "fieldKey": "size",
+     "option": "310mm x 445mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-window-sticker-custom",
+   "name": "Window Sticker - Custom Size",
+   "sha256": "27b0e00e8b980e040974f713b0ad12bd9d6ad95f7008e1d005fe33cd817c6609",
+   "source": "assets/Window Sticker - Custom Size.png",
+   "destination": "web/assets/configuration/Window Sticker - Custom Size.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 170423
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 116,
+     "fieldKey": "size",
+     "option": "Others",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 117,
+     "fieldKey": "size",
+     "option": "Other",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-colour-paper-purple-75gsm",
+   "name": "Colour Paper Purple 75gsm",
+   "sha256": "049694396edd8f0bd333dcf7710f22813ca115dfb3864b528f4dacd2f7b5ecb1",
+   "source": "assets/Colour Paper Purple 75gsm.png",
+   "destination": "web/assets/configuration/Colour Paper Purple 75gsm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69547
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 110,
+     "fieldKey": "paper",
+     "option": "Colour Paper Purple 75gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "ink-2c-front",
+   "name": "2C - Front",
+   "sha256": "a059948da3b7c9605e06ccad48066a38d4f7715920f6c230240c5a7afc000a27",
+   "source": "assets/2C - Front.png",
+   "destination": "web/assets/configuration/2C - Front.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 153747
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 106,
+     "fieldKey": "colour",
+     "option": "2C (Front)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 105,
+     "fieldKey": "colour",
+     "option": "2C (Front)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 111,
+     "fieldKey": "colour",
+     "option": "2C",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 110,
+     "fieldKey": "ex_printcolour",
+     "option": "2C (Front)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 110,
+     "fieldKey": "ex_printcolour",
+     "option": "2C(Front)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "printcolour",
+     "option": "2C (Front)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "ink-2c-front-1c-back",
+   "name": "2C Front - 1C Back",
+   "sha256": "3b072894a25252b9a266922d023591bb1d1d87e79039f2a0ddadba807f55105a",
+   "source": "assets/2C Front - 1C Back.png",
+   "destination": "web/assets/configuration/2C Front - 1C Back.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 143383
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 106,
+     "fieldKey": "colour",
+     "option": "2C (Front)/1C (Back)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 110,
+     "fieldKey": "ex_printcolour",
+     "option": "2C (Front) + 1C (Back)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 110,
+     "fieldKey": "ex_printcolour",
+     "option": "2C(Front),1C(Back)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "printcolour",
+     "option": "2C (Front) / 1C (Back)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "ink-2c-both",
+   "name": "2C - Both Sides",
+   "sha256": "9c853b3c4e945ede1bc60c45f73a4b3a0c2cc00f3520bf28dba69984468459ba",
+   "source": "assets/2C - Both Sides.png",
+   "destination": "web/assets/configuration/2C - Both Sides.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 143302
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 106,
+     "fieldKey": "colour",
+     "option": "2C (Both)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 110,
+     "fieldKey": "ex_printcolour",
+     "option": "2C (Both)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 110,
+     "fieldKey": "ex_printcolour",
+     "option": "2C(Both)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "ink-2c-front-4c-back",
+   "name": "2C Front - 4C Back",
+   "sha256": "76e2ec09b2bbed6c086d582dc40c2a959e2a832b1cadffe8ea9639d7431313f3",
+   "source": "assets/2C Front - 4C Back.png",
+   "destination": "web/assets/configuration/2C Front - 4C Back.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 143198
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 106,
+     "fieldKey": "colour",
+     "option": "2C (Front)/4C (Back)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "finish-no-numbering",
+   "name": "No Numbering",
+   "sha256": "4a95ec7c69809cec6a522417485a30fa58f3b0134680bafbb39c6a98ce5f0a75",
+   "source": "assets/No Numbering.png",
+   "destination": "web/assets/configuration/No Numbering.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 109706
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "numbering",
+     "option": "No Numbering",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-colour-paper-buff-75gsm",
+   "name": "Colour Paper Buff 75gsm",
+   "sha256": "84bb0703d053a29fdf26f3e988802ca97382019b43eec15af5a5588e6067a66c",
+   "source": "assets/Colour Paper Buff 75gsm.png",
+   "destination": "web/assets/configuration/Colour Paper Buff 75gsm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69547
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 110,
+     "fieldKey": "paper",
+     "option": "Colour Paper Buff 75gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-envelope-114-162",
+   "name": "Envelope - 114mm x 162mm",
+   "sha256": "afc79aeaaa66f9a4a6bc038ad05e0614725af4f6dc0c8266296c6bb02ccbb8ef",
+   "source": "assets/Envelope - 114mm x 162mm.png",
+   "destination": "web/assets/configuration/Envelope - 114mm x 162mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 159838
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 106,
+     "fieldKey": "ex_size",
+     "option": "162mm x 114mm (Fit A6 Size)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "finish-no-perforation",
+   "name": "No Perforation",
+   "sha256": "4a95ec7c69809cec6a522417485a30fa58f3b0134680bafbb39c6a98ce5f0a75",
+   "source": "assets/No Perforation.png",
+   "destination": "web/assets/configuration/No Perforation.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 109706
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 110,
+     "fieldKey": "perforation",
+     "option": "0",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "envelope-peel-seal-blue-security-slit",
+   "name": "Envelope - Peel and Seal with Blue Security Tint and Security Slits",
+   "sha256": "58db44d3c6dd9817633e8d832f1d0d37133063888f77ee681bebf86be7099c70",
+   "source": "assets/Envelope - Peel and Seal with Blue Security Tint and Security Slits.png",
+   "destination": "web/assets/configuration/Envelope - Peel and Seal with Blue Security Tint and Security Slits.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 174052
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 106,
+     "fieldKey": "ex_envelopetype",
+     "option": "Peel & Seal + Blue Security Line + Security Slit",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "fold-3fd",
+   "name": "Folding - 3Fd",
+   "sha256": "bfb26ab3ae609627220eae01e0aabfbdf2729c50bc7172c7f5e44696521c0aca",
+   "source": "assets/Folding - 3Fd.png",
+   "destination": "web/assets/configuration/Folding - 3Fd.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 126017
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "fold_code",
+     "option": "3Fd",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "fold_code",
+     "option": "3Fd",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 101,
+     "fieldKey": "fold_code",
+     "option": "3Fd",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 102,
+     "fieldKey": "fold_code",
+     "option": "3Fd",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 103,
+     "fieldKey": "fold_code",
+     "option": "3Fd",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "crease-2fd",
+   "name": "Creasing - 2Fd",
+   "sha256": "4650b4d53db6c21f4a55821f9556ca1725e496faadf767b7b8efab96d8a55857",
+   "source": "assets/Creasing - 2Fd.png",
+   "destination": "web/assets/configuration/Creasing - 2Fd.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 132563
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "fold_code_c",
+     "option": "2Fd",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "fold_code_c",
+     "option": "2Fd",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 101,
+     "fieldKey": "fold_code_c",
+     "option": "2Fd",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 102,
+     "fieldKey": "fold_code_c",
+     "option": "2Fd",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 103,
+     "fieldKey": "fold_code_c",
+     "option": "2Fd",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "crease-3fc",
+   "name": "Creasing - 3Fc",
+   "sha256": "485bd5bdad2feb008d8b4ce91b15602f1d13ad66388b5fce9bd593ea4a3ef23c",
+   "source": "assets/Creasing - 3Fc.png",
+   "destination": "web/assets/configuration/Creasing - 3Fc.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 132531
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "fold_code_c",
+     "option": "3Fc",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "fold_code_c",
+     "option": "3Fc",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 101,
+     "fieldKey": "fold_code_c",
+     "option": "3Fc",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 102,
+     "fieldKey": "fold_code_c",
+     "option": "3Fc",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 103,
+     "fieldKey": "fold_code_c",
+     "option": "3Fc",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "fold-4fb",
+   "name": "Folding - 4Fb",
+   "sha256": "12e525a69306080f1d7654594b649eb9ab048e77d82f659762fb4894b2bd0c27",
+   "source": "assets/Folding - 4Fb.png",
+   "destination": "web/assets/configuration/Folding - 4Fb.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 147622
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "fold_code",
+     "option": "4Fb",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "fold_code",
+     "option": "4Fb",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 101,
+     "fieldKey": "fold_code",
+     "option": "4Fb",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 102,
+     "fieldKey": "fold_code",
+     "option": "4Fb",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 103,
+     "fieldKey": "fold_code",
+     "option": "4Fb",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-wobbler-180-108",
+   "name": "Wobbler - 180mm x 108mm",
+   "sha256": "77f68bbdcf024c8d29193aeec06ac6dc917e3fb541c6d73c815fb0dae9d73d5a",
+   "source": "assets/Wobbler - 180mm x 108mm.png",
+   "destination": "web/assets/configuration/Wobbler - 180mm x 108mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 172877
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 126,
+     "fieldKey": "size",
+     "option": "180mm x 108mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-wobbler-108-180",
+   "name": "Wobbler - 108mm x 180mm",
+   "sha256": "37e4fa3d580664a87dc9590fa09e3da0c93bab70661db29cadeeac245071fb4e",
+   "source": "assets/Wobbler - 108mm x 180mm.png",
+   "destination": "web/assets/configuration/Wobbler - 108mm x 180mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 172884
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 126,
+     "fieldKey": "size",
+     "option": "108mm x 180mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-creative-card-720-490",
+   "name": "Creative Card Sheet - 720mm x 490mm",
+   "sha256": "edc96de3a4858049246bdc5535db3fc1bbf28113bf9a1251fe15d54a32a2febe",
+   "source": "assets/Creative Card Sheet - 720mm x 490mm.png",
+   "destination": "web/assets/configuration/Creative Card Sheet - 720mm x 490mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 162924
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 165,
+     "fieldKey": "cc_size",
+     "option": "720mm x 490mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "finish-no-lamination",
+   "name": "No Lamination",
+   "sha256": "108b8248623f47fd8fc5b6befd1653279f894e78e24df431fca7d3687c847537",
+   "source": "assets/No Lamination.png",
+   "destination": "web/assets/configuration/No Lamination.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 152293
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 165,
+     "fieldKey": "lamination",
+     "option": "No Lamination",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "content_lamination",
+     "option": "No Lamination",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "content_lamination",
+     "option": "No Lamination",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-booklet-210-210",
+   "name": "Booklet - 210mm x 210mm",
+   "sha256": "0fb677f8415c0ba80e206be9303ee585edeeadab153d4a19a2544378b3098ba6",
+   "source": "assets/Booklet - 210mm x 210mm.png",
+   "destination": "web/assets/configuration/Booklet - 210mm x 210mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 90348
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 19,
+     "fieldKey": "size",
+     "option": "210mm x 210mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "size",
+     "option": "210mm x 210mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "finish-id-hole-punch",
+   "name": "ID Card - Hole Punching",
+   "sha256": "4bfd9f6bc8073345df96f845f926b0fa1bcb2e32ad56fa52c75d5bfc07f63fe0",
+   "source": "assets/ID Card - Hole Punching.png",
+   "destination": "web/assets/configuration/ID Card - Hole Punching.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 128396
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 170,
+     "fieldKey": "idc_hole",
+     "option": "Hole Punching",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "binding-arch-file-steel",
+   "name": "Arch File - Steel Binding and Metal Fittings",
+   "sha256": "f44477e04f785999977a7839c41682d1ed7229dd9b63d19cbcc79a2cbe80e685",
+   "source": "assets/Arch File - Steel Binding and Metal Fittings.png",
+   "destination": "web/assets/configuration/Arch File - Steel Binding and Metal Fittings.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 148348
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 119,
+     "fieldKey": "inc_binding",
+     "option": "Steel Binding- 4 ring & Metal Clip & Wire-O & Oval curve & 2 L-shape corner",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "finish-uv-varnish-both",
+   "name": "UV Varnish - Both Sides",
+   "sha256": "47ad4a6b3c326f36817dfd5cc7f6878dd8e79dacf800b5a68339ceff86beacb5",
+   "source": "assets/UV Varnish - Both Sides.png",
+   "destination": "web/assets/configuration/UV Varnish - Both Sides.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 131846
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 19,
+     "fieldKey": "content_lamination",
+     "option": "UV Varnish (Both Sides)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "cover_lamination",
+     "option": "UV Varnish (Both)",
+     "condition": null,
+     "supplierAvailability": "not-offered-in-current-checked-cover-menu",
+     "integrationCondition": "Verify whether this repository option should remain before enabling it; do not substitute front-only UV or inner waterbase varnish."
+    },
+    {
+     "productId": 37,
+     "fieldKey": "cover_lamination",
+     "option": "UV Varnish (Both)",
+     "condition": null,
+     "supplierAvailability": "not-offered-in-current-checked-cover-menu",
+     "integrationCondition": "Verify whether this repository option should remain before enabling it; do not substitute front-only UV or inner waterbase varnish."
+    }
+   ]
+  },
+  {
+   "assetId": "bag-handle-red",
+   "name": "Non-Woven Bag - Red Handles",
+   "sha256": "e9afef652e27ef8191f61e8fdf722844537903c3c9f3f49abc546b6c9b0a9ea7",
+   "source": "assets/Non-Woven Bag - Red Handles.png",
+   "destination": "web/assets/configuration/Non-Woven Bag - Red Handles.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 153737
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 139,
+     "fieldKey": "handle_colour",
+     "option": "Red",
+     "condition": "WH-A4 white body with selectable red handles; not a contrasting-handle WS-A4 coloured-body sample",
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "bag-handle-green",
+   "name": "Non-Woven Bag - Green Handles",
+   "sha256": "6be4ba55aae2939f81b9382e12d856641be323d59e0a5ad3931e2f107a6b4a64",
+   "source": "assets/Non-Woven Bag - Green Handles.png",
+   "destination": "web/assets/configuration/Non-Woven Bag - Green Handles.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 153560
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 139,
+     "fieldKey": "handle_colour",
+     "option": "Green",
+     "condition": "WH-A4 white body with selectable green handles",
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-digital-paper-198-210",
+   "name": "Digital Loose Sheet - 198mm x 210mm (2DL)",
+   "sha256": "313945e3b8e03dfd29a0a68cf5e2cbe70d7640a6b8144cf28977761b4c13c7d2",
+   "source": "assets/Digital Loose Sheet - 198mm x 210mm (2DL).png",
+   "destination": "web/assets/configuration/Digital Loose Sheet - 198mm x 210mm (2DL).png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 130736
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 50,
+     "fieldKey": "size",
+     "option": "198mm x 210mm - (2DL)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-digital-paper-310-445",
+   "name": "Digital Loose Sheet - 310mm x 445mm",
+   "sha256": "5313e8dea64c67a01db9aa587351b32086d0df2f1a51a6631909d045514e59f8",
+   "source": "assets/Digital Loose Sheet - 310mm x 445mm.png",
+   "destination": "web/assets/configuration/Digital Loose Sheet - 310mm x 445mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 161177
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 50,
+     "fieldKey": "size",
+     "option": "310mm x 445mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "sheet-delivery-148-148",
+   "name": "Sticker Delivery Sheet - 148mm x 148mm",
+   "sha256": "9bc9c8b09d20e52fc6f366dc6130aafcb0e1f870ee8fe99264f13c836cc7a405",
+   "source": "assets/Sticker Delivery Sheet - 148mm x 148mm.png",
+   "destination": "web/assets/configuration/Sticker Delivery Sheet - 148mm x 148mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 123695
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 60,
+     "fieldKey": "sheet_size",
+     "option": "148mm x 148mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "sheet-delivery-111-148",
+   "name": "Sticker Delivery Sheet - 111mm x 148mm",
+   "sha256": "b3579956793f4cbe84ee90309eaf95577eeed990b434d964c9c40e538f1134f8",
+   "source": "assets/Sticker Delivery Sheet - 111mm x 148mm.png",
+   "destination": "web/assets/configuration/Sticker Delivery Sheet - 111mm x 148mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 154577
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 60,
+     "fieldKey": "sheet_size",
+     "option": "111mm x 148mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "sheet-delivery-89-148",
+   "name": "Sticker Delivery Sheet - 89mm x 148mm",
+   "sha256": "64b2ea5155624978b9e60fd8e274436542e8d2c5624df86f8a0cb02cae2d8ae6",
+   "source": "assets/Sticker Delivery Sheet - 89mm x 148mm.png",
+   "destination": "web/assets/configuration/Sticker Delivery Sheet - 89mm x 148mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 172947
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 60,
+     "fieldKey": "sheet_size",
+     "option": "89mm x 148mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "sheet-delivery-112-98",
+   "name": "Sticker Delivery Sheet - 112mm x 98mm",
+   "sha256": "b460be9187bc7ba403bc7da6e41666d9d6d49b59f933182268ff8d215a5531da",
+   "source": "assets/Sticker Delivery Sheet - 112mm x 98mm.png",
+   "destination": "web/assets/configuration/Sticker Delivery Sheet - 112mm x 98mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 138995
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 60,
+     "fieldKey": "sheet_size",
+     "option": "112mm x 98mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "sheet-delivery-74-98",
+   "name": "Sticker Delivery Sheet - 74mm x 98mm",
+   "sha256": "adc22e41ba41ca8ca6781eea5ff826e88c92f78e57b4d97b25da38cb0f6113f1",
+   "source": "assets/Sticker Delivery Sheet - 74mm x 98mm.png",
+   "destination": "web/assets/configuration/Sticker Delivery Sheet - 74mm x 98mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 153942
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 60,
+     "fieldKey": "sheet_size",
+     "option": "74mm x 98mm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-custom-loose-sheet",
+   "name": "Loose Sheet - Custom Size",
+   "sha256": "85da1be261bf9a3ddcb3e2a4242aad181f9703458d777106de3492d41ecd06f4",
+   "source": "assets/Loose Sheet - Custom Size.png",
+   "destination": "web/assets/configuration/Loose Sheet - Custom Size.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 154532
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "size",
+     "option": "Other (Custom Size)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 101,
+     "fieldKey": "size",
+     "option": "Other (Custom Size)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 102,
+     "fieldKey": "size",
+     "option": "Other (Custom Size)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 103,
+     "fieldKey": "size",
+     "option": "Other (Custom Size)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "notebook-content-1",
+   "name": "Wire-O Content - 1 - Custom 4C and Custom 1C",
+   "sha256": "674bff1adc24f0124625c5d3548bd0b9dca3811ae5dc1c75ce5c957e4dbdb7ea",
+   "source": "assets/Wire-O Content - 1 - Custom 4C and Custom 1C.png",
+   "destination": "web/assets/configuration/Wire-O Content - 1 - Custom 4C and Custom 1C.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 139227
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 112,
+     "fieldKey": "printcolourcontent",
+     "option": "16 sheets custom content=4C(Both) + 64 sheets Custom Content=1C(Both)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "notebook-content-2",
+   "name": "Wire-O Content - 2 - Custom 4C and Ready 1C",
+   "sha256": "1258c4d87c22dfb83e2dcc28b88f8e9622f8114ceb3f27742d8eab14c2e837a0",
+   "source": "assets/Wire-O Content - 2 - Custom 4C and Ready 1C.png",
+   "destination": "web/assets/configuration/Wire-O Content - 2 - Custom 4C and Ready 1C.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 139294
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 112,
+     "fieldKey": "printcolourcontent",
+     "option": "16 sheets custom content=4C(Both) + 64 sheets ready content=1C(Both)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "notebook-content-3",
+   "name": "Wire-O Content - 3 - Custom 4C and Custom 4C",
+   "sha256": "bbceb12856d283bc9be625ec9d7cf70ea8133a658804fad928455e073d97b42a",
+   "source": "assets/Wire-O Content - 3 - Custom 4C and Custom 4C.png",
+   "destination": "web/assets/configuration/Wire-O Content - 3 - Custom 4C and Custom 4C.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 139196
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 112,
+     "fieldKey": "printcolourcontent",
+     "option": "16 sheets custom content=4C(Both) + 64 sheets Custom Content=4C(Both)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "notebook-content-4",
+   "name": "Wire-O Content - 4 - Ready 1C and Custom 1C",
+   "sha256": "8ecebfa7104114eede6c8e7bed450ab1d60be5eaa32ddc0fec6b83fb7f277c11",
+   "source": "assets/Wire-O Content - 4 - Ready 1C and Custom 1C.png",
+   "destination": "web/assets/configuration/Wire-O Content - 4 - Ready 1C and Custom 1C.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 139333
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 112,
+     "fieldKey": "printcolourcontent",
+     "option": "16 sheets ready content=1C(Both) + 64 sheets Custom Content=1C(Both)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "notebook-content-5",
+   "name": "Wire-O Content - 5 - Ready 1C and Custom 4C",
+   "sha256": "0703ef42d07f3c2fe545fd82a2849305b7f3a4e9586173c07854bb6e266c6baf",
+   "source": "assets/Wire-O Content - 5 - Ready 1C and Custom 4C.png",
+   "destination": "web/assets/configuration/Wire-O Content - 5 - Ready 1C and Custom 4C.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 139302
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 112,
+     "fieldKey": "printcolourcontent",
+     "option": "16 sheets ready content=1C(Both) + 64 sheets Custom Content=4C(Both)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "envelope-blue-tint-peel",
+   "name": "Envelope - Peel and Seal with Blue Security Tint",
+   "sha256": "99c1d5e7fff41cdf5170baefd1cf4c4cfe84aadefa26ac6c75b074b1c12948f5",
+   "source": "assets/Envelope - Peel and Seal with Blue Security Tint.png",
+   "destination": "web/assets/configuration/Envelope - Peel and Seal with Blue Security Tint.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 135043
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 106,
+     "fieldKey": "ex_envelopetype",
+     "option": "Peel & Seal + Blue Security Line",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "envelope-peel-only",
+   "name": "Envelope - Peel and Seal",
+   "sha256": "0d03a15baa03d0bd74aa5ca50a240a173f75e74c8387be40324344cb976a4bdc",
+   "source": "assets/Envelope - Peel and Seal.png",
+   "destination": "web/assets/configuration/Envelope - Peel and Seal.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 135504
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 106,
+     "fieldKey": "ex_envelopetype",
+     "option": "Peel & Seal",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "envelope-white-100-peel",
+   "name": "Envelope - White 100gsm with Peel and Seal",
+   "sha256": "54a4e4879b4e7b5911bfe57f8bee9d3b4d389742da3566b8ebbe345741b0ddd5",
+   "source": "assets/Envelope - White 100gsm with Peel and Seal.png",
+   "destination": "web/assets/configuration/Envelope - White 100gsm with Peel and Seal.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 133876
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 106,
+     "fieldKey": "ex_envelopetype",
+     "option": "White 100gsm + Peel & Seal",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "envelope-white-100",
+   "name": "Envelope - White 100gsm",
+   "sha256": "feffc234e35728a5d1c17962610af0d13acda9b4841a714a80be462953e30237",
+   "source": "assets/Envelope - White 100gsm.png",
+   "destination": "web/assets/configuration/Envelope - White 100gsm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 160625
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 106,
+     "fieldKey": "ex_envelopetype",
+     "option": "White 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "envelope-window-security-peel",
+   "name": "Envelope - Window with Peel Seal, Blue Tint and Security Slits",
+   "sha256": "45ca49d85ceb0c025068208840374c50fc666597e6cc043d61829ef5048978c8",
+   "source": "assets/Envelope - Window with Peel Seal, Blue Tint and Security Slits.png",
+   "destination": "web/assets/configuration/Envelope - Window with Peel Seal, Blue Tint and Security Slits.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 96738
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 106,
+     "fieldKey": "ex_envelopetype",
+     "option": "Peel & Seal + Blue Security Line + Security Slit + Window",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "stand-material-pp-hollow",
+   "name": "Butterfly Stand - 5mm PP Hollow",
+   "sha256": "d4d4387f775f68bb2adc06e8c4ec628c7c3cef465ae52a2e22cb41666627774c",
+   "source": "assets/Butterfly Stand - 5mm PP Hollow.png",
+   "destination": "web/assets/configuration/Butterfly Stand - 5mm PP Hollow.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 120266
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 154,
+     "fieldKey": "materialstand",
+     "option": "5mm PP Hollow",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "model-lanyard-plain",
+   "name": "Lanyard - PB LANYARD 01",
+   "sha256": "437963922f365e3ecc9bfce891c6e908262d2482ae7826a5b2a38e5e2b4299b8",
+   "source": "assets/Lanyard - PB LANYARD 01.png",
+   "destination": "web/assets/configuration/Lanyard - PB LANYARD 01.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 236188
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 174,
+     "fieldKey": "model",
+     "option": "PB LANYARD 01",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "model-lanyard-clip",
+   "name": "Lanyard - PB LANYARD 01 CLIP",
+   "sha256": "090c008bca5ed76e44d613d74f96e4a45303118e3ec56607b6e685630cf6150f",
+   "source": "assets/Lanyard - PB LANYARD 01 CLIP.png",
+   "destination": "web/assets/configuration/Lanyard - PB LANYARD 01 CLIP.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 234278
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 174,
+     "fieldKey": "model",
+     "option": "PB LANYARD 01 CLIP",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "notebook-front-foil-2c",
+   "name": "Hardcover Notebook - Two Colour Front Foil",
+   "sha256": "39c15a0e8b33be471aa0183e5fa59936fa58b1f6f1b94b81f4717445fd1c50b3",
+   "source": "assets/Hardcover Notebook - Two Colour Front Foil.png",
+   "destination": "web/assets/configuration/Hardcover Notebook - Two Colour Front Foil.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 154612
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 164,
+     "fieldKey": "hotstampingcolour",
+     "option": "2C (Front)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "notebook-inner-cover-0c",
+   "name": "Hardcover Notebook - Unprinted Inner Covers",
+   "sha256": "a4317224225946b9043cd52a157cfbac325f01cd4c56d51d459e9598b0e20aea",
+   "source": "assets/Hardcover Notebook - Unprinted Inner Covers.png",
+   "destination": "web/assets/configuration/Hardcover Notebook - Unprinted Inner Covers.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 170538
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 164,
+     "fieldKey": "innerprintcolour",
+     "option": "0C + 0C",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "shape-magnet-multiple-dieline",
+   "name": "Magnet - Multiple Dieline",
+   "sha256": "7e9d7440d4c5ab74cc9e5fbb6445a2d516135573110ad5d9e39d8dead992d523",
+   "source": "assets/Magnet - Multiple Dieline.png",
+   "destination": "web/assets/configuration/Magnet - Multiple Dieline.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 169134
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 135,
+     "fieldKey": "shape",
+     "option": "Multiple Dieline",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "size-wedding-2dl",
+   "name": "Wedding Card - 2DL Open Size 198mm x 210mm",
+   "sha256": "313945e3b8e03dfd29a0a68cf5e2cbe70d7640a6b8144cf28977761b4c13c7d2",
+   "source": "assets/Wedding Card - 2DL Open Size 198mm x 210mm.png",
+   "destination": "web/assets/configuration/Wedding Card - 2DL Open Size 198mm x 210mm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 130736
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 114,
+     "fieldKey": "size",
+     "option": "2DL (198mm x 210mm)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-roll-hologram",
+   "name": "Roll Label - Hologram",
+   "sha256": "0464b337b9cc6ab9b01a9af8bc319c3284b3879c13fb1ddf44e7b0190897af88",
+   "source": "assets/Roll Label - Hologram.png",
+   "destination": "web/assets/configuration/Roll Label - Hologram.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 122226
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_paper",
+     "option": "Hologram",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "bag-colour-iris-green",
+   "name": "Non-Woven Bag - Iris Green",
+   "sha256": "94bec610589cb8cab2799b81a4f79e84007f0a1743cc5219b87c873d91fb4d46",
+   "source": "assets/Non-Woven Bag - Iris Green.png",
+   "destination": "web/assets/configuration/Non-Woven Bag - Iris Green.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 153271
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 139,
+     "fieldKey": "bag_colour",
+     "option": "Iris Green",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "paper-premium-metallic-150",
+   "name": "Premium Paper - Metallic 150gsm",
+   "sha256": "0e3d5f70b4bac136532a551adc338d418bab17fcf8a80dee41f1f56e083b243e",
+   "source": "assets/Premium Paper - Metallic 150gsm.png",
+   "destination": "web/assets/configuration/Premium Paper - Metallic 150gsm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69547
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 167,
+     "fieldKey": "paper",
+     "option": "Metallic 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 167,
+     "fieldKey": "paper",
+     "option": "Metallic Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "paper-premium-old-mill-150",
+   "name": "Premium Paper - Old Mill 150gsm",
+   "sha256": "dd913e0034fd954878218c7d961a1a89c8b86e59b742ddcd09d40d2f0eb98ea7",
+   "source": "assets/Premium Paper - Old Mill 150gsm.png",
+   "destination": "web/assets/configuration/Premium Paper - Old Mill 150gsm.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69547
+   },
+   "replacesOriginalRepoPath": null,
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 167,
+     "fieldKey": "paper",
+     "option": "Old Mill Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-original-brilliant-white",
+   "name": "Brilliant White Paper",
+   "sha256": "f8e991b40102f1fddcf4c12a07c9b2bcac19aaf94d684c8eff83c66988a572e1",
+   "source": "assets/Brilliant White Paper.png",
+   "destination": "web/assets/configuration/Brilliant White Paper.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69563
+   },
+   "replacesOriginalRepoPath": "web/assets/original/brilliant-white.jpg",
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 109,
+     "fieldKey": "paper",
+     "option": "Brilliant White 220gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 105,
+     "fieldKey": "paper",
+     "option": "Conqueror 100gsm Brilliant White Laid",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 105,
+     "fieldKey": "paper",
+     "option": "Conqueror 100gsm Diamond White Laid",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 105,
+     "fieldKey": "paper",
+     "option": "Conqueror 100gsm White Wove",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 105,
+     "fieldKey": "paper",
+     "option": "Conqueror 100gsm Cream Laid",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-original-brown-craft",
+   "name": "Brown Kraft Paper",
+   "sha256": "f77c9bd5597069c52b88df6f20fe01c4c17eaffd8d1aa6e65bf782d1f536b71b",
+   "source": "assets/Brown Kraft Paper.png",
+   "destination": "web/assets/configuration/Brown Kraft Paper.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69563
+   },
+   "replacesOriginalRepoPath": "web/assets/original/brown-craft.jpg",
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 151,
+     "fieldKey": "material",
+     "option": "Brown Kraft 75G + PE 40U",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 151,
+     "fieldKey": "material",
+     "option": "White Kraft 65G + PE 40U",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 178,
+     "fieldKey": "material",
+     "option": "Brown Kraft 120 gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 178,
+     "fieldKey": "material",
+     "option": "White Kraft 120 gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 60,
+     "fieldKey": "paper",
+     "option": "Brown Craft Paper",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-original-conqueror-vellum",
+   "name": "Conqueror Vellum Paper",
+   "sha256": "a7178a05dc200b60f747ef83561628d80574d352cb8a8a4d9be3803de8557eab",
+   "source": "assets/Conqueror Vellum Paper.png",
+   "destination": "web/assets/configuration/Conqueror Vellum Paper.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69563
+   },
+   "replacesOriginalRepoPath": "web/assets/original/conqueror-vellum.jpg",
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 115,
+     "fieldKey": "paper",
+     "option": "Vellum 220gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 114,
+     "fieldKey": "paper",
+     "option": "Vellum 220gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 109,
+     "fieldKey": "paper",
+     "option": "Vellum 220gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-original-gloss-art-card",
+   "name": "Gloss Art Card",
+   "sha256": "98d2ee6348cf4a3b99d1a7282c87fc7a5bfc3abce55472f7d6134dff77165a86",
+   "source": "assets/Gloss Art Card.png",
+   "destination": "web/assets/configuration/Gloss Art Card.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69563
+   },
+   "replacesOriginalRepoPath": "web/assets/original/gloss-art-card.jpg",
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 1,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 250gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 1,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 310gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 1,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 360gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 104,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 260gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 104,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 310gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 107,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 210gsm (1 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 107,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 250gsm (1 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 107,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 260gsm (1 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 107,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 300gsm (1 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 107,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 230gsm (2 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 107,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 250gsm (2 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 107,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 310gsm (2 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 107,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 360gsm (2 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 120,
+     "fieldKey": "coverpaper",
+     "option": "Gloss Art Card 230gsm (2 side coated) (2 Sheets)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 120,
+     "fieldKey": "coverpaper",
+     "option": "Gloss Art Card 230gsm (2 side coated) (4 Sheets)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 120,
+     "fieldKey": "coverpaper",
+     "option": "Gloss Art Card 230gsm (2 side coated) (1 Sheets)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 120,
+     "fieldKey": "contentpaper",
+     "option": "Gloss Art Card 230gsm (2 side coated) (6 Sheets)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 120,
+     "fieldKey": "contentpaper",
+     "option": "Gloss Art Card 230gsm (2 side coated) (12 Sheets)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 120,
+     "fieldKey": "contentpaper",
+     "option": "Gloss Art Card 230gsm (2 side coated) (14 Sheets)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 121,
+     "fieldKey": "ss_standpaper",
+     "option": "Gloss Art Card 400gsm (1 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 126,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 260gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 126,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 310gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 126,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 360gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 127,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 190gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 133,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 310gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 133,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 360gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 134,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 310gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 134,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 360gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 140,
+     "fieldKey": "inc_paper",
+     "option": "Art Card 310gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 165,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 250gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 165,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 310gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 166,
+     "fieldKey": "papermaterial",
+     "option": "Gloss Art Card 250gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 166,
+     "fieldKey": "papermaterial",
+     "option": "Gloss Art Card 310gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 169,
+     "fieldKey": "emp_paper",
+     "option": "Art Card 1 side coated 250gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 175,
+     "fieldKey": "pd_coverpaper",
+     "option": "Gloss Art Card 230gsm (2 side coated) (2 sheets)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 175,
+     "fieldKey": "pd_contentpaper",
+     "option": "Gloss Art Card 230gsm (2 side coated) (12 sheets)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 179,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 260gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 179,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 300gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 179,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 310gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 115,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 230gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 115,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 260gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 115,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 310gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 115,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 360gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 114,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 230gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 114,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 260gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 114,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 310gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 114,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 360gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 110,
+     "fieldKey": "paper",
+     "option": "Art Card 230gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 110,
+     "fieldKey": "paper",
+     "option": "Art Card 260gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 109,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 250gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 109,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 310gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 21,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 230gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 21,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 250gsm (2 sides coated) - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 21,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 250gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 21,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 310gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 21,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 360gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 230gsm (2 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 250gsm (2 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 310gsm (2 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 360gsm (2 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "cover",
+     "option": "Gloss Art Card 230gsm (2 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "cover",
+     "option": "Gloss Art Card 250gsm (2 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "cover",
+     "option": "Gloss Art Card 310gsm (2 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "content",
+     "option": "Gloss Art Card 230gsm (2 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "content",
+     "option": "Gloss Art Card 250gsm (2 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "cover",
+     "option": "Gloss Art Card 230gsm (2 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "cover",
+     "option": "Gloss Art Card 250gsm (2 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "cover",
+     "option": "Gloss Art Card 310gsm (2 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "content",
+     "option": "Gloss Art Card 230gsm (2 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "content",
+     "option": "Gloss Art Card 250gsm (2 side coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 101,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 230gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 101,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 250gsm (2 sides coated) - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 101,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 250gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 101,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 310gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 101,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 360gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 102,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 230gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 102,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 250gsm (2 sides coated) - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 102,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 250gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 102,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 310gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 102,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 360gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 103,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 230gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 103,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 250gsm (2 sides coated) - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 103,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 250gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 103,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 310gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 103,
+     "fieldKey": "paper",
+     "option": "Gloss Art Card 360gsm (2 sides coated)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-original-gloss-art-paper",
+   "name": "Gloss Art Paper",
+   "sha256": "b99b2aedee5d0187ebeac03f9a8310a9aa89ad28dece2d5b5ef9554edf3f41f1",
+   "source": "assets/Gloss Art Paper.png",
+   "destination": "web/assets/configuration/Gloss Art Paper.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69563
+   },
+   "replacesOriginalRepoPath": "web/assets/original/gloss-art-paper.jpg",
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 119,
+     "fieldKey": "af_paper",
+     "option": "Chipboard 1200gsm & Gloss Art Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 122,
+     "fieldKey": "ww_paper",
+     "option": "Gloss Art Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 127,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 157gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 132,
+     "fieldKey": "inc_paper",
+     "option": "Gloss Art Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 136,
+     "fieldKey": "coverpaper",
+     "option": "Chipboard 1000gsm + Gloss Art Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 136,
+     "fieldKey": "contentpaper",
+     "option": "Gloss Art Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 138,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 130gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 138,
+     "fieldKey": "paper",
+     "option": "Art Paper 157gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 154,
+     "fieldKey": "fb_material",
+     "option": "5mm Paper Foamboards 127gsm Art Paper",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 155,
+     "fieldKey": "fbm_material",
+     "option": "5mm Paper Foamboards 127gsm Art Paper + Magnetic Sheet",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 163,
+     "fieldKey": "innerfrontcontent",
+     "option": "Gloss Art Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 163,
+     "fieldKey": "paper1to4",
+     "option": "Gloss Art Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 163,
+     "fieldKey": "paper5to8",
+     "option": "Gloss Art Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 163,
+     "fieldKey": "paper9to12",
+     "option": "Gloss Art Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 164,
+     "fieldKey": "hcp_innerpaper",
+     "option": "Gloss Art Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 166,
+     "fieldKey": "papermaterial",
+     "option": "Gloss Art Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 167,
+     "fieldKey": "paper",
+     "option": "Art Paper 157gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 168,
+     "fieldKey": "paper",
+     "option": "Art Paper 157gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 168,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 130gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 112,
+     "fieldKey": "paper1to4",
+     "option": "Gloss Art Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 112,
+     "fieldKey": "paper5to8",
+     "option": "Gloss Art Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 112,
+     "fieldKey": "paper9to12",
+     "option": "Gloss Art Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 112,
+     "fieldKey": "wo_cpaper",
+     "option": "Gloss Art Paper 150gsm, Chipboard 1000gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 110,
+     "fieldKey": "paper",
+     "option": "Art Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 110,
+     "fieldKey": "paper",
+     "option": "Art Paper 130gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 110,
+     "fieldKey": "paper",
+     "option": "Art Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 21,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 100gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 21,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 128gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 21,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 150gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 21,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 80gsm - Best Seller (NEW)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 128gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "cover",
+     "option": "Gloss Art Paper 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "cover",
+     "option": "Gloss Art Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "cover",
+     "option": "Gloss Art Paper 128gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "cover",
+     "option": "Gloss Art Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "content",
+     "option": "Gloss Art Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "content",
+     "option": "Gloss Art Paper 128gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "content",
+     "option": "Gloss Art Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "content",
+     "option": "Gloss Art Paper 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "cover",
+     "option": "Gloss Art Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "cover",
+     "option": "Gloss Art Paper 128gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "cover",
+     "option": "Gloss Art Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "content",
+     "option": "Gloss Art Paper 128gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "content",
+     "option": "Gloss Art Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "content",
+     "option": "Gloss Art Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 101,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 100gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 101,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 128gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 101,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 150gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 101,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 80gsm - Best Seller (NEW)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 102,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 100gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 102,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 128gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 102,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 150gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 102,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 80gsm - Best Seller (NEW)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 103,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 100gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 103,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 128gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 103,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 150gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 103,
+     "fieldKey": "paper",
+     "option": "Gloss Art Paper 80gsm - Best Seller (NEW)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-original-linen",
+   "name": "Linen Paper",
+   "sha256": "3197c85bde47307b485750bc8010a0a28504135f15245b06941baee9ec3b970e",
+   "source": "assets/Linen Paper.png",
+   "destination": "web/assets/configuration/Linen Paper.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69563
+   },
+   "replacesOriginalRepoPath": "web/assets/original/linen.jpg",
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 1,
+     "fieldKey": "paper",
+     "option": "Linen 240gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 138,
+     "fieldKey": "paper",
+     "option": "Linen 140gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 166,
+     "fieldKey": "papermaterial",
+     "option": "Linen 240gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 167,
+     "fieldKey": "paper",
+     "option": "Linen 140gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 168,
+     "fieldKey": "paper",
+     "option": "Linen 140gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 114,
+     "fieldKey": "paper",
+     "option": "Linen 240gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 109,
+     "fieldKey": "paper",
+     "option": "Linen 240gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "paper",
+     "option": "Linen 240gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "cover",
+     "option": "Linen 240gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "content",
+     "option": "Linen 240gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-original-matte-art-paper",
+   "name": "Matte Art Paper and Card",
+   "sha256": "b1f3d34dd2a428819916a0a066d756ff0b89667ad0db13dec763d39974ba88f6",
+   "source": "assets/Matte Art Paper and Card.png",
+   "destination": "web/assets/configuration/Matte Art Paper and Card.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69563
+   },
+   "replacesOriginalRepoPath": "web/assets/original/matte-art-paper.jpg",
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 1,
+     "fieldKey": "paper",
+     "option": "Matte Art Card 250gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 114,
+     "fieldKey": "paper",
+     "option": "Matte Art Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 110,
+     "fieldKey": "paper",
+     "option": "Matte Art Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 21,
+     "fieldKey": "paper",
+     "option": "Matte Art Paper 130gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "paper",
+     "option": "Matte Art Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "paper",
+     "option": "Matte Art Paper 130gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "paper",
+     "option": "Matte Art Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "cover",
+     "option": "Matte Art Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "cover",
+     "option": "Matte Art Paper 130gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "cover",
+     "option": "Matte Art Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "content",
+     "option": "Matte Art Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "content",
+     "option": "Matte Art Paper 130gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "content",
+     "option": "Matte Art Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "cover",
+     "option": "Matte Art Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "cover",
+     "option": "Matte Art Paper 130gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "cover",
+     "option": "Matte Art Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "content",
+     "option": "Matte Art Paper 150gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "content",
+     "option": "Matte Art Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "content",
+     "option": "Matte Art Paper 130gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 101,
+     "fieldKey": "paper",
+     "option": "Matte Art Paper 130gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 102,
+     "fieldKey": "paper",
+     "option": "Matte Art Paper 130gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 103,
+     "fieldKey": "paper",
+     "option": "Matte Art Paper 130gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-original-metal-ice",
+   "name": "Metal Ice Paper",
+   "sha256": "b9eb028e0b66fddc222361176a5cc7c5efa6b665229c21942683d59370c68441",
+   "source": "assets/Metal Ice Paper.png",
+   "destination": "web/assets/configuration/Metal Ice Paper.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69563
+   },
+   "replacesOriginalRepoPath": "web/assets/original/metal-ice.jpg",
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 1,
+     "fieldKey": "paper",
+     "option": "Metal Ice 250gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 166,
+     "fieldKey": "papermaterial",
+     "option": "Metal Ice 250gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 179,
+     "fieldKey": "paper",
+     "option": "Metal Ice 250gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 115,
+     "fieldKey": "paper",
+     "option": "Metal Ice 250gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 114,
+     "fieldKey": "paper",
+     "option": "Metal Ice 250gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 109,
+     "fieldKey": "paper",
+     "option": "Metal Ice 250gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "paper",
+     "option": "Metal Ice 250gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "cover",
+     "option": "Metal Ice 250gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "content",
+     "option": "Metal Ice 250gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-original-mirror-kote",
+   "name": "Mirror Kote Paper",
+   "sha256": "da41a5d953c4a2a54310adb7575597acb3738df14838c08d0be22849636a0798",
+   "source": "assets/Mirror Kote Paper.png",
+   "destination": "web/assets/configuration/Mirror Kote Paper.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69563
+   },
+   "replacesOriginalRepoPath": "web/assets/original/mirror-kote.jpg",
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_paper",
+     "option": "Mirror Kote",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 60,
+     "fieldKey": "paper",
+     "option": "Mirror Kote",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 60,
+     "fieldKey": "paper",
+     "option": "Mirror Kote (Strong Glue)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-original-printing-paper",
+   "name": "Printing Paper",
+   "sha256": "b1f3d34dd2a428819916a0a066d756ff0b89667ad0db13dec763d39974ba88f6",
+   "source": "assets/Printing Paper.png",
+   "destination": "web/assets/configuration/Printing Paper.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69563
+   },
+   "replacesOriginalRepoPath": "web/assets/original/printing-paper.jpg",
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_paper",
+     "option": "Printing Paper",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 60,
+     "fieldKey": "paper",
+     "option": "Printing Paper",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-original-simili-paper",
+   "name": "Simili Paper",
+   "sha256": "643feb0987c77ed9162a416443538639de3a80ff6cb2b9bdfcd623338f495812",
+   "source": "assets/Simili Paper.png",
+   "destination": "web/assets/configuration/Simili Paper.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69563
+   },
+   "replacesOriginalRepoPath": "web/assets/original/simili-paper.jpg",
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 118,
+     "fieldKey": "inc_contentpaper",
+     "option": "Simili 60gsm (12 Sheets)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 119,
+     "fieldKey": "cover_paper",
+     "option": "Simili 140gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 120,
+     "fieldKey": "coverpaper",
+     "option": "Simili 140gsm (1 Sheets)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 120,
+     "fieldKey": "coverpaper",
+     "option": "Simili 140gsm (2 Sheets)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 120,
+     "fieldKey": "contentpaper",
+     "option": "Simili 140gsm (6 Sheets)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 121,
+     "fieldKey": "ss_coverpaper",
+     "option": "Simili 100gsm (2 Sheets)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 121,
+     "fieldKey": "ss_contentpaper",
+     "option": "Simili 100gsm (6 Sheets)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 163,
+     "fieldKey": "innerfrontcontent",
+     "option": "Simili 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 163,
+     "fieldKey": "paper1to4",
+     "option": "Simili 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 163,
+     "fieldKey": "paper5to8",
+     "option": "Simili 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 163,
+     "fieldKey": "paper9to12",
+     "option": "Simili 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 163,
+     "fieldKey": "el_readypaper",
+     "option": "Simili 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 164,
+     "fieldKey": "hcp_contentpaper",
+     "option": "Simili Paper 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 114,
+     "fieldKey": "paper",
+     "option": "Simili 140gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 112,
+     "fieldKey": "paper1to4",
+     "option": "Simili 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 112,
+     "fieldKey": "paper5to8",
+     "option": "Simili 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 112,
+     "fieldKey": "paper9to12",
+     "option": "Simili 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 112,
+     "fieldKey": "wo_contentpaper",
+     "option": "Simili 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 110,
+     "fieldKey": "paper",
+     "option": "Simili 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 110,
+     "fieldKey": "paper",
+     "option": "Simili 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 105,
+     "fieldKey": "paper",
+     "option": "Simili 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 105,
+     "fieldKey": "paper",
+     "option": "Simili 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_1",
+     "option": "Simili White 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_1",
+     "option": "Simili White 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_2",
+     "option": "Simili White 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_2",
+     "option": "Simili White 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_3",
+     "option": "Simili White 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_3",
+     "option": "Simili White 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_4",
+     "option": "Simili White 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_4",
+     "option": "Simili White 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_5",
+     "option": "Simili White 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_5",
+     "option": "Simili White 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_6",
+     "option": "Simili White 50gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 24,
+     "fieldKey": "bb_paper_6",
+     "option": "Simili White 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 21,
+     "fieldKey": "paper",
+     "option": "Simili 100gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 21,
+     "fieldKey": "paper",
+     "option": "Simili 140gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 21,
+     "fieldKey": "paper",
+     "option": "Simili 80gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "paper",
+     "option": "Simili 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "paper",
+     "option": "Simili 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "paper",
+     "option": "Simili 140gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "cover",
+     "option": "Simili Paper 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "cover",
+     "option": "Simili Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "content",
+     "option": "Simili Paper 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 19,
+     "fieldKey": "content",
+     "option": "Simili Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "cover",
+     "option": "Simili Paper 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "cover",
+     "option": "Simili Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "cover",
+     "option": "Simili Paper 140gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "content",
+     "option": "Simili Paper 80gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "content",
+     "option": "Simili Paper 100gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "content",
+     "option": "Simili Paper 140gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 101,
+     "fieldKey": "paper",
+     "option": "Simili 100gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 101,
+     "fieldKey": "paper",
+     "option": "Simili 140gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 101,
+     "fieldKey": "paper",
+     "option": "Simili 80gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 102,
+     "fieldKey": "paper",
+     "option": "Simili 100gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 102,
+     "fieldKey": "paper",
+     "option": "Simili 140gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 102,
+     "fieldKey": "paper",
+     "option": "Simili 80gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 103,
+     "fieldKey": "paper",
+     "option": "Simili 100gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 103,
+     "fieldKey": "paper",
+     "option": "Simili 140gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 103,
+     "fieldKey": "paper",
+     "option": "Simili 80gsm - Best Seller",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-original-super-white",
+   "name": "Super White Paper",
+   "sha256": "03903cc9bffebd72bc79275e8240a7a855c48f9f994c5cbfcdfcf3df2ce4dd65",
+   "source": "assets/Super White Paper.png",
+   "destination": "web/assets/configuration/Super White Paper.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69563
+   },
+   "replacesOriginalRepoPath": "web/assets/original/super-white.jpg",
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 1,
+     "fieldKey": "paper",
+     "option": "Super White 250gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 166,
+     "fieldKey": "papermaterial",
+     "option": "Super White 250gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 115,
+     "fieldKey": "paper",
+     "option": "Super White 240gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 114,
+     "fieldKey": "paper",
+     "option": "Super White 240gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 109,
+     "fieldKey": "paper",
+     "option": "Super White 250gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "paper",
+     "option": "Super White 240gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "cover",
+     "option": "Super White 240gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 37,
+     "fieldKey": "content",
+     "option": "Super White 240gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-original-suwen",
+   "name": "Suwen Paper",
+   "sha256": "5df4e23cc9351d7caa8b6aba24e96ab6fd17648695abfeec463a2e9875754b4c",
+   "source": "assets/Suwen Paper.png",
+   "destination": "web/assets/configuration/Suwen Paper.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69563
+   },
+   "replacesOriginalRepoPath": "web/assets/original/suwen.jpg",
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 1,
+     "fieldKey": "paper",
+     "option": "Suwen 240gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 114,
+     "fieldKey": "paper",
+     "option": "Suwen 240gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 109,
+     "fieldKey": "paper",
+     "option": "Suwen 240gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "paper",
+     "option": "Suwen 240gsm",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-original-synthetic-paper",
+   "name": "Synthetic Paper",
+   "sha256": "f2c503aa5e46e1ef0bd0b7319c27b2003f549edcb8ec257dfc092c422a304673",
+   "source": "assets/Synthetic Paper.png",
+   "destination": "web/assets/configuration/Synthetic Paper.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 69563
+   },
+   "replacesOriginalRepoPath": "web/assets/original/synthetic-paper.jpg",
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 1,
+     "fieldKey": "paper",
+     "option": "Synthetic Paper 180micron",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 108,
+     "fieldKey": "paper",
+     "option": "Synthetic Paper 180micron",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 124,
+     "fieldKey": "material",
+     "option": "Synthetic Paper 180micron",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 160,
+     "fieldKey": "material",
+     "option": "Synthetic Paper 180micron",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 161,
+     "fieldKey": "material",
+     "option": "Synthetic Paper 180micron",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 162,
+     "fieldKey": "material",
+     "option": "Synthetic Paper 180micron",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 184,
+     "fieldKey": "rf_paper",
+     "option": "Synthetic Paper",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 109,
+     "fieldKey": "paper",
+     "option": "Synthetic Paper 180micron",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 60,
+     "fieldKey": "paper",
+     "option": "Synthetic Paper",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 50,
+     "fieldKey": "paper",
+     "option": "Synthetic Paper 180micron",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  },
+  {
+   "assetId": "material-original-box-board-grey-back",
+   "name": "Boxboard - White Front and Grey Back",
+   "sha256": "faa34924e0ecb1f8f5c799c43cb3c6c29eed61ee524529eb1a167e306d07a521",
+   "source": "assets/Boxboard - White Front and Grey Back.png",
+   "destination": "web/assets/configuration/Boxboard - White Front and Grey Back.png",
+   "png": {
+    "width": 500,
+    "height": 500,
+    "colourType": 6,
+    "transparentPixels": 87802
+   },
+   "replacesOriginalRepoPath": "web/assets/original/box-board-grey-back.jpg",
+   "status": "created-pending-user-review",
+   "userApproved": false,
+   "mappings": [
+    {
+     "productId": 118,
+     "fieldKey": "inc_headerpaper",
+     "option": "Boxboard Grey Back 300gsm (1 Sheet)",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 130,
+     "fieldKey": "pko_comp",
+     "option": "Boxboard Grey Back 400gsm, Gloss Water Based Varnish (Front),4C Front, Die-Cutting",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    },
+    {
+     "productId": 154,
+     "fieldKey": "materialstand",
+     "option": "E flute corrugated with 250gsm boxboard with white liner",
+     "condition": null,
+     "supplierAvailability": null,
+     "integrationCondition": null
+    }
+   ]
+  }
+ ]
+}
