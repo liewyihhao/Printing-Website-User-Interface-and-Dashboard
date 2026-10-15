@@ -878,7 +878,7 @@ function serveStatic(req, res, pathname) {
   // never serve the server code, its data store (customers, sessions), dotfiles (.env), node_modules,
   // build scripts or source notes — only the public app files
   const relN = path.relative(WEB_ROOT, filePath).split(path.sep).join('/');
-  if (/^(server|node_modules|private|src)(\/|$)/.test(relN) || relN.split('/').some(p => p.charAt(0) === '.') || /\.(md|mjs|sh|log|env|local|txt)$/i.test(relN) && !/^robots\.txt$/.test(relN) || /^content\/.*\.(json)$/.test(relN) || /(^|\/)_/.test(relN.replace(/^assets\/original\//, '')))
+  if (/^(server|node_modules|private|src)(\/|$)/.test(relN) || relN.split('/').some(p => p.charAt(0) === '.') || /\.(md|mjs|sh|log|env|local|txt)$/i.test(relN) && !/^robots\.txt$/.test(relN) || /^content\/.*\.(json)$/.test(relN) || /(^|\/)[^/]*manifest[^/]*\.json$/i.test(relN) || /(^|\/)_/.test(relN.replace(/^assets\/original\//, '')))
     return send(res, 404, 'Not found', 'text/plain');
   fs.readFile(filePath, (err, data) => {
     if (err) {

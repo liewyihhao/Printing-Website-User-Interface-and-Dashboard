@@ -1,0 +1,1493 @@
+{
+ "generatedAt": "2026-10-15T00:46:50.270Z",
+ "totals": {
+  "styles": 65,
+  "styleImages": 130,
+  "optionImages": 22
+ },
+ "styles": [
+  {
+   "code": "A001",
+   "name": "Reverse Tuck End Box",
+   "family": "Basic boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit",
+    "Bottom Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/A001.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/A001-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/A001.png",
+    "web/assets/original/A001.jpg"
+   ]
+  },
+  {
+   "code": "B038",
+   "name": "Reverse Tuck Box, Tongue Lock",
+   "family": "Basic boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit",
+    "Bottom Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/B038.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/B038-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/B038.jpg"
+   ]
+  },
+  {
+   "code": "A002X",
+   "name": "Straight Tuck End Box",
+   "family": "Basic boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit",
+    "Bottom Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/A002X.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/A002X-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/A002X.jpg"
+   ]
+  },
+  {
+   "code": "A002BX",
+   "name": "Straight Tuck Box, Tongue Lock",
+   "family": "Basic boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit",
+    "Bottom Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/A002BX.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/A002BX-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/A002BX.jpg"
+   ]
+  },
+  {
+   "code": "B044X",
+   "name": "Semi Auto Bottom Lock, Tongue Lock",
+   "family": "Basic boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/B044X.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/B044X-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "B048A",
+   "name": "Auto Bottom Lock, Tongue Lock",
+   "family": "Basic boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/B048A.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/B048A-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "C001A",
+   "name": "Semi Auto Bottom Lock Box",
+   "family": "Basic boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/C001A.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/C001A-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/C001A.jpg"
+   ]
+  },
+  {
+   "code": "C001AA",
+   "name": "Semi Auto Bottom Lock",
+   "family": "Basic boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/C001AA.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/C001AA-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "C001AB",
+   "name": "Semi Auto Bottom Lock, Dust Flaps",
+   "family": "Basic boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/C001AB.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/C001AB-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "C001AD",
+   "name": "Auto Bottom Lock",
+   "family": "Basic boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/C001AD.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/C001AD-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "C001M",
+   "name": "Auto Bottom Lock Box",
+   "family": "Basic boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/C001M.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/C001M-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/C001M.jpg"
+   ]
+  },
+  {
+   "code": "T001",
+   "name": "Tuck Top Box with Clasp",
+   "family": "Basic boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [
+    "Top Closure: Concealed clasp/Lock",
+    "Bottom Closure: Concealed clasp/Lock"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/T001.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/T001-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "A002FX",
+   "name": "STE Box, Tongue Lock (Hanging)",
+   "family": "Hanging boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit",
+    "Bottom Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/A002FX.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/A002FX-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/A002FX.jpg"
+   ]
+  },
+  {
+   "code": "B040A",
+   "name": "RTE Box (Hanging)",
+   "family": "Hanging boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit",
+    "Bottom Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/B040A.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/B040A-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "B042A",
+   "name": "RTE Box, Tongue Lock (Hanging)",
+   "family": "Hanging boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit",
+    "Bottom Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/B042A.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/B042A-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "C001IX",
+   "name": "Semi Auto Bottom Lock, Sombrero Hole",
+   "family": "Hanging boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/C001IX.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/C001IX-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/C001IX.jpg"
+   ]
+  },
+  {
+   "code": "C001QX",
+   "name": "Auto Bottom Lock, Sombrero Hole",
+   "family": "Hanging boxes",
+   "window": false,
+   "aliasOf": "C001IX",
+   "options": [
+    "Top Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/C001QX.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/C001QX-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/C001QX.jpg"
+   ]
+  },
+  {
+   "code": "A001A",
+   "name": "RTE Box, Window Patching",
+   "family": "Window boxes",
+   "window": true,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit",
+    "Bottom Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/A001A.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/A001A-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/A001A-1.jpg"
+   ]
+  },
+  {
+   "code": "A002AX",
+   "name": "STE Box, Window Patching",
+   "family": "Window boxes",
+   "window": true,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit",
+    "Bottom Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/A002AX.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/A002AX-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/A002AX.jpg"
+   ]
+  },
+  {
+   "code": "A002CX",
+   "name": "STE Box, Window Patching",
+   "family": "Window boxes",
+   "window": true,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit",
+    "Bottom Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/A002CX.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/A002CX-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/A002CX.jpg"
+   ]
+  },
+  {
+   "code": "C001AC",
+   "name": "Semi Auto Bottom Lock (Window)",
+   "family": "Window boxes",
+   "window": true,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/C001AC.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/C001AC-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "C001AE",
+   "name": "Auto Bottom Lock (Window)",
+   "family": "Window boxes",
+   "window": true,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/C001AE.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/C001AE-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "C001B",
+   "name": "Semi Auto Bottom Lock, Window Patching",
+   "family": "Window boxes",
+   "window": true,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/C001B.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/C001B-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/C001B.jpg"
+   ]
+  },
+  {
+   "code": "C001N",
+   "name": "Auto Bottom Lock, Window Patching",
+   "family": "Window boxes",
+   "window": true,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/C001N.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/C001N-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/C001N.jpg"
+   ]
+  },
+  {
+   "code": "B037",
+   "name": "STE Box, Tongue Lock (Hanging + Window)",
+   "family": "Hanging + window boxes",
+   "window": true,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit",
+    "Bottom Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/B037.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/B037-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/B037.jpg"
+   ]
+  },
+  {
+   "code": "C001JX",
+   "name": "Semi Auto Bottom Lock, Window (Hanging)",
+   "family": "Hanging + window boxes",
+   "window": true,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/C001JX.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/C001JX-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/C001JX.jpg"
+   ]
+  },
+  {
+   "code": "C001RX",
+   "name": "Auto Bottom Lock, Window (Hanging)",
+   "family": "Hanging + window boxes",
+   "window": true,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/C001RX.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/C001RX-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/C001RX.jpg"
+   ]
+  },
+  {
+   "code": "E005X",
+   "name": "Roll End Tuck Front (RETF) Box",
+   "family": "Hinged lid boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [
+    "Number of Left Right Slot: 1/2/3"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/E005X.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/E005X-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "E028A",
+   "name": "Roll End Tuck Front (RETF) Box",
+   "family": "Hinged lid boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [
+    "Number of Left Right Slot: 1/2/3",
+    "Dust Flap CMV: 1/2/3"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/E028A.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/E028A-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "E049",
+   "name": "Roll End Tuck Front (RETF) Box",
+   "family": "Hinged lid boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [
+    "Number of Left Right Slot: 1/2"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/E049.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/E049-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/E049.jpg"
+   ]
+  },
+  {
+   "code": "D007A",
+   "name": "Friction Box with Base Only",
+   "family": "Trays & telescopic boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/D007A.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/D007A-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/D007A.jpg"
+   ]
+  },
+  {
+   "code": "D030",
+   "name": "Friction Box with Lid Only",
+   "family": "Trays & telescopic boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/D030.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/D030-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/D030.jpg"
+   ]
+  },
+  {
+   "code": "D040A",
+   "name": "Friction Base and Lid Gift Box",
+   "family": "Trays & telescopic boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/D040A.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/D040A-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/D040A.jpg"
+   ]
+  },
+  {
+   "code": "B052A",
+   "name": "Open Top Box with Hole Punch",
+   "family": "Gift & display boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [
+    "Number of Left Right Slot: 1/2/3"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/B052A.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/B052A-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "K003",
+   "name": "Tongue Lock",
+   "family": "Gift & display boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/K003.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/K003-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "K006",
+   "name": "Top with Dual Lock",
+   "family": "Gift & display boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/K006.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/K006-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "K016X",
+   "name": "Gable with Handle",
+   "family": "Gift & display boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/K016X.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/K016X-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "K024",
+   "name": "Semi Auto Bottom Lock Box",
+   "family": "Gift & display boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/K024.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/K024-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "L044",
+   "name": "Triangular Cone Box",
+   "family": "Gift & display boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/L044.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/L044-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "L069A",
+   "name": "Self Lock Box",
+   "family": "Gift & display boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/L069A.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/L069A-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "L082",
+   "name": "Triangle Box",
+   "family": "Gift & display boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/L082.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/L082-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "Z039A",
+   "name": "Roll End Tuck Front (RETF) Box",
+   "family": "Gift & display boxes",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/Z039A.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/Z039A-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "G012",
+   "name": "Gift Card Envelope",
+   "family": "Folders & envelopes",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/G012.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/G012-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "J023A",
+   "name": "Packaging Sleeve",
+   "family": "Sleeves",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/J023A.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/J023A-dieline.svg"
+    }
+   ],
+   "existingReference": [
+    "web/assets/original/J023A.jpg",
+    "web/assets/original/J023A.png"
+   ]
+  },
+  {
+   "code": "0930",
+   "name": "Divider Boxes",
+   "family": "Dividers",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/0930.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/0930-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "M013",
+   "name": "Divider Box",
+   "family": "Dividers",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/M013.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/M013-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "M014",
+   "name": "Divider Box",
+   "family": "Dividers",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/M014.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/M014-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "M015",
+   "name": "Divider Box",
+   "family": "Dividers",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/M015.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/M015-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "M016",
+   "name": "Divider Boxes",
+   "family": "Dividers",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/M016.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/M016-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "D052A",
+   "name": "Inner Holding Box",
+   "family": "Inner holders",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/D052A.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/D052A-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "M061",
+   "name": "Inner Holding Box",
+   "family": "Inner holders",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/M061.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/M061-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "M062",
+   "name": "Inner Holding Box",
+   "family": "Inner holders",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/M062.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/M062-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "M063",
+   "name": "Inner Holding Box",
+   "family": "Inner holders",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/M063.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/M063-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "M064",
+   "name": "Inner Holding Box",
+   "family": "Inner holders",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/M064.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/M064-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "A001X",
+   "name": "Reverse Tuck End (RTE) Box",
+   "family": "More styles",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/A001X.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/A001X-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "C001AX",
+   "name": "Box C001AX",
+   "family": "More styles",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/C001AX.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/C001AX-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "C001AY",
+   "name": "Box C001AY",
+   "family": "More styles",
+   "window": false,
+   "aliasOf": null,
+   "options": [
+    "Top Tuck: Friction/Slit"
+   ],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/C001AY.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/C001AY-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "C001BX",
+   "name": "Box C001BX",
+   "family": "More styles",
+   "window": true,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/C001BX.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/C001BX-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "C001EX",
+   "name": "Box C001EX",
+   "family": "More styles",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/C001EX.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/C001EX-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "C001NX",
+   "name": "Box C001NX",
+   "family": "More styles",
+   "window": true,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/C001NX.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/C001NX-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "C017",
+   "name": "Box C017",
+   "family": "More styles",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/C017.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/C017-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "E013X",
+   "name": "Box E013X",
+   "family": "More styles",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/E013X.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/E013X-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "K016",
+   "name": "Box K016",
+   "family": "More styles",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/K016.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/K016-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "L021",
+   "name": "Box L021",
+   "family": "More styles",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/L021.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/L021-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  },
+  {
+   "code": "L069",
+   "name": "Box L069",
+   "family": "More styles",
+   "window": false,
+   "aliasOf": null,
+   "options": [],
+   "images": [
+    {
+     "kind": "assembled-3d",
+     "file": "web/assets/packaging/L069.png"
+    },
+    {
+     "kind": "flat-dieline",
+     "file": "web/assets/packaging/L069-dieline.svg"
+    }
+   ],
+   "existingReference": []
+  }
+ ],
+ "builderOptions": [
+  {
+   "question": "Top / Bottom Tuck",
+   "options": [
+    {
+     "option": "Friction",
+     "file": "web/assets/packaging/options/Top - Bottom Tuck - Friction.png"
+    },
+    {
+     "option": "Slit",
+     "file": "web/assets/packaging/options/Top - Bottom Tuck - Slit.png"
+    }
+   ]
+  },
+  {
+   "question": "Top / Bottom Closure (T001)",
+   "options": [
+    {
+     "option": "Concealed clasp",
+     "file": "web/assets/packaging/options/Top - Bottom Closure - Concealed clasp.png"
+    },
+    {
+     "option": "Lock",
+     "file": "web/assets/packaging/options/Top - Bottom Closure - Lock.png"
+    }
+   ]
+  },
+  {
+   "question": "Number of Left Right Slot",
+   "options": [
+    {
+     "option": "1",
+     "file": "web/assets/packaging/options/Number of Left Right Slot - 1.png"
+    },
+    {
+     "option": "2",
+     "file": "web/assets/packaging/options/Number of Left Right Slot - 2.png"
+    },
+    {
+     "option": "3",
+     "file": "web/assets/packaging/options/Number of Left Right Slot - 3.png"
+    }
+   ]
+  },
+  {
+   "question": "Dust Flap CMV (E028A)",
+   "options": [
+    {
+     "option": "1",
+     "file": "web/assets/packaging/options/Dust Flap CMV - 1.png"
+    },
+    {
+     "option": "2",
+     "file": "web/assets/packaging/options/Dust Flap CMV - 2.png"
+    },
+    {
+     "option": "3",
+     "file": "web/assets/packaging/options/Dust Flap CMV - 3.png"
+    }
+   ]
+  },
+  {
+   "question": "Paper",
+   "options": [
+    {
+     "option": "Gloss Art Card (1 Side Coated)",
+     "file": "web/assets/packaging/options/Paper - Gloss Art Card (1 Side Coated).png"
+    },
+    {
+     "option": "Boxboard Grey Back",
+     "file": "web/assets/packaging/options/Paper - Boxboard Grey Back.png"
+    }
+   ]
+  },
+  {
+   "question": "Coating",
+   "options": [
+    {
+     "option": "Gloss Lamination",
+     "file": "web/assets/packaging/options/Coating - Gloss Lamination.png"
+    },
+    {
+     "option": "Matte Lamination",
+     "file": "web/assets/packaging/options/Coating - Matte Lamination.png"
+    },
+    {
+     "option": "Soft Touch Lamination",
+     "file": "web/assets/packaging/options/Coating - Soft Touch Lamination.png"
+    },
+    {
+     "option": "Gloss Water Based Varnish",
+     "file": "web/assets/packaging/options/Coating - Gloss Water Based Varnish.png"
+    },
+    {
+     "option": "UV Varnish",
+     "file": "web/assets/packaging/options/Coating - UV Varnish.png"
+    }
+   ]
+  },
+  {
+   "question": "Extra finishing",
+   "options": [
+    {
+     "option": "Spot UV",
+     "file": "web/assets/packaging/options/Extra finishing - Spot UV.png"
+    },
+    {
+     "option": "Embossing",
+     "file": "web/assets/packaging/options/Extra finishing - Embossing.png"
+    },
+    {
+     "option": "Hot Stamping - Gold",
+     "file": "web/assets/packaging/options/Extra finishing - Hot Stamping - Gold.png"
+    },
+    {
+     "option": "Hot Stamping - Silver",
+     "file": "web/assets/packaging/options/Extra finishing - Hot Stamping - Silver.png"
+    },
+    {
+     "option": "Window Film",
+     "file": "web/assets/packaging/options/Extra finishing - Window Film.png"
+    }
+   ]
+  }
+ ]
+}
