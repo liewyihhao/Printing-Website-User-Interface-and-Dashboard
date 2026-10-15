@@ -1728,6 +1728,18 @@ const SB_MODELS = {
 };
 // Soccer Pants set (Round Neck / V Neck): unit per sleeve [base, 4-7XL], sizes XS-7XL
 const SB_PANTS = { 'Short Sleeve': [30.5, 37.5], 'Sleeveless': [30.5, 37.5], 'Long Sleeve': [37.5, 44] };
+// orders under 10 pieces in total (Sublimation Shirt and Muslimah only; live 2026-10-16): unit per sleeve [base, 4-7XL, 8-9XL, 10XL]
+const SB_SMALL_MIN = 10;
+const SB_SMALL = (() => { const rn = { 'Short Sleeve': [21, 25, 31, 34], 'Long Sleeve': [24.5, 28.5, 35.5, 38.5], 'Sleeveless': [21, 25, 31, 34] },
+  rv = { 'Short Sleeve': [26.5, 30.5, 38.5, 41.5], 'Long Sleeve': [30, 34, 42, 45] }, krn = { 'Short Sleeve': [20.5], 'Long Sleeve': [24], 'Sleeveless': [20.5] }, krv = { 'Short Sleeve': [26.3], 'Long Sleeve': [29.8] };
+  return { 'Round Neck': rn, 'V Neck': rn, 'Collar with Button': { 'Short Sleeve': [25.5, 29.5, 37.5, 40.5], 'Long Sleeve': [29, 33, 41, 44] },
+    'Mandarin Collar': { 'Short Sleeve': [27, 31, 39, 42], 'Long Sleeve': [30.5, 34.5, 42.5, 45.5] }, 'Retro V Collar': rv, 'Retro Flat Collar': rv,
+    'Raglan Round Neck': { 'Short Sleeve': [23.5, 27.5, 35.5, 38.5], 'Long Sleeve': [27, 31, 39, 42] }, 'NFL Oversize': { 'Short Sleeve': [40.5, 44.5, 52.5, 55.5], 'Long Sleeve': [44, 48, 57, 60] },
+    'Kids Round Neck': krn, 'Kids V Neck': krn, 'Kids Collar with Button': { 'Short Sleeve': [25.3], 'Long Sleeve': [28.8] }, 'Kids Retro V Collar': krv, 'Kids Retro Flat Collar': krv,
+    'Kids Raglan Round Neck': { 'Short Sleeve': [23], 'Long Sleeve': [26.5] }, 'Muslimah Round Neck': { 'Long Sleeve': [29, 33, 41, 44] }, 'Kids Muslimah Round Neck': { 'Long Sleeve': [27] } }; })();
+const SB_PANTS_SMALL = { 'Short Sleeve': [41.5, 45.5], 'Sleeveless': [41.5, 45.5], 'Long Sleeve': [48, 52] };
+// logo patch per position per piece: RM3 from 10 pieces in total, RM5 below (every apparel form, live 2026-10-16)
+const sbPatchRate = total => (total || 0) >= SB_SMALL_MIN ? 3 : 5;
 const SB_VDP = { 'Numbering': 4, 'Text': 4, 'Numbering + Text': 6 };
 const SB_PATCH_POS = ['Not Required', 'Front', 'Left Sleeve', 'Right Sleeve'];
 function sbModel(name, V) { const M = SB_MODELS[name] || {}, cat = V.sb_category || 'Adult'; return (M[cat] || M.Adult || []).find(m => m[0] === V.sb_model) || (M[cat] || M.Adult || [])[0]; }
@@ -1738,15 +1750,20 @@ function sbVdpPart(pos, a, b) { // pos Front/Back/Both (or Left/Right/Both); a, 
   const sa = SB_VDP[a] || 0, sbb = SB_VDP[b] || 0;
   return pos === 'Both' ? Math.max(sa, sbb) + 2 : (/^(Front|Left)$/.test(pos) ? sa : sbb);
 }
-function sbUnit(name, V, size) {
+function sbUnit(name, V, size, total) {
   const m = sbModel(name, V); if (!m) return null;
   const u = m[4][V.sb_sleeve] || m[4][Object.keys(m[4])[0]], band = SB_BAND(size);
   let unit;
-  if (sbPants(V)) { const p = SB_PANTS[V.sb_sleeve] || SB_PANTS['Short Sleeve']; unit = band ? p[1] : p[0]; }
-  else { const t = (m[6] && V.sb_fabric && V.sb_fabric !== m[2][0]) ? (m[6][V.sb_sleeve] || u) : u; unit = t[band] != null ? t[band] : t[0]; }
+  const small = (total || 0) < SB_SMALL_MIN && V.sb_proof !== 'Sample Proof' && (name === 'Sublimation Shirt' || /^Muslimah/.test(name));
+  if (sbPants(V)) { const p = (small ? SB_PANTS_SMALL : SB_PANTS)[V.sb_sleeve] || SB_PANTS['Short Sleeve']; unit = band ? p[1] : p[0]; }
+  else {
+    const alt = m[6] && V.sb_fabric && V.sb_fabric !== m[2][0];   // NFL Oversize on Eyelet / Super Square = Collar with Button
+    const sm = small && SB_SMALL[alt ? 'Collar with Button' : m[0]], su = sm && (sm[V.sb_sleeve] || sm[Object.keys(sm)[0]]);
+    const t = su || (alt ? (m[6][V.sb_sleeve] || u) : u); unit = t[band] != null ? t[band] : t[0];
+  }
   if (V.sb_proof === 'Sample Proof') unit = Math.ceil(unit + (sbPants(V) ? 49.5 : 24));
   else unit += sbVdpPart(V.sb_vdp, V.sb_vdp_front, V.sb_vdp_back) + (sbPants(V) ? sbVdpPart(V.sb_pvdp, V.sb_pvdp_left, V.sb_pvdp_right) : 0);
-  if (V.sb_patch && V.sb_patch !== 'Not Required') ['sb_patch1', 'sb_patch2', 'sb_patch3'].forEach(k => { if (V[k] && V[k] !== 'Not Required') unit += 3; });
+  if (V.sb_patch && V.sb_patch !== 'Not Required') ['sb_patch1', 'sb_patch2', 'sb_patch3'].forEach(k => { if (V[k] && V[k] !== 'Not Required') unit += sbPatchRate(total); });
   return unit;
 }
 function sbOverride(name, engineKeys) {
@@ -1786,7 +1803,7 @@ function sbOverride(name, engineKeys) {
       sb_fabric: (V, o) => { const m = mOf(V); return !m || m[2].indexOf(o) >= 0; },
       sb_pants: (V, o) => o === 'Not Required' || ((V.sb_category || 'Adult') === 'Adult' && /^(Round Neck|V Neck)$/.test(V.sb_model || 'Round Neck')),
     },
-    sizeRows: { sizes: V => sbSizes(name, V), unit: (V, s) => sbUnit(name, V, s), min: V => V.sb_proof === 'Sample Proof' ? 1 : 5, max: V => V.sb_proof === 'Sample Proof' ? 2 : 1000, maxRows: 11 },
+    sizeRows: { sizes: V => sbSizes(name, V), unit: (V, s, total) => sbUnit(name, V, s, total), min: V => V.sb_proof === 'Sample Proof' ? 1 : 5, max: V => V.sb_proof === 'Sample Proof' ? 2 : 1000, maxRows: 11 },
   };
 }
 
@@ -4684,8 +4701,9 @@ class Component extends DCLogic {
     }
     if (ov.sizeRows) {   // size rows: each size at its own per-piece price, added up
       const C = ov.sizeRows, V = this.pkV(), rows = this.srRows(); let g = 0, tq = 0;
-      if (rows.length) { for (const r of rows) { const u = C.unit(V, r.size); if (u == null || !(+r.qty > 0)) return { ok: false, message: 'Enter a quantity' }; g += u * r.qty; tq += +r.qty; } }
-      else { const sz = C.sizes(V), s0 = sz.indexOf('M') >= 0 ? 'M' : sz[0], u = s0 ? C.unit(V, s0) : null; if (u == null) return { ok: false, message: 'Add a size' }; tq = qty; g = u * qty; }
+      const rtot = rows.reduce((a, r) => a + (+r.qty || 0), 0);
+      if (rows.length) { for (const r of rows) { const u = C.unit(V, r.size, rtot); if (u == null || !(+r.qty > 0)) return { ok: false, message: 'Enter a quantity' }; g += u * r.qty; tq += +r.qty; } }
+      else { const sz = C.sizes(V), s0 = sz.indexOf('M') >= 0 ? 'M' : sz[0], u = s0 ? C.unit(V, s0, qty) : null; if (u == null) return { ok: false, message: 'Add a size' }; tq = qty; g = u * qty; }
       const gross = Math.round(g * 100) / 100, net = Math.round(gross * (1 - this.tierPct() / 100) * 100) / 100;
       return { ok: true, gross, disc: Math.round((gross - net) * 100) / 100, net, unit: net / (tq || 1), weight: tq * 0.2, note: null, method: 'excard', finishing: 0 };
     }
@@ -8303,7 +8321,7 @@ class Component extends DCLogic {
     if (t > mx) return 'Order up to ' + mx + ' pcs in total.';
     return null;
   }
-  srValid() { const C = this.srCfg(); if (!C || this.srErr()) return false; const V = this.pkV(); return this.srRows().every(r => C.unit(V, r.size) != null); }
+  srValid() { const C = this.srCfg(); if (!C || this.srErr()) return false; const V = this.pkV(); return this.srRows().every(r => C.unit(V, r.size, this.srTotal()) != null); }
   srNode() {
     const C = this.srCfg(), V = this.pkV(), sizes = C.sizes(V), rows = this.srRows(), stored = this.srStored(), total = this.srTotal();
     // sizes that no longer exist for the chosen model drop out of the order
@@ -8316,7 +8334,7 @@ class Component extends DCLogic {
     const ctl = { height: 36, border: '1px solid #e6e8eb', background: '#fff', font: '400 14px Montserrat,sans-serif', color: INK };
     return h('div', { key: 'quantity', 'data-cfgkey': 'quantity', 'data-cfgans': ans ? '1' : '0', 'data-cfgsel': ans ? '1' : '0', style: { padding: '15px 0', borderTop: '1px solid ' + LINE } },
       h('div', { style: { fontSize: 13.5, fontWeight: 600, marginBottom: 10 } }, 'Size & Quantity'),
-      rows.map((r, i) => { const u = C.unit(V, r.size), used = rows.map(x => x.size);
+      rows.map((r, i) => { const u = C.unit(V, r.size, total), used = rows.map(x => x.size);
         return h('div', { key: i, style: { display: 'grid', gridTemplateColumns: 'minmax(80px,120px) auto minmax(0,1fr) auto', gap: 10, alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #f0f1f3' } },
           h('select', { 'aria-label': 'Size ' + (i + 1), value: r.size, onChange: e => setRow(i, { size: e.target.value }), style: Object.assign({ padding: '0 8px' }, ctl) },
             sizes.filter(z => z === r.size || used.indexOf(z) < 0).map(z => h('option', { key: z, value: z }, z))),
@@ -8332,7 +8350,7 @@ class Component extends DCLogic {
         style: { border: '1px dashed #c9191b', color: '#c9191b', textAlign: 'center', padding: '10px', marginTop: 10, cursor: 'pointer', fontWeight: 500 } }, '+ Add size') : null,
       err ? h('div', { role: 'alert', style: { color: '#c9191b', fontSize: 13.5, marginTop: 10 } }, err) : null,
       h('div', { style: { display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e6e8eb', marginTop: 12, paddingTop: 12, fontWeight: 600 } },
-        h('span', null, 'Total: ' + total + ' pcs'), h('span', null, this.money(rows.reduce((a, r) => { const u = C.unit(V, r.size); return a + (u != null ? u * (+r.qty || 0) : 0); }, 0)))));
+        h('span', null, 'Total: ' + total + ' pcs'), h('span', null, this.money(rows.reduce((a, r) => { const u = C.unit(V, r.size, total); return a + (u != null ? u * (+r.qty || 0) : 0); }, 0)))));
   }
   // ---------- line builder (Cap / readymade apparel): the order is a list of model lines ----------
   lbCfg() { const ov = this.cfgOv(); return ov && ov.lineBuilder; }
