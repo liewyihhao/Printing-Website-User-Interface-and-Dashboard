@@ -3054,6 +3054,7 @@ const CFG_OVERRIDES = {
       paper: ['Gloss Art Card 250gsm', 'Gloss Art Card 310gsm', 'Linen 240gsm', 'Metal Ice 250gsm', 'Super White 250gsm', 'Suwen 240gsm', 'Synthetic Paper 180micron'],
       lamination: (cfg, o) => ['Gloss Lamination (Both)', 'Matte Lamination (Both)', 'Matte Lamination (Both) + Spot UV (Front)', 'No Required'].filter(v => !o || o.map(x => Array.isArray(x) ? x[0] : x).indexOf(v) >= 0),
       bm_comp: cfg => [cfg.model === 'BM-C' || cfg.model === 'BM-D' ? 'Die-Cutting' : 'No Required'],
+      size: cfg => [cfg.model === 'BM-E' ? '60mm x 170mm' : '50mm x 150mm'],   // live form + price list: BM-E is 60 x 170
     },
     addFields: [
       { key: 'bm_comp', label: 'Compulsory', options: ['No Required', 'Die-Cutting'], section: 'General', neutral: true, after: 'lamination' },
