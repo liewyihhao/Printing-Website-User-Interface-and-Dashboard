@@ -3176,8 +3176,13 @@ const CFG_OVERRIDES = {
     placeholderExact: ['model', 'ex_window', 'quantity'],
   },
   'Paper Bag — Litho': {
+    // live form (2026-10-15): lamination reads without '(Front)'; a hot stamp asks for its foil colour (Gold / Silver)
+    optLabel: { lamination: { 'Gloss Lamination (Front)': 'Gloss Lamination', 'Matte Lamination (Front)': 'Matte Lamination' } },
+    addFields: [
+      { key: 'pb_hs_colour', label: 'H/S Colour', options: ['Gold', 'Silver'], section: 'Optional Finishing', neutral: true, after: 'hotstampingsize', showWhen: { field: 'hotstampingsize', values: ['100mm x 100mm', '100mm x 200mm', '200mm x 200mm', '300mm x 100mm', '300mm x 200mm', '400mm x 100mm', '400mm x 200mm'] } },
+    ],
     defaultOpt: { model: 'PBG 001' },
-    placeholderExact: ['paper', 'lamination', 'rope_colour', 'quantity'],
+    placeholderExact: ['paper', 'lamination', 'rope_colour', 'pb_hs_colour', 'quantity'],
   },
   'Desk Calendar — Soft Stand (Litho)': {
     addFields: [
