@@ -1568,10 +1568,17 @@ function capLinePrice(line) {
   if (!c || !q) return null;
   const cv = c.curves[line.model === 'bt_c' ? 'Trucker' : 'Baseball']; if (!cv) return null;
   let unit = shUnit(cv, q);   // Excard steps the unit price by quantity tier
+  // under 10 caps: the 10-cap unit price plus RM0.60 for every cap short of 10 (live 2026-10-16: 5 / 7 / 9 caps exact)
+  if (q < 10 && cv[10] != null) unit = cv[10] / 10 + 0.6 * (10 - q) / q;
+  // from 50 caps the total runs on a straight line between the list points (the 100-cap point starts a cheaper run; live 2026-10-16)
+  if (q >= 50) { const ks = Object.keys(cv).map(Number).filter(k => k >= 50).sort((x, y) => x - y); let i = 0; while (i < ks.length - 1 && ks[i + 1] <= q) i++;
+    const a0 = ks[i], b0 = ks[i + 1], run = b0 != null && !(a0 < 100 && b0 >= 100) ? [a0, b0] : (i > 0 ? [ks[i - 1], a0] : null);
+    if (run && q !== a0) { const [x0, x1] = run; unit = (cv[x0] + (cv[x1] - cv[x0]) * (q - x0) / (x1 - x0)) / q; } }
   if (line.cat === 'Kid') unit -= 0.2;
   const R = CAP_POS_RATE; let r = R[R.length - 1][1];
   if (q <= R[0][0]) r = R[0][1]; else for (let i = 1; i < R.length; i++) if (q <= R[i][0]) { r = R[i - 1][1] + (R[i][1] - R[i - 1][1]) * (q - R[i - 1][0]) / (R[i][0] - R[i - 1][0]); break; }
-  return Math.round(unit * q + Math.max(0, (line.prints || []).length - 1) * r * q);
+  // unit price to the sen, total to 5 sen (live: 9 caps = 9.67 x 9 = RM87.05, 35 caps = RM324.45)
+  return Math.round((Math.round(unit * 100) / 100 * q + Math.max(0, (line.prints || []).length - 1) * r * q) * 20) / 20;
 }
 const CAP_COLOURS_BB = ['Apple Green', 'Beige', 'Black', 'Dark Green', 'Emerald', 'Khaki', 'Knight Grey', 'Lemon Yellow', 'Light Pink', 'Magenta', 'Maroon', 'Mid Grey', 'Navy Blue', 'Ocean Blue', 'Orange', 'Purple', 'Red', 'Royal Blue', 'White'];
 const CAP_LB = {
@@ -1633,8 +1640,9 @@ function dtfLinePrice(line, fab) {
   const sizes = line.sizes || {}, q = Object.keys(sizes).reduce((a, k) => a + (+sizes[k] || 0), 0); if (!c || !q) return null;
   const cv = c.curves[[line.cat, SH_MODEL_LABEL[line.model], SH_FAB[fab]].join('|')]; if (!cv) return null;
   const k = q < 50 ? 16 / 15 : q >= 400 ? 14 / 15 : 1, basePrint = line.cat === 'Kid' ? '3" x 3"' : 'A3';
-  const unit = shUnit(cv, q) + ((line.prints || []).reduce((a, p) => a + (DTF_P[p.size] || 0), 0) - DTF_P[basePrint]) * k;
-  let tot = 0; Object.keys(sizes).forEach(s => { tot += (+sizes[s] || 0) * (unit + (SH_BIG[s] ? 7.54 * k : 0)); });
+  // under 10 pcs a line costs RM0.55 (Adult) / RM0.44 (Kid) more per piece and 4XL-7XL add RM8.00 (live 2026-10-16)
+  const small = q < 10, unit = shUnit(cv, q) + (small ? (line.cat === 'Kid' ? 0.44 : 0.55) : 0) + ((line.prints || []).reduce((a, p) => a + (DTF_P[p.size] || 0), 0) - DTF_P[basePrint]) * k;
+  let tot = 0; Object.keys(sizes).forEach(s => { tot += (+sizes[s] || 0) * (unit + (SH_BIG[s] ? (small ? 8 : 7.54 * k) : 0)); });
   return Math.round(tot * 20) / 20;
 }
 const DTF_LB = {
