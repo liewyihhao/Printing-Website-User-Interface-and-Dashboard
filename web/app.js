@@ -1508,8 +1508,13 @@ function kpbPriceBase(cfg, q) {
 
 // ---------- Hard Cover Menu (Excard hard-cover-menu, live 2026-10-02): Type decides which cover/content fields show; Content only =
 // 4-16 pages, Cover + Content = 12-32 pages; Gloss and Matte cost the same (our list lacks Matte 12pp, so it reads Gloss). Live 3/3. ----------
+// Content only: Excard's live list (Gloss = Matte; 4p@10 and 16p@100 checked live 2026-10-15) - the stored curves were shifted by a page step
+const HM_CO_Q = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200, 250, 300, 350, 400, 450, 500];
+const HM_CO = { 4: [67, 93, 115, 140, 161, 180, 201, 225, 246, 260, 368, 478, 575, 690, 805, 900, 1012.5, 1125], 8: [92, 132, 177, 219, 264, 295, 339, 378, 422, 446, 649, 848, 1050, 1260, 1470, 1660, 1867.5, 2075],
+  12: [112, 166, 229, 287, 343, 407, 463, 523, 578, 642, 958, 1257, 1550, 1860, 2170, 2460, 2767.5, 3075], 16: [137, 208, 293, 366, 440, 524, 602, 678, 755, 838, 1197, 1572, 1950, 2340, 2730, 3100, 3487.5, 3875] };
 function hmPriceBase(cfg, q) {
   const E = typeof window !== 'undefined' && window.PricingEngine, c = E && E.DATA.params.hardmenu_plx; if (!c || !cfg.orderdesc || !cfg.lamination) return null;
+  if (/^content only$/i.test(cfg.orderdesc)) { const t = HM_CO[cfg.pages], i = HM_CO_Q.indexOf(q); return t && i >= 0 ? t[i] : null; }
   const cov = cfg.orderdesc !== 'Content Only', con = cfg.orderdesc !== 'Cover only';
   const k = lam => [cfg.orderdesc, lam, cov ? 'Chipboard 1000gsm + Gloss Art Paper 150gsm' : 'N/A', cov ? '220mm x 307mm' : 'N/A', con ? 'Gloss Art Paper 150gsm' : 'N/A', con ? '210mm x 297mm' : 'N/A', con ? String(cfg.pages || '') : 'N/A'].join('|');
   const cv = c.curves[k(cfg.lamination)] || c.curves[k('Gloss Lamination (Both)')];
@@ -3689,6 +3694,7 @@ const CFG_OVERRIDES = {
       contentpaper: cfg => cfg.orderdesc === 'Cover only', contentsize: cfg => cfg.orderdesc === 'Cover only', pages: cfg => cfg.orderdesc === 'Cover only',
     },
     defaultOpt: { orderdesc: 'Cover + Content' },
+    ownsOptions: true,   // Content only 4-16 pages must not be reset by the stored list (12-32)
     placeholderExact: ['lamination', 'pages', 'quantity'],
     qtyOptions: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200, 250, 300, 350, 400, 450, 500],
     priceBase: hmPriceBase,
