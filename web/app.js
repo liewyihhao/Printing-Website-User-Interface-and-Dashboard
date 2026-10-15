@@ -932,6 +932,12 @@ const CL_F = {
   'CLB-S': { 50: 61, 100: 99, 150: 142, 200: 175, 250: 217, 300: 254, 350: 295, 400: 321, 450: 362, 500: 397 },
   'CLB-D': { 50: 78, 100: 131, 150: 189, 200: 236, 250: 292, 300: 344, 350: 401, 400: 438, 450: 493, 500: 543 },
 };
+// DTF Tote Bag With Zip / Heat Transfer Tote Bag: Excard's live list, 4C (Front) and 4C (Both), CASH (2026-10-15; Both checked live)
+const TOTE_Q = [10, 20, 30, 40, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500];
+const TOTE_T = {
+  dz: { '4C (Front)': [150, 295, 439, 583, 727, 1448, 2170, 2790, 3486, 4181, 4877, 5369, 6040, 6711], '4C (Both)': [192, 379, 565, 751, 937, 1868, 2800, 3600, 4498, 5396, 6295, 6929, 7795, 8661] },
+  ht: { '4C (Front)': [107, 204, 299, 395, 490, 976, 1441, 1919, 2398, 2875, 3236, 3698, 4160, 4622], '4C (Both)': [143, 277, 409, 541, 673, 1341, 1981, 2640, 3299, 3956, 4452, 5088, 5723, 6359] } };
+const totePrice = k => (cfg, q) => { const t = TOTE_T[k][cfg.printcolour || '4C (Front)'], i = TOTE_Q.indexOf(q); return t && i >= 0 ? t[i] : null; };
 const CL_SIZE = { 'CLB-S': '120mm x 280mm x 100mm', 'CLB-D': '200mm x 290mm x 120mm' };
 const LN_SPEC = { 'LNWB-S': ['285mm (W) x 335mm (H) x 140mm (D)', '300mm'], 'LNWB-B': ['356mm (W) x 380mm (H) x 190mm (D)', '440mm'] };
 function bagPerPiece(id, V, q) {
@@ -3280,6 +3286,8 @@ const CFG_OVERRIDES = {
       { key: 'dz_handlelength', label: 'Handle Length', options: ['500mm'], section: 'General', neutral: true, after: 'dz_handlecolour' },
     ],
     placeholderExact: ['printcolour', 'quantity'],
+    qtyOptions: TOTE_Q,
+    priceBase: totePrice('dz'),
   },
   'Canvas Tote Bag — Litho': {
     label: { printcolour: 'Print Colour', handlelength: 'Handle Length', inc_compulsory: 'Compulsory' },
@@ -3306,6 +3314,8 @@ const CFG_OVERRIDES = {
       { key: 'ht_handlelength', label: 'Handle Length', options: ['500mm'], section: 'General', neutral: true, after: 'ht_handlecolour' },
     ],
     placeholderExact: ['ex_orientation', 'printcolour', 'quantity'],
+    qtyOptions: TOTE_Q,
+    priceBase: totePrice('ht'),
   },
   'Cooler Bag — Litho': {
     optionsOverride: { size: cfg => [CL_SIZE[cfg.model] || CL_SIZE['CLB-S']] },
