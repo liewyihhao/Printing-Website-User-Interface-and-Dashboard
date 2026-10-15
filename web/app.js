@@ -838,16 +838,24 @@ function fdPriceBase(cfg, q) {
   return Math.round(v * 100) / 100;
 }
 
-// ---------- Wall Calendar (Excard wall-calendar, live 2026-10-02): the order form now offers Racing Horse Without School
-// Holiday (RHC 003, Package 1-10 in 1) and Custom Design Content (RHC 003, from 1,000); everything else is fixed at
-// 260 x 265 mm. Prices = Excard's list (unchanged from the stored RHC 003 curves). ----------
-const WC_RH = 'Racing Horse Without School Holiday', WC_CUSTOM = 'Custom Design Content';
+// ---------- Wall Calendar (Excard wall-calendar, live 2026-10-15): the order form offers Racing Horse With School Holiday
+// (RHC 001 150 x 150, RHC 002 206 x 230, RHC 003 260 x 265 mm; Package Normal or 2-10 in 1) and Custom Design Content
+// (RHC 001 / RHC 003, Normal only, from 1,000). Prices = Excard's live price list (CASH, exact); an 'N in 1 (d% Off)' package
+// = N x the Normal price x (1 - d), exact on all 1,881 package rows. Custom RHC 001 read from the live order form. ----------
+const WC_RH = 'Racing Horse With School Holiday', WC_CUSTOM = 'Custom Design Content';
+const WC_Q = [50, 100, 150, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000, 15000, 16000, 17000, 18000, 19000, 20000];
+const WC_SIZE = { 'RHC 001': '150mm x 150mm', 'RHC 002': '206mm x 230mm', 'RHC 003': '260mm x 265mm' };
+// Normal package, CASH in sen (base 36) per WC_Q
+const WC_T = (() => { const raw = {"RH|RHC 001":"5v4,7k8,a9g,ccg,hto,mj4,re4,weo,119o,16a8,1bki,1dds,1zrc,2m4w,3uw0,53n4,6bmg,7l5c,8uo8,a474,bdq0,cbr0,dgvk,elxc,fr1w,gw3o,i15g,j6a0,kbbs,lggc,mli4,nqjw","RH|RHC 002":"7hg,b6s,g7c,l7w,vbs,14fk,1djc,1kmw,1rno,1yog,25p8,2cq0,3c28,4bbo,6a04,88j0,a74o,bvmg,dk1g,f8m0,gx3s,illk,k62w,lqk8,nb1k,oviw,qfxg,s4f8,tsx0,vhes,x5wk,yuec","RH|RHC 003":"86g,d48,izc,oug,10ng,196e,1hpc,1qa8,1yv4,27g0,2g0w,2ols,3wl4,51y0,7cns,9ndk,bxxs,dwuk,fvrc,hulc,jtfc,ku5k,mlfc,ocp4,q3yw,rv8o,tmig,viag,xe2g,z9ug,115mg,131eg","C|RHC 003":",,,,,,,,,,,3msc,4rg8,5yl0,86oc,akv4,cz4o,ev14,gwy8,iyvc,l0v8,ls9c,nwnc,q11c,s548,tk1k,uyyw,wyf4,yz9c,10yk0,12vx8,14tag","C|RHC 001":",,,,,,,,,,,1uo0,2e40,34yo,4mo0,5m08,6ydw,7yt0,9alu,ameo,by7i,cxxr,e54c,fc80,gjel,hqi9,ixlx,k4si,lbw6,mj2r,nq6f,oxa3"};
+  const out = {}; Object.keys(raw).forEach(k => { out[k] = raw[k].split(',').map(v => v === '' ? null : parseInt(v, 36) / 100); }); return out; })();
 const wcCustom = cfg => cfg.category === WC_CUSTOM;
+const wcModel = cfg => String(cfg.model || 'RHC 003').replace(/ \(.*\)$/, '');
+const wcKey = cfg => (wcCustom(cfg) ? 'C|' : 'RH|') + wcModel(cfg);
+const wcQty = cfg => { const t = WC_T[wcKey(cfg)] || []; return WC_Q.filter((q, i) => t[i] != null); };
 function wcPriceBase(cfg, q) {
-  const E = typeof window !== 'undefined' && window.PricingEngine; const c = E && E.DATA.params.wallcal_plx && E.DATA.params.wallcal_plx.curves; if (!c) return null;
-  const k = wcCustom(cfg) ? 'Custom Design Content|RHC 003|260mm x 265mm|-|260mm x 265mm|Normal'
-    : 'Racing Horse With School Holiday|RHC 003 (Racing Horse)|260mm x 265mm|Racing Horse|260mm x 265mm|' + (cfg.package || 'Normal');
-  const v = c[k]; return v && v[q] != null ? +v[q] : null;
+  const t = WC_T[wcKey(cfg)], i = WC_Q.indexOf(q); if (!t || i < 0 || t[i] == null) return null;
+  const m = !wcCustom(cfg) && String(cfg.package || 'Normal').match(/^(\d+) IN 1 \((\d+)% Off\)/i);
+  return m ? Math.round(t[i] * +m[1] * (1 - +m[2] / 100) * 100) / 100 : t[i];
 }
 
 // ---------- Hard Stand Desk Calendar (Excard hard-stand-desk-calendar, live 2026-10-02) ----------
@@ -3080,18 +3088,18 @@ const CFG_OVERRIDES = {
     label: { inc_headercompulsory: 'Compulsory (Header)', inc_contentcompulsory: 'Compulsory (Content)', contentartwork: 'Content Artwork' },
     optionsOverride: {
       category: [WC_RH, WC_CUSTOM],
-      model: cfg => [wcCustom(cfg) ? 'RHC 003' : 'RHC 003 (Racing Horse)'],
-      headersize: ['260mm x 265mm'], contentsize: ['260mm x 265mm'],
+      model: cfg => wcCustom(cfg) ? ['RHC 001', 'RHC 003'] : ['RHC 001 (Racing Horse)', 'RHC 002 (Racing Horse)', 'RHC 003 (Racing Horse)'],
+      headersize: cfg => [WC_SIZE[wcModel(cfg)] || WC_SIZE['RHC 003']], contentsize: cfg => [WC_SIZE[wcModel(cfg)] || WC_SIZE['RHC 003']],
       contentartwork: cfg => [wcCustom(cfg) ? 'Custom Design' : 'Racing Horse'],
+      package: cfg => wcCustom(cfg) ? ['Normal'] : ['Normal', '2 IN 1 (5% Off)', '3 IN 1 (7% Off)', '4 IN 1 (10% Off)', '5 IN 1 (10% Off)', '6 IN 1 (10% Off)', '7 IN 1 (10% Off)', '8 IN 1 (10% Off)', '9 IN 1 (10% Off)', '10 IN 1 (10% Off)'],
     },
     addFields: [
       { key: 'wc_contentcolour', label: 'Content Print Colour', options: ['4C (Front)'], section: 'General', neutral: true, after: 'contentsize' },
     ],
     hideWhen: { package: wcCustom },
     defaultOpt: { category: WC_RH },
-    placeholderExact: ['package', 'quantity'],
-    qtyOptions: cfg => wcCustom(cfg) ? [1000, 1500, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000, 15000, 16000, 17000, 18000, 19000, 20000]
-      : [50, 100, 150, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000, 15000, 16000, 17000, 18000, 19000, 20000],
+    placeholderExact: ['model', 'package', 'quantity'],
+    qtyOptions: wcQty,
     priceBase: wcPriceBase,
   },
   'Desk Calendar — Hard Stand (Litho)': {
