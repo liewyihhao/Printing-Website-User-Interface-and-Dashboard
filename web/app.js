@@ -1669,7 +1669,13 @@ function silkLinePrice(line, fab) {
   const der = SS_DERIVED[line.model], mk = der ? der[0] : line.model;
   const cv = c.curves[['Adult', SH_MODEL_LABEL[mk], SH_FAB[fab]].join('|')]; if (!cv) return null;
   const k = q < 50 ? 16 / 15 : q >= 400 ? 14 / 15 : 1, pr = line.prints || []; if (!pr.length) return null;
-  let tot = shUnit(cv, q) * q + (der ? der[1] * k * q : 0);
+  // the garment + first print runs on straight lines between the list points (a set-up charge plus a per-piece price), kept
+  // separately below and from 50 pcs where the rate changes (live 2026-10-16: 25 / 39 / 45 / 49 / 60 / 99 / 120 pcs)
+  const ks = Object.keys(cv).map(Number).filter(x => (x < 50) === (q < 50)).sort((x, y) => x - y);
+  let base = cv[q] != null ? +cv[q] : null;
+  if (base == null && ks.length > 1) { let i = 0; while (i < ks.length - 2 && ks[i + 1] < q) i++; const x0 = ks[i], x1 = ks[i + 1]; base = cv[x0] + (cv[x1] - cv[x0]) * (q - x0) / (x1 - x0); }
+  if (base == null) base = shUnit(cv, q) * q;
+  let tot = base + (der ? der[1] * k * q : 0);
   pr.forEach((p, i) => {
     const r = SS_RATE[p.size] != null ? SS_RATE[p.size] : 1.2;
     tot += (i === 0 ? -(1.2 - r) * q : 60 + r * q) * k + (ssEffCols(p) - 1) * (60 + 0.3 * q) * k;
