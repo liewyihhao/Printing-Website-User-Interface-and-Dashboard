@@ -1474,7 +1474,9 @@ const envSide = (cfg, side) => {   // colours on a side: 0 / 1 / 2 / 4
 const envOE = cfg => /^OE/.test(cfg.model || '');
 const ENV_TYPE = { OE4496NW: 'Simili 100gsm + Peel & Seal', OE4496W: 'Simili 100gsm + Peel & Seal + Window Patching', OE9013NW: 'Simili 100gsm + Peel & Seal', EV4090NW: 'Peel & Seal + Blue Security Line + Security Slit', EV4090W: 'Peel & Seal + Blue Security Line + Security Slit + Window', EV4286NW: 'Peel & Seal + Blue Security Line + Security Slit', EV4286W: 'Peel & Seal + Blue Security Line + Security Slit + Window', EV4496NW: 'Peel & Seal + Blue Security Line + Security Slit', EV4496W: 'Peel & Seal + Blue Security Line + Security Slit + Window', EV6390NW: 'Peel & Seal + Blue Security Line', EV7010NW: 'Peel & Seal', EV9013NW: 'Peel & Seal + Blue Security Line', EV1015NW: 'Peel & Seal + Blue Security Line', IS4286NW: 'White 100gsm', IS6390NW: 'White 100gsm + Peel & Seal', OP8642NW: 'Peel & Seal + Blue Security Line', OP6344NW: 'Peel & Seal + Blue Security Line' };
 const ENV_QTY_OE = [1000, 2000, 3000, 4000, 5000, 10000, 15000, 20000];
-const ENV_QTY_EV = [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000, 10000];
+// OP6344NW takes 1,000 to 10,000 in steps of 1,000 (live price list, 2026-10-15); the other EV/IS/OP models step 500
+const ENV_QTY_OP6344 = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000];
+const ENV_QTY_EV = [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000, 9500, 10000];
 
 // ---------- Kotak Cenderahati (Excard kotak-cenderahati, live 2026-10-02): size by model; laminations and quantities depend on the
 // paper (GAC 260/300 = coated 1 side, 250..10,000; GAC 310 = 50..5,000; Metal Ice = no lamination). Prices = Excard's list (live 4/4
@@ -3640,9 +3642,11 @@ const CFG_OVERRIDES = {
     optionsOverride: {
       colour: cfg => envOE(cfg) ? ['4C (Front)'] : ['1C (Front)', '1C (Both)', '1C (Front)/2C (Back)', '1C (Front)/4C (Back)', '2C (Front)', '2C (Front)/1C (Back)', '2C (Both)', '2C (Front)/4C (Back)', '4C (Front)', '4C (Front)/1C (Back)', '4C (Front)/2C (Back)', '4C (Both)'],
       ex_envelopetype: cfg => [ENV_TYPE[String(cfg.model || '').split(' — ')[0]] || 'Peel & Seal'],
+      inc_compulsory: cfg => [/^OE4496W/.test(cfg.model || '') ? 'Die-Cutting, Folding + Gluing, Window Patching' : 'Die-Cutting, Folding + Gluing'],
     },
     placeholderExact: ['env_fk', 'env_bk', 'env_fm', 'env_bm', 'quantity'],
-    qtyOptions: cfg => envOE(cfg) ? ENV_QTY_OE : ENV_QTY_EV,
+    hideWhen: { inc_compulsory: cfg => !envOE(cfg) },
+    qtyOptions: cfg => envOE(cfg) ? ENV_QTY_OE : /^OP6344/.test(cfg.model || '') ? ENV_QTY_OP6344 : ENV_QTY_EV,
   },
   'Kotak Cenderahati — Litho': {
     hide: ['inc_printmethod'],
