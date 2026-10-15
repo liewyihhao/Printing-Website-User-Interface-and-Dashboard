@@ -74,4 +74,4 @@ function verifyCart(body, user) {
   return { ok: true };
 }
 
-module.exports = { priceLine, verifyCart, boot };
+module.exports = { priceLine, verifyCart, boot, context: () => (boot(), CTX) };

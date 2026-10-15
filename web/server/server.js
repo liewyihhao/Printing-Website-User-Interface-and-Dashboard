@@ -395,6 +395,10 @@ async function api(req, res, pathname, query) {
     body.userId = me.id;
     // (user, 2026-09-29) no order without its artwork: every job carries at least one file from Artwork Storage
     if (me.type === 'customer' && body.items.some(it => !Array.isArray(it.artworkRefs) || !it.artworkRefs.length)) return send(res, 400, { error: 'Please upload the artwork for every job in your cart.' });
+    // every line is priced again on the server from its configurator choices; the browser's price is display only
+    const rp = reprice.verifyCart(body, me);
+    if (rp.error) return send(res, 400, rp);
+    body.subtotal = Math.round((body.items || []).reduce((a, it) => a + (Number(it.lineTotal) || 0), 0) * 100) / 100;
     // member promo code / store coupon: re-verify server-side (owner, minimum spend, limits) and use the server's discount
     if (body.coupon) {
       const r = admin.checkAnyCoupon(body.userId, body.coupon, body.subtotal);
@@ -403,10 +407,6 @@ async function api(req, res, pathname, query) {
       if (Math.abs((Number(body.couponDiscount) || 0) - r.discount) > 0.01) return send(res, 400, { error: 'Your discount code amount has changed. Please refresh your cart and try again.' });
       body.coupon = r.code; body.couponDiscount = r.discount;
     } else { body.couponDiscount = 0; }
-    // every line is priced again on the server from its configurator choices; the browser's price is display only
-    const rp = reprice.verifyCart(body, me);
-    if (rp.error) return send(res, 400, rp);
-    body.subtotal = Math.round((body.items || []).reduce((a, it) => a + (Number(it.lineTotal) || 0), 0) * 100) / 100;
     const pm = (body.payment && body.payment.method) || 'bank_transfer';
     if (!payments.methodAvailable(pm)) return send(res, 400, { error: 'That payment method is not available right now. Please choose another.' });
     const vt = admin.verifyTotals(body, me && me.type === 'customer' ? me : null);
