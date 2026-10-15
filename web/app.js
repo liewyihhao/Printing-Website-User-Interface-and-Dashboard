@@ -1354,10 +1354,29 @@ function kkLerp(pts, q, low) {
   if (q > ks[ks.length - 1]) { const a = ks[ks.length - 2], b = ks[ks.length - 1]; return pts[b] + (pts[b] - pts[a]) / (b - a) * (q - b); }
   let i = 0; while (ks[i + 1] < q) i++; const a = ks[i], b = ks[i + 1]; return pts[a] + (pts[b] - pts[a]) * (q - a) / (b - a);
 }
+// Excard's stored list has a few broken small-quantity points (a 20 or 30 pc price below the 10 pc one). Live, a laminated card costs
+// the same as its Gloss/Matte twin; the rest were read from the live order form (2026-10-16).
+const KK_LIVE = { 'A7 (74mm x 105mm)|Linen 240gsm|4C (Front)|Not Required': { 20: 38.6 }, 'A6 (105mm x 148mm)|Super White 240gsm|4C (Both)|Not Required': { 30: 46.7 },
+  '2DL (198mm x 210mm)|Super White 240gsm|4C (Both)|Not Required': { 20: 59.15 }, '2DL (198mm x 210mm)|Metal Ice 250gsm|4C (Both)|Not Required': { 20: 74.4 } };
+let KK_REPAIRED = null;
+function kkCurves(c) {
+  if (KK_REPAIRED && KK_REPAIRED.src === c) return KK_REPAIRED.curves;
+  const out = {};
+  Object.keys(c.curves).forEach(k => { out[k] = Object.assign({}, c.curves[k], KK_LIVE[k] || {}); });
+  Object.keys(out).forEach(k => {
+    const v = out[k], tw = /Gloss Lamination/.test(k) ? k.replace('Gloss Lamination', 'Matte Lamination') : /Matte Lamination/.test(k) ? k.replace('Matte Lamination', 'Gloss Lamination') : null;
+    const t = tw && c.curves[tw]; if (!t) return;
+    const ks = Object.keys(v).map(Number).sort((x, y) => x - y);
+    for (let i = 1; i < ks.length; i++) { const q = ks[i]; if (q < 500 && +v[q] < +v[ks[i - 1]] - 0.001 && t[q] != null && +t[q] >= +v[ks[i - 1]]) v[q] = +t[q]; }
+  });
+  KK_REPAIRED = { src: c, curves: out }; return out;
+}
+
 function kkBase(cfg, q) {
   const E = typeof window !== 'undefined' && window.PricingEngine, c = E && E.DATA.params.kadkahwin_plx; if (!c) return null;
-  const lam = KK_GAC.test(cfg.paper || '') ? cfg.lamination : 'Not Required';
-  const cv = c.curves[[cfg.size, cfg.paper, cfg.printcolour, lam].join('|')]; if (!cv) return null;
+  // Simili takes no lamination on the form, but Excard prices it on its Matte Lamination (Front) curve (live 2026-10-16, 8 sizes / colours exact)
+  const lam = KK_GAC.test(cfg.paper || '') ? cfg.lamination : /^Simili/.test(cfg.paper || '') ? 'Matte Lamination (Front)' : 'Not Required';
+  const cv = kkCurves(c)[[cfg.size, cfg.paper, cfg.printcolour, lam].join('|')]; if (!cv) return null;
   if (cv[q] != null) return +cv[q];
   const ks = Object.keys(cv).map(Number).sort((a, b) => a - b), r = k => cv[k] / k;
   // the cheap litho points (a per-piece rate well below both neighbours) are not part of the regular rate curve
