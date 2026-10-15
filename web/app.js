@@ -1249,49 +1249,74 @@ const woHsFields = () => {
 // leather (no Brown on Excard), fixed binding/cover size/front frosted sheet/content spec, pages 5-12 follow pages 1-4, 10..200 pcs.
 // Prices = Excard's list (3,900 curves exact). ----------
 
-// ---------- Voucher (Excard www /spec/Litho/Voucher, live 2026-10-02). Option rules from a full size x form x paper crawl:
-// perforation lines by size and form (Book has no 0 and goes higher), sets 10/25 on Art Card, spot colours on colour papers (Simili
-// gets spot + 4C), Loose has its own quantity list and no sets; Book shows Craft Paper front + Craft Card back, Pad Craft Card back.
-// Prices: our curves (repaired, 30+ live points exact) for 4C on non-card papers; perforation above 2 lines costs the same as 2.
-// Art Card = the Art Paper 100gsm price + a paper surcharge (1.27 / 1.02 per m2 of sheets, small minimum, double for 4C Both; ~3%).
-// Spot colours = a 1-colour price by m2 of paper + a per-plate step, sampled live; numbering/perforation/form add the same as on 4C. ----------
-const VO_K = 1.2705;
-const VO_SPOT = ['1C(Front)', '1C(Both)', '2C(Front)', '2C(Both)', '2C(Front),1C(Back)'];
-const VO_PLATES = { '1C(Front)': 1, '1C(Both)': 2, '2C(Front)': 2, '2C(Front),1C(Back)': 3, '2C(Both)': 4 };
-const VO_P1 = [[6.3, 110.53], [12.6, 132.13], [63, 181.68], [157.5, 269.35], [630, 973.2]];
+// ---------- Voucher (Excard v4 voucher-pad / voucher-book / voucher-loose, live 2026-10-15). Options from the live order form:
+// Pad / Book / Loose; spot colours (1C/2C, with K100 / M100 inks) on colour papers and Simili, 4C on Gloss/Matte Art and Simili;
+// Gloss Art Card 230/260 must take a varnish (UV or Gloss Water Base, Front or Both) and nothing else does; sheets 10/25/50;
+// perforation 0-5 (Pad, Loose) or 1-6 (Book), 0-3 / 1-3 on Art Card. Prices (live price lists, 40 sampled lists x 66 points):
+//  - 4C on paper: our curves (exact live).
+//  - spot colours: the 4C (Front) price of the same paper + the size's 1C offset (exact per size) + an extra-plate add-on that
+//    grows with press sheets (pieces x the size's press-sheet factor F); Simili adds a small residual. Exact on all 12 sizes.
+//  - Art Card: the Art Paper 100gsm price + the size's card+front-varnish surcharge (exact per size) + back varnish / 260gsm /
+//    4C Both add-ons by press sheets. Within 0.25% on 145x210, ~0.8% on other sizes; Loose within 0.5%.
+//  - perforation above 2 lines costs the same as 2 (live). ----------
+const VO_TAB = {"F":{"145mm x 210mm":1,"90mm x 140mm":0.535,"105mm x 145mm":0.5375,"145mm x 145mm":0.515,"125mm x 175mm":1.0025,"90mm x 190mm":0.535,"107mm x 190mm":0.535,"60mm x 210mm":0.4,"55mm x 213mm":0.7,"95mm x 225mm":0.535,"120mm x 230mm":1.0025,"105mm x 300mm":1},"SP1":{"145mm x 210mm":"-lgx,-ldb,-lgv,-lgx,-ldb,-lgv,-lgx,-lgu,-lgx,-ldd,-ldb,-ldd,-ldg,-ldc,-ldf,-ldg,-lgx,-ldc,-ldb,-lgs,-ldg,-ldb,-ldg,-ldg,-lgx,-ldb,-khn,-lgx,-lgx,-khn,-lde,-ldg,-n4x,-ldb,-khi,-phn,-lgs,-n4x,-tss,-lgu,-n4x,-vgs,-ldb,-pl4,-wub,-ldc,-phn,-y0m,-khk,-tss,-130l,-ke1,-vgu,-16jn,-n4w,-wud,-1c1a,-n4w,-y0l,-1fyi,-pol,-1192,-1l94,-phn,-130l,-1ohi","90mm x 140mm":"-ldg,-ldc,-ldb,-ldg,-l9u,-l9u,-ldd,-ldb,-ldb,-l9v,-ldb,-ldb,-lde,-ldb,-lda,-ldd,-ldg,-l9w,-ldc,-l9t,-ldb,-ldb,-ldb,-ldb,-ldg,-l9v,-l9u,-l9u,-ldg,-ldb,-l9u,-ldg,-ldg,-ldb,-l9u,-ke1,-ldb,-ldb,-n4x,-ldg,-ldd,-n1b,-lde,-ke4,-pl4,-lde,-ke1,-phn,-l9w,-n4x,-tpb,-ldf,-n1c,-vda,-ldb,-pl4,-wu8,-ldb,-phl,-xx3,-ke1,-rqr,-1195,-ke1,-tpb,-12x4","105mm x 145mm":"-lgx,-lde,-ldb,-ldb,-lgx,-ldb,-ldg,-lde,-ldf,-lgx,-lgy,-lgx,-lgx,-lgx,-ldg,-lgw,-ldb,-ldb,-ldg,-lgx,-lgx,-ldb,-ldb,-ldg,-lgx,-lgx,-lgu,-ldb,-ldd,-lgx,-lgx,-lgx,-lgx,-lgx,-ldb,-ke1,-ldb,-ldd,-n4w,-ldf,-lgx,-n4x,-lgx,-khi,-pl4,-ldg,-ke1,-pl4,-ldb,-n4x,-tsx,-lgx,-n4x,-vgs,-ldg,-pl4,-wu8,-ldg,-pl4,-y0k,-khi,-ru9,-11cm,-ke1,-tsw,-130o","145mm x 145mm":"-lke,-lkd,-lke,-lkf,-lo0,-lke,-lke,-lkh,-lkh,-lkg,-lkf,-lke,-lkh,-lkh,-lke,-lkg,-lkg,-lnx,-lkj,-lkd,-lnx,-lkg,-lkg,-lkd,-lo0,-lkd,-lnx,-lke,-lke,-lkh,-lkf,-lkd,-lkh,-lke,-lkg,-kl4,-lkj,-lkh,-nby,-lke,-lkg,-nby,-lkg,-kl4,-ps6,-lkf,-kl5,-pon,-lkg,-nby,-tzx,-lkf,-nby,-vkd,-lkd,-ps6,-wxv,-lkf,-pon,-y47,-kl5,-s1b,-11g4,-kl4,-tzv,-1347","125mm x 175mm":"-l6d,-l6d,-l6d,-l2t,-l2s,-l2q,-l2r,-l2t,-l2s,-l2r,-l68,-l2s,-l2q,-l2r,-l2t,-l2r,-l2r,-l2r,-l6d,-l68,-l68,-l6c,-l2p,-l2p,-l6b,-l2r,-k6y,-l2t,-l2r,-k3i,-l68,-l6d,-mu9,-l2r,-k6y,-paf,-l2r,-mud,-ti9,-l2r,-mub,-v68,-l6b,-pak,-wjo,-l6b,-paf,-xq1,-k6y,-ti8,-12q2,-k73,-v68,-165n,-mu8,-wjo,-1bu8,-mu8,-xq2,-1frc,-pah,-1121,-1l21,-pah,-12q1,-1o6y","90mm x 190mm":"-l9w,-l9t,-l9s,-l9v,-l9u,-lde,-l9u,-l9v,-l9v,-l9t,-l9s,-l9s,-l9s,-l9s,-ldd,-l9u,-l9t,-ldb,-ldg,-l9u,-l9w,-ldg,-ldb,-l9u,-ldb,-l9t,-ldg,-ldb,-l9u,-ldc,-ldc,-ldf,-l9u,-l9s,-l9s,-ke1,-l9s,-ldc,-n1g,-l9t,-l9t,-n1b,-l9t,-ke3,-phl,-ldf,-ke1,-phl,-l9s,-n1e,-tpb,-l9u,-n1d,-v9u,-l9u,-phl,-wqq,-ldg,-phl,-xx2,-ke6,-rqq,-115i,-ke1,-tpb,-12x1","107mm x 190mm":"-l9w,-l9u,-l9u,-l9v,-l9w,-l9u,-l9u,-l9s,-ldb,-l9u,-ldd,-l9u,-l9u,-ldd,-l9t,-l9u,-ldg,-ldb,-l9t,-ldg,-ldb,-l9u,-ldb,-l9u,-ldg,-ldb,-ldf,-l9s,-lde,-ldg,-l9u,-ldg,-ldd,-l9u,-ldd,-ke4,-ldb,-l9t,-n4x,-ldb,-ldb,-n1f,-ldf,-ke1,-pl4,-ldb,-ke6,-phn,-ldb,-n4w,-tpg,-ldb,-n1f,-vdb,-l9u,-pl4,-wud,-ldb,-phn,-xx4,-ke6,-rqt,-1194,-ke6,-tpe,-12x4","60mm x 210mm":"-l6d,-l68,-l69,-l9v,-l9u,-l9u,-l6b,-l9v,-l9v,-l9t,-l6b,-lde,-l9s,-l9s,-ldb,-l9s,-ldb,-ldb,-l6a,-ldb,-ldd,-l69,-l9u,-ldg,-l9w,-ldf,-lgw,-l9v,-ldb,-ldb,-l9v,-lgw,-lgs,-ldg,-ldb,-ldb,-ldg,-ldd,-khl,-ldg,-lgu,-ke3,-ldg,-ldf,-n4u,-ldf,-ldc,-n4x,-ldb,-khn,-pl4,-ldc,-ke1,-rqs,-lgs,-n4s,-tsw,-ldb,-n4y,-vgt,-ldc,-pl4,-wu8,-ldb,-pl3,-y0l","55mm x 213mm":"-l2s,-l2w,-l2r,-l2r,-l2r,-l2s,-l2r,-l2u,-l2r,-l2r,-l2r,-l2r,-l2r,-l2r,-l2r,-l2r,-l68,-l2r,-l2r,-l2r,-l2r,-l2u,-l68,-l6d,-l2r,-l2w,-l2s,-l2q,-l2r,-l2r,-l2s,-l2r,-k3g,-l2r,-l2s,-mud,-l2w,-k3h,-paf,-l2r,-k3h,-paj,-l68,-k3h,-rg7,-l2s,-mud,-ter,-l2s,-paf,-wjo,-l2r,-pak,-xmf,-k3h,-rg7,-10yf,-k3h,-ter,-14e3,-k3h,-v2r,-165i,-mud,-wjo,-19vn","95mm x 225mm":"-l6d,-l6a,-l68,-l6d,-l6d,-l6b,-l6b,-l68,-l6d,-l2t,-l6d,-l6d,-l6b,-l6d,-l9s,-l6b,-l6b,-l9u,-l6a,-l6b,-l9u,-l6d,-l9w,-l9u,-l6a,-l9u,-lkh,-l69,-l9u,-lo0,-l6b,-l9u,-lgx,-l6d,-lke,-khl,-l9u,-lgu,-n4x,-l9u,-lgx,-n4w,-ldb,-ke6,-pl4,-ldg,-khn,-pl3,-lke,-n4x,-tsx,-lgu,-n4x,-vgu,-ldb,-pl4,-wud,-lde,-pl4,-y0l,-khm,-ru8,-1194,-khn,-tsx,-130o","120mm x 230mm":"-l9u,-l9u,-l6d,-l68,-l9u,-l9u,-l9u,-l9s,-l9w,-l68,-l68,-l9t,-l9u,-l6d,-l9t,-l6a,-l9u,-l9u,-l9u,-l9t,-l9u,-l68,-l6d,-l9r,-l9u,-l69,-kaj,-l9u,-l9s,-kak,-l9u,-l6d,-mxt,-l9u,-kaj,-pe2,-l9u,-mxw,-tpb,-l9u,-mxu,-v9u,-l9u,-phn,-wna,-l6d,-pe2,-xti,-kaj,-tpd,-12ti,-kah,-v9s,-1694,-mxu,-wn8,-1bxu,-mxr,-xti,-1fuy,-pe2,-115l,-1l1x,-pe2,-12ti,-1oaf","105mm x 300mm":"-lgv,-ldb,-lgx,-lgx,-ldb,-lgv,-lgx,-lgs,-lgx,-ldb,-ldd,-ldd,-ldg,-ldb,-ldf,-ldf,-lgv,-ldb,-ldb,-lgu,-lde,-ldb,-ldg,-ldg,-lgw,-ldc,-khn,-lgx,-lgv,-khn,-ldg,-ldg,-n4x,-ldd,-khi,-pl4,-lgu,-n4y,-tsx,-lgu,-n4x,-vgs,-ldb,-pl4,-wu8,-ldb,-pl4,-xx4,-khk,-tsw,-130n,-ke1,-vgt,-16g7,-n4w,-wu9,-1c1b,-n4w,-xx4,-1fyf,-pol,-1194,-1l91,-pl4,-130n,-1ohi"},"KC":{"145mm x 210mm":"7cl,7nb,8c0,7jo,8fk,9pg,7ud,947,aza,84y,9pb,cg7,8fh,aak,ezz,8q6,aza,hna,90q,bke,k71,94c,cg7,mu8,9er,dq1,pe6,9pg,f3i,s1g,azb,lgv,14s7,cg9,s1b,1hpw,ezy,yi8,1ud8,hna,14s2,27b4,k6z,1b20,2jrc,mud,1hpw,2wsq,s1b,1ud6,3mdr,x8e,27b5,4byv,1289,2jrc,51gi,17bv,2wsq,5r8p,1ciz,39je,6gq7,1hpw,3mds,767p","90mm x 140mm":"6yl,723,7ga,75p,7g8,84z,795,7ud,8q4,796,81c,97s,7g7,8fk,9sw,7n8,8q6,ae3,7qw,946,az8,7qu,97r,bny,7xu,9ib,d1f,84x,9wg,e7t,8q1,b9v,ke4,97t,e48,q69,9wh,hcn,vyi,aak,ke5,128c,aza,nbz,187p,bnz,q69,1e3g,e47,vyi,1q1x,grh,128e,223z,j7t,187o,2e2o,lgy,1e3h,2pxm,ntn,1k2m,31zv,q68,1q1w,3dup","105mm x 145mm":"75n,7g7,7na,797,7qv,8fm,7g7,81g,97s,7jt,8fj,9lz,7qr,8q3,aak,7qw,97p,aza,81g,9ba,bke,88e,9pb,cg8,88e,a3h,dq1,8fh,aak,f00,947,byk,l9u,9lu,ezx,rn5,aai,ic0,xx5,aza,l9w,14ak,bkj,oi8,1agu,cg8,rn7,1gxp,ezv,xx4,1thi,hn7,14ak,2617,k70,1agu,2ioi,mjo,1gxp,2vbq,ozv,1n42,37vj,rn5,1thi,3kf7","145mm x 145mm":"7qw,81g,8fh,7u8,8j3,9id,84x,8x4,a74,8c0,9et,azc,8iy,9sx,buy,8ml,a70,cna,8tn,ahn,dfk,90q,azc,epe,97t,bgx,g6d,9id,brh,hjo,aan,dx4,osv,azc,hnb,wcl,buz,l9u,13id,cn9,osx,1auy,dfh,smf,1i46,epg,wcl,1pkb,hna,13id,2468,khn,1auy,2iog,nbv,1i47,2xkx,qdb,1pkb,3c37,tba,1wti,3qp3,wcl,2468,457e","125mm x 175mm":"6kh,6v2,797,6rj,7cr,88h,724,7qr,8x5,723,88g,9wg,7cn,8j1,c23,7g8,8x7,e7t,7na,97o,g9u,7xv,9zx,ibz,7xu,aza,ke4,88f,c21,mjo,8x7,hg6,wxu,9wg,mg8,17c0,c25,rn9,1hpz,e7s,wu9,1s44,g9v,124s,22b3,i8e,17bz,2cp8,mg8,1hpz,2xkv,qrf,1s42,3i9l,us6,22b5,42uq,yzw,2cp6,4nje,1345,2mzv,587z,17bz,2xkv,5t3q","90mm x 190mm":"6o0,7na,81d,7jo,81b,8ti,7qr,8fh,9ia,7ud,8q1,a70,81f,97t,avo,84x,9ib,bgx,8c0,9we,ccp,8fh,aam,dc0,8mj,al7,elu,8tn,aza,fzb,9id,cna,mn6,a70,fz5,t7o,azb,jid,1068,bkf,mn7,16n5,ccl,pvo,1deq,d8h,t7o,1jz5,fz5,1068,1xem,iq6,16n5,2aqm,l9u,1der,2nz4,o0l,1jz5,31i3,qny,1qxp,3exl,t7o,1xem,3sd1","107mm x 190mm":"6o0,7n8,7xu,7ud,81d,90o,7jt,8iy,9sy,7qw,90n,aon,81g,9b8,bgx,84v,9sx,c99,8bx,aak,d1g,8mn,aol,e0l,8q1,b6d,fho,90r,bgx,gv0,9wh,dc0,nx4,aon,gv2,v2r,bgx,ke5,11qs,c93,nx4,193g,cxx,r94,1fuy,e0o,v2r,1n7n,gv3,11qr,214p,jpg,193g,2f90,mg7,1fuz,2t63,pak,1n7n,37a9,s4x,1u2o,3lek,v2r,214n,3zio","60mm x 210mm":"6kj,6ri,723,6rm,75n,7qt,6v3,7cn,8fj,6yk,7qr,8x7,75n,81g,9id,75n,8fg,aaj,7cm,8ml,bv0,7jo,8to,dc0,7na,97q,bo0,7qw,9ic,cg5,8bv,cjo,hjr,8x9,cg6,mcm,9id,f00,r95,aak,hjs,wjo,bv3,jzx,11jo,d8e,mcm,16g5,cg6,r95,1gcl,eic,wjo,1qg5,gny,11jo,20g3,ij3,16g5,2ack,khi,1bg4,2kcj,mcl,1gcl,2u5g","55mm x 213mm":"6dg,6gv,6rl,6kf,6rj,798,6ke,722,7qs,6rk,794,88f,6rl,7js,8mk,6yk,7qw,9i9,721,81b,aoq,725,8c0,c5n,796,8fm,dfh,795,8q3,esx,7ub,bde,l9t,88f,esy,rqr,8mj,i1d,y43,9er,l6d,14l4,aoo,olu,1bg2,c21,rqr,1hq0,esy,y43,1unq,hg7,14l4,27pb,k6y,1bg2,2ku3,mjo,1hq0,2xvh,p3h,1oaf,3atd,rqr,1unq,3nr7","95mm x 225mm":"6v3,75p,7qv,726,7qr,8q1,799,84w,9lu,7g7,8mk,aza,7na,97t,d4s,7ud,9lw,fe3,84y,a00,hn5,8c0,avt,jwe,8j2,c21,mcl,8q4,d1e,olu,9lz,itk,pol,azc,olu,xfh,d1g,yba,14oq,fe2,pol,1cfc,hqu,tid,1k2m,jwe,xfh,1rit,olu,14oo,26me,tb5,1cfd,2lte,o44,1k2n,30wy,r94,1riv,3g0c,ue3,1z2m,3v0b,xfh,26mf,4a3t","120mm x 230mm":"75p,7na,88e,7jp,88h,9er,7qr,8x4,aop,7xv,9i8,c5n,88e,a00,elz,8j2,aor,h5l,8tl,b9u,jlu,90q,c5m,m26,97o,dc1,opb,9eu,elt,r95,al3,kz5,13lt,c5n,r5k,1g1z,elu,xbw,1sb6,h5n,13lu,24uy,jpb,19s4,2h7o,m26,1g1z,2tr7,r5i,1sb5,3id6,w24,24ux,479h,115j,2h7o,4w5t,1693,2tr9,5kv9,1auy,35wv,69o5,1g21,3id6,6ykm","105mm x 300mm":"7cn,7nb,8c0,7jp,8fm,9pe,7ud,947,az9,84x,9pb,cg7,8fh,aai,ezz,8q6,aza,hna,90q,bke,k3h,94c,cg7,mu9,9es,dq2,pe6,9pg,f3i,rqr,aza,lgv,14l4,cg9,rqr,1hfd,ezy,yem,1u9p,hna,14l1,26x0,k3h,1b5h,2jut,mud,1hfc,2wem,rqr,1u9p,3lzn,x8e,26wz,4bha,124s,2jut,512b,17bv,2wem,5qgh,1cbx,398v,6g1h,1hfc,3lzn,75mq"},"PD":{"2":"2s:69u,5k:69u,6y:69u,8c:69z,b4:66d,dw:67h,go:66d,jg:69u,ku:69u,m8:69u,p0:69u,rs:69w,yq:66d,15o:68o,1cm:69u,1jk:67j,1qi:66d,1xg:68o,2bc:69u,2p8:69u,2w6:66d,334:684,3h0:7gc,3uw:7g7,4mo:7g7,4tm:8q6,5eg:8q6,5sc:8od,668:8mk,6r2:9we,6y0:9we,7ps:9sx,9n8:c21,bko:d8e,di4:e7t,ffk:f73,hd0:h21,jag:hxu,n5c:ji8,r08:lke,uv4:mud,yq0:p73,12kw:r5n","3":"2s:cg7,5k:cjt,6y:cg7,8c:cjt,b4:cg7,dw:cg7,go:cg7,jg:cg7,ku:cjo,m8:cg7,p0:cg7,rs:cik,yq:cg7,15o:chd,1cm:cjo,1jk:cg7,1qi:cg7,1xg:chd,2bc:chy,2p8:cg7,2w6:cg7,334:cg7,3h0:ewj,3uw:exl,4mo:ewe,4tm:hcq,5eg:hg7,5sc:hcq,668:hcq,6r2:jpb,6y0:jss,7ps:jpg,9n8:o7o,bko:qgx,di4:sfh,ffk:ue1,hd0:y0l,jag:zvo,n5c:130l,r08:178e,uv4:19l4,yq0:1ehn,12kw:1ib5","4":"2s:iq1,5k:iq1,6y:iq1,8c:iq6,b4:imk,dw:iq1,go:iq6,jg:iq1,ku:iq1,m8:iq1,p0:iq1,rs:iq3,yq:iq1,15o:iq1,1cm:iq1,1jk:inq,1qi:iq1,1xg:iq3,2bc:iq1,2p8:iq4,2w6:iq6,334:iob,3h0:mcq,3uw:mg7,4mo:mcl,4tm:q2r,5eg:q2r,5sc:q2r,668:q2r,6r2:tlp,6y0:tpb,7ps:tlu,9n8:10db,bko:13lu,di4:16na,ffk:19l4,hd0:1f68,jag:1hpw,n5c:1miy,r08:1sss,uv4:1wfc,yq0:23ol,12kw:29d6"},"SIM80":"2s:73,5k:3m,6y:3j,8c:3l,b4:-3,dw:2c,go:3o,jg:3i,ku:70,m8:3h,p0:3l,rs:4o,yq:-1,15o:3l,1cm:3h,1jk:18,1qi:-2,1xg:4o,2bc:1r,2p8:3,2w6:5,334:1t,3h0:74,3uw:3g,4mo:-2,4tm:3n,5eg:3l,5sc:3m,668:3g,6r2:3m,6y0:72,7ps:1,9n8:3h,bko:3i,di4:3k,ffk:3g,hd0:-2,jag:3h,n5c:71,r08:-1,uv4:-1,yq0:3n,12kw:3j","SIM100":"2s:3h,5k:1,6y:1,8c:0,b4:-3j,dw:-15,go:4,jg:0,ku:-3,m8:0,p0:3h,rs:-1,yq:1,15o:19,1cm:-5,1jk:-2,1qi:1,1xg:2,2bc:-1,2p8:-1q,2w6:3,334:3,3h0:3f,3uw:2c,4mo:0,4tm:0,5eg:-3n,5sc:3i,668:3g,6r2:5,6y0:3n,7ps:-4,9n8:-4,bko:-5,di4:3,ffk:0,hd0:0,jag:0,n5c:-1,r08:-3i,uv4:-2,yq0:0,12kw:-3k","VB":"2s:0,5k:0,6y:0,8c:0,b4:0,dw:0,go:0,jg:0,ku:0,m8:0,p0:0,rs:ak,yq:1kj,15o:2xu,1cm:4ba,1jk:5e1,1qi:62w,1xg:6qb,2bc:88e,2p8:9lx,2w6:aak,334:axj,3h0:cg7,3uw:dq4,4mo:ggx,4tm:h5n,5eg:j7t,5sc:kmx,668:lyk,6r2:nx4,6y0:opb,7ps:rcq,9n8:yba,bko:152r,di4:1c1b,ffk:1iw9,hd0:1prh,jag:1wfc,n5c:2a8z,r08:2nz0,uv4:31p6,yq0:3fbq,12kw:3t1w","G260":"2s:ap,5k:hn,6y:hn,8c:hn,b4:l4,dw:md,go:oq,jg:oq,ku:s7,m8:vo,p0:vt,rs:y4,yq:12w,15o:16d,1cm:1dg,1jk:1i3,1qi:1o0,1xg:1so,2bc:23u,2p8:2ga,2w6:2na,334:2qt,3h0:31b,3uw:3c0,4mo:3x9,4tm:44c,5eg:4lz,5sc:4uq,668:573,6r2:5l4,6y0:5s7,7ps:6dg,9n8:7xu,bko:9ba,di4:aza,ffk:cg7,hd0:dx4,jag:fe6,n5c:iiy,r08:lgx,uv4:oi8,yq0:rg7,12kw:uhn","X4B":"2s:zh,5k:12w,6y:16c,8c:12r,b4:16c,dw:16b,go:12r,jg:12w,ku:16d,m8:168,p0:12w,rs:12v,yq:16d,15o:13y,1cm:12w,1jk:155,1qi:16g,1xg:140,2bc:14i,2p8:16d,2w6:16f,334:14m,3h0:168,3uw:140,4mo:12w,4tm:16i,5eg:16j,5sc:16f,668:16d,6r2:12u,6y0:12q,7ps:16i,9n8:16c,bko:12s,di4:16d,ffk:12t,hd0:12w,jag:12w,n5c:16d,r08:168,uv4:168,yq0:12w,12kw:131"};
+const VO_SPOT = ['1C (Front)', '1C (Both)', '2C (Front)', '2C (Both)', '2C (Front) + 1C (Back)'];
+// plate count per spot colour (old saved carts may carry the compact labels)
+const VO_PLATES = { '1C (Front)': 1, '1C (Both)': 2, '2C (Front)': 2, '2C (Front) + 1C (Back)': 3, '2C (Both)': 4,
+  '1C(Front)': 1, '1C(Both)': 2, '2C(Front)': 2, '2C(Front),1C(Back)': 3, '2C(Both)': 4 };
+const VO_VARNISH = ['UV Varnish (Front)', 'UV Varnish (Both)', 'Gloss Water Base Varnish (Front)', 'Gloss Water Base Varnish (Both)'];
 const VO_PAD_QTY = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 1000];
 const VO_LOOSE_QTY = [250, 500, 1000, 1500, 2000, 2500, 5000, 10000, 15000, 20000, 25000, 50000];
-const voCard = cfg => /^Art Card/.test(cfg.paper || '');
+const voCard = cfg => /Art Card/.test(cfg.paper || '');
 const voColourPaper = cfg => /^Colour Paper/.test(cfg.paper || '');
 const voSimili = cfg => /^Simili/.test(cfg.paper || '');
 const voColours = cfg => voColourPaper(cfg) ? VO_SPOT : voSimili(cfg) ? VO_SPOT.concat(['4C (Front)', '4C (Both)']) : ['4C (Front)', '4C (Both)'];
 function voPerfs(cfg) {
-  const sz = cfg.size || '', book = cfg.packform === 'Book';
-  const g = s => ['90mm x 140mm', '105mm x 145mm', '145mm x 145mm', '125mm x 175mm'].indexOf(s) >= 0 ? 2 : ['95mm x 225mm', '120mm x 230mm'].indexOf(s) >= 0 ? 4 : s === '105mm x 300mm' ? 5 : 3;
-  let max = g(sz);
-  if (book) max = ['90mm x 140mm', '105mm x 145mm', '145mm x 145mm'].indexOf(sz) >= 0 ? 2 : ['125mm x 175mm', '90mm x 190mm', '107mm x 190mm'].indexOf(sz) >= 0 ? 3 : sz === '105mm x 300mm' ? 6 : 4;
+  const book = cfg.packform === 'Book', max = voCard(cfg) ? 3 : book ? 6 : 5;
   const out = []; for (let i = book ? 1 : 0; i <= max; i++) out.push(String(i)); return out;
 }
-const voArea = cfg => { const m = (cfg.size || '').match(/\d+/g) || [90, 140]; return m[0] * m[1] / 1e6; };
+// decoded tables: grid arrays (22 quantities x sets 10/25/50, in sen) and curves [[pieces, sen]]
+const VO_D = (() => {
+  const arr = s => s.split(',').map(v => v[0] === '-' ? -parseInt(v.slice(1), 36) : parseInt(v, 36));
+  const crv = s => s.split(',').map(p => { const [x, y] = p.split(':'); return [parseInt(x, 36), y[0] === '-' ? -parseInt(y.slice(1), 36) : parseInt(y, 36)]; });
+  const byPcs = a => { const m = {}; a.forEach((v, i) => { const pc = VO_PAD_QTY[Math.floor(i / 3)] * [10, 25, 50][i % 3]; (m[pc] = m[pc] || []).push(v); });
+    return Object.keys(m).map(Number).sort((x, y) => x - y).map(pc => [pc, m[pc].reduce((s, v) => s + v, 0) / m[pc].length]); };
+  const D = { F: VO_TAB.F, SP1: {}, KC: {}, SP1c: {}, KCc: {}, PD: {} };
+  Object.keys(VO_TAB.SP1).forEach(s => { D.SP1[s] = arr(VO_TAB.SP1[s]); D.KC[s] = arr(VO_TAB.KC[s]); D.SP1c[s] = byPcs(D.SP1[s]); D.KCc[s] = byPcs(D.KC[s]); });
+  [2, 3, 4].forEach(p => { D.PD[p] = crv(VO_TAB.PD[p]); });
+  ['SIM80', 'SIM100', 'VB', 'G260', 'X4B'].forEach(k => { D[k] = crv(VO_TAB[k]); });
+  return D;
+})();
+const voIp = (pts, x) => { if (x <= pts[0][0]) return pts[0][1]; for (let i = 1; i < pts.length; i++) if (x <= pts[i][0]) { const [a, pa] = pts[i - 1], [b, pb] = pts[i]; return pa + (pb - pa) * (x - a) / (b - a); }
+  const n = pts.length, [a, pa] = pts[n - 2], [b, pb] = pts[n - 1]; return pb + (pb - pa) * (x - b) / (b - a); };
+// per-size table value: exact on the Pad/Book grid, by pieces otherwise (Loose)
+const voAt = (grid, curve, q, sets, pcs) => { const gi = VO_PAD_QTY.indexOf(q) * 3 + [10, 25, 50].indexOf(+sets); return (gi >= 0 && [10, 25, 50].indexOf(+sets) >= 0 && VO_PAD_QTY.indexOf(q) >= 0) ? grid[gi] : voIp(curve, pcs); };
 function voPriceBase(cfg, q) {
   if (!cfg.size || !cfg.paper || !cfg.packform) return null;
-  const loose = cfg.packform === 'Loose', col = cfg.ex_printcolour || '4C (Front)', spot = VO_PLATES[col] != null;
-  const sets = loose ? '' : String(cfg.sets || '50'), sheets = loose ? q : q * (+sets || 50), m2 = sheets * voArea(cfg);
+  const loose = cfg.packform === 'Loose', col = cfg.ex_printcolour || '4C (Front)', plates = VO_PLATES[col];
+  const sets = loose ? '' : String(cfg.sets || '50'), pcs = loose ? q : q * (+sets || 50);
   const perf = String(Math.min(2, +(cfg.perforation || 0)));
-  const V = { packform: cfg.packform, size: cfg.size, paper: voCard(cfg) ? 'Art Paper 100gsm' : cfg.paper, colour: spot ? '4C (Front)' : col, sets, numbering: cfg.numbering === 'Yes' ? 'Yes' : 'No', perforation: perf };
-  const full = plQuote(110, V, q); if (full == null) return null;
-  let p = full;
+  const paper = String(cfg.paper).replace(/^Gloss Art Paper/, 'Art Paper').replace(/^Gloss Art Card/, 'Art Card');
+  const V = { packform: cfg.packform, size: cfg.size, paper, colour: col, sets, numbering: cfg.numbering === 'Yes' ? 'Yes' : 'No', perforation: perf };
+  const sz = cfg.size, f = VO_D.F[sz] || 1, e = pcs * f;
+  let p;
   if (voCard(cfg)) {
-    const gsm260 = /260/.test(cfg.paper), u = Math.max(gsm260 ? 11 : 9, (gsm260 ? 1.27 : 1.02) * m2) * (col === '4C (Both)' ? 2 : 1);
-    p = full + u * VO_K;
-  } else if (spot) {
-    const ref = plQuote(110, Object.assign({}, V, { packform: loose ? 'Loose' : 'Pad', numbering: 'No', perforation: '0' }), q);
-    let p1; if (m2 <= VO_P1[0][0]) p1 = VO_P1[0][1]; else if (m2 >= VO_P1[4][0]) p1 = VO_P1[4][1] + (m2 - VO_P1[4][0]) * 1.4896;
-    else { let i = 0; while (VO_P1[i + 1][0] < m2) i++; const [a, pa] = VO_P1[i], [b, pb] = VO_P1[i + 1]; p1 = pa + (pb - pa) * (m2 - a) / (b - a); }
-    const step = 80.04 + 0.283 * Math.max(0, m2 - 96.8);
-    p = (p1 + (VO_PLATES[col] - 1) * step) * (voSimili(cfg) ? 0.965 : 1) + (ref != null ? full - ref : 0);
+    if (!VO_D.KC[sz]) return null;
+    const base = plQuote(110, Object.assign({}, V, { paper: 'Art Paper 100gsm', colour: col === '4C (Both)' ? '4C (Both)' : '4C (Front)' }), q); if (base == null) return null;
+    p = base + voAt(VO_D.KC[sz], VO_D.KCc[sz], q, sets, pcs) / 100;
+    if (/Both/.test(cfg.ex_lamination || '')) p += voIp(VO_D.VB, e) / 100;
+    if (/260/.test(paper)) p += voIp(VO_D.G260, e) / 100;
+    if (col === '4C (Both)') p += voIp(VO_D.X4B, e) / 100;
+  } else if (plates) {
+    if (!VO_D.SP1[sz]) return null;
+    const base = plQuote(110, Object.assign({}, V, { colour: '4C (Front)' }), q); if (base == null) return null;
+    p = base + voAt(VO_D.SP1[sz], VO_D.SP1c[sz], q, sets, pcs) / 100;
+    if (plates > 1) p += voIp(VO_D.PD[plates], e) / 100;
+    if (/Simili 80/.test(paper)) p += voIp(VO_D.SIM80, e) / 100; else if (/Simili 100/.test(paper)) p += voIp(VO_D.SIM100, e) / 100;
+  } else {
+    p = plQuote(110, V, q); if (p == null) return null;
   }
-  return Math.round(p * 100) / 100;
+  return Math.round(p * 20) / 20;
 }
 const voPanelFields = () => { const out = []; let after = 'perforation'; for (let i = 1; i <= 7; i++) { const vals = []; for (let n = Math.max(1, i - 1); n <= 6; n++) vals.push(String(n)); out.push({ key: 'vo_panel_' + i, label: 'Panel ' + i + ' Width (mm)', type: 'number', min: 45, section: 'Optional Finishing', after, showWhen: { field: 'perforation', values: vals } }); after = 'vo_panel_' + i; } return out; };
 
@@ -3502,22 +3527,30 @@ const CFG_OVERRIDES = {
     qtyOptions: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 150, 200],
   },
   'Voucher — Litho': {
-    hide: ['inc_printmethod', 'colour', 'ex_lamination', 'ex_perforationline'],
-    order: ['size', 'packform', 'vo_fc', 'vo_bc', 'paper', 'sets', 'ex_printcolour', 'numbering', 'perforation'],
-    label: { packform: 'Form', size: 'Size', paper: 'Paper Material (Content)', sets: 'Sheets per Pad / Book', ex_printcolour: 'Print Colour', numbering: 'Numbering', perforation: 'Perforation Line (s)' },
-    optLabel: { numbering: { No: 'Not required', Yes: 'Required (All Panels)' } },
+    hide: ['inc_printmethod', 'colour', 'ex_perforationline'],
+    order: ['packform', 'size', 'vo_fc', 'vo_bc', 'paper', 'ex_printcolour', 'vo_fk', 'vo_bk', 'vo_fm', 'vo_bm', 'ex_lamination', 'sets', 'numbering', 'vo_fpn', 'perforation'],
+    label: { packform: 'Form', size: 'Size', paper: 'Paper', sets: 'Sheets per Pad / Book', ex_printcolour: 'Print Colour', ex_lamination: 'Lamination', numbering: 'Numbering', perforation: 'Perforation Line' },
+    optLabel: { numbering: { No: 'Not Required', Yes: 'Required' },
+      paper: { 'Art Paper 100gsm': 'Gloss Art Paper 100gsm', 'Art Paper 130gsm': 'Gloss Art Paper 130gsm', 'Art Paper 150gsm': 'Gloss Art Paper 150gsm', 'Art Card 230gsm (2 sides coated)': 'Gloss Art Card 230gsm (2 sides coated)', 'Art Card 260gsm (2 sides coated)': 'Gloss Art Card 260gsm (2 sides coated)' } },
     addFields: [
       { key: 'vo_fc', label: 'Paper Material (Front Cover)', options: ['Craft Paper'], section: 'General', neutral: true, after: 'packform', showWhen: { field: 'packform', value: 'Book' } },
       { key: 'vo_bc', label: 'Paper Material (Back Cover)', options: ['Craft Card'], section: 'General', neutral: true, after: 'packform', showWhen: { field: 'packform', values: ['Pad', 'Book'] } },
+      { key: 'vo_fk', label: 'Front K100', options: ENV_SPOT, section: 'General', neutral: true, after: 'ex_printcolour', showWhen: { field: 'ex_printcolour', values: ["1C (Front)","1C (Both)","2C (Front)","2C (Both)","2C (Front) + 1C (Back)"] } },
+      { key: 'vo_bk', label: 'Back K100', options: ENV_SPOT, section: 'General', neutral: true, after: 'vo_fk', showWhen: { field: 'ex_printcolour', values: ["1C (Both)","2C (Both)","2C (Front) + 1C (Back)"] } },
+      { key: 'vo_fm', label: 'Front M100', options: ENV_SPOT, section: 'General', neutral: true, after: 'vo_bk', showWhen: { field: 'ex_printcolour', values: ["2C (Front)","2C (Both)","2C (Front) + 1C (Back)"] } },
+      { key: 'vo_bm', label: 'Back M100', options: ENV_SPOT, section: 'General', neutral: true, after: 'vo_fm', showWhen: { field: 'ex_printcolour', values: ["2C (Both)"] } },
+      { key: 'vo_fpn', label: 'First Panel Without Numbering', options: ['No'], section: 'General', neutral: true, after: 'numbering' },
     ].concat(voPanelFields()),
     optionsOverride: {
-      sets: cfg => voCard(cfg) ? ['10', '25'] : ['10', '25', '50'],
+      sets: ['10', '25', '50'],
+      ex_lamination: cfg => voCard(cfg) ? VO_VARNISH : ['Not Required'],
       ex_printcolour: voColours,
       perforation: voPerfs,
     },
     hideWhen: { sets: cfg => cfg.packform === 'Loose' },
     defaultOpt: { packform: 'Pad', numbering: 'No', sets: '10' },
-    placeholderExact: ['quantity'],
+    placeholderExact: ['quantity', 'vo_fk', 'vo_bk', 'vo_fm', 'vo_bm'],
+    placeholderWhen: { ex_lamination: cfg => voCard(cfg) },
     qtyOptions: cfg => cfg.packform === 'Loose' ? VO_LOOSE_QTY : VO_PAD_QTY,
     priceBase: voPriceBase,
   },
