@@ -1327,18 +1327,20 @@ const voPanelFields = () => { const out = []; let after = 'perforation'; for (le
 // interpolated on the regular points (live: 1-2% off). H/S add-on = per foil size by quantity (same on every card size / paper);
 // envelope add-on by envelope size by quantity (live samples). ----------
 const KK_QTY = [10, 20, 30, 40, 50].concat(Array.from({ length: 19 }, (_, i) => 100 + i * 50), Array.from({ length: 10 }, (_, i) => 1100 + i * 100));
-const KK_GAC = /^Gloss Art Card/;
+const KK_GAC = /^(Gloss Art Card|Matte Art Paper)/;   // papers that take (and need) lamination
 const KK_PAPERS = ['Gloss Art Card 230gsm (2 sides coated)', 'Gloss Art Card 260gsm (2 sides coated)', 'Gloss Art Card 310gsm (2 sides coated)', 'Gloss Art Card 360gsm (2 sides coated)',
   'Super White 240gsm', 'Metal Ice 250gsm', 'Linen 240gsm', 'Suwen 240gsm', 'Simili 140gsm', 'Matte Art Paper 150gsm'];
 const KK_FOLD = { 'DL (99mm x 210mm)': null, '2DL (198mm x 210mm)': ['1Fa – Landscape', '2Fd – Landscape', '1Fa – Portrait'], 'A4 (210mm x 297mm)': ['Not Required', '1Fa – Landscape', '2Fa – Landscape', '2Fb – Landscape', '2Fd – Landscape'],
   'A5 (148mm x 210mm)': ['Not Required', '1Fa – Landscape', '2Fd – Landscape'], 'A6 (105mm x 148mm)': ['Not Required', '1Fa – Landscape'], 'A7 (74mm x 105mm)': null, 'Square (140mm x 280mm)': ['1Fa – Landscape', '2Fd – Landscape'] };
 const kkFolded = cfg => { const o = KK_FOLD[cfg.size]; return !!(o && cfg.kk_fold && cfg.kk_fold !== 'Not Required'); };
+// envelope choices by size and fold (Excard live order form, 2026-10-15)
 function kkEnvelopes(cfg) {
-  const s = cfg.size, f = kkFolded(cfg);
+  const s = cfg.size, f = kkFolded(cfg) ? cfg.kk_fold : 'Not Required', two = /^2F/.test(f);
   if (s === 'DL (99mm x 210mm)') return ['Not Required', 'White (DL)', 'Pink (DL)'];
-  if (s === '2DL (198mm x 210mm)') return ['Not Required', 'White (DL)'];
-  if (s === 'A4 (210mm x 297mm)' && f) return ['Not Required', 'White (A5)', 'Pink (A5)'];
-  if (s === 'A5 (148mm x 210mm)' && f) return ['Not Required', 'White (A6)', 'Pink (A6)'];
+  if (s === '2DL (198mm x 210mm)') return two ? ['Not Required', 'White (DL)'] : ['Not Required', 'White (DL)', 'Pink (DL)'];
+  if (s === 'A6 (105mm x 148mm)') return f === 'Not Required' ? ['Not Required', 'White (A6)', 'Pink (A6)'] : ['Not Required'];
+  if (s === 'A5 (148mm x 210mm)') return f === 'Not Required' ? ['Not Required', 'White (A5)', 'Pink (A5)'] : ['Not Required', 'White (A6)', 'Pink (A6)'];
+  if (s === 'A4 (210mm x 297mm)') return f === 'Not Required' ? ['Not Required'] : ['Not Required', 'White (A5)', 'Pink (A5)'];
   if (s === 'Square (140mm x 280mm)') return ['Not Required', 'Cream (Square)'];
   return ['Not Required'];
 }
@@ -1350,7 +1352,11 @@ const KK_HS_BY = { 'DL (99mm x 210mm)': ['90mm x 30mm', '90mm x 70mm', '95mm x 2
 const KK_HS_ADD = { '90mm x 30mm': { 10: 53.15, 100: 53.15, 500: 53.1, 1000: 78.35, 2000: 130.2 }, '90mm x 70mm': { 100: 66.4, 1000: 144.75, 2000: 249.75 },
   '101mm x 144mm': { 100: 93, 1000: 247.05, 2000: 427.7 }, '95mm x 206mm': { 100: 106.25, 1000: 321.45, 2000: 563.2 }, '144mm x 206mm': { 100: 150.1, 1000: 421.05, 2000: 722.6 },
   '194mm x 206mm': { 100: 192.6, 1000: 544.55, 2000: 936.45 }, '206mm x 294mm': { 10: 245.75, 100: 274.95, 1000: 777, 2000: 1334.9 } };
-const KK_ENV_ADD = { DL: { 100: 7.95, 1000: 71.7 }, A6: { 100: 7.95, 1000: 54.45 }, A5: { 100: 11.95, 500: 51.8, 1000: 99.6 } };
+// envelope add-on by envelope, live CASH in sen per quantity (Excard price list 2026-10-15). Excard's list adds nothing for an envelope on a
+// two-fold card (2Fa / 2Fb / 2Fd) or on the Square card.
+const KK_ENV_PTS = (() => { const raw = {"Pink (DL)":"10:135,20:265,30:400,40:535,50:665,100:1325,150:1860,200:2520,250:3055,300:3720,350:4375,400:4915,450:5345,500:6110,550:6670,600:7250,650:7875,700:8500,750:9045,800:9750,850:10175,900:10890,950:11495,1000:12085,1100:13285,1200:14195,1300:15425,1400:16525,1500:17625,1600:18750,1700:20030,1800:21160,1900:22315,2000:23625","White (DL)":"10:400,20:400,30:530,40:535,50:530,100:795,150:1060,200:1595,250:1860,300:2125,350:2780,400:2920,450:3085,500:3715,550:4015,600:4195,650:4820,700:5045,750:5325,800:5630,850:6060,900:6375,950:6715,1000:7170,1100:7710,1200:8220,1300:9050,1400:9485,1500:10185,1600:10645,1700:11525,1800:12260,1900:12750,2000:13665","Pink (A6)":"10:400,20:395,30:530,40:530,50:535,100:800,150:1065,200:1195,250:1725,300:1990,350:2215,400:2390,450:2640,500:3190,550:3345,600:3390,650:3745,700:4115,750:4560,800:4630,850:4990,900:5220,950:5600,1000:5975,1100:6440,1200:6785,1300:7560,1400:7785,1500:8730,1600:8990,1700:9965,1800:10245,1900:10970,2000:11545","White (A6)":"10:400,20:395,30:395,40:530,50:535,100:800,150:930,200:1195,250:1595,300:1860,350:1950,400:2255,450:2375,500:2925,550:3080,600:3125,650:3480,700:3720,750:4165,800:4230,850:4595,900:4685,950:5070,1000:5445,1100:5910,1200:6250,1300:6895,1400:7120,1500:7935,1600:8190,1700:9035,1800:9315,1900:9910,2000:10480","Pink (A5)":"10:400,20:535,30:530,40:660,50:800,100:1195,150:1860,200:2255,250:2660,300:3455,350:3970,400:4515,450:4900,500:5310,550:6110,600:6525,650:6980,700:7570,750:8090,800:8720,850:9270,900:9525,950:10350,1000:10630,1100:11735,1200:12720,1300:13445,1400:14460,1500:15490,1600:16665,1700:17455,1800:18650,1900:19580,2000:20665","White (A5)":"10:400,20:535,30:530,40:660,50:800,100:1195,150:1595,200:2255,250:2660,300:3055,350:3835,400:4115,450:4500,500:5180,550:5580,600:5995,650:6715,700:7040,750:7560,800:8055,850:8605,900:8865,950:9690,1000:9965,1100:10805,1200:11790,1300:12650,1400:13395,1500:14430,1600:15470,1700:16260,1800:17320,1900:18255,2000:19070"};
+  const out = {}; Object.keys(raw).forEach(k => { out[k] = {}; raw[k].split(',').forEach(p => { const [q, v] = p.split(':'); out[k][+q] = +v / 100; }); }); return out; })();
+const kkEnvFree = cfg => /^Square/.test(cfg.size || '') || (kkFolded(cfg) && /^2F/.test(cfg.kk_fold || ''));
 function kkLerp(pts, q, low) {
   const ks = Object.keys(pts).map(Number).sort((a, b) => a - b); if (pts[q] != null) return pts[q];
   if (q < ks[0]) return low ? low(pts[ks[0]], q, ks[0]) : pts[ks[0]];
@@ -1390,8 +1396,7 @@ function kkPriceBase(cfg, q) {
     const t = KK_HS_ADD[cfg['kk_hs_size_' + i]]; if (!t) continue;
     p += kkLerp(t, q);
   }
-  const env = (cfg.envelope || '').match(/\((DL|A5|A6)\)/);
-  if (env && KK_ENV_ADD[env[1]]) p += kkLerp(KK_ENV_ADD[env[1]], q, (v, qq, k0) => v * qq / k0);
+  const et = KK_ENV_PTS[cfg.envelope]; if (et && !kkEnvFree(cfg)) p += kkLerp(et, q);
   return Math.round(p * 100) / 100;
 }
 const kkHsFields = () => {
