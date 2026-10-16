@@ -732,13 +732,25 @@ const bbNormal = cfg => cfg.papermaterials === 'Normal Paper';
 // back-colour surcharge rate per size (RM per book x set beyond 1,919), keyed size|L (landscape-left / portrait-top
 // binding along the same edge) or size|S (the other edge); from live q1000 quotes
 const BB_BACK_K = {"210x297|L":0.017202, "176x250|L":0.009553, "250x353|L":0.017202, "90x140|L":0.003429, "90x177|L":0.005895, "95x210|L":0.004598, "95x225|L":0.004598, "105x145|L":0.005894, "105x175|L":0.004599, "107x190|L":0.004548, "110x210|L":0.004573, "120x210|L":0.009401, "120x230|L":0.009528, "125x175|L":0.005895, "135x210|L":0.005869, "160x240|L":0.009528, "165x210|L":0.005894, "170x190|L":0.005894, "180x280|L":0.017176, "190x210|L":0.009503, "190x270|L":0.017177, "190x290|L":0.017177, "190x297|L":0.017176, "192x268|L":0.017176, "206x240|L":0.009554, "206x330|L":0.009554, "145x210|L":0.005869, "148x190|S":0.009553, "148x291|S":0.009528, "173x206|S":0.009502, "194x205|S":0.009528, "210x291|S":0.009553, "145x148|L":0.004598, "145x190|L":0.005895, "145x210|S":0.009528, "210x297|S":0.009528, "176x250|S":0.009553, "105x145|S":0.014965, "192x268|S":0.009528, "210x270|L":0.017176, "291x420|L":0.017176, "330x420|L":0.017202};
+// back-colour surcharge on top of the stored list (live price-list sweep 2026-10-16, 37 sizes): it depends on book-sets S only and
+// follows one of six step profiles; R(S) = the size's surcharge at 1,000 books x 50 sets x its profile, last slope carried on
+const BB_BACK_R1 = {"105x145|L":261.28,"105x145|S":715.25,"105x175|L":195.65,"107x190|L":194.4,"110x210|L":196.09,"120x210|L":319.75,"120x230|L":443.41,"125x175|L":261.72,"135x210|L":260.87,"145x148|L":195.65,"145x190|L":260.88,"145x210|L":261.3,"145x210|S":443.4,"148x190|S":444.25,"148x291|S":443.84,"160x240|L":443.83,"165x210|L":261.71,"170x190|L":261.73,"173x206|S":443.83,"176x250|L":444.67,"176x250|S":444.65,"180x280|L":825.82,"190x210|L":443.4,"190x270|L":827.1,"190x290|L":825.83,"190x297|L":826.24,"192x268|L":826.26,"192x268|S":443.4,"194x205|S":444.24,"206x240|L":444.26,"206x330|L":444.68,"210x270|L":825.83,"210x291|S":444.24,"210x297|L":826.25,"210x297|S":443.4,"250x353|L":826.27,"291x420|L":827.52,"330x420|L":826.27,"90x140|L":137.64,"90x177|L":260.9,"95x210|L":196.92,"95x225|L":195.65};
+const BB_BACK_PROF = {"138":[[7500,0],[10000,0.0062],[15000,0.037],[25000,0.2523],[50000,1]],"196":[[7500,0],[10000,0.0086],[15000,0.149],[25000,0.4285],[50000,1]],"261":[[7500,0],[10000,0.0892],[15000,0.186],[25000,0.4571],[50000,1]],"320":[[4000,0],[4500,0.0305],[5000,0.0371],[7500,0.0344],[10000,0.1099],[15000,0.2199],[25000,0.4729],[50000,1]],"444":[[4000,0],[4500,0.0429],[5000,0.0439],[7500,0.0869],[10000,0.1316],[15000,0.2631],[25000,0.4805],[50000,1]],"826":[[2000,0],[2500,0.0205],[3000,0.0205],[3500,0.0415],[4000,0.0425],[4500,0.0621],[5000,0.0631],[7500,0.1256],[10000,0.1667],[15000,0.2713],[25000,0.4792],[50000,1]]};
+function bbBackR(ek, S) {
+  const r1 = BB_BACK_R1[ek] != null ? BB_BACK_R1[ek] : (BB_BACK_K[ek] || 0) * 50000 - 33; if (!(r1 > 0)) return 0;
+  const ck = Object.keys(BB_BACK_PROF).reduce((a, b) => Math.abs(b - r1) < Math.abs(a - r1) ? b : a), P = BB_BACK_PROF[ck];
+  if (S <= P[0][0]) return 0;
+  for (let i = 1; i < P.length; i++) if (S <= P[i][0]) { const [s0, g0] = P[i - 1], [s1, g1] = P[i]; return r1 * (g0 + (g1 - g0) * (S - s0) / (s1 - s0)); }
+  const [s0, g0] = P[P.length - 2], [s1, g1] = P[P.length - 1]; return r1 * (g1 + (g1 - g0) * (S - s1) / (s1 - s0));
+}
 function bbCurve(V, q) {
   const E = typeof window !== 'undefined' && window.PricingEngine; if (!E) return null;
   const c = E.DATA.params.billbook_plx && E.DATA.params.billbook_plx.curves; if (!c) return null;
   const key = L => [V.binding, V.size, V.orientation, V.bindinglocation, String(L), V.printcolour, V.sets, V.holepunching].join('|');
   const at = (L) => { const v = c[key(L)]; if (!v) return null; const qs = Object.keys(v).map(Number).sort((a, b) => a - b);
     if (v[q] != null) return +v[q]; for (let i = 1; i < qs.length; i++) if (q < qs[i]) { const a = qs[i - 1], b = qs[i]; return +v[a] + (+v[b] - +v[a]) * (q - a) / (b - a); }
-    return +v[qs[qs.length - 1]] * q / qs[qs.length - 1]; };
+    // past the list (2,000 / 2,200 books): Excard carries the 500 -> 1,000 slope on (live A4 within 0.1%, small sizes within 3%)
+    const A = qs[qs.length - 2], B = qs[qs.length - 1]; return A != null ? +v[B] + (+v[B] - +v[A]) * (q - B) / (B - A) : +v[B] * q / B; };
   return at;
 }
 // custom size: Excard prices the first standard size (in height order) that holds it, plus RM10 (live 3/3 exact)
@@ -764,7 +776,7 @@ function bbPriceBase(cfg, q) {
   const S = q * (+sets), d = bbDims(size), [w, hgt] = d.split('x').map(Number), A = (w * hgt) / 30450;
   if (BB_BACK.indexOf(V.printcolour) >= 0) {
     const sameEdge = (V.orientation === 'Landscape') === (V.bindinglocation === 'Left side binding');
-    const k = BB_BACK_K[d + '|' + (sameEdge ? 'L' : 'S')] || 0; p += Math.max(0, k * S - 33);
+    const ek = d + '|' + (sameEdge ? 'L' : 'S'), k = BB_BACK_K[ek] || 0; p += bbBackR(ek, S);
     if (cfg.back_print_layer === 'All Layers' && L > 1) p += (L - 1) * k * S;   // back printed on every layer (A4 live exact)
   }
   if (bbNormal(cfg)) {
@@ -776,7 +788,7 @@ function bbPriceBase(cfg, q) {
   else if (L >= 2 && cfg.copy_change === 'Yes — Add Copy Change') p += 13.975 * L;
   return Math.round((p + extra) * 20) / 20;
 }
-const BB_QTY = Array.from({ length: 100 }, (_, i) => (i + 1) * 10);
+const BB_QTY = Array.from({ length: 100 }, (_, i) => (i + 1) * 10).concat([2000, 2200]);   // Excard lists 2,000 and 2,200 too
 
 // ---------- Computer Form (Excard www spec/Litho/Computer_Form + its price-list generator, live 2026-10-02) ----------
 // 9.5" x 11" continuous form. Multi Layer: Ups, Print Colour, Layer (2-5), Copy Change, a paper per layer, Numbering;
