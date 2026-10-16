@@ -1553,10 +1553,12 @@ function magPriceBase(cfg, q) {
     const n = magPer(h, w, 304, 432); if (!n) return null; const s = Math.ceil(q / n);
     return Math.round(magF(s) + 0.1 * q + (st ? 0.46 * s : 0));
   }
-  // custom die-cut / round: magnets up to ~130 mm on the short side nest on a 304 x 466 mm sheet with an 8 mm gap, bigger ones on
-  // 300 x 420 with 4 mm (live 2026-10-17, 47 quotes: mean 3.1%, was 5.9%; 150 x 100 mm fits 6, 200 x 150 mm 2)
-  const gp = (sw, sh, g) => { const x = (a, b) => Math.floor((sw + g) / (a + g)) * Math.floor((sh + g) / (b + g)); return Math.max(x(h, w), x(w, h)); };
-  const n = Math.min(h, w) >= 130 ? magPer(h, w, 300, 420) : gp(304, 466, 8); if (!n) return null; const s = Math.ceil(q / n);
+  // custom die-cut / round: one 300 x 438 mm sheet, 6 mm gap, rows of one orientation plus a strip of the other (reverse-engineered
+  // from 47 live quotes 2026-10-16: mean 1.4%, worst 6.3%, was 3.2% / 20.5%; 160 x 110 mm fits 5, 150 x 100 mm 6, 200 x 150 mm 2)
+  const fit = (sw, sh, g) => { let m = 0; for (const [a, b] of [[h, w], [w, h]]) {
+    for (let k = 0; k * (a + g) <= sw + g; k++) { const r = sw - k * (a + g); m = Math.max(m, k * Math.floor((sh + g) / (b + g)) + (r >= b ? Math.floor((r + g) / (b + g)) * Math.floor((sh + g) / (a + g)) : 0)); }
+    for (let k = 0; k * (b + g) <= sh + g; k++) { const r = sh - k * (b + g); m = Math.max(m, k * Math.floor((sw + g) / (a + g)) + (r >= a ? Math.floor((r + g) / (a + g)) * Math.floor((sw + g) / (b + g)) : 0)); } } return m; };
+  const n = fit(300, 438, 6); if (!n) return null; const s = Math.ceil(q / n);
   return Math.round(magF(s) * 1.13 + 5 + 0.1 * q + (st ? 0.46 * s : 0));
 }
 
