@@ -4017,6 +4017,8 @@ function pkgEmb(lane, q, mm2) { if (lane === 'sr') return Math.max(85.8, 78 + 0.
   if (q <= 1000) return Math.max(129, 117.7 + 0.00911 * mm2);
   return 313.7 + 0.0268 * mm2 + PKG_LERP({ 2000: 0, 5000: 26.6, 20000: 198.6, 100000: 1210.65 }, q); }
 // both lanes for a full spec: { std: {price, days} | null, sr: {...} | null, open }
+// per-style corrections measured live (2026-10-17, two sizes each): the hanger box B044X costs more to make than its flat size suggests
+const PKG_STYLE_F = { B044X: { std: { 300: 1.087, 1000: 1.078, 5000: 1.073, 10000: 0.992 }, sr: 1.24 } };
 function pkgQuote(sp) {
   const open = pkgOpen(sp); if (!open || pkgSizeErr(sp)) return null;
   const q = +sp.qty || 0; if (!q) return { open, std: null, sr: null };
@@ -4043,13 +4045,17 @@ function pkgQuote(sp) {
     // Excard's Standard lane never goes below its smallest box (live 91 x 118.5 mm flat); long thin pieces sit ~10% above it up to 2,000 pcs
     { const asp = Math.max(open[0], open[1]) / Math.max(1, Math.min(open[0], open[1])); base = Math.max(base, PKG_LERP(PKG_STD_FLOOR, q) * (q <= 2000 ? 1 + 0.1 * Math.min(1, Math.max(0, (asp - 2) / 2)) : 1)); }
     const mk = (board ? 'B' : 'G') + gsm; if (PKG_MATF[mk]) base += (PKG_LERP(PKG_MATF[mk], q) - 1) * PKG_LERP(PKG_REF.std, q) * A / PKG_REF.A;
+    // live 2026-10-17: small boxes (flat sheet under 0.13 m2) run ~5.5% above the fit from 5,000 to 10,000 pcs (4 of 4 styles)
+    if (A < 0.13 && q > 5000) base *= 1 + 0.055 * Math.min(1, (q - 5000) / 5000);
+    { const sf = (PKG_STYLE_F[sp.style] || {}).std; if (sf) base *= typeof sf === 'number' ? sf : PKG_LERP(sf, q); }
     std = { price: Math.round((base + fin('std')) * 20) / 20, days: 6 + ((sp.hs || []).length || sp.win || coat === 'UV Varnish' ? 1 : 0) };
   }
   if (pkgSrOK(sp)) {
-    const ups = Math.max(Math.floor(566 / open[0]) * Math.floor(660 / open[1]), Math.floor(566 / open[1]) * Math.floor(660 / open[0]));
+    // a flat sheet longer than ~520 mm prints one up on Short Run (live: C001A 534 x 291 mm = 1 up, exact)
+    const ups = Math.max(open[0], open[1]) > 520 ? 1 : Math.max(Math.floor(566 / open[0]) * Math.floor(660 / open[1]), Math.floor(566 / open[1]) * Math.floor(660 / open[0]));
     if (ups >= 1) { const S = Math.ceil(q / ups);
       const base = 75.203 + 1.870 * S + 2.939 * Math.sqrt(S) + 0.144 * q + 1.245 * q * A + 4.271 * Math.sqrt(q) + (PKG_SR_MAT[gsm] || 0) * A * q;
-      sr = { price: Math.round((base + fin('sr')) * 20) / 20, days: 2 + (sp.suv ? 2 : 0) + (sp.emb || (sp.hs || []).length ? 1 : 0) }; }
+      sr = { price: Math.round((base * ((PKG_STYLE_F[sp.style] || {}).sr || 1) + fin('sr')) * 20) / 20, days: 2 + (sp.suv ? 2 : 0) + (sp.emb || (sp.hs || []).length ? 1 : 0) }; }
   }
   return { open, std, sr };
 }
