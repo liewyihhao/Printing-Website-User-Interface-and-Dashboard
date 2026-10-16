@@ -2529,7 +2529,7 @@ function stkKissDelta(area, q) {
 const STK_FC = [[1,30.39],[2,31.42],[3,33.49],[4,34.6],[5,36.18],[6,37.6],[7,37.6],[8,39.85],[9,41.95],[12,44.75],[13,46.65],[17,53.45],[18,53.45],[20,56.2],[25,63.12],[28,67.2],[29,67.2],[32,71.55],[34,76.7],[40,76.7],[42,85.83],[50,96.65],[56,107.15],[63,115.9],[67,126.98],[84,129.3],[112,166.65],[125,184.36],[167,234.4],[250,292.65],[278,333.15],[300,333.15],[313,333.15],[334,335.6],[417,416.65],[500,482.45],[1250,975.65]];
 const STK_FD = [[2,28.3],[5,31.55],[6,34.85],[11,52.8],[12,52.8],[14,54.45],[16,55.55],[17,57.7],[20,62.1],[21,62.1],[23,69.7],[28,75.15],[30,76.25],[31,77.85],[32,80.6],[34,85.5],[36,89.03],[38,89.03],[39,89.03],[40,90.35],[42,96.9],[45,101.25],[50,115.45],[56,115.45],[63,115.45],[67,117.6],[72,141.55],[75,142.65],[76,142.65],[84,156.82],[100,177.5],[112,187.35],[152,197.25],[167,240.2],[179,242.6],[200,277.1],[500,423.5]];
 const STK_PIECE = 0.005;
-const STK_MATR = {"Mirror Kote (Strong Glue)":[[10,1.355],[67,1.5162]],"Transparent OPP":[[10,1.1467],[34,1.213],[67,1.3699]],"White PP (Polypropylene)":[[10,1.4636],[67,1.7059]],"White PE (Polyethylene)":[[10,1.5722],[67,1.9299]],"Synthetic Paper":[[10,1.6797],[34,2.0141],[67,2.1022]],"Printing Paper":[[10,1.1109],[67,1.1114]],"Brown Craft Paper":[[10,1.3281],[67,1.4991]],"Matte Silver Polyester":[[10,1.5722],[67,1.9213]],"Bright Silver Polyester":[[10,1.5722],[67,1.9213]],"Removable Transparent OPP":[[10,1.2732],[67,1.3699]],"Removable White PP":[[10,1.4087],[67,1.6369]]};
+const STK_MATR = {"Mirror Kote (Strong Glue)":[[10,1.355],[67,1.5162],[167,1.4012],[834,1.4082],[1000000,1.4082]],"Transparent OPP":[[10,1.1467],[34,1.213],[67,1.3699],[167,1.2576],[834,1.185],[1000000,1.185]],"White PP (Polypropylene)":[[10,1.4636],[67,1.7059],[84,1.5406],[167,1.5892],[834,1.4862],[1000000,1.4862]],"White PE (Polyethylene)":[[10,1.5722],[67,1.9299],[167,1.8022],[834,1.6865],[1000000,1.6865]],"Synthetic Paper":[[10,1.6797],[34,2.0141],[67,2.1022],[167,1.9755],[834,1.8486],[1000000,1.8486]],"Printing Paper":[[10,1.1109],[67,1.1114],[167,1],[834,0.9969],[1000000,0.9969]],"Brown Craft Paper":[[10,1.3281],[67,1.4991],[167,1.3813],[834,1.3027],[1000000,1.3027]],"Matte Silver Polyester":[[10,1.5722],[67,1.9213],[167,1.7973],[834,1.6835],[1000000,1.6835]],"Bright Silver Polyester":[[10,1.5722],[67,1.9213],[167,1.7973],[834,1.6835],[1000000,1.6835]],"Removable Transparent OPP":[[10,1.2732],[67,1.3699],[167,1.2576],[834,1.185],[1000000,1.185]],"Removable White PP":[[10,1.4087],[67,1.6369],[167,1.5198],[834,1.4296],[1000000,1.4296]]};   // material / Mirror Kote, by sheets; 167 and 834 sheets live 2026-10-16 (100x100 cut, 2,000 / 10,000 pcs), held flat beyond (the old linear run-out reached 4-15x)
 const stkFit = (L, a, g) => Math.floor((L + g) / (a + g));
 const stkUps = (A, B, g) => (h, w) => Math.max(stkFit(A, h, g) * stkFit(B, w, g), stkFit(A, w, g) * stkFit(B, h, g));
 const STK_UPS_CUT = stkUps(330, 458, 7), STK_UPS_DIE = stkUps(257, 474, 12);
@@ -2543,6 +2543,9 @@ function stkSheetPrice(cfg, paper, h, w, q) {
   const cut = stkAt(STK_FC, sc) + STK_PIECE * q, r = paper !== 'Mirror Kote' && STK_MATR[paper] ? stkAt(STK_MATR[paper], sc) : 1;
   let p = die ? stkAt(STK_FD, sd) + (r - 1) * cut : cut * r;
   if (cfg.category === 'Custom Die-Cut') p *= 1.13;
+  // past 5,000 pcs Excard's cut-to-size price climbs faster than the sheet curve (27 live quotes 6k-200k: x(1 + 0.0329 ln(q/5000)),
+  // leave-one-out 3.2% vs 6.0% uncorrected)
+  if (!die && q > 5000) p *= 1 + 0.0329 * Math.log(q / 5000);
   return p;
 }
 function stkPriceBase(cfg, q) {
@@ -2574,7 +2577,9 @@ function stkPriceBase(cfg, q) {
     else if (cat === 'Custom Die-Cut') { const sp = stkSheetPrice(cfg, paper, h, w, q); base = sp != null ? sp : plain * stkLog(STK_CUSTOM_F, q); }
     else if (cat === 'Kiss Cut') base = plain + stkKissDelta(h * w, q);
     else {   // Rectangle/Square: a sampled cut-to-size size (or preset) keeps its exact price; everything else uses the sheet model
-      const lk = ((X.E.DATA.params.sticker_digital || {}).lookup || {})[paper] || {}, exact = !stkDie(Object.assign({}, cfg, { height: h, width: w })) && (lk[h + 'x' + w] || lk[w + 'x' + h]);
+      const lk = (paper === 'White PP (Polypropylene)' /* stored list is an old promo, ~1/3 of live (2026-10-16) */ ? null : ((X.E.DATA.params.sticker_digital || {}).lookup || {})[paper]) || {}, ek = !stkDie(Object.assign({}, cfg, { height: h, width: w })) && (lk[h + 'x' + w] || lk[w + 'x' + h]),
+        top = ek ? Math.max.apply(null, Object.keys(ek).map(Number)) : 0, a5 = ek && Math.min(h, w) === 148 && Math.max(h, w) === 210,
+        exact = ek && (q <= top || a5);   // A5 past 5,000: Excard follows the table's own slope (live 6k / 20k within 5%), not the sheet model   // the sampled table stops at 5,000 pcs; past it the sheet model prices
       const sp = exact ? null : stkSheetPrice(cfg, paper, h, w, q); base = sp != null ? sp : plain;
     }
     if (cfg.colour === '1C') base *= stkLog(STK_1C, q);
