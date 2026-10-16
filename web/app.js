@@ -2542,7 +2542,10 @@ function stkPriceBase(cfg, q) {
     // lamination and waste removal cost more on dearer materials (Synthetic ≈ ×1.3 of Mirror Kote): × (price ratio)^0.4
     const extraF = paper === 'Mirror Kote' ? 1 : Math.pow(plain / (stkRect('Mirror Kote', h, w, q) || plain), 0.4);
     const lam = (rect - plain) * extraF;
-    if (cat === 'Round') base = plain + stkShapeDelta((X.E.DATA.sticker_categories || {}).round || [], r => r.d + 'x' + r.d, h * w, q);
+    // Round = a die-cut square of the diameter, preset sizes included (live 2026-10-17: 30 / 50 mm exact, 45 / 70 mm and Synthetic 30 mm
+    // within 2.5%)
+    if (cat === 'Round') { const sp = stkSheetPrice(Object.assign({}, cfg, { category: 'Rectangle/Square', cutting_method: 'Die-Cutting' }), paper, h, w, q);
+      base = sp != null ? sp : plain + stkShapeDelta((X.E.DATA.sticker_categories || {}).round || [], r => r.d + 'x' + r.d, h * w, q); }
     else if (cat === 'Standard Shape') base = plain + stkShapeDelta((X.E.DATA.sticker_categories || {}).standard_shape || [], r => r.h + 'x' + r.w, h * w, q);
     else if (cat === 'Custom Die-Cut') { const sp = stkSheetPrice(cfg, paper, h, w, q); base = sp != null ? sp : plain * stkLog(STK_CUSTOM_F, q); }
     else if (cat === 'Kiss Cut') base = plain + stkKissDelta(h * w, q);
