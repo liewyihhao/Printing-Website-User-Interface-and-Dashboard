@@ -1905,9 +1905,9 @@ const STAMP_LINES = {
 // and hot stamping add units by total sticker area (fitted on 50x50 at 1k / 10k). Pcs / roll, core and roll direction are price-neutral.
 // Validation: grid exact; other shapes within ~5% (very wide 330 mm labels ~10% low). ----------
 const RF_U = 7.425;
-const RF_GRID = { 20: { 1000: 25, 2000: 28, 10000: 41, 50000: 83 }, 35: { 1000: 27, 2000: 32, 10000: 55, 50000: 133 },
-  50: { 1000: 30, 2000: 38, 3000: 41, 5000: 52, 10000: 77, 20000: 115, 50000: 228, 100000: 415 }, 75: { 1000: 37, 2000: 47, 10000: 125, 50000: 482 },
-  100: { 1000: 42, 2000: 56, 10000: 155, 50000: 620 }, 150: { 1000: 54, 2000: 87, 10000: 292, 50000: 1313 },
+const RF_GRID = { 20: { 1000: 25, 2000: 28, 5000: 36, 10000: 41, 50000: 83 }, 35: { 1000: 27, 2000: 32, 5000: 41, 10000: 55, 50000: 133 },
+  50: { 1000: 30, 2000: 38, 3000: 41, 5000: 52, 10000: 77, 20000: 115, 50000: 228, 100000: 415 }, 75: { 1000: 37, 2000: 47, 5000: 68, 10000: 125, 50000: 482 },
+  100: { 1000: 42, 2000: 56, 5000: 97, 10000: 155, 20000: 271, 50000: 620 }, 150: { 1000: 54, 2000: 87, 10000: 292, 50000: 1313 },
   200: { 1000: 96, 2000: 171, 10000: 732, 50000: 3541 }, 300: { 1000: 130, 2000: 234, 10000: 1030, 50000: 5009 } };
 function rfCurve(c, q) {
   const ks = Object.keys(c).map(Number).sort((a, b) => a - b);
@@ -1923,7 +1923,8 @@ function rfBase(h, w, q) {
   const a = rfCurve(RF_GRID[lo], q), b = rfCurve(RF_GRID[hi], q);
   return a + (b - a) * t;
 }
-const RF_LAM = { 'Matte Lamination': [1.78, 0.435], 'Gloss Lamination': [2.45, 0.198], 'UV Varnish': [2, 0] };
+// UV Varnish costs the same as Matte Lamination (live 2026-10-17)
+const RF_LAM = { 'Matte Lamination': [1.78, 0.435], 'Gloss Lamination': [2.45, 0.198], 'UV Varnish': [1.78, 0.435] };
 const RF_PAPER = { 'White PP': [-0.22, 0.079], 'Transparent OPP': [0.45, 0.198], 'Printing Paper': [0.33, -0.119], 'Synthetic Paper': [0.33, 0.237], 'Hologram': [2.56, 1.225] };
 function rfPrice(cfg, qty) {
   if (cfg.rf_proof === 'Yes (2 pcs)') return 42;
@@ -1936,6 +1937,7 @@ function rfPrice(cfg, qty) {
   if (RF_PAPER[cfg.rf_paper]) n += cfg.rf_paper === 'Printing Paper' ? Math.min(0, lin(RF_PAPER[cfg.rf_paper])) : lin(RF_PAPER[cfg.rf_paper], 0);
   if (/White/.test(cfg.rf_colour || '')) n += Math.max(0, -0.33 + 0.119 * A);
   if (cfg.rf_hs === '1C (Front)') n += 25.2 + 0.632 * A;
+  if (cfg.rf_cat === 'Custom Shape') n *= 1.154;   // live 2026-10-17: custom-shape die = 60 units vs 52 for the rectangle
   return Math.round(Math.round(n) * RF_U * 20) / 20;
 }
 const RF_HS_PAPERS = ['White PP', 'Transparent OPP', 'Mirror Kote'];
