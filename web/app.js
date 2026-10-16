@@ -4022,6 +4022,16 @@ function pkgEmb(lane, q, mm2) { if (lane === 'sr') return Math.max(85.8, 78 + 0.
   if (q <= 1000) return Math.max(129, 117.7 + 0.00911 * mm2);
   return 313.7 + 0.0268 * mm2 + PKG_LERP({ 2000: 0, 5000: 26.6, 20000: 198.6, 100000: 1210.65 }, q); }
 // both lanes for a full spec: { std: {price, days} | null, sr: {...} | null, open }
+// material price ratio vs Gloss Art Card 250 depends on the flat sheet size (live 2026-10-17, A001 at 0.088 / 0.126 m2 plus the 0.195 m2
+// reference box): art cards scale from the 400gsm ratio, boards from Boxboard 350, interpolated by area (clamped to the measured range)
+const PKG_MAT_SIZE = { A: [0.0878, 0.1263], G400: { 1000: [1.190, 1.219], 5000: [1.308, 1.273] }, B350: { 1000: [1.005, 0.962], 5000: [1.014, 0.985] } };
+function pkgMatRatio(mk, A, q) {
+  const ref = PKG_LERP(PKG_MATF[mk], q), anc = mk[0] === 'B' ? 'B350' : 'G400', aRef = PKG_LERP(PKG_MATF[anc], q), S = PKG_MAT_SIZE[anc];
+  const qq = Math.min(5000, Math.max(1000, q)), t = (qq - 1000) / 4000, at = i => S[1000][i] + (S[5000][i] - S[1000][i]) * t;
+  const xs = [PKG_MAT_SIZE.A[0], PKG_MAT_SIZE.A[1], PKG_REF.A], ys = [at(0), at(1), aRef], x = Math.min(xs[2], Math.max(xs[0], A));
+  const aA = x <= xs[1] ? ys[0] + (ys[1] - ys[0]) * (x - xs[0]) / (xs[1] - xs[0]) : ys[1] + (ys[2] - ys[1]) * (x - xs[1]) / (xs[2] - xs[1]);
+  return mk[0] === 'B' ? aA + (ref - aRef) : 1 + (aA - 1) * (ref - 1) / (aRef - 1);
+}
 // per-style corrections measured live (2026-10-17, two sizes each): the hanger box B044X costs more to make than its flat size suggests
 const PKG_STYLE_F = { B044X: { std: { 300: 1.087, 1000: 1.078, 5000: 1.04, 10000: 0.992 } } };
 // a narrow flat sheet too long for the 370 x 510 half press (longer than ~477 mm) goes to the full press; live 2026-10-17 B044X 454 / 470 mm
@@ -4052,7 +4062,7 @@ function pkgQuote(sp) {
     if (wsum > 0) base *= (fsum + Math.max(0, 1 - wsum)) / (wsum + Math.max(0, 1 - wsum));
     // Excard's Standard lane never goes below its smallest box (live 91 x 118.5 mm flat); long thin pieces sit ~10% above it up to 2,000 pcs
     { const asp = Math.max(open[0], open[1]) / Math.max(1, Math.min(open[0], open[1])); base = Math.max(base, PKG_LERP(PKG_STD_FLOOR, q) * (q <= 2000 ? 1 + 0.1 * Math.min(1, Math.max(0, (asp - 2) / 2)) : 1)); }
-    const mk = (board ? 'B' : 'G') + gsm; if (PKG_MATF[mk]) base += (PKG_LERP(PKG_MATF[mk], q) - 1) * PKG_LERP(PKG_REF.std, q) * A / PKG_REF.A;
+    const mk = (board ? 'B' : 'G') + gsm; if (PKG_MATF[mk]) base *= pkgMatRatio(mk, A, q);
     // live 2026-10-17: small boxes (flat sheet under 0.13 m2) run ~5.5% above the fit from 5,000 to 10,000 pcs (4 of 4 styles)
     if (A < 0.13 && q > 5000) base *= 1 + 0.055 * Math.min(1, (q - 5000) / 5000);
     { const sf = (PKG_STYLE_F[sp.style] || {}).std; if (sf) base *= typeof sf === 'number' ? sf : PKG_LERP(sf, q); }
