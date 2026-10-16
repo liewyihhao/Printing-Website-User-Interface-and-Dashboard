@@ -207,8 +207,8 @@ function stickerLookupPrice(sizeTbl,w,h,qty){
 function stickerLookupBySum(sizeTbl,w,h,qty){
   if(!sizeTbl) return null; const ks=Object.keys(sizeTbl); if(!ks.length) return null;
   if(sizeTbl[w+"x"+h]||sizeTbl[h+"x"+w]) return stickerLookupPrice(sizeTbl,w,h,qty);
-  const by={}; ks.forEach(k=>{ const p=k.split("x"), sm=(+p[0])+(+p[1]), v=stickerLookupPrice({[k]:sizeTbl[k]},+p[1],+p[0],qty); (by[sm]=by[sm]||[]).push(v); });
-  const pts=Object.keys(by).map(Number).sort((x,y)=>x-y).map(sm=>[sm,by[sm].reduce((x,y)=>x+y,0)/by[sm].length]), x=w+h;
+  const by={}; ks.forEach(k=>{ const p=k.split("x"), sm=qty>50000?(+p[0])*(+p[1]):(+p[0])+(+p[1]), v=stickerLookupPrice({[k]:sizeTbl[k]},+p[1],+p[0],qty); (by[sm]=by[sm]||[]).push(v); });
+  const pts=Object.keys(by).map(Number).sort((x,y)=>x-y).map(sm=>[sm,by[sm].reduce((x,y)=>x+y,0)/by[sm].length]), x=qty>50000?w*h:w+h;   // past 50,000 pcs price follows area (leave-one-size-out 14.6% vs 19.4% on h+w)
   if(x<=pts[0][0]) return pts[0][1];
   if(x>=pts[pts.length-1][0]){ const A=pts[pts.length-2]||pts[0], B=pts[pts.length-1]; return B[1]+(x-B[0])*(B[1]-A[1])/Math.max(B[0]-A[0],1); }
   for(let i=1;i<pts.length;i++) if(x<=pts[i][0]){ const A=pts[i-1],B=pts[i]; return A[1]+(x-A[0])/(B[0]-A[0])*(B[1]-A[1]); }
