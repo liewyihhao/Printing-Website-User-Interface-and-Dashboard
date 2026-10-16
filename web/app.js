@@ -1553,13 +1553,14 @@ function magPriceBase(cfg, q) {
     const n = magPer(h, w, 304, 432); if (!n) return null; const s = Math.ceil(q / n);
     return Math.round(magF(s) + 0.1 * q + (st ? 0.46 * s : 0));
   }
-  // custom die-cut / round: one 300 x 438 mm sheet, 6 mm gap, rows of one orientation plus a strip of the other (reverse-engineered
-  // from 47 live quotes 2026-10-16: mean 1.4%, worst 6.3%, was 3.2% / 20.5%; 160 x 110 mm fits 5, 150 x 100 mm 6, 200 x 150 mm 2)
+  // custom die-cut / round: one 302 x 424 mm sheet, 6 mm gap, rows of one orientation plus a strip of the other, RM0.11 a piece
+  // (reverse-engineered from 61 live quotes 2026-10-16, 15 of them holdouts: mean 1.3%, worst 4.8%, leave-one-size-out the same;
+  // was 6.3% / 43%. 160 x 110 mm fits 5, 210 x 140 mm 3, 210 x 210 mm 1)
   const fit = (sw, sh, g) => { let m = 0; for (const [a, b] of [[h, w], [w, h]]) {
     for (let k = 0; k * (a + g) <= sw + g; k++) { const r = sw - k * (a + g); m = Math.max(m, k * Math.floor((sh + g) / (b + g)) + (r >= b ? Math.floor((r + g) / (b + g)) * Math.floor((sh + g) / (a + g)) : 0)); }
     for (let k = 0; k * (b + g) <= sh + g; k++) { const r = sh - k * (b + g); m = Math.max(m, k * Math.floor((sw + g) / (a + g)) + (r >= a ? Math.floor((r + g) / (a + g)) * Math.floor((sw + g) / (b + g)) : 0)); } } return m; };
-  const n = fit(300, 438, 6); if (!n) return null; const s = Math.ceil(q / n);
-  return Math.round(magF(s) * 1.13 + 5 + 0.1 * q + (st ? 0.46 * s : 0));
+  const n = fit(302, 424, 6); if (!n) return null; const s = Math.ceil(q / n);
+  return Math.round(magF(s) * 1.13 + 5 + 0.11 * q + (st ? 0.46 * s : 0));
 }
 
 // ---------- Line builder (Excard readymade order form: Cap / shirts). The order is a list of lines; each line = category (Adult /
