@@ -2498,6 +2498,30 @@ function stkKissDelta(area, q) {
   if (q > 5000) return d5000 + (q - 5000) * (d5000 - d1000) / 4000;
   return stkLog([[100, d100], [1000, d1000], [5000, d5000]], q);
 }
+// ---------- Label Sticker (Digital) rectangle / custom die-cut model, reverse-engineered from Excard live CASH (2026-10-17, 90+ live
+// quotes). Excard prices by printed sheets: Cut To Size lays stickers on a 330 x 458 mm sheet with a 7 mm gap, plus RM0.005 a sticker;
+// Die-Cutting (forced when either side is under 50 mm, optional above) on ~256 x 482 mm with a 14 mm gap and its own sheet curve.
+// Other materials = Mirror Kote x a per-sheet ratio (live 60x60 calibration at 10 / 34 / 67 sheets; the stored per-material tables were
+// captured during old promotions). Custom Die-Cut = die-cut x 1.13. ----------
+const STK_FC = [[1,30.39],[2,31.42],[3,33.49],[4,34.6],[5,36.18],[6,37.6],[7,37.6],[8,39.85],[9,41.95],[12,44.75],[13,46.65],[17,53.45],[18,53.45],[20,56.2],[25,63.12],[28,67.2],[29,67.2],[32,71.55],[34,76.7],[40,76.7],[42,85.83],[50,96.65],[56,107.15],[63,115.9],[67,126.98],[84,129.3],[112,166.65],[125,184.36],[167,234.4],[250,292.65],[278,333.15],[300,333.15],[313,333.15],[334,335.6],[417,416.65],[500,482.45],[1250,975.65]];
+const STK_FD = [[2,28.3],[5,31.55],[11,52.25],[12,52.25],[14,53.35],[16,55.55],[17,57.7],[20,62.1],[21,62.1],[23,69.7],[24,69.7],[28,75.15],[30,76.25],[31,77.85],[32,81.32],[34,88.2],[36,89.3],[40,90.35],[42,90.35],[56,111.1],[63,114.35],[76,137.2],[84,156.82],[100,177.5],[152,197.25],[167,240.2],[179,246.85],[209,246.85],[500,423.5]];
+const STK_PIECE = 0.005;
+const STK_MATR = {"Mirror Kote (Strong Glue)":[[10,1.355],[67,1.5162]],"Transparent OPP":[[10,1.1467],[34,1.213],[67,1.3699]],"White PP (Polypropylene)":[[10,1.4636],[67,1.7059]],"White PE (Polyethylene)":[[10,1.5722],[67,1.9299]],"Synthetic Paper":[[10,1.6797],[34,2.0141],[67,2.1022]],"Printing Paper":[[10,1.1109],[67,1.1114]],"Brown Craft Paper":[[10,1.3281],[67,1.4991]],"Matte Silver Polyester":[[10,1.5722],[67,1.9213]],"Bright Silver Polyester":[[10,1.5722],[67,1.9213]],"Removable Transparent OPP":[[10,1.2732],[67,1.3699]],"Removable White PP":[[10,1.4087],[67,1.6369]]};
+const stkFit = (L, a, g) => Math.floor((L + g) / (a + g));
+const stkUps = (A, B, g) => (h, w) => Math.max(stkFit(A, h, g) * stkFit(B, w, g), stkFit(A, w, g) * stkFit(B, h, g));
+const STK_UPS_CUT = stkUps(330, 458, 7), STK_UPS_DIE = stkUps(256, 482, 14);
+const stkAt = (F, s) => { if (s <= F[0][0]) return F[0][1]; for (let i = 1; i < F.length; i++) if (s <= F[i][0]) { const [a, pa] = F[i - 1], [b, pb] = F[i]; return pa + (pb - pa) * (s - a) / (b - a); }
+  const [a, pa] = F[F.length - 2], [b, pb] = F[F.length - 1]; return pb + (pb - pa) * (s - b) / (b - a); };
+const stkDie = cfg => cfg.category === 'Custom Die-Cut' || cfg.cutting_method === 'Die-Cutting' || Math.min(+cfg.height || 0, +cfg.width || 0) < 50;
+function stkSheetPrice(cfg, paper, h, w, q) {
+  const die = stkDie(Object.assign({}, cfg, { height: h, width: w })), sc = Math.ceil(q / STK_UPS_CUT(h, w)), sd = Math.ceil(q / STK_UPS_DIE(h, w));
+  if (!isFinite(sc) || !isFinite(sd)) return null;
+  // the material scales the printed-sheet part; the die-cutting charge is the same on every material (live: OPP and Mirror Kote 60x60 die +29.40 both)
+  const cut = stkAt(STK_FC, sc) + STK_PIECE * q, r = paper !== 'Mirror Kote' && STK_MATR[paper] ? stkAt(STK_MATR[paper], sc) : 1;
+  let p = die ? stkAt(STK_FD, sd) + (r - 1) * cut : cut * r;
+  if (cfg.category === 'Custom Die-Cut') p *= 1.13;
+  return p;
+}
 function stkPriceBase(cfg, q) {
   const X = stkEngine(); if (!X) return null;
   const cat = cfg.category, paper = cfg.paper;
@@ -2520,9 +2544,12 @@ function stkPriceBase(cfg, q) {
     const lam = (rect - plain) * extraF;
     if (cat === 'Round') base = plain + stkShapeDelta((X.E.DATA.sticker_categories || {}).round || [], r => r.d + 'x' + r.d, h * w, q);
     else if (cat === 'Standard Shape') base = plain + stkShapeDelta((X.E.DATA.sticker_categories || {}).standard_shape || [], r => r.h + 'x' + r.w, h * w, q);
-    else if (cat === 'Custom Die-Cut') base = plain * stkLog(STK_CUSTOM_F, q);
+    else if (cat === 'Custom Die-Cut') { const sp = stkSheetPrice(cfg, paper, h, w, q); base = sp != null ? sp : plain * stkLog(STK_CUSTOM_F, q); }
     else if (cat === 'Kiss Cut') base = plain + stkKissDelta(h * w, q);
-    else base = plain;                                                   // Rectangle/Square
+    else {   // Rectangle/Square: a sampled cut-to-size size (or preset) keeps its exact price; everything else uses the sheet model
+      const lk = ((X.E.DATA.params.sticker_digital || {}).lookup || {})[paper] || {}, exact = !stkDie(Object.assign({}, cfg, { height: h, width: w })) && (lk[h + 'x' + w] || lk[w + 'x' + h]);
+      const sp = exact ? null : stkSheetPrice(cfg, paper, h, w, q); base = sp != null ? sp : plain;
+    }
     if (cfg.colour === '1C') base *= stkLog(STK_1C, q);
     if (cfg.colour === '4C & White') base *= stkLog(STK_4CW_F, q);
     base += lam;
@@ -2557,7 +2584,8 @@ const CFG_OVERRIDES = {
       colour: ['4C', '4C & White', '1C'],
       sheet_size: cfg => cfg.category === 'Kiss Cut' ? STICKER_KISS_SHEETS : ['A3+', 'A4', 'A5'],
       // every die-cut shape shows Cutting Method fixed to Die-Cutting; only Rectangle/Square can be cut to size
-      cutting_method: cfg => cfg.category === 'Rectangle/Square' ? ['Cut To Size', 'Die-Cutting'] : ['Die-Cutting'],
+      // under 50 mm on either side Excard only die-cuts (live 2026-10-17)
+      cutting_method: cfg => cfg.category === 'Rectangle/Square' && !(Math.min(+cfg.height || 0, +cfg.width || 0) > 0 && Math.min(+cfg.height, +cfg.width) < 50) ? ['Cut To Size', 'Die-Cutting'] : ['Die-Cutting'],
     },
     sectionOf: { sheet_size: 'Optional Finishing', dielines: 'Optional Finishing' },
     optLabel: { sheet_size: { 'A3+': '317mm x 425mm (A3+)', 'A4': '210mm x 297mm (A4)', 'A5': '148mm x 210mm (A5)' } },
