@@ -2027,7 +2027,7 @@ const PILLOW_PTS_EM = { 10: 748, 20: 1482, 30: 2216, 40: 2951, 50: 3685, 60: 441
 const DL_REGION = { key: 'dl_region', label: 'Delivery To', options: ['West Malaysia', 'East Malaysia (Sabah, Sarawak, Labuan)'], default: 'West Malaysia', section: 'General' };
 const isEastRegion = v => /^East/.test(v || '');
 const isEastAddr = a => !!a && (/sabah|sarawak|labuan/i.test(a.state || '') || /^(8[7-9]|9[01]|9[3-8])\d{3}$/.test(String(a.postcode || '').trim()));
-const PILLOW_PTS = { 10: 282, 20: 548, 30: 813, 40: 1081, 50: 1347, 70: 1881, 100: 2487, 120: 2981, 150: 3722, 180: 4464, 190: 4712, 200: 4959, 210: 5206, 250: 6195, 300: 7431, 350: 8667, 400: 9904, 450: 11139, 500: 12376 };
+const PILLOW_PTS = { 10: 282, 20: 548, 30: 813, 40: 1081, 50: 1347, 60: 1613, 70: 1881, 80: 2146, 90: 2412, 100: 2487, 120: 2981, 150: 3722, 180: 4464, 190: 4712, 200: 4959, 210: 5206, 250: 6195, 300: 7431, 350: 8667, 400: 9904, 450: 11139, 500: 12376 };
 function ptsPrice(P, q) {
   const ks = Object.keys(P).map(Number).sort((a, b) => a - b); q = +q || 0; if (!q) return null;
   if (P[q] != null) return P[q];
