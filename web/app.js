@@ -4018,7 +4018,10 @@ function pkgEmb(lane, q, mm2) { if (lane === 'sr') return Math.max(85.8, 78 + 0.
   return 313.7 + 0.0268 * mm2 + PKG_LERP({ 2000: 0, 5000: 26.6, 20000: 198.6, 100000: 1210.65 }, q); }
 // both lanes for a full spec: { std: {price, days} | null, sr: {...} | null, open }
 // per-style corrections measured live (2026-10-17, two sizes each): the hanger box B044X costs more to make than its flat size suggests
-const PKG_STYLE_F = { B044X: { std: { 300: 1.087, 1000: 1.078, 5000: 1.073, 10000: 0.992 }, sr: 1.24 } };
+const PKG_STYLE_F = { B044X: { std: { 300: 1.087, 1000: 1.078, 5000: 1.04, 10000: 0.992 }, sr: 1.24 } };
+// a narrow flat sheet too long for the 370 x 510 half press (longer than ~477 mm) goes to the full press; live 2026-10-17 B044X 454 / 470 mm
+// price as normal, 484 / 510 / 514 mm carry the extra below (RM, by qty); C001A 534 mm as a factor. Wide sheets are already in the fit.
+const PKG_LONG = { B044X: { add: { 300: 580, 1000: 630, 5000: 720, 10000: 180 } }, C001A: { f: { 300: 1.105, 1000: 1.083, 5000: 1.177, 10000: 0.955 } } };
 function pkgQuote(sp) {
   const open = pkgOpen(sp); if (!open || pkgSizeErr(sp)) return null;
   const q = +sp.qty || 0; if (!q) return { open, std: null, sr: null };
@@ -4048,6 +4051,7 @@ function pkgQuote(sp) {
     // live 2026-10-17: small boxes (flat sheet under 0.13 m2) run ~5.5% above the fit from 5,000 to 10,000 pcs (4 of 4 styles)
     if (A < 0.13 && q > 5000) base *= 1 + 0.055 * Math.min(1, (q - 5000) / 5000);
     { const sf = (PKG_STYLE_F[sp.style] || {}).std; if (sf) base *= typeof sf === 'number' ? sf : PKG_LERP(sf, q); }
+    { const lg = PKG_LONG[sp.style]; if (lg && Math.min(open[0], open[1]) <= 370 && Math.max(open[0], open[1]) > 477) { if (lg.add) base += PKG_LERP(lg.add, q); if (lg.f) base *= PKG_LERP(lg.f, q); } }
     std = { price: Math.round((base + fin('std')) * 20) / 20, days: 6 + ((sp.hs || []).length || sp.win || coat === 'UV Varnish' ? 1 : 0) };
   }
   if (pkgSrOK(sp)) {
