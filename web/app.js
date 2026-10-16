@@ -4067,6 +4067,7 @@ function pkgMatRatio(mk, A, q) {
   return mk[0] === 'B' ? aA + (ref - aRef) : 1 + (aA - 1) * (ref - 1) / (aRef - 1);
 }
 // per-style corrections measured live (2026-10-17, two sizes each): the hanger box B044X costs more to make than its flat size suggests
+const PKG_STD_FIX_B044X = {"434x180.5":{"300":1.2851,"1000":1.2224,"5000":0.9927,"10000":0.9558},"494x237.5":{"300":0.5696,"1000":0.5893,"5000":0.715,"10000":0.8905},"534x180.5":{"300":0.9821,"1000":0.9981,"5000":1.0321,"10000":1.2287},"614x224.5":{"300":1.0998,"1000":1.0798,"5000":1.1149,"10000":0.9665},"654x209.5":{"300":1.1291,"1000":1.1085,"5000":1.1202,"10000":0.9942},"374x194.5":{"300":0.9679,"1000":0.9925,"5000":1.0407,"10000":1.0063},"394x210.5":{"300":0.9999,"1000":1.0002,"5000":1.0313,"10000":1.0006},"454x209.5":{"300":1.0049,"5000":0.981},"470x209.5":{"300":0.9976,"5000":0.9649},"484x209.5":{"300":0.9877,"5000":1.0317},"510x209.5":{"300":1.0107,"5000":1.0235},"514x209.5":{"300":1.0106,"1000":1.0006,"5000":1.0205,"10000":1.0006},"484x195":{"300":0.7167,"5000":0.7143},"624x223":{"300":1.1011,"5000":1.111}};
 const PKG_STYLE_F = { B044X: { std: { 300: 1.087, 1000: 1.078, 5000: 1.04, 10000: 0.992 } } };
 // a narrow flat sheet too long for the 370 x 510 half press (longer than ~477 mm) goes to the full press; live 2026-10-17 B044X 454 / 470 mm
 // price as normal, 484 / 510 / 514 mm carry the extra below (RM, by qty); C001A 534 mm as a factor. Wide sheets are already in the fit.
@@ -4101,13 +4102,20 @@ function pkgQuote(sp) {
     if (A < 0.13 && q > 5000) base *= 1 + 0.055 * Math.min(1, (q - 5000) / 5000);
     { const sf = (PKG_STYLE_F[sp.style] || {}).std; if (sf) base *= typeof sf === 'number' ? sf : PKG_LERP(sf, q); }
     { const lg = PKG_LONG[sp.style] || PKG_LONG._default; if (lg && Math.min(open[0], open[1]) <= 370 && Math.max(open[0], open[1]) > 477) { if (lg.add) base += PKG_LERP(lg.add, q); if (lg.f) base *= PKG_LERP(lg.f, q); } }
+    // B044X Standard follows Excard's own imposition (sharp steps by flat size): live / model ratios at 12 measured flat sizes, blended
+    // by distance (live 16 Oct)
+    if (sp.style === 'B044X') { let w0 = 0, f0 = 0; Object.keys(PKG_STD_FIX_B044X).forEach(k => { const o = k.split('x').map(Number), dd = Math.min(Math.hypot(o[0] - open[0], o[1] - open[1]), Math.hypot(o[0] - open[1], o[1] - open[0])), w = Math.exp(-(dd / 20) * (dd / 20)); if (w > 0.01) { w0 += w; f0 += w * PKG_LERP(PKG_STD_FIX_B044X[k], q); } });
+      if (w0 > 0) base *= (f0 + Math.max(0, 1 - w0)) / (w0 + Math.max(0, 1 - w0)); }
     std = { price: Math.round((base + fin('std')) * 20) / 20, days: 6 + ((sp.hs || []).length || sp.win || coat === 'UV Varnish' ? 1 : 0) };
   }
   if (pkgSrOK(sp)) {
     // a flat sheet longer than ~520 mm prints one up on Short Run (live: C001A 534 x 291 mm = 1 up, exact)
     // three or more rows along the 660 mm side only fit within ~600 mm (live: 201 / 209 / 210 mm rows go 2 up, 176 mm rows 3 up)
     const rows = x => { const n = Math.floor(660 / x); return n >= 3 ? Math.floor(600 / x) : n; };
-    const ups = Math.max(open[0], open[1]) > 520 ? 1 : Math.max(Math.floor(566 / open[0]) * rows(open[1]), Math.floor(566 / open[1]) * rows(open[0]));
+    // only pieces up to 520 mm can run along the 566 mm side (C001A 534 x 291 = 1 up); B044X always runs its long side along 660
+    // (live 16 Oct: 374-654 mm long, 180.5 mm wide = 3 up, 194.5-237.5 mm = 2 up, whatever the length)
+    const upsAlong = (a, b) => a > 520 ? 0 : Math.floor(566 / a) * rows(b), sh = Math.min(open[0], open[1]), lg = Math.max(open[0], open[1]);
+    const ups = sp.style === 'B044X' ? upsAlong(sh, lg) : Math.max(upsAlong(open[0], open[1]), upsAlong(open[1], open[0]));
     if (ups >= 1) { const S = Math.ceil(q / ups);
       const base = 75.203 + 1.870 * S + 2.939 * Math.sqrt(S) + 0.144 * q + 1.245 * q * A + 4.271 * Math.sqrt(q) + (PKG_SR_MAT[gsm] || 0) * A * q;
       sr = { price: Math.round((base * ((PKG_STYLE_F[sp.style] || {}).sr || 1) + fin('sr')) * 20) / 20, days: 2 + (sp.suv ? 2 : 0) + (sp.emb || (sp.hs || []).length ? 1 : 0) }; }
