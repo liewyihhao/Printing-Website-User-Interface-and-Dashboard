@@ -4030,7 +4030,6 @@ const PKG_SUV = { As: 0.0789, Ab: 0.1945,
   std: { s: { 300: 263.1, 500: 277.05, 1000: 320.05, 2000: 407.35, 5000: 662.85, 20000: 2007.55, 100000: 8830.95 }, b: { 300: 347.85, 500: 387.1, 1000: 488.25, 2000: 743.8, 5000: 1351, 20000: 4394.6, 100000: 20654.9 } },
   sr: { s: { 100: 271.7, 300: 288.85, 500: 282.5, 1000: 330, 2000: 401 }, b: { 100: 278.85, 300: 321.75, 500: 343.2, 1000: 448.8, 2000: 632.5 } } };
 // hot stamping, one block: 50 x 50 mm and 100 x 100 mm; each extra block costs the same less the shared set-up
-const PKG_HS = { std: { s: { 300: 120.15, 500: 136.65, 1000: 180.85, 2000: 438.95, 5000: 718.5, 20000: 2117.6, 100000: 9616.5 }, b: { 300: 180.9, 500: 206.2, 1000: 273.2, 2000: 710.95, 5000: 1100, 20000: 3578.65, 100000: 16356.45 }, extra: 42 },
   sr: { s: { 100: 90.05, 300: 107.25, 500: 120.1, 1000: 165, 2000: 245.4 }, b: { 100: 148.7, 300: 175.9, 500: 192.7, 1000: 261.4, 2000: 382.05 }, extra: 20 } };
 // every style the builder can make: the 12 Basic Boxes above plus the measured PKG_X styles (wrapped to the same shape)
 const PKG_XW = {};
@@ -4055,10 +4054,22 @@ function pkgCoatings(sp) { const q = +sp.qty || 0;
 const pkgSrOK = sp => !sp.win && !pkgIsBoard(sp) && (+sp.gsm || 250) <= 350 && (+sp.qty || 0) >= 50 && (+sp.qty || 0) <= 2000;
 const pkgStdOK = sp => (+sp.qty || 0) >= 300 && sp.coat !== 'Soft Touch Lamination';
 function pkgLerpA(t, A, q) { const s = PKG_LERP(t.s, q), b = PKG_LERP(t.b, q); return Math.max(s * 0.6, s + (b - s) * (A - PKG_SUV.As) / (PKG_SUV.Ab - PKG_SUV.As)); }
-function pkgHsBlock(t, q, mm2) { const s = PKG_LERP(t.s, q), b = PKG_LERP(t.b, q); return Math.max(s * 0.7, s + (b - s) * (mm2 - 2500) / 7500); }
-function pkgEmb(lane, q, mm2) { if (lane === 'sr') return Math.max(85.8, 78 + 0.0087 * mm2);
-  if (q <= 1000) return Math.max(129, 117.7 + 0.00911 * mm2);
-  return 313.7 + 0.0268 * mm2 + PKG_LERP({ 2000: 0, 5000: 26.6, 20000: 198.6, 100000: 1210.65 }, q); }
+// Hot stamping = Excard's foil run (blocks up to 85 mm: 22 + 0.0699/pc, minimum 42; larger
+// blocks x1.5) + foil block by area, plus a little extra paper and lamination once per job (live 22 Oct, 30x30 to 200x150 mm,
+// 300-10,000 pcs, within ~1%)
+// every extra block runs at the largest block's tier, block +34 (live: 200x150 + 50x50 at 300-10,000 pcs)
+function pkgHsLive(lane, q, h, w, extra, bigAll) {
+  const big = bigAll != null ? bigAll : Math.max(h, w) > 85, mm2 = h * w, sr = lane === 'sr';
+  const run = Math.max(42, 22 + 0.0699 * q) * (big ? 1.5 : 1);
+  const mould = (extra ? 34 : 0) + (mm2 > 30000 ? 75 + 0.0012 * (mm2 - 30000) : PKG_LERP({ 900: 21, 1600: 16, 2500: 18, 6400: 35, 8100: 38, 10000: 47, 15000: 64, 30000: 75 }, Math.max(900, mm2)));
+  if (sr) return (q < 500 ? 1.43 : q < 2000 ? 1.32 : 1.265) * (run + mould + (extra ? 0 : 5)) + (extra ? 0 : 11.4);
+  return 1.2658 * (run + mould + (extra ? 0 : 18)); }
+// Emboss = Excard's emboss block (by area) + emboss run (Standard max(40, 0.02/pc), Short Run 20), at each lane's markup
+// (live 22 Oct: 30x30 to 200x100 mm, 300-10,000 pcs, exact to the cent)
+function pkgEmb(lane, q, mm2) {
+  const mould = mm2 > 22500 ? 173 + 0.0053 * (mm2 - 22500) : PKG_LERP({ 900: 47, 2500: 40, 10000: 94, 20000: 161, 22500: 173 }, Math.max(900, mm2));
+  if (lane === 'sr') return (q < 500 ? 1.43 : q < 2000 ? 1.32 : 1.265) * (mould + 20) + 18.5;
+  return 1.2658 * (mould + Math.max(40, 0.02 * q)) + 23; }
 // both lanes for a full spec: { std: {price, days} | null, sr: {...} | null, open }
 // material price ratio vs Gloss Art Card 250 depends on the flat sheet size (live 2026-10-17, A001 at 0.088 / 0.126 m2 plus the 0.195 m2
 // reference box): art cards scale from the 400gsm ratio, boards from Boxboard 350, interpolated by area (clamped to the measured range)
@@ -4105,9 +4116,10 @@ function pkgQuote(sp) {
     if (coat === 'Gloss Water Based Varnish') x -= 0.62 * A * q;
     if (coat === 'UV Varnish') x -= 0.355 * A * q;
     if (coat === 'Soft Touch Lamination') x += 8.5 + 1.87 * A * q;
-    if (sp.suv) x += pkgLerpA(PKG_SUV[lane], A, q);
+    // Standard Spot UV = Excard's RM160 screen + run ~1.03/m2/pc (live 22 Oct, 3 sizes x 300-10,000 pcs, within RM30)
+    if (sp.suv) x += lane === 'std' ? 222.07 + 1.0267 * A * q + 0.0055 * q + 237.2 * A : pkgLerpA(PKG_SUV[lane], A, q);
     if (sp.emb) x += pkgEmb(lane, q, (+sp.embH || 0) * (+sp.embW || 0));
-    (sp.hs || []).forEach((b, i) => { x += pkgHsBlock(PKG_HS[lane], q, (+b.h || 0) * (+b.w || 0)) - (i ? PKG_HS[lane].extra : 0); });
+    { const hs = sp.hs || [], big = hs.some(b => Math.max(+b.h || 0, +b.w || 0) > 85); hs.forEach((b, i) => { x += pkgHsLive(lane, q, +b.h || 0, +b.w || 0, i > 0, big); }); }
     // window film (Standard only): live A001A 120x100x200, film 130x90 -> RM58 + RM0.109/pc; film scales with the front panel
     if (sp.win) { const fa = 0.4875 * (+sp.L || 0) * (+sp.D || +sp.W || 0) / 1e6; x += 58 + 0.109 * q * Math.max(0.3, fa / 0.0117); }
     return x; };
