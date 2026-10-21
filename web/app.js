@@ -4030,7 +4030,6 @@ const PKG_SUV = { As: 0.0789, Ab: 0.1945,
   std: { s: { 300: 263.1, 500: 277.05, 1000: 320.05, 2000: 407.35, 5000: 662.85, 20000: 2007.55, 100000: 8830.95 }, b: { 300: 347.85, 500: 387.1, 1000: 488.25, 2000: 743.8, 5000: 1351, 20000: 4394.6, 100000: 20654.9 } },
   sr: { s: { 100: 271.7, 300: 288.85, 500: 282.5, 1000: 330, 2000: 401 }, b: { 100: 278.85, 300: 321.75, 500: 343.2, 1000: 448.8, 2000: 632.5 } } };
 // hot stamping, one block: 50 x 50 mm and 100 x 100 mm; each extra block costs the same less the shared set-up
-  sr: { s: { 100: 90.05, 300: 107.25, 500: 120.1, 1000: 165, 2000: 245.4 }, b: { 100: 148.7, 300: 175.9, 500: 192.7, 1000: 261.4, 2000: 382.05 }, extra: 20 } };
 // every style the builder can make: the 12 Basic Boxes above plus the measured PKG_X styles (wrapped to the same shape)
 const PKG_XW = {};
 const pkgStyle = code => { const b = PKG_STYLES.find(s => s.code === code); if (b) return b; const x = typeof PKG_X_BY !== 'undefined' && PKG_X_BY[code]; if (!x) return null;
