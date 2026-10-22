@@ -2501,10 +2501,11 @@ const STK_WASTE = [[100, 10.9], [400, 12.1], [1000, 13.05], [5000, 25.4]];
 const STK_1C = [[400, 0.9026], [1000, 0.8542]];
 const STK_4CW_F = [[400, 1.1737], [1000, 1.2335], [5000, 1.264]];
 function stkEngine() { const E = typeof window !== 'undefined' && window.PricingEngine; const p = E && E.DATA.products.find(x => x.id === 60); return p ? { E, p } : null; }
-const STK_FIN = { 'Matte Laminate (Front)': [3.2027, 0.1939], 'Gloss Laminate (Front)': [3.2027, 0.1939], 'Gloss Water Based Varnish': [3.4758, 0.1033], 'UV Varnish': [3.4758, 0.1033], 'Soft Touch Laminate (Front)': [3.2753, 0.3716] };
+const STK_FIN = { 'Matte Laminate (Front)': [4.491, 0.1903], 'Gloss Laminate (Front)': [4.491, 0.1903], 'Gloss Water Based Varnish': [3.973, 0.1024], 'UV Varnish': [3.973, 0.1024], 'Soft Touch Laminate (Front)': [5.829, 0.3658] };   // RM + RM per printed sheet (live 23 Oct, 5 sizes x 100-20,000 pcs; matte = gloss, water-based = UV)
 function stkFinish(fin, cfg, h, w, q, fallback) {
   const k = STK_FIN[fin]; if (!k) return fin && fin !== 'Not Required' ? fallback : 0;
-  const u = STK_UPS_CUT(h, w);   // counted on the cut-to-size sheet even when die-cut (live: 60x60 die + matte = +9.80, same as cut)
+  const die = ['Round', 'Standard Shape', 'Custom Die-Cut'].indexOf(cfg.category) >= 0 || stkDie(Object.assign({}, cfg, { height: h, width: w }));
+  const u = (die ? STK_UPS_DIE2 : STK_UPS_CUT2)(h, w);   // sheets of the layout in use (die-cut 312x452 / cut 320x452): RM3.1 mean abs vs RM7.0 on the old sheet
   return u ? k[0] + k[1] * Math.ceil(q / u) : fallback; }
 function stkRect(paper, h, w, q, finishing) {
   const X = stkEngine(); if (!X) return null;
