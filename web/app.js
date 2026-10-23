@@ -2679,7 +2679,8 @@ const CFG_OVERRIDES = {
     optLabel: { sheet_size: { 'A3+': '317mm x 425mm (A3+)', 'A4': '210mm x 297mm (A4)', 'A5': '148mm x 210mm (A5)' } },
     validOpt: {
       paper: (cfg, v) => !((cfg.category === 'Multiple Dieline' && (v === 'Brown Craft Paper' || v === 'Warranty Sticker'))
-        || (['Custom Die-Cut', 'Kiss Cut', 'No Cut'].indexOf(cfg.category) >= 0 && v === 'Warranty Sticker')),
+        || (['Custom Die-Cut', 'Kiss Cut', 'No Cut'].indexOf(cfg.category) >= 0 && v === 'Warranty Sticker')
+        || (cfg.category === 'Rectangle/Square' && +cfg.height * +cfg.width > 0 && +cfg.height * +cfg.width < 600 && v !== 'Warranty Sticker')),   // under 600 mm2 Excard offers Warranty Sticker only
       colour: (cfg, v) => v !== '4C & White' || STK_4CW.indexOf(cfg.paper) >= 0,
       ink_colour: (cfg, v) => v !== 'White' || STK_4CW.indexOf(cfg.paper) >= 0,
       finishing: (cfg, v) => stkLams(cfg.paper).indexOf(v) >= 0,
