@@ -1,0 +1,3828 @@
+{
+ "source": "Printoka All Images - 2026-10-25.zip",
+ "status": "integrated at owner request 2026-10-25",
+ "assets": [
+  {
+   "assetId": "cfg-0405",
+   "name": "Back Colour - Black",
+   "file": "batch-2/cfg-0405/Back Colour - Black.png",
+   "sha256": "af3e319b3b98ddda45a28b4c4ee8740da460d90cde2c15dbae40b455e7047282",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "spot_back",
+     "option": "Black"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "spot_back",
+     "option": "Black"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "spot_back",
+     "option": "Black"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "spot_back",
+     "option": "Black"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "spot_back",
+     "option": "Black"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0406",
+   "name": "Back Colour - Cyan",
+   "file": "batch-2/cfg-0406/Back Colour - Cyan.png",
+   "sha256": "1891783233c555676f12714ebba7d3b025182b8168e7f299a18d168a7bbd904b",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "spot_back",
+     "option": "Cyan"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "spot_back",
+     "option": "Cyan"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "spot_back",
+     "option": "Cyan"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "spot_back",
+     "option": "Cyan"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "spot_back",
+     "option": "Cyan"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0407",
+   "name": "Back Colour - Magenta",
+   "file": "batch-2/cfg-0407/Back Colour - Magenta.png",
+   "sha256": "7a0da2899f1942d1a3e6de28c92e91dfe042aa21e5dc488d2e786ea5e60e6756",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "spot_back",
+     "option": "Magenta"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "spot_back",
+     "option": "Magenta"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "spot_back",
+     "option": "Magenta"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "spot_back",
+     "option": "Magenta"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "spot_back",
+     "option": "Magenta"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0411",
+   "name": "Custom Creasing Line - 1 Line",
+   "file": "batch-2/cfg-0411/Custom Creasing Line - 1 Line.png",
+   "sha256": "1503570470c9cbe8188720d2d2358b26a985f33e56c2ceac9cd19a338083462c",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "crease_lines",
+     "option": "1 Line"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "crease_lines",
+     "option": "1 Line"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "crease_lines",
+     "option": "1 Line"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "crease_lines",
+     "option": "1 Line"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "crease_lines",
+     "option": "1 Line"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0412",
+   "name": "Custom Creasing Line - 2 Lines",
+   "file": "batch-2/cfg-0412/Custom Creasing Line - 2 Lines.png",
+   "sha256": "3a639390af4801997032449bbd98df24e53904fa6bc5ac79a93f8eba93b234fd",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "crease_lines",
+     "option": "2 Lines"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "crease_lines",
+     "option": "2 Lines"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "crease_lines",
+     "option": "2 Lines"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "crease_lines",
+     "option": "2 Lines"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "crease_lines",
+     "option": "2 Lines"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0413",
+   "name": "Custom Creasing Line - 3 Lines",
+   "file": "batch-2/cfg-0413/Custom Creasing Line - 3 Lines.png",
+   "sha256": "44bca8c259e18e87739ea35630be01601346079629c66cd124d2f75e4aabd5e3",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "crease_lines",
+     "option": "3 Lines"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "crease_lines",
+     "option": "3 Lines"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "crease_lines",
+     "option": "3 Lines"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "crease_lines",
+     "option": "3 Lines"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "crease_lines",
+     "option": "3 Lines"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0414",
+   "name": "Custom Creasing Line - 4 Lines",
+   "file": "batch-2/cfg-0414/Custom Creasing Line - 4 Lines.png",
+   "sha256": "98f07f1908a79d9054f4698cb6711d09c9711c3217780483dc301abc6f0417d4",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "crease_lines",
+     "option": "4 Lines"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "crease_lines",
+     "option": "4 Lines"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "crease_lines",
+     "option": "4 Lines"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "crease_lines",
+     "option": "4 Lines"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "crease_lines",
+     "option": "4 Lines"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0415",
+   "name": "Custom Creasing Line - 5 Lines",
+   "file": "batch-2/cfg-0415/Custom Creasing Line - 5 Lines.png",
+   "sha256": "808a72a7ab819900b6c243c6500b2a83d1296ec7b34349092b45785d94df8a79",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "crease_lines",
+     "option": "5 Lines"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "crease_lines",
+     "option": "5 Lines"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "crease_lines",
+     "option": "5 Lines"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "crease_lines",
+     "option": "5 Lines"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "crease_lines",
+     "option": "5 Lines"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0416",
+   "name": "Custom Creasing Line - 6 Lines",
+   "file": "batch-2/cfg-0416/Custom Creasing Line - 6 Lines.png",
+   "sha256": "2b3e099a41da81701e6a5cf17e54be522bbd0be6126794739db8fb07624f058b",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "crease_lines",
+     "option": "6 Lines"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "crease_lines",
+     "option": "6 Lines"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "crease_lines",
+     "option": "6 Lines"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "crease_lines",
+     "option": "6 Lines"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "crease_lines",
+     "option": "6 Lines"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0430",
+   "name": "Front Colour - Black",
+   "file": "batch-2/cfg-0430/Front Colour - Black.png",
+   "sha256": "74a61e727028ef7f6bca7fac1cc449e27311a16e07b80ff6be16e55e77d57bc8",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "spot_front",
+     "option": "Black"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "spot_front",
+     "option": "Black"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "spot_front",
+     "option": "Black"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "spot_front",
+     "option": "Black"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "spot_front",
+     "option": "Black"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0431",
+   "name": "Front Colour - Cyan",
+   "file": "batch-2/cfg-0431/Front Colour - Cyan.png",
+   "sha256": "1bccf1c210e270e7d0955989a5a4aa5d503aef9082780b488ab2868d9bb38bdc",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "spot_front",
+     "option": "Cyan"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "spot_front",
+     "option": "Cyan"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "spot_front",
+     "option": "Cyan"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "spot_front",
+     "option": "Cyan"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "spot_front",
+     "option": "Cyan"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0432",
+   "name": "Front Colour - Magenta",
+   "file": "batch-2/cfg-0432/Front Colour - Magenta.png",
+   "sha256": "d05376da644e99d2463188f7b88bfe2c144432a65dab9966da21cb584f5a478f",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "spot_front",
+     "option": "Magenta"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "spot_front",
+     "option": "Magenta"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "spot_front",
+     "option": "Magenta"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "spot_front",
+     "option": "Magenta"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "spot_front",
+     "option": "Magenta"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-none",
+   "name": "Not Required",
+   "file": "batch-2/cfg-none/Not Required.png",
+   "sha256": "52a3220500924ba0329dda8e924d70feef40e809564f290b71b0f1d74c769eba",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 1,
+     "fieldKey": "silkscreen_spot_uv",
+     "option": "No Required"
+    },
+    {
+     "productId": 1,
+     "fieldKey": "hot_stamping",
+     "option": "No Hot Stamping"
+    },
+    {
+     "productId": 1,
+     "fieldKey": "round_corner",
+     "option": "No"
+    },
+    {
+     "productId": 1,
+     "fieldKey": "embossing",
+     "option": "Not Required"
+    },
+    {
+     "productId": 19,
+     "fieldKey": "cover_lamination",
+     "option": "Not Required"
+    },
+    {
+     "productId": 19,
+     "fieldKey": "hot_stamping",
+     "option": "No Required"
+    },
+    {
+     "productId": 19,
+     "fieldKey": "content_lamination",
+     "option": "No Lamination"
+    },
+    {
+     "productId": 19,
+     "fieldKey": "content_lamination",
+     "option": "Not Required"
+    },
+    {
+     "productId": 19,
+     "fieldKey": "cover_embossing",
+     "option": "No Required"
+    },
+    {
+     "productId": 19,
+     "fieldKey": "cover_embossing",
+     "option": "Not Available"
+    },
+    {
+     "productId": 21,
+     "fieldKey": "envelope",
+     "option": "- Not Required -"
+    },
+    {
+     "productId": 21,
+     "fieldKey": "folding_type",
+     "option": "Not Required"
+    },
+    {
+     "productId": 21,
+     "fieldKey": "hole_punch",
+     "option": "Not Required"
+    },
+    {
+     "productId": 21,
+     "fieldKey": "rcorner",
+     "option": "Not Required"
+    },
+    {
+     "productId": 21,
+     "fieldKey": "hot_stamping",
+     "option": "Not Required"
+    },
+    {
+     "productId": 21,
+     "fieldKey": "perforation",
+     "option": "Not Required"
+    },
+    {
+     "productId": 21,
+     "fieldKey": "lam",
+     "option": "Not Required"
+    },
+    {
+     "productId": 21,
+     "fieldKey": "creasing",
+     "option": "Not Required"
+    },
+    {
+     "productId": 24,
+     "fieldKey": "last_layer_perforation",
+     "option": "No"
+    },
+    {
+     "productId": 37,
+     "fieldKey": "hot_stamping",
+     "option": "No Hot Stamping"
+    },
+    {
+     "productId": 37,
+     "fieldKey": "content_lamination",
+     "option": "No Lamination"
+    },
+    {
+     "productId": 37,
+     "fieldKey": "cover_embossing",
+     "option": "No Emboss"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "hole_punch",
+     "option": "Not Required"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "rcorner",
+     "option": "Not Required"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "envelope",
+     "option": "Not Required"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "hot_stamping",
+     "option": "Not Required"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "folding_type",
+     "option": "Not Required"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "lam",
+     "option": "Not Required"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "creasing",
+     "option": "Not Required"
+    },
+    {
+     "productId": 60,
+     "fieldKey": "finishing",
+     "option": "Not Required"
+    },
+    {
+     "productId": 60,
+     "fieldKey": "waste_removal",
+     "option": "Not Required"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "envelope",
+     "option": "- Not Required -"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "folding_type",
+     "option": "Not Required"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "hole_punch",
+     "option": "Not Required"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "rcorner",
+     "option": "Not Required"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "hot_stamping",
+     "option": "Not Required"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "perforation",
+     "option": "Not Required"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "creasing",
+     "option": "Not Required"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "lam",
+     "option": "Not Required"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "envelope",
+     "option": "- Not Required -"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "hole_punch",
+     "option": "Not Required"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "rcorner",
+     "option": "Not Required"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "hot_stamping",
+     "option": "Not Required"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "perforation",
+     "option": "Not Required"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "lam",
+     "option": "Not Required"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "folding_type",
+     "option": "Not Required"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "creasing",
+     "option": "Not Required"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "envelope",
+     "option": "- Not Required -"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "folding_type",
+     "option": "Not Required"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "hole_punch",
+     "option": "Not Required"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "hot_stamping",
+     "option": "Not Required"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "creasing",
+     "option": "Not Required"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "lam",
+     "option": "Not Required"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "rcorner",
+     "option": "Not Required"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "perforation",
+     "option": "Not Required"
+    },
+    {
+     "productId": 107,
+     "fieldKey": "fd_cdseal",
+     "option": "Not Required"
+    },
+    {
+     "productId": 109,
+     "fieldKey": "lamination",
+     "option": "No Required"
+    },
+    {
+     "productId": 109,
+     "fieldKey": "roundcorner",
+     "option": "No Required"
+    },
+    {
+     "productId": 109,
+     "fieldKey": "holepunch",
+     "option": "No Required"
+    },
+    {
+     "productId": 110,
+     "fieldKey": "numbering",
+     "option": "No"
+    },
+    {
+     "productId": 111,
+     "fieldKey": "copychange",
+     "option": "No"
+    },
+    {
+     "productId": 111,
+     "fieldKey": "numbering",
+     "option": "No"
+    },
+    {
+     "productId": 112,
+     "fieldKey": "hotstamping",
+     "option": "Not Required"
+    },
+    {
+     "productId": 113,
+     "fieldKey": "hole_punch",
+     "option": "Not Required"
+    },
+    {
+     "productId": 114,
+     "fieldKey": "hot_stamping",
+     "option": "Not Required"
+    },
+    {
+     "productId": 114,
+     "fieldKey": "envelope",
+     "option": "Not Required"
+    },
+    {
+     "productId": 114,
+     "fieldKey": "kk_finish",
+     "option": "-"
+    },
+    {
+     "productId": 114,
+     "fieldKey": "kk_fold",
+     "option": "Not Required"
+    },
+    {
+     "productId": 115,
+     "fieldKey": "holepunch",
+     "option": "Not Required"
+    },
+    {
+     "productId": 115,
+     "fieldKey": "lamination",
+     "option": "Not Required"
+    },
+    {
+     "productId": 120,
+     "fieldKey": "hd_opp",
+     "option": "No"
+    },
+    {
+     "productId": 123,
+     "fieldKey": "finishing",
+     "option": "No"
+    },
+    {
+     "productId": 124,
+     "fieldKey": "lamination",
+     "option": "No Required"
+    },
+    {
+     "productId": 126,
+     "fieldKey": "roundcorner",
+     "option": "No"
+    },
+    {
+     "productId": 126,
+     "fieldKey": "roundcorner",
+     "option": "Not Required"
+    },
+    {
+     "productId": 138,
+     "fieldKey": "finishing",
+     "option": "N/A"
+    },
+    {
+     "productId": 143,
+     "fieldKey": "sb_pants",
+     "option": "Not Required"
+    },
+    {
+     "productId": 143,
+     "fieldKey": "sb_vdp",
+     "option": "Not Required"
+    },
+    {
+     "productId": 143,
+     "fieldKey": "sb_patch",
+     "option": "Not Required"
+    },
+    {
+     "productId": 143,
+     "fieldKey": "sb_patch1",
+     "option": "Not Required"
+    },
+    {
+     "productId": 143,
+     "fieldKey": "sb_patch2",
+     "option": "Not Required"
+    },
+    {
+     "productId": 143,
+     "fieldKey": "sb_patch3",
+     "option": "Not Required"
+    },
+    {
+     "productId": 143,
+     "fieldKey": "sb_pvdp",
+     "option": "Not Required"
+    },
+    {
+     "productId": 154,
+     "fieldKey": "butterflystand",
+     "option": "Not Required"
+    },
+    {
+     "productId": 160,
+     "fieldKey": "lamination",
+     "option": "No Required"
+    },
+    {
+     "productId": 161,
+     "fieldKey": "lamination",
+     "option": "No Required"
+    },
+    {
+     "productId": 162,
+     "fieldKey": "lamination",
+     "option": "No Required"
+    },
+    {
+     "productId": 163,
+     "fieldKey": "finishingcover",
+     "option": "No Finishing"
+    },
+    {
+     "productId": 164,
+     "fieldKey": "hotstampingcolour",
+     "option": "Not Required"
+    },
+    {
+     "productId": 165,
+     "fieldKey": "lamination",
+     "option": "No Lamination"
+    },
+    {
+     "productId": 165,
+     "fieldKey": "cc_crease",
+     "option": "No"
+    },
+    {
+     "productId": 166,
+     "fieldKey": "foldtype",
+     "option": "No Fold"
+    },
+    {
+     "productId": 166,
+     "fieldKey": "lamination",
+     "option": "N/A"
+    },
+    {
+     "productId": 166,
+     "fieldKey": "envelope",
+     "option": "Not Required"
+    },
+    {
+     "productId": 167,
+     "fieldKey": "finishing",
+     "option": "N/A"
+    },
+    {
+     "productId": 170,
+     "fieldKey": "idc_hole",
+     "option": "Not Required"
+    },
+    {
+     "productId": 179,
+     "fieldKey": "lamination",
+     "option": "Not Required"
+    },
+    {
+     "productId": 180,
+     "fieldKey": "sb_vdp",
+     "option": "Not Required"
+    },
+    {
+     "productId": 180,
+     "fieldKey": "sb_patch",
+     "option": "Not Required"
+    },
+    {
+     "productId": 180,
+     "fieldKey": "sb_patch1",
+     "option": "Not Required"
+    },
+    {
+     "productId": 180,
+     "fieldKey": "sb_patch2",
+     "option": "Not Required"
+    },
+    {
+     "productId": 180,
+     "fieldKey": "sb_patch3",
+     "option": "Not Required"
+    },
+    {
+     "productId": 181,
+     "fieldKey": "sb_vdp",
+     "option": "Not Required"
+    },
+    {
+     "productId": 181,
+     "fieldKey": "sb_patch",
+     "option": "Not Required"
+    },
+    {
+     "productId": 181,
+     "fieldKey": "sb_patch1",
+     "option": "Not Required"
+    },
+    {
+     "productId": 181,
+     "fieldKey": "sb_patch2",
+     "option": "Not Required"
+    },
+    {
+     "productId": 181,
+     "fieldKey": "sb_patch3",
+     "option": "Not Required"
+    },
+    {
+     "productId": 182,
+     "fieldKey": "sb_vdp",
+     "option": "Not Required"
+    },
+    {
+     "productId": 182,
+     "fieldKey": "sb_patch",
+     "option": "Not Required"
+    },
+    {
+     "productId": 182,
+     "fieldKey": "sb_patch1",
+     "option": "Not Required"
+    },
+    {
+     "productId": 182,
+     "fieldKey": "sb_patch2",
+     "option": "Not Required"
+    },
+    {
+     "productId": 182,
+     "fieldKey": "sb_patch3",
+     "option": "Not Required"
+    },
+    {
+     "productId": 183,
+     "fieldKey": "sb_vdp",
+     "option": "Not Required"
+    },
+    {
+     "productId": 183,
+     "fieldKey": "sb_patch",
+     "option": "Not Required"
+    },
+    {
+     "productId": 183,
+     "fieldKey": "sb_patch1",
+     "option": "Not Required"
+    },
+    {
+     "productId": 183,
+     "fieldKey": "sb_patch2",
+     "option": "Not Required"
+    },
+    {
+     "productId": 183,
+     "fieldKey": "sb_patch3",
+     "option": "Not Required"
+    },
+    {
+     "productId": 184,
+     "fieldKey": "rf_lam",
+     "option": "Not Required"
+    },
+    {
+     "productId": 184,
+     "fieldKey": "rf_hs",
+     "option": "Not Required"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0076",
+   "name": "Brochure (= Loose Sheet Litho) - Folding Type - Required",
+   "file": "batch-2/cfg-0076/Brochure (= Loose Sheet Litho) - Folding Type - Required.png",
+   "sha256": "6a19d8fb15ba7823c6e51dbd78163339e1a316d555018710cdd1b68a609c2314",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 101,
+     "fieldKey": "folding_type",
+     "option": "Required"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0150",
+   "name": "Customprint (= Loose Sheet Litho) - Folding Type - Required",
+   "file": "batch-2/cfg-0150/Customprint (= Loose Sheet Litho) - Folding Type - Required.png",
+   "sha256": "6a19d8fb15ba7823c6e51dbd78163339e1a316d555018710cdd1b68a609c2314",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 103,
+     "fieldKey": "folding_type",
+     "option": "Required"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0209",
+   "name": "Flyer (= Loose Sheet Litho) - Folding Type - Required",
+   "file": "batch-2/cfg-0209/Flyer (= Loose Sheet Litho) - Folding Type - Required.png",
+   "sha256": "6a19d8fb15ba7823c6e51dbd78163339e1a316d555018710cdd1b68a609c2314",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 102,
+     "fieldKey": "folding_type",
+     "option": "Required"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0398",
+   "name": "Loose Sheet - Folding Type - Required",
+   "file": "batch-2/cfg-0398/Loose Sheet - Folding Type - Required.png",
+   "sha256": "6a19d8fb15ba7823c6e51dbd78163339e1a316d555018710cdd1b68a609c2314",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 50,
+     "fieldKey": "folding_type",
+     "option": "Required"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0429",
+   "name": "Loose Sheet - Folding Type - Required",
+   "file": "batch-2/cfg-0429/Loose Sheet - Folding Type - Required.png",
+   "sha256": "6a19d8fb15ba7823c6e51dbd78163339e1a316d555018710cdd1b68a609c2314",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "folding_type",
+     "option": "Required"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0408",
+   "name": "Creasing Type - Crease + Fold",
+   "file": "batch-2/cfg-0408/Creasing Type - Crease + Fold.png",
+   "sha256": "6a19d8fb15ba7823c6e51dbd78163339e1a316d555018710cdd1b68a609c2314",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "creasing",
+     "option": "Crease + Fold"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "creasing",
+     "option": "Crease + Fold"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "creasing",
+     "option": "Crease + Fold"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "creasing",
+     "option": "Crease + Fold"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "creasing",
+     "option": "Crease + Fold"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0409",
+   "name": "Creasing Type - Standard",
+   "file": "batch-2/cfg-0409/Creasing Type - Standard.png",
+   "sha256": "1503570470c9cbe8188720d2d2358b26a985f33e56c2ceac9cd19a338083462c",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "creasing",
+     "option": "Standard"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "creasing",
+     "option": "Standard"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "creasing",
+     "option": "Standard"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "creasing",
+     "option": "Standard"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "creasing",
+     "option": "Standard"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0410",
+   "name": "Creasing Type - Custom",
+   "file": "batch-2/cfg-0410/Creasing Type - Custom.png",
+   "sha256": "44bca8c259e18e87739ea35630be01601346079629c66cd124d2f75e4aabd5e3",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "creasing",
+     "option": "Custom"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "creasing",
+     "option": "Custom"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "creasing",
+     "option": "Custom"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "creasing",
+     "option": "Custom"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "creasing",
+     "option": "Custom"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0458",
+   "name": "Round Corner - Round Corner (Radius 6mm)",
+   "file": "batch-2/cfg-0458/Round Corner - Round Corner (Radius 6mm).png",
+   "sha256": "a89c70f1aaa11c698455d9430977605bbbe2b0e1b2c3ce24babbd74275528580",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "rcorner",
+     "option": "Round Corner (Radius 6mm)"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "rcorner",
+     "option": "Round Corner (Radius 6mm)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "rcorner",
+     "option": "Round Corner (Radius 6mm)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "rcorner",
+     "option": "Round Corner (Radius 6mm)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "rcorner",
+     "option": "Round Corner (Radius 6mm)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0095",
+   "name": "Hot Stamping - 1C (Front)",
+   "file": "batch-2/cfg-0095/Hot Stamping - 1C (Front).png",
+   "sha256": "b0c98bedbdd1438846e598e073cca6210e97e9fb20b36a8e16c03b8caac72300",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "Illustrative foil colours; preserve actual configured foil-colour selections."
+   ],
+   "mappings": [
+    {
+     "productId": 1,
+     "fieldKey": "hot_stamping",
+     "option": "1C (Front)"
+    },
+    {
+     "productId": 21,
+     "fieldKey": "hot_stamping",
+     "option": "1C (Front)"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "hot_stamping",
+     "option": "1C (Front)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "hot_stamping",
+     "option": "1C (Front)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "hot_stamping",
+     "option": "1C (Front)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "hot_stamping",
+     "option": "1C (Front)"
+    },
+    {
+     "productId": 114,
+     "fieldKey": "hot_stamping",
+     "option": "1C (Front)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0096",
+   "name": "Hot Stamping - 1C (Back)",
+   "file": "batch-2/cfg-0096/Hot Stamping - 1C (Back).png",
+   "sha256": "00c04e9714a79d67d0ede67c3c6158fc90da7b1413c914ee304352b8bbf582e5",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "Illustrative foil colours; preserve actual configured foil-colour selections."
+   ],
+   "mappings": [
+    {
+     "productId": 1,
+     "fieldKey": "hot_stamping",
+     "option": "1C (Back)"
+    },
+    {
+     "productId": 21,
+     "fieldKey": "hot_stamping",
+     "option": "1C (Back)"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "hot_stamping",
+     "option": "1C (Back)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "hot_stamping",
+     "option": "1C (Back)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "hot_stamping",
+     "option": "1C (Back)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "hot_stamping",
+     "option": "1C (Back)"
+    },
+    {
+     "productId": 114,
+     "fieldKey": "hot_stamping",
+     "option": "1C (Back)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0099",
+   "name": "Hot Stamping - 2C (Front)",
+   "file": "batch-2/cfg-0099/Hot Stamping - 2C (Front).png",
+   "sha256": "f670122df8bae2b4c997df970be8282cadb7329128240ac24a0bb1d84c3f8b2e",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "Illustrative foil colours; preserve actual configured foil-colour selections."
+   ],
+   "mappings": [
+    {
+     "productId": 1,
+     "fieldKey": "hot_stamping",
+     "option": "2C (Front)"
+    },
+    {
+     "productId": 21,
+     "fieldKey": "hot_stamping",
+     "option": "2C (Front)"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "hot_stamping",
+     "option": "2C (Front)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "hot_stamping",
+     "option": "2C (Front)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "hot_stamping",
+     "option": "2C (Front)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "hot_stamping",
+     "option": "2C (Front)"
+    },
+    {
+     "productId": 114,
+     "fieldKey": "hot_stamping",
+     "option": "2C (Front)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0100",
+   "name": "Hot Stamping - 2C (Back)",
+   "file": "batch-2/cfg-0100/Hot Stamping - 2C (Back).png",
+   "sha256": "42f761498bfa540e88fdcaa2bce4c54eb9943bfc8b6b93d17460ff52e438aeb7",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "Illustrative foil colours; preserve actual configured foil-colour selections."
+   ],
+   "mappings": [
+    {
+     "productId": 1,
+     "fieldKey": "hot_stamping",
+     "option": "2C (Back)"
+    },
+    {
+     "productId": 21,
+     "fieldKey": "hot_stamping",
+     "option": "2C (Back)"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "hot_stamping",
+     "option": "2C (Back)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "hot_stamping",
+     "option": "2C (Back)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "hot_stamping",
+     "option": "2C (Back)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "hot_stamping",
+     "option": "2C (Back)"
+    },
+    {
+     "productId": 114,
+     "fieldKey": "hot_stamping",
+     "option": "2C (Back)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0444",
+   "name": "Lamination - Gloss Lamination (Front)",
+   "file": "batch-2/cfg-0444/Lamination - Gloss Lamination (Front).png",
+   "sha256": "d8b0a1df70a86ea4dfd732fc301066006cf05252d0a3a6931ab92f4775a52d27",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "Preserve actual material/size/quantity restrictions.",
+    "For qualifying Art Card with two-side printing, front-only colour-protective finishing may require water-base protection on the reverse; retain existing configuration logic."
+   ],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "lam",
+     "option": "Gloss Lamination (Front)"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "lam",
+     "option": "Gloss Lamination (Front)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "lam",
+     "option": "Gloss Lamination (Front)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "lam",
+     "option": "Gloss Lamination (Front)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "lam",
+     "option": "Gloss Lamination (Front)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0445",
+   "name": "Lamination - Gloss Lamination (Both)",
+   "file": "batch-2/cfg-0445/Lamination - Gloss Lamination (Both).png",
+   "sha256": "f9011869c90d17e82b4d93e952f75b98a80d3737abf288bba3f5f80544a56e21",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "Preserve actual material/size/quantity restrictions.",
+    "For qualifying Art Card with two-side printing, front-only colour-protective finishing may require water-base protection on the reverse; retain existing configuration logic."
+   ],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "lam",
+     "option": "Gloss Lamination (Both)"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "lam",
+     "option": "Gloss Lamination (Both)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "lam",
+     "option": "Gloss Lamination (Both)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "lam",
+     "option": "Gloss Lamination (Both)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "lam",
+     "option": "Gloss Lamination (Both)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0446",
+   "name": "Lamination - Matt Lamination (Front)",
+   "file": "batch-2/cfg-0446/Lamination - Matt Lamination (Front).png",
+   "sha256": "1a29832d367f51008d7fafb40317c4ccd622bf65da9ec0189aebae55266b9dbc",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "Preserve actual material/size/quantity restrictions.",
+    "For qualifying Art Card with two-side printing, front-only colour-protective finishing may require water-base protection on the reverse; retain existing configuration logic."
+   ],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Front)"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Front)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Front)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Front)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Front)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0447",
+   "name": "Lamination - Matt Lamination (Both)",
+   "file": "batch-2/cfg-0447/Lamination - Matt Lamination (Both).png",
+   "sha256": "9854a00d2a69f7ab00b31d5849e1bd170d1c37e17585b8065c18ff1c91898714",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "Preserve actual material/size/quantity restrictions.",
+    "For qualifying Art Card with two-side printing, front-only colour-protective finishing may require water-base protection on the reverse; retain existing configuration logic."
+   ],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Both)"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Both)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Both)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Both)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Both)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0448",
+   "name": "Lamination - Gloss Water Base Varnish (Both)",
+   "file": "batch-2/cfg-0448/Lamination - Gloss Water Base Varnish (Both).png",
+   "sha256": "f9011869c90d17e82b4d93e952f75b98a80d3737abf288bba3f5f80544a56e21",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "Preserve actual material/size/quantity restrictions.",
+    "For qualifying Art Card with two-side printing, front-only colour-protective finishing may require water-base protection on the reverse; retain existing configuration logic."
+   ],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "lam",
+     "option": "Gloss Water Base Varnish (Both)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "lam",
+     "option": "Gloss Water Base Varnish (Both)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "lam",
+     "option": "Gloss Water Base Varnish (Both)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "lam",
+     "option": "Gloss Water Base Varnish (Both)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0449",
+   "name": "Lamination - Matt Lamination (Front) + Spot UV (Front)",
+   "file": "batch-2/cfg-0449/Lamination - Matt Lamination (Front) + Spot UV (Front).png",
+   "sha256": "8881050b30a901c488cd688137af757e32d49b768071935fbe9abe5b00722c82",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "Preserve actual material/size/quantity restrictions.",
+    "For qualifying Art Card with two-side printing, front-only colour-protective finishing may require water-base protection on the reverse; retain existing configuration logic."
+   ],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Front) + Spot UV (Front)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Front) + Spot UV (Front)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Front) + Spot UV (Front)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Front) + Spot UV (Front)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0450",
+   "name": "Lamination - Matt Lamination (Both) + Spot UV (Front)",
+   "file": "batch-2/cfg-0450/Lamination - Matt Lamination (Both) + Spot UV (Front).png",
+   "sha256": "124db821a49ea6a333822a090d1dcc2b1563e248975258d7ea2432fd34413176",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "Preserve actual material/size/quantity restrictions.",
+    "For qualifying Art Card with two-side printing, front-only colour-protective finishing may require water-base protection on the reverse; retain existing configuration logic."
+   ],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Both) + Spot UV (Front)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Both) + Spot UV (Front)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Both) + Spot UV (Front)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Both) + Spot UV (Front)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0451",
+   "name": "Lamination - Matt Lamination (Both) + Spot UV (Both)",
+   "file": "batch-2/cfg-0451/Lamination - Matt Lamination (Both) + Spot UV (Both).png",
+   "sha256": "5ee48b70635a528ef6ae0ca7126aa99c0267147cfbd656f08fd87fc08a3ea4e3",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "Preserve actual material/size/quantity restrictions.",
+    "For qualifying Art Card with two-side printing, front-only colour-protective finishing may require water-base protection on the reverse; retain existing configuration logic."
+   ],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Both) + Spot UV (Both)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Both) + Spot UV (Both)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Both) + Spot UV (Both)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "lam",
+     "option": "Matt Lamination (Both) + Spot UV (Both)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0452",
+   "name": "Lamination - UV Varnish (Front)",
+   "file": "batch-2/cfg-0452/Lamination - UV Varnish (Front).png",
+   "sha256": "d8b0a1df70a86ea4dfd732fc301066006cf05252d0a3a6931ab92f4775a52d27",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "Preserve actual material/size/quantity restrictions.",
+    "For qualifying Art Card with two-side printing, front-only colour-protective finishing may require water-base protection on the reverse; retain existing configuration logic."
+   ],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "lam",
+     "option": "UV Varnish (Front)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "lam",
+     "option": "UV Varnish (Front)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "lam",
+     "option": "UV Varnish (Front)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "lam",
+     "option": "UV Varnish (Front)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0453",
+   "name": "Lamination - UV Varnish (Both)",
+   "file": "batch-2/cfg-0453/Lamination - UV Varnish (Both).png",
+   "sha256": "f9011869c90d17e82b4d93e952f75b98a80d3737abf288bba3f5f80544a56e21",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "Preserve actual material/size/quantity restrictions.",
+    "For qualifying Art Card with two-side printing, front-only colour-protective finishing may require water-base protection on the reverse; retain existing configuration logic."
+   ],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "lam",
+     "option": "UV Varnish (Both)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "lam",
+     "option": "UV Varnish (Both)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "lam",
+     "option": "UV Varnish (Both)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "lam",
+     "option": "UV Varnish (Both)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0454",
+   "name": "Lamination - Gloss Water Base Varnish (Front)",
+   "file": "batch-2/cfg-0454/Lamination - Gloss Water Base Varnish (Front).png",
+   "sha256": "d8b0a1df70a86ea4dfd732fc301066006cf05252d0a3a6931ab92f4775a52d27",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "Preserve actual material/size/quantity restrictions.",
+    "For qualifying Art Card with two-side printing, front-only colour-protective finishing may require water-base protection on the reverse; retain existing configuration logic."
+   ],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "lam",
+     "option": "Gloss Water Base Varnish (Front)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "lam",
+     "option": "Gloss Water Base Varnish (Front)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "lam",
+     "option": "Gloss Water Base Varnish (Front)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "lam",
+     "option": "Gloss Water Base Varnish (Front)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0456",
+   "name": "Perforation Side - 297",
+   "file": "batch-2/cfg-0456/Perforation Side - 297.png",
+   "sha256": "8b985288bd6d0653a7c9d6689f8cd1c86bea6f70d7c8c6b18f143e0d587bad46",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "perf_side",
+     "option": "297"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "perf_side",
+     "option": "297"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "perf_side",
+     "option": "297"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "perf_side",
+     "option": "297"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0457",
+   "name": "Perforation Side - 420",
+   "file": "batch-2/cfg-0457/Perforation Side - 420.png",
+   "sha256": "da38a58507a512fd33ebbe21a837032afa341f8309e9622b29016b6f55e72acb",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "perf_side",
+     "option": "420"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "perf_side",
+     "option": "420"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "perf_side",
+     "option": "420"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "perf_side",
+     "option": "420"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0455",
+   "name": "Perforation Side - 210",
+   "file": "batch-2/cfg-0455/Perforation Side - 210.png",
+   "sha256": "501a8987bfca54755c5c16451439c10b8767c329962cf6284310f9b6d20ed5f3",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "perf_side",
+     "option": "210"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "perf_side",
+     "option": "210"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "perf_side",
+     "option": "210"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "perf_side",
+     "option": "210"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0433",
+   "name": "Hole Punching Side - Width Side (210mm)",
+   "file": "batch-2/cfg-0433/Hole Punching Side - Width Side (210mm).png",
+   "sha256": "e45557b02f949354e0134ceeff3da5de2cae6f8f4068f6a55896eef097cf3fa7",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "hp_side",
+     "option": "Width Side (210mm)"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "hp_side",
+     "option": "Width Side (210mm)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "hp_side",
+     "option": "Width Side (210mm)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "hp_side",
+     "option": "Width Side (210mm)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "hp_side",
+     "option": "Width Side (210mm)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0434",
+   "name": "Hole Punching Side - Height Side (148mm)",
+   "file": "batch-2/cfg-0434/Hole Punching Side - Height Side (148mm).png",
+   "sha256": "8cef8f5d88b8ef4632c00796e2d1624cd465d36a1609d5eaf0eb676fd708a199",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "hp_side",
+     "option": "Height Side (148mm)"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "hp_side",
+     "option": "Height Side (148mm)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "hp_side",
+     "option": "Height Side (148mm)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "hp_side",
+     "option": "Height Side (148mm)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "hp_side",
+     "option": "Height Side (148mm)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0417",
+   "name": "Custom Creasing Side - 210",
+   "file": "batch-2/cfg-0417/Custom Creasing Side - 210.png",
+   "sha256": "d7605a9cfbd53cee7bc1d5085dadb2697b7d9ed7a168fb3399f27f2cc2998f62",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "crease_side",
+     "option": "210"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "crease_side",
+     "option": "210"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "crease_side",
+     "option": "210"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "crease_side",
+     "option": "210"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "crease_side",
+     "option": "210"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0418",
+   "name": "Custom Creasing Side - 297",
+   "file": "batch-2/cfg-0418/Custom Creasing Side - 297.png",
+   "sha256": "df5c16d002377f866ab71d5aa37f420fffb6300ff95ec6e2265b35f998ab082e",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "crease_side",
+     "option": "297"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "crease_side",
+     "option": "297"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "crease_side",
+     "option": "297"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "crease_side",
+     "option": "297"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "crease_side",
+     "option": "297"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0419",
+   "name": "Custom Creasing Side - 420",
+   "file": "batch-2/cfg-0419/Custom Creasing Side - 420.png",
+   "sha256": "d00b616c35733ceb550dd16089d69c25ae11b236ae0dbe2c527a7b410a975b68",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "crease_side",
+     "option": "420"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "crease_side",
+     "option": "420"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "crease_side",
+     "option": "420"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "crease_side",
+     "option": "420"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "crease_side",
+     "option": "420"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0397",
+   "name": "Loose Sheet - Custom Creasing Side - 445",
+   "file": "batch-2/cfg-0397/Loose Sheet - Custom Creasing Side - 445.png",
+   "sha256": "62badd6fea3a7fe59e21cbb1cedd12cc0d73fe6bfdde3dad72f5d2c69d20d2e2",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 50,
+     "fieldKey": "crease_side",
+     "option": "445"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0420",
+   "name": "Custom Creasing Side - 594",
+   "file": "batch-2/cfg-0420/Custom Creasing Side - 594.png",
+   "sha256": "4dbcc02d4a4b399b903a7ee874b57770b1245b849b80d4cceaebf772ae2955d6",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "crease_side",
+     "option": "594"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "crease_side",
+     "option": "594"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "crease_side",
+     "option": "594"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "crease_side",
+     "option": "594"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0421",
+   "name": "Custom Creasing Side - 630",
+   "file": "batch-2/cfg-0421/Custom Creasing Side - 630.png",
+   "sha256": "7532060ed64f0e8e4cc074c4d7ae116bea24193e596fc435ec0d2ae5533192fc",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "crease_side",
+     "option": "630"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "crease_side",
+     "option": "630"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "crease_side",
+     "option": "630"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "crease_side",
+     "option": "630"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0443",
+   "name": "Hole Punching Side - Width Side (297mm)",
+   "file": "batch-2/cfg-0443/Hole Punching Side - Width Side (297mm).png",
+   "sha256": "9354520bac0ab4fb12c89fbbc37f9797be0fa60f187802df942e0276d086affe",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "hp_side",
+     "option": "Width Side (297mm)"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "hp_side",
+     "option": "Width Side (297mm)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "hp_side",
+     "option": "Width Side (297mm)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "hp_side",
+     "option": "Width Side (297mm)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "hp_side",
+     "option": "Width Side (297mm)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0439",
+   "name": "Hole Punching Side - Height Side (210mm)",
+   "file": "batch-2/cfg-0439/Hole Punching Side - Height Side (210mm).png",
+   "sha256": "a5e54adeb126fd5e2b289a4c8bef5cbfcbbd33749c7c1fd85eefe21c3f0df9da",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "hp_side",
+     "option": "Height Side (210mm)"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "hp_side",
+     "option": "Height Side (210mm)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "hp_side",
+     "option": "Height Side (210mm)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "hp_side",
+     "option": "Height Side (210mm)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "hp_side",
+     "option": "Height Side (210mm)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0435",
+   "name": "Hole Punching Side - Width Side (420mm)",
+   "file": "batch-2/cfg-0435/Hole Punching Side - Width Side (420mm).png",
+   "sha256": "f4e47e9d1498325feb50569eaa460a48926357bfef3df8d3ef9764323530a61b",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "hp_side",
+     "option": "Width Side (420mm)"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "hp_side",
+     "option": "Width Side (420mm)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "hp_side",
+     "option": "Width Side (420mm)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "hp_side",
+     "option": "Width Side (420mm)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "hp_side",
+     "option": "Width Side (420mm)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0436",
+   "name": "Hole Punching Side - Height Side (297mm)",
+   "file": "batch-2/cfg-0436/Hole Punching Side - Height Side (297mm).png",
+   "sha256": "37c56915f841f13938dd338b769de2bafab493e5935fcedee0426a2745fc0c97",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "hp_side",
+     "option": "Height Side (297mm)"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "hp_side",
+     "option": "Height Side (297mm)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "hp_side",
+     "option": "Height Side (297mm)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "hp_side",
+     "option": "Height Side (297mm)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "hp_side",
+     "option": "Height Side (297mm)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0440",
+   "name": "Hole Punching Side - Width Side (148mm)",
+   "file": "batch-2/cfg-0440/Hole Punching Side - Width Side (148mm).png",
+   "sha256": "c3d747c2d4350296acf302fe2f77d1483c86c927d91da73d7f2891f50ba22859",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "hp_side",
+     "option": "Width Side (148mm)"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "hp_side",
+     "option": "Width Side (148mm)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "hp_side",
+     "option": "Width Side (148mm)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "hp_side",
+     "option": "Width Side (148mm)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "hp_side",
+     "option": "Width Side (148mm)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0441",
+   "name": "Hole Punching Side - Height Side (105mm)",
+   "file": "batch-2/cfg-0441/Hole Punching Side - Height Side (105mm).png",
+   "sha256": "f6b9801f2e1a5eb07722d3230c4a2c633553ecccfe3a52b3dc1d2f118f7f4311",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "hp_side",
+     "option": "Height Side (105mm)"
+    },
+    {
+     "productId": 50,
+     "fieldKey": "hp_side",
+     "option": "Height Side (105mm)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "hp_side",
+     "option": "Height Side (105mm)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "hp_side",
+     "option": "Height Side (105mm)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "hp_side",
+     "option": "Height Side (105mm)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0400",
+   "name": "Loose Sheet - Hole Punching Side - Width Side (105mm)",
+   "file": "batch-2/cfg-0400/Loose Sheet - Hole Punching Side - Width Side (105mm).png",
+   "sha256": "92d44ef838f29eb2dd0a95071d5862f7e7805676e650ea61fb441efa32d3812a",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 50,
+     "fieldKey": "hp_side",
+     "option": "Width Side (105mm)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0401",
+   "name": "Loose Sheet - Hole Punching Side - Height Side (74mm)",
+   "file": "batch-2/cfg-0401/Loose Sheet - Hole Punching Side - Height Side (74mm).png",
+   "sha256": "63f08db69e5a6d5e46eef5ee5960d549011699b0784a638525b7787c4ab909ca",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 50,
+     "fieldKey": "hp_side",
+     "option": "Height Side (74mm)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0402",
+   "name": "Loose Sheet - Hole Punching Side - Width Side (445mm)",
+   "file": "batch-2/cfg-0402/Loose Sheet - Hole Punching Side - Width Side (445mm).png",
+   "sha256": "1da346857bd14fadff674161a9ffe367a65fefe13c8e1f30f79073f60cb96e59",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 50,
+     "fieldKey": "hp_side",
+     "option": "Width Side (445mm)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0403",
+   "name": "Loose Sheet - Hole Punching Side - Height Side (310mm)",
+   "file": "batch-2/cfg-0403/Loose Sheet - Hole Punching Side - Height Side (310mm).png",
+   "sha256": "a063b8b1f519fb4c8759fe72b3d763dd8f90da61cb56d7a8e5ebdefe150d2907",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 50,
+     "fieldKey": "hp_side",
+     "option": "Height Side (310mm)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0399",
+   "name": "Loose Sheet - Hole Punching Side - Height Side (198mm)",
+   "file": "batch-2/cfg-0399/Loose Sheet - Hole Punching Side - Height Side (198mm).png",
+   "sha256": "77cf631af67f01816ddff662e862e07c223d48b9529b67acd96efec4f06be98c",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 50,
+     "fieldKey": "hp_side",
+     "option": "Height Side (198mm)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0404",
+   "name": "Loose Sheet - Hole Punching Side - Height Side (99mm)",
+   "file": "batch-2/cfg-0404/Loose Sheet - Hole Punching Side - Height Side (99mm).png",
+   "sha256": "ae21a00742fe5cc8b6efe95f552134ac789ff8343003dcf4c8ad2c5d5af16156",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 50,
+     "fieldKey": "hp_side",
+     "option": "Height Side (99mm)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0438",
+   "name": "Hole Punching Side - Width Side (594mm)",
+   "file": "batch-2/cfg-0438/Hole Punching Side - Width Side (594mm).png",
+   "sha256": "ca07950693300a988deef9cb1c9d7309d3689cfe528618afc156a56a7f45cb51",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "hp_side",
+     "option": "Width Side (594mm)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "hp_side",
+     "option": "Width Side (594mm)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "hp_side",
+     "option": "Width Side (594mm)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "hp_side",
+     "option": "Width Side (594mm)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0442",
+   "name": "Hole Punching Side - Height Side (420mm)",
+   "file": "batch-2/cfg-0442/Hole Punching Side - Height Side (420mm).png",
+   "sha256": "efe82c4f230984aeda090fdeac3ee3c1650e89982ec9158bd3969a505c972a14",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "hp_side",
+     "option": "Height Side (420mm)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "hp_side",
+     "option": "Height Side (420mm)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "hp_side",
+     "option": "Height Side (420mm)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "hp_side",
+     "option": "Height Side (420mm)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0437",
+   "name": "Hole Punching Side - Width Side (630mm)",
+   "file": "batch-2/cfg-0437/Hole Punching Side - Width Side (630mm).png",
+   "sha256": "a8bca5aa8098729325e268fd948ca22a9e08b7396749ed9c3c04ae1217d9098e",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 21,
+     "fieldKey": "hp_side",
+     "option": "Width Side (630mm)"
+    },
+    {
+     "productId": 101,
+     "fieldKey": "hp_side",
+     "option": "Width Side (630mm)"
+    },
+    {
+     "productId": 102,
+     "fieldKey": "hp_side",
+     "option": "Width Side (630mm)"
+    },
+    {
+     "productId": 103,
+     "fieldKey": "hp_side",
+     "option": "Width Side (630mm)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0093",
+   "name": "Business Card - Creasing - Standard Creasing",
+   "file": "batch-2/cfg-0093/Business Card - Creasing - Standard Creasing.png",
+   "sha256": "c1414f86519df3d56f236213f8180e75aa8cba9f50471de150885b384342216b",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 1,
+     "fieldKey": "creasing",
+     "option": "Standard Creasing"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0094",
+   "name": "Business Card - Creasing - Customised Creasing",
+   "file": "batch-2/cfg-0094/Business Card - Creasing - Customised Creasing.png",
+   "sha256": "3fdc5d28772a8c62cab2e8cfd2c21a355ee06b1c9b6b87f48c0624e85dcf993a",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 1,
+     "fieldKey": "creasing",
+     "option": "Customised Creasing"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0097",
+   "name": "Business Card - Hot Stamping - 1C (Front) + 1C (Back)",
+   "file": "batch-2/cfg-0097/Business Card - Hot Stamping - 1C (Front) + 1C (Back).png",
+   "sha256": "97ac2bc7183fac00bb5ae97f23cbe3da0896aab81fd07e39fbbe7c58a5581b6b",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 1,
+     "fieldKey": "hot_stamping",
+     "option": "1C (Front) + 1C (Back)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0098",
+   "name": "Business Card - Hot Stamping - 1C (Front) + 2C (Back)",
+   "file": "batch-2/cfg-0098/Business Card - Hot Stamping - 1C (Front) + 2C (Back).png",
+   "sha256": "05b83d050dedb80fbbb300e4c641e4c17295d89fd994a601f0736acffc728d0c",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 1,
+     "fieldKey": "hot_stamping",
+     "option": "1C (Front) + 2C (Back)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0101",
+   "name": "Business Card - Hot Stamping - 2C (Front) + 1C (Back)",
+   "file": "batch-2/cfg-0101/Business Card - Hot Stamping - 2C (Front) + 1C (Back).png",
+   "sha256": "ea451c6c56f4f6c0555a05c93b07f5cbf1e8fb2411adfbfff548b34ac2678f24",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 1,
+     "fieldKey": "hot_stamping",
+     "option": "2C (Front) + 1C (Back)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0102",
+   "name": "Business Card - Hot Stamping - 2C (Front) + 2C (Back)",
+   "file": "batch-2/cfg-0102/Business Card - Hot Stamping - 2C (Front) + 2C (Back).png",
+   "sha256": "3802bdd3e7056046a7a7d223f98bfed38de870f7e1dd304499f12dd6c44b5c2b",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 1,
+     "fieldKey": "hot_stamping",
+     "option": "2C (Front) + 2C (Back)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0057",
+   "name": "Booklet - Binding - Perfect Binding",
+   "file": "batch-2/cfg-0057/Booklet - Binding - Perfect Binding.png",
+   "sha256": "fed161d0d2f6dd9513d8d221bdbceaa502fdb4679f689851a1bae8a0a5548dbd",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "No availability changes authorized. See../SUPPLIER-FINDINGS.md for material/binding restrictions."
+   ],
+   "mappings": [
+    {
+     "productId": 37,
+     "fieldKey": "binding",
+     "option": "Perfect Binding"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0058",
+   "name": "Booklet - Cover Type - Soft Cover",
+   "file": "batch-2/cfg-0058/Booklet - Cover Type - Soft Cover.png",
+   "sha256": "fed161d0d2f6dd9513d8d221bdbceaa502fdb4679f689851a1bae8a0a5548dbd",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "No availability changes authorized. See../SUPPLIER-FINDINGS.md for material/binding restrictions."
+   ],
+   "mappings": [
+    {
+     "productId": 37,
+     "fieldKey": "ordertype",
+     "option": "Soft Cover"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0059",
+   "name": "Booklet - Cover Type - Hard Cover",
+   "file": "batch-2/cfg-0059/Booklet - Cover Type - Hard Cover.png",
+   "sha256": "27e0cad48d3c0e578ab648d8ba13412b0c43f3c9c14baba511946118d34e3a08",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "No availability changes authorized. See../SUPPLIER-FINDINGS.md for material/binding restrictions."
+   ],
+   "mappings": [
+    {
+     "productId": 37,
+     "fieldKey": "ordertype",
+     "option": "Hard Cover"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0061",
+   "name": "Booklet - Binding - Perfect Binding",
+   "file": "batch-2/cfg-0061/Booklet - Binding - Perfect Binding.png",
+   "sha256": "fed161d0d2f6dd9513d8d221bdbceaa502fdb4679f689851a1bae8a0a5548dbd",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "No availability changes authorized. See../SUPPLIER-FINDINGS.md for material/binding restrictions."
+   ],
+   "mappings": [
+    {
+     "productId": 19,
+     "fieldKey": "binding",
+     "option": "Perfect Binding"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0065",
+   "name": "Booklet - Cover Type - Soft Cover",
+   "file": "batch-2/cfg-0065/Booklet - Cover Type - Soft Cover.png",
+   "sha256": "fed161d0d2f6dd9513d8d221bdbceaa502fdb4679f689851a1bae8a0a5548dbd",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "No availability changes authorized. See../SUPPLIER-FINDINGS.md for material/binding restrictions."
+   ],
+   "mappings": [
+    {
+     "productId": 19,
+     "fieldKey": "ordertype",
+     "option": "Soft Cover"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0066",
+   "name": "Booklet - Cover Type - Hard Cover",
+   "file": "batch-2/cfg-0066/Booklet - Cover Type - Hard Cover.png",
+   "sha256": "27e0cad48d3c0e578ab648d8ba13412b0c43f3c9c14baba511946118d34e3a08",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "No availability changes authorized. See../SUPPLIER-FINDINGS.md for material/binding restrictions."
+   ],
+   "mappings": [
+    {
+     "productId": 19,
+     "fieldKey": "ordertype",
+     "option": "Hard Cover"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0056",
+   "name": "Booklet - Binding - Saddle Stitching",
+   "file": "batch-2/cfg-0056/Booklet - Binding - Saddle Stitching.png",
+   "sha256": "f64aa14fcded592f7e15885d44e86564289df7b5692e937495cc3d1044e8f982",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "No availability changes authorized. See../SUPPLIER-FINDINGS.md for material/binding restrictions."
+   ],
+   "mappings": [
+    {
+     "productId": 37,
+     "fieldKey": "binding",
+     "option": "Saddle Stitching"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0060",
+   "name": "Booklet - Binding - Saddle Stitching",
+   "file": "batch-2/cfg-0060/Booklet - Binding - Saddle Stitching.png",
+   "sha256": "f64aa14fcded592f7e15885d44e86564289df7b5692e937495cc3d1044e8f982",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "No availability changes authorized. See../SUPPLIER-FINDINGS.md for material/binding restrictions."
+   ],
+   "mappings": [
+    {
+     "productId": 19,
+     "fieldKey": "binding",
+     "option": "Saddle Stitching"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0062",
+   "name": "Cover Embossing - Add Emboss",
+   "file": "batch-2/cfg-0062/Cover Embossing - Add Emboss.png",
+   "sha256": "7b348f4a48c810eaf107549956e5c13448ecf4a5524c6a3b1e57b89257f7871c",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "No availability changes authorized. See../SUPPLIER-FINDINGS.md for material/binding restrictions."
+   ],
+   "mappings": [
+    {
+     "productId": 19,
+     "fieldKey": "cover_embossing",
+     "option": "Add Emboss"
+    },
+    {
+     "productId": 37,
+     "fieldKey": "cover_embossing",
+     "option": "Add Emboss"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0063",
+   "name": "Cover Print Colour - 4C - 4 Colour Outer Only",
+   "file": "batch-2/cfg-0063/Cover Print Colour - 4C - 4 Colour Outer Only.png",
+   "sha256": "f9f058e12c601ba669a4dc855c33c3974b94246ebbbb61530fda029af7621f75",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "No availability changes authorized. See../SUPPLIER-FINDINGS.md for material/binding restrictions."
+   ],
+   "mappings": [
+    {
+     "productId": 19,
+     "fieldKey": "outer_inner",
+     "option": "4C : 4 Colour Outer Only"
+    },
+    {
+     "productId": 37,
+     "fieldKey": "outer_inner",
+     "option": "4C : 4 Colour Outer Only"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0064",
+   "name": "Cover Print Colour - 4C - 4 Colour Outer & 4 Colour Inner",
+   "file": "batch-2/cfg-0064/Cover Print Colour - 4C - 4 Colour Outer & 4 Colour Inner.png",
+   "sha256": "70c5d4dfbd1050c8a12c6fc5943929553e45da7c1312748752830ffdfeeec955",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "No availability changes authorized. See../SUPPLIER-FINDINGS.md for material/binding restrictions."
+   ],
+   "mappings": [
+    {
+     "productId": 19,
+     "fieldKey": "outer_inner",
+     "option": "4C : 4 Colour Outer & 4 Colour Inner"
+    },
+    {
+     "productId": 37,
+     "fieldKey": "outer_inner",
+     "option": "4C : 4 Colour Outer & 4 Colour Inner"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0067",
+   "name": "Hot Stamping Colour - Hot Stamping - 1 Colour (Front)",
+   "file": "batch-2/cfg-0067/Hot Stamping Colour - Hot Stamping - 1 Colour (Front).png",
+   "sha256": "f858e93a425eecf76becc2078412f024f258c8b6d2362f0db6919e0d6644b04e",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "No availability changes authorized. See../SUPPLIER-FINDINGS.md for material/binding restrictions."
+   ],
+   "mappings": [
+    {
+     "productId": 19,
+     "fieldKey": "hot_stamping",
+     "option": "Hot Stamping - 1 Colour (Front)"
+    },
+    {
+     "productId": 37,
+     "fieldKey": "hot_stamping",
+     "option": "Hot Stamping - 1 Colour (Front)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0068",
+   "name": "Hot Stamping Colour - Hot Stamping - 2 Colours (Front)",
+   "file": "batch-2/cfg-0068/Hot Stamping Colour - Hot Stamping - 2 Colours (Front).png",
+   "sha256": "fa0a6dc23d76086c95a7d9c307e6d5c1d43e0255e90ccab525b34a4d54c7d7ff",
+   "status": "created-pending-user-review",
+   "conditions": [
+    "No availability changes authorized. See../SUPPLIER-FINDINGS.md for material/binding restrictions."
+   ],
+   "mappings": [
+    {
+     "productId": 19,
+     "fieldKey": "hot_stamping",
+     "option": "Hot Stamping - 2 Colours (Front)"
+    },
+    {
+     "productId": 37,
+     "fieldKey": "hot_stamping",
+     "option": "Hot Stamping - 2 Colours (Front)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0048",
+   "name": "Bill-Book - Layers - 1",
+   "file": "batch-2/cfg-0048/Bill-Book - Layers - 1.png",
+   "sha256": "372be4225683afba2cdd0ef0bdd14712459862a1b9f1433b507c02eeed2e253e",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "layers",
+     "option": "1"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0049",
+   "name": "Bill-Book - Layers - 2",
+   "file": "batch-2/cfg-0049/Bill-Book - Layers - 2.png",
+   "sha256": "1b37bd24b5306f5d105b370f1d8e783fc19e485168e6668841d4b5a653231e7e",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "layers",
+     "option": "2"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0050",
+   "name": "Bill-Book - Layers - 3",
+   "file": "batch-2/cfg-0050/Bill-Book - Layers - 3.png",
+   "sha256": "2655f351febeea7a03e7f37df14eabc577d9a4aadfedf1082839b4207481dc0d",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "layers",
+     "option": "3"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0054",
+   "name": "Bill-Book - Paper Materials - NCR (Carbonize Paper)",
+   "file": "batch-2/cfg-0054/Bill-Book - Paper Materials - NCR (Carbonize Paper).png",
+   "sha256": "2655f351febeea7a03e7f37df14eabc577d9a4aadfedf1082839b4207481dc0d",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "papermaterials",
+     "option": "NCR (Carbonize Paper)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0055",
+   "name": "Bill-Book - Paper Materials - Normal Paper",
+   "file": "batch-2/cfg-0055/Bill-Book - Paper Materials - Normal Paper.png",
+   "sha256": "372be4225683afba2cdd0ef0bdd14712459862a1b9f1433b507c02eeed2e253e",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "papermaterials",
+     "option": "Normal Paper"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0051",
+   "name": "Bill-Book - Layers - 4",
+   "file": "batch-2/cfg-0051/Bill-Book - Layers - 4.png",
+   "sha256": "37041dafbf54fa23c963a47dcb3ec8f4d1f98bdf3a0deb87120f613266907fcb",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "layers",
+     "option": "4"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0052",
+   "name": "Bill-Book - Layers - 5",
+   "file": "batch-2/cfg-0052/Bill-Book - Layers - 5.png",
+   "sha256": "e19743e93df902a326dde94950b2eb43107e1c014bcd43b3c6a6b93238a4e832",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "layers",
+     "option": "5"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0053",
+   "name": "Bill-Book - Layers - 6",
+   "file": "batch-2/cfg-0053/Bill-Book - Layers - 6.png",
+   "sha256": "634ef8cdcd7d3e60374926ca0930e26f58df3256a3a262d38f8d927c2c53397a",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "layers",
+     "option": "6"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0042",
+   "name": "Bill-Book - Back Print — Apply to - First Layer Only",
+   "file": "batch-2/cfg-0042/Bill-Book - Back Print — Apply to - First Layer Only.png",
+   "sha256": "0332fb92437f038207b85f3e164403939a0497f001b7d1e40dbec2e2d8f1bf87",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "back_print_layer",
+     "option": "First Layer Only"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0043",
+   "name": "Bill-Book - Back Print — Apply to - All Layers",
+   "file": "batch-2/cfg-0043/Bill-Book - Back Print — Apply to - All Layers.png",
+   "sha256": "604f596d4f7d1453dd45851a110bf4bdbf14f423efe0b9c6883c9ac5c4a2d0ff",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "back_print_layer",
+     "option": "All Layers"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0047",
+   "name": "Bill-Book - Binding Type - Pad",
+   "file": "batch-2/cfg-0047/Bill-Book - Binding Type - Pad.png",
+   "sha256": "9f693ee5308685d4082107ba9f721ce924a13c65b8ddc4211583df0748d05728",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "binding",
+     "option": "Pad"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0045",
+   "name": "Bill-Book - Binding Location - Top side binding",
+   "file": "batch-2/cfg-0045/Bill-Book - Binding Location - Top side binding.png",
+   "sha256": "5a278d0effe9659fc09f3ab042e038a0ee2656eab438808ba3b6411fc2de01da",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "bindinglocation",
+     "option": "Top side binding"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0046",
+   "name": "Bill-Book - Binding Type - Book",
+   "file": "batch-2/cfg-0046/Bill-Book - Binding Type - Book.png",
+   "sha256": "ef1bcd8b52ad39bc7d8ebbc18f719ff7ebcc6a7f960a75325ac37af8049df2a6",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "binding",
+     "option": "Book"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0044",
+   "name": "Bill-Book - Binding Location - Left side binding",
+   "file": "batch-2/cfg-0044/Bill-Book - Binding Location - Left side binding.png",
+   "sha256": "5ac1966290a28892ecffaca8ed61b64b722f6f7f9aaefd0baf10b1cd467fe796",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "bindinglocation",
+     "option": "Left side binding"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0138",
+   "name": "Computer Form - Layer - 2",
+   "file": "batch-2/cfg-0138/Computer Form - Layer - 2.png",
+   "sha256": "7e641f14dd459b511be4dd1cd9f046cad7590d3cda055bce8089c14e71452d7e",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 111,
+     "fieldKey": "layers",
+     "option": "2"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0139",
+   "name": "Computer Form - Layer - 3",
+   "file": "batch-2/cfg-0139/Computer Form - Layer - 3.png",
+   "sha256": "4222f59fe355808abc94f8ceef6cc27b59c7138d62117424f8802bf9478fed9c",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 111,
+     "fieldKey": "layers",
+     "option": "3"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0140",
+   "name": "Computer Form - Layer - 4",
+   "file": "batch-2/cfg-0140/Computer Form - Layer - 4.png",
+   "sha256": "2aa4f21f11b69f703bcdabd4608c935085db0fda5a53d735d2af6b6bea4bed02",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 111,
+     "fieldKey": "layers",
+     "option": "4"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0141",
+   "name": "Computer Form - Layer - 5",
+   "file": "batch-2/cfg-0141/Computer Form - Layer - 5.png",
+   "sha256": "607c6ae13e115a0ff335d25cef746fc9a03d8c3691049fc7a1d3f2d05f07e943",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 111,
+     "fieldKey": "layers",
+     "option": "5"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0548",
+   "name": "Roll Form Sticker - Paper Core - 25mm",
+   "file": "batch-2/cfg-0548/Roll Form Sticker - Paper Core - 25mm.png",
+   "sha256": "ae97bb7959c285cb289c0468db9f911a3969e309156cb827120d9d116a9c5065",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_core",
+     "option": "25mm"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0549",
+   "name": "Roll Form Sticker - Paper Core - 40mm",
+   "file": "batch-2/cfg-0549/Roll Form Sticker - Paper Core - 40mm.png",
+   "sha256": "661d8f90c15b05fa4aec22bfa30abf8bcf2781700e567e000435e559e1af57b1",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_core",
+     "option": "40mm"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0550",
+   "name": "Roll Form Sticker - Paper Core - 76mm",
+   "file": "batch-2/cfg-0550/Roll Form Sticker - Paper Core - 76mm.png",
+   "sha256": "0ba91d87beb7aed39fbbdae802c941b4da59b2d9d68c8cae64c35a8965502683",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_core",
+     "option": "76mm"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0371",
+   "name": "Label Sticker - Cutting Method - Cut To Size",
+   "file": "batch-2/cfg-0371/Label Sticker - Cutting Method - Cut To Size.png",
+   "sha256": "636c8ae17e9faedf9fb1293f15d3d40574ae230acc8479ed50434bb6adc2fff4",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 60,
+     "fieldKey": "cutting_method",
+     "option": "Cut To Size"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0372",
+   "name": "Label Sticker - Cutting Method - Die-Cutting",
+   "file": "batch-2/cfg-0372/Label Sticker - Cutting Method - Die-Cutting.png",
+   "sha256": "4e0a5ae36fb03bfd553e901bf50298ed7446df6388fca336427c5bd0a07919d5",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 60,
+     "fieldKey": "cutting_method",
+     "option": "Die-Cutting"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0374",
+   "name": "Label Sticker - Delivery Sheet Size - 297mm x 210mm",
+   "file": "batch-2/cfg-0374/Label Sticker - Delivery Sheet Size - 297mm x 210mm.png",
+   "sha256": "dc9ab2959f9bfb0e74f65b2a9f3f5c3d42d7e583526cc35ab81832a05e8b51bc",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 60,
+     "fieldKey": "delivery_sheet",
+     "option": "297mm x 210mm"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0375",
+   "name": "Label Sticker - Delivery Sheet Size - 210mm x 148mm",
+   "file": "batch-2/cfg-0375/Label Sticker - Delivery Sheet Size - 210mm x 148mm.png",
+   "sha256": "694a3fb85d29d7ab36be7484510b8ede49832e84cd31fb1a50f83e41393777f1",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 60,
+     "fieldKey": "delivery_sheet",
+     "option": "210mm x 148mm"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0373",
+   "name": "Label Sticker - Delivery Sheet Size - 330mm x 482mm",
+   "file": "batch-2/cfg-0373/Label Sticker - Delivery Sheet Size - 330mm x 482mm.png",
+   "sha256": "be720c74f45276f8af4b3075cf2cf3c9af3ec583c555385c2996e32e96a6421f",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 60,
+     "fieldKey": "delivery_sheet",
+     "option": "330mm x 482mm"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0376",
+   "name": "Label Sticker - Delivery Sheet Size - 148mm x 148mm",
+   "file": "batch-2/cfg-0376/Label Sticker - Delivery Sheet Size - 148mm x 148mm.png",
+   "sha256": "9f4ba7f03aafd65fc43dcef2df14acf9e29caf0a99c7dcc1d2298143a8fffea1",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 60,
+     "fieldKey": "delivery_sheet",
+     "option": "148mm x 148mm"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0377",
+   "name": "Label Sticker - Delivery Sheet Size - 111mm x 148mm",
+   "file": "batch-2/cfg-0377/Label Sticker - Delivery Sheet Size - 111mm x 148mm.png",
+   "sha256": "657a86b1340e527d48a57e336ede4b79155ff0f26fccee6f1a73d77279261fb1",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 60,
+     "fieldKey": "delivery_sheet",
+     "option": "111mm x 148mm"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0380",
+   "name": "Label Sticker - Delivery Sheet Size - 74mm x 98mm",
+   "file": "batch-2/cfg-0380/Label Sticker - Delivery Sheet Size - 74mm x 98mm.png",
+   "sha256": "1a8c2d231a7d858474fc092da42af76a91c7dd2baf98d4fe2e5d39f204c93602",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 60,
+     "fieldKey": "delivery_sheet",
+     "option": "74mm x 98mm"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0378",
+   "name": "Label Sticker - Delivery Sheet Size - 89mm x 148mm",
+   "file": "batch-2/cfg-0378/Label Sticker - Delivery Sheet Size - 89mm x 148mm.png",
+   "sha256": "de9902a49ea8ce329863492b0f91723a713674d3e966e7232fbe73505dac0bd6",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 60,
+     "fieldKey": "delivery_sheet",
+     "option": "89mm x 148mm"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0379",
+   "name": "Label Sticker - Delivery Sheet Size - 112mm x 98mm",
+   "file": "batch-2/cfg-0379/Label Sticker - Delivery Sheet Size - 112mm x 98mm.png",
+   "sha256": "b48cbcfd95c4a47f0e8e1c9b4ef196fa04791192684e39702483007980780d24",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 60,
+     "fieldKey": "delivery_sheet",
+     "option": "112mm x 98mm"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0381",
+   "name": "Label Sticker - Waste Removal - Required",
+   "file": "batch-2/cfg-0381/Label Sticker - Waste Removal - Required.png",
+   "sha256": "f441d3dbd8dba5a71b236ada2d05171404b6d1e1829bc5cb4630efcab1e15ee9",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 60,
+     "fieldKey": "waste_removal",
+     "option": "Required"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0382",
+   "name": "Label Sticker - Hot Stamping Front Colour - Gold",
+   "file": "batch-2/cfg-0382/Label Sticker - Hot Stamping Front Colour - Gold.png",
+   "sha256": "88dc5110fe916c71638c8230a3b15e3db392bcd2117f94279c99461165a3eb14",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 61,
+     "fieldKey": "colour",
+     "option": "Gold"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0383",
+   "name": "Label Sticker - Hot Stamping Front Colour - Silver",
+   "file": "batch-2/cfg-0383/Label Sticker - Hot Stamping Front Colour - Silver.png",
+   "sha256": "27f6c7dc77b327c0c834fec6073df7c712e504f7224af50a5dfcf22fb3a0dfb5",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 61,
+     "fieldKey": "colour",
+     "option": "Silver"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0537",
+   "name": "Roll Form Sticker - Category - Rectangle-Square",
+   "file": "batch-2/cfg-0537/Roll Form Sticker - Category - Rectangle-Square.png",
+   "sha256": "1457bbc4713a24620298134337cd85b7bdb9d7033552539ca6b4e543fbc4cd86",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_cat",
+     "option": "Rectangle/Square"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0538",
+   "name": "Roll Form Sticker - Category - Round",
+   "file": "batch-2/cfg-0538/Roll Form Sticker - Category - Round.png",
+   "sha256": "4bda75632cdcd9a6d3b06b45e0872c87353af6447a5d731b84d9ffc8a9dcf4fc",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_cat",
+     "option": "Round"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0539",
+   "name": "Roll Form Sticker - Category - Custom Shape",
+   "file": "batch-2/cfg-0539/Roll Form Sticker - Category - Custom Shape.png",
+   "sha256": "78b17a24fdd685dd28544a1a731f21634ff44b06fdd7ef3ec97ee7cae93beb56",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_cat",
+     "option": "Custom Shape"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0540",
+   "name": "Roll Form Sticker - Final Roll Direction - 3 o'clock",
+   "file": "batch-2/cfg-0540/Roll Form Sticker - Final Roll Direction - 3 o'clock.png",
+   "sha256": "67c05aed9f97081b6f9d89f3187846ed7d0fa49b0a2356371302a0d0af02c4cd",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_dir",
+     "option": "3 o'clock"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0552",
+   "name": "Roll Form Sticker - Roll Type - Roll Out",
+   "file": "batch-2/cfg-0552/Roll Form Sticker - Roll Type - Roll Out.png",
+   "sha256": "67c05aed9f97081b6f9d89f3187846ed7d0fa49b0a2356371302a0d0af02c4cd",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_rolltype",
+     "option": "Roll Out"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0541",
+   "name": "Roll Form Sticker - Final Roll Direction - 6 o'clock",
+   "file": "batch-2/cfg-0541/Roll Form Sticker - Final Roll Direction - 6 o'clock.png",
+   "sha256": "af051479ec0450f9898679350edc58368491537e412262d4712b154a3ba7f079",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_dir",
+     "option": "6 o'clock"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0542",
+   "name": "Roll Form Sticker - Final Roll Direction - 9 o'clock",
+   "file": "batch-2/cfg-0542/Roll Form Sticker - Final Roll Direction - 9 o'clock.png",
+   "sha256": "9d266a1055c9de50fa5d59677f5c604a16dc038a3f0c69ba912808558b408f31",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_dir",
+     "option": "9 o'clock"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0543",
+   "name": "Roll Form Sticker - Final Roll Direction - 12 o'clock",
+   "file": "batch-2/cfg-0543/Roll Form Sticker - Final Roll Direction - 12 o'clock.png",
+   "sha256": "ab1b95867062e8ae002059b2752f23b85235e32f0b5cb2c10a50dc5154c5ca22",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_dir",
+     "option": "12 o'clock"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0551",
+   "name": "Roll Form Sticker - Roll Type - Roll In",
+   "file": "batch-2/cfg-0551/Roll Form Sticker - Roll Type - Roll In.png",
+   "sha256": "756f019bf956e49a1bd3ab2336ebf3813d3dd8097f357fd8c64ca2e8fb171a4a",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_rolltype",
+     "option": "Roll In"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0544",
+   "name": "Roll Form Sticker - Hot Stamping Colour - 1C (Front)",
+   "file": "batch-2/cfg-0544/Roll Form Sticker - Hot Stamping Colour - 1C (Front).png",
+   "sha256": "277de31cc27959e3b50ffab75dfdccda919b8969f3b4e5cccf34cf00b930a569",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_hs",
+     "option": "1C (Front)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0545",
+   "name": "Roll Form Sticker - Lamination - Finishing - Matte Lamination",
+   "file": "batch-2/cfg-0545/Roll Form Sticker - Lamination - Finishing - Matte Lamination.png",
+   "sha256": "fe626c6d11abae15b454826d137f625ca56f7167206030d8db80df3aca7dcb06",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_lam",
+     "option": "Matte Lamination"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0546",
+   "name": "Roll Form Sticker - Lamination - Finishing - Gloss Lamination",
+   "file": "batch-2/cfg-0546/Roll Form Sticker - Lamination - Finishing - Gloss Lamination.png",
+   "sha256": "588e6cf3ef64bf5cc18ef4d2ada58a6fdc939115738c207ade07d5a1eceaae21",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_lam",
+     "option": "Gloss Lamination"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0547",
+   "name": "Roll Form Sticker - Lamination - Finishing - UV Varnish",
+   "file": "batch-2/cfg-0547/Roll Form Sticker - Lamination - Finishing - UV Varnish.png",
+   "sha256": "7e974450ce1d1a11ee618ce7f5cdfcad681b3ca42b79979cd9e8ac0455093bd7",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_lam",
+     "option": "UV Varnish"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0553",
+   "name": "Roll Form Sticker - Spot Colour - NBLK 01",
+   "file": "batch-2/cfg-0553/Roll Form Sticker - Spot Colour - NBLK 01.png",
+   "sha256": "2b6b6ca04834973fb44811e9cf52427ced3856eaa964db158100a1a24e99c1f5",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_spot",
+     "option": "NBLK 01"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0554",
+   "name": "Roll Form Sticker - Spot Colour - NCYN 01",
+   "file": "batch-2/cfg-0554/Roll Form Sticker - Spot Colour - NCYN 01.png",
+   "sha256": "90c32ac192ef8c2dc4148405aca99298fe97e7d3a3519c0a9ee2ea23cc1b276c",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_spot",
+     "option": "NCYN 01"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0555",
+   "name": "Roll Form Sticker - Spot Colour - NMAG 01",
+   "file": "batch-2/cfg-0555/Roll Form Sticker - Spot Colour - NMAG 01.png",
+   "sha256": "637713dc5b53f9131c1e9e2866dc3c4bf8328f6fb177d4385c10e613c010bc9f",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_spot",
+     "option": "NMAG 01"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0556",
+   "name": "Roll Form Sticker - Spot Colour - NWHT 01",
+   "file": "batch-2/cfg-0556/Roll Form Sticker - Spot Colour - NWHT 01.png",
+   "sha256": "7b53e724ceeba990dfe7a064e2356022285b1293692433bbabcaf9790c7af5ef",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 184,
+     "fieldKey": "rf_spot",
+     "option": "NWHT 01"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0583",
+   "name": "Print Direction - Face Out View",
+   "file": "batch-2/cfg-0583/Print Direction - Face Out View.png",
+   "sha256": "1e76c10f48a815628b64c603ede644d587cdbbc7a61f6b3c694f883f13690c49",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 116,
+     "fieldKey": "printdirection",
+     "option": "Face Out View"
+    },
+    {
+     "productId": 117,
+     "fieldKey": "printdirection",
+     "option": "Face Out View"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0584",
+   "name": "Print Direction - Face In View",
+   "file": "batch-2/cfg-0584/Print Direction - Face In View.png",
+   "sha256": "240b162c47c6396d3770118364d76d57b07d41991ca47d5a88d079d823a17eac",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 116,
+     "fieldKey": "printdirection",
+     "option": "Face In View"
+    },
+    {
+     "productId": 117,
+     "fieldKey": "printdirection",
+     "option": "Face In View"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0585",
+   "name": "Print Direction - Both Side View",
+   "file": "batch-2/cfg-0585/Print Direction - Both Side View.png",
+   "sha256": "ec0311e02c21ac97326f0b63a9f7d49697f9c241c4cf6e3b38a653497e1f4c28",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 116,
+     "fieldKey": "printdirection",
+     "option": "Both Side View"
+    },
+    {
+     "productId": 117,
+     "fieldKey": "printdirection",
+     "option": "Both Side View"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0628",
+   "name": "UV DTF Sticker - Delivery Sheet Size - 297mm x 420mm (A3)",
+   "file": "batch-2/cfg-0628/UV DTF Sticker - Delivery Sheet Size - 297mm x 420mm (A3).png",
+   "sha256": "49eb30921f37d3bf98ee5c82f9c179db0e3fe8860de2a84f9680bda67361c252",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 176,
+     "fieldKey": "uvd_sheet",
+     "option": "297mm x 420mm (A3)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0629",
+   "name": "UV DTF Sticker - Delivery Sheet Size - 210mm x 297mm (A4)",
+   "file": "batch-2/cfg-0629/UV DTF Sticker - Delivery Sheet Size - 210mm x 297mm (A4).png",
+   "sha256": "317d92ab574797a5772655c0c2a2700a1cb5f04dc2e53e1a34ada6778fc90b2f",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 176,
+     "fieldKey": "uvd_sheet",
+     "option": "210mm x 297mm (A4)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0630",
+   "name": "UV DTF Sticker - Delivery Sheet Size - 148mm x 210mm (A5)",
+   "file": "batch-2/cfg-0630/UV DTF Sticker - Delivery Sheet Size - 148mm x 210mm (A5).png",
+   "sha256": "82f8bccbae8672b4d5a2acd84ce4eae9ea1612a9b867a8f18db96527508d1ab3",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 176,
+     "fieldKey": "uvd_sheet",
+     "option": "148mm x 210mm (A5)"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0631",
+   "name": "UV DTF Sticker - Size - 267mm x 390mm",
+   "file": "batch-2/cfg-0631/UV DTF Sticker - Size - 267mm x 390mm.png",
+   "sha256": "c683dfb5260982584458e51b3f33437bd79a97e7f63ea29ba7d2953bdbbd0acf",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 176,
+     "fieldKey": "size",
+     "option": "267mm x 390mm"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0632",
+   "name": "UV DTF Sticker - Size - 118mm x 180mm",
+   "file": "batch-2/cfg-0632/UV DTF Sticker - Size - 118mm x 180mm.png",
+   "sha256": "234eeb2c46a376ff9c5c7715ed28f4f0ed7f05200b237eff475aac106c73227c",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 176,
+     "fieldKey": "size",
+     "option": "118mm x 180mm"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0633",
+   "name": "UV DTF Sticker - Size - 180mm x 267mm",
+   "file": "batch-2/cfg-0633/UV DTF Sticker - Size - 180mm x 267mm.png",
+   "sha256": "1db7cf13c979300c9446044aa1cf4db5f8ae70b542513cecc5a03583214b26b9",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 176,
+     "fieldKey": "size",
+     "option": "180mm x 267mm"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0047",
+   "name": "Pad Binding",
+   "file": "batch-2/cfg-0047/Bill-Book - Binding Type - Pad.png",
+   "sha256": "9f693ee5308685d4082107ba9f721ce924a13c65b8ddc4211583df0748d05728",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "binding",
+     "option": "Pad"
+    }
+   ]
+  },
+  {
+   "assetId": "cfg-0046",
+   "name": "Book Binding",
+   "file": "batch-2/cfg-0046/Bill-Book - Binding Type - Book.png",
+   "sha256": "ef1bcd8b52ad39bc7d8ebbc18f719ff7ebcc6a7f960a75325ac37af8049df2a6",
+   "status": "created-pending-user-review",
+   "conditions": [],
+   "mappings": [
+    {
+     "productId": 24,
+     "fieldKey": "binding",
+     "option": "Book"
+    }
+   ]
+  }
+ ]
+}

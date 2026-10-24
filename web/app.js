@@ -7430,7 +7430,7 @@ class Component extends DCLogic {
           h('span', { style: { fontSize: 13, color: MUT } }, 'Sort: Most popular')),
         famModels.length ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(190px,1fr))', gap: 16 } },
           famModels.map((m, i) => h('div', { key: i, 'data-go': m[4] ? 'pkstyle:' + m[0] : 'solutions', style: { border: '1px solid ' + HAIR, borderRadius: 0, background: '#fff', padding: '16px 16px 18px', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 } },
-            this.dieline(m[3]),
+            this.pkStyleImg(m[0], 150) || this.dieline(m[3]),
             h('div', { style: { fontSize: 14.5, fontWeight: 600, color: TEAL, marginTop: 8 } }, m[0]),
             h('div', { style: { fontSize: 12.5, fontWeight: 500 } }, m[1]),
             h('div', { style: { fontSize: 12, color: MUT, lineHeight: 1.5 } }, m[2]))))
@@ -7511,6 +7511,10 @@ class Component extends DCLogic {
     this.setState({ cart }); this.saveCart(cart); this.go('cart');
   }
   // flat die-line drawn from the real open size: panels, flaps, cut (solid) and crease (dashed) lines
+  pkStyleImg(code, size) {   // assembled box picture for a style code (assets/packaging), or null
+    const P = window.PK_IMAGES, src = P && P.pkgImg ? P.pkgImg(code) : null;
+    return src ? h('img', { src, alt: '', loading: 'lazy', width: size, height: size, style: { width: '100%', maxWidth: size, height: size, objectFit: 'contain', display: 'block', margin: '0 auto' } }) : null;
+  }
   pkbDieline(sp, open, maxH) {
     const s = pkgStyle(sp.style), L = +sp.L || 100, W = +sp.W || 60, D = +sp.D || 150;
     if (s && s.x) {   // measured styles: the true flat outline (open size) with its main creases
@@ -7560,8 +7564,10 @@ class Component extends DCLogic {
     const box = (kids, extra) => h('div', { style: Object.assign({ background: '#fff', border: '1px solid #e6e8eb', padding: '22px 22px' }, extra || {}) }, kids);
     const title = t => [h('div', { key: 'bar', style: { width: 24, height: 3, background: RED, marginBottom: 10 } }), h('div', { key: 't', style: { fontSize: 24, fontWeight: 500, marginBottom: 16 } }, t)];
     const lab = t => h('div', { style: { fontSize: 14, fontWeight: 500, color: '#212121', margin: '0 0 8px' } }, t);
-    const chip = (label, on, click, key) => h('button', { key: key || label, type: 'button', onClick: click, 'aria-pressed': !!on,
-      style: { font: 'inherit', fontSize: 14, padding: '10px 16px', border: '1px solid ' + (on ? RED : '#e6e8eb'), background: on ? '#fdf2f2' : '#fff', color: on ? RED : '#212121', fontWeight: on ? 500 : 400, cursor: 'pointer', borderRadius: 0 } }, label);
+    const chip = (label, on, click, key, img) => h('button', { key: key || label, type: 'button', onClick: click, 'aria-pressed': !!on,
+      style: { font: 'inherit', fontSize: 14, padding: img ? '8px 10px 10px' : '10px 16px', border: '1px solid ' + (on ? RED : '#e6e8eb'), background: on ? '#fdf2f2' : '#fff', color: on ? RED : '#212121', fontWeight: on ? 500 : 400, cursor: 'pointer', borderRadius: 0, display: img ? 'flex' : undefined, flexDirection: 'column', alignItems: 'center', gap: 6, width: img ? 132 : undefined } },
+      img ? h('img', { src: img, alt: '', loading: 'lazy', width: 96, height: 96, style: { width: 96, height: 96, objectFit: 'contain', display: 'block' } }) : null, label);
+    const oimg = (q, v) => { const P = window.PK_IMAGES; return P && P.pkgOpt ? P.pkgOpt(q, v) : null; };
     const num = (label, value, onCh, err, key) => h('label', { key: key || label, style: { display: 'flex', flexDirection: 'column', gap: 6, flex: '1 1 110px', minWidth: 0 } },
       h('span', { style: { fontSize: 13, color: '#616161' } }, label),
       h('span', { style: { display: 'flex', border: '1px solid ' + (err ? RED : '#e6e8eb'), background: '#fff' } },
@@ -7577,7 +7583,7 @@ class Component extends DCLogic {
     if (!s) return box([title('Choose your box style'), FAMS.map(([fam, list]) => h('div', { key: fam, style: { marginBottom: 22 } }, lab(fam),
       h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(170px,1fr))', gap: 14 } },
         list.map(x => h('button', { key: x.code, type: 'button', onClick: () => this.pkbStart(x.code), style: { font: 'inherit', textAlign: 'left', background: '#fff', border: '1px solid #e6e8eb', padding: 14, cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4, borderRadius: 0 } },
-          this.pkbDieline({ style: x.code, L: 100, W: 60, D: 150 }, null, 110),
+          this.pkStyleImg(x.code, 130) || this.pkbDieline({ style: x.code, L: 100, W: 60, D: 150 }, null, 110),
           h('span', { style: { fontSize: 14.5, fontWeight: 500, color: RED, marginTop: 6 } }, x.code),
           h('span', { style: { fontSize: 13, color: '#616161', lineHeight: 1.45 } }, x.name))))))]);
 
@@ -7594,7 +7600,7 @@ class Component extends DCLogic {
     if (step === 1) {
       body = [
         s.opts.length ? h('div', { key: 'o', style: { display: 'flex', gap: 22, flexWrap: 'wrap', marginBottom: 22 } }, s.opts.map((o, i) => h('div', { key: i },
-          lab(o[0]), h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, o[1].map(v => chip(v, sp['opt' + i] === v, () => this.pkbSet({ ['opt' + i]: v }))))))) : null,
+          lab(o[0]), h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, o[1].map(v => chip(v, sp['opt' + i] === v, () => this.pkbSet({ ['opt' + i]: v }), null, oimg(o[0], v))))))) : null,
         lab('Box size'),
         h('div', { key: 'd', style: { display: 'flex', gap: 12, flexWrap: 'wrap' } },
           pkgDims(s).map(k => num({ L: 'Length (L)', W: 'Width (W)', D: 'Depth (D)' }[k], sp[k], v => this.pkbSet({ [k]: v }), sp[k] !== '' && errs[k], k)),
@@ -7602,7 +7608,7 @@ class Component extends DCLogic {
         errs.all ? h('div', { key: 'e', role: 'alert', style: { marginTop: 12, fontSize: 13.5, color: RED } }, errs.all) : null,
         cta('Next: Material', () => go(2), !sizeOK)];
     } else if (step === 2) {
-      body = [lab('Paper'), h('div', { key: 'p', style: { display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 22 } }, Object.keys(PKG_MATS).map(m => chip(m, sp.paper === m, () => this.pkbSet({ paper: m })))),
+      body = [lab('Paper'), h('div', { key: 'p', style: { display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 22 } }, Object.keys(PKG_MATS).map(m => chip(m, sp.paper === m, () => this.pkbSet({ paper: m }), null, oimg('Paper', m)))),
         lab('Weight'), h('div', { key: 'g', style: { display: 'flex', gap: 8, flexWrap: 'wrap' } }, PKG_MATS[sp.paper].map(g => chip(g + 'gsm', +sp.gsm === g, () => this.pkbSet({ gsm: g })))),
         cta('Next: Quantity', () => go(3))];
     } else if (step === 3) {
@@ -7624,16 +7630,16 @@ class Component extends DCLogic {
         const m = [+mh || 0, +mw || 0].sort((a, b) => b - a); return m[0] > face[0] || m[1] > face[1] ? 'Max ' + face[0] + ' x ' + face[1] + ' mm' : null; };
       const setHs = (i, patch) => this.pkbSet({ hs: hs.map((b, k) => k === i ? Object.assign({}, b, patch) : b) });
       const extra = [['Spot UV', 'suv'], ['Embossing', 'emb'], ['Hot Stamping', 'hs']].concat(s.win ? [['Window Film', 'win']] : []).filter(x => x[1] !== 'suv' || sp.coat === 'Matte Lamination');
-      body = [lab('Coating'), h('div', { key: 'c', style: { display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 22 } }, pkgCoatings(sp).map(c => chip(c, sp.coat === c, () => this.pkbSet({ coat: c })))),
+      body = [lab('Coating'), h('div', { key: 'c', style: { display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 22 } }, pkgCoatings(sp).map(c => chip(c, sp.coat === c, () => this.pkbSet({ coat: c }), null, oimg('Coating', c)))),
         lab('Extra finishing'), h('div', { key: 'x', style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
           extra.map(x => { const on = x[1] === 'hs' ? hs.length > 0 : !!sp[x[1]];
-            return chip(x[0], on, () => this.pkbSet(x[1] === 'hs' ? { hs: on ? [] : [{ c: 'Gold', h: 50, w: 50 }] } : x[1] === 'emb' ? { emb: !on, embH: sp.embH || 50, embW: sp.embW || 50 } : { [x[1]]: !on })); })),
+            return chip(x[0], on, () => this.pkbSet(x[1] === 'hs' ? { hs: on ? [] : [{ c: 'Gold', h: 50, w: 50 }] } : x[1] === 'emb' ? { emb: !on, embH: sp.embH || 50, embW: sp.embW || 50 } : { [x[1]]: !on }), null, oimg('Extra finishing', x[1] === 'hs' ? 'Hot Stamping - Gold' : x[0])); })),
         sp.emb ? h('div', { key: 'em', style: { marginTop: 18 } }, lab('Embossing size'), h('div', { style: { display: 'flex', gap: 12, flexWrap: 'wrap', maxWidth: 360 } },
           num('Height', sp.embH, v => this.pkbSet({ embH: v }), markErr(sp.embH, sp.embW, 0), 'eh'), num('Width', sp.embW, v => this.pkbSet({ embW: v }), markErr(sp.embH, sp.embW, 1), 'ew'))) : null,
         hs.length ? h('div', { key: 'hs', style: { marginTop: 18, display: 'flex', flexDirection: 'column', gap: 14 } },
           hs.map((b, i) => h('div', { key: i, style: { borderTop: i ? '1px solid #e6e8eb' : 'none', paddingTop: i ? 14 : 0 } },
             lab('Hot stamping ' + (i + 1)),
-            h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 } }, ['Gold', 'Silver'].map(c => chip(c, b.c === c, () => setHs(i, { c }), 'c' + c)),
+            h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 } }, ['Gold', 'Silver'].map(c => chip(c, b.c === c, () => setHs(i, { c }), 'c' + c, oimg('Extra finishing', 'Hot Stamping - ' + c))),
               i ? h('span', { role: 'button', tabIndex: 0, onClick: () => this.pkbSet({ hs: hs.filter((_, k) => k !== i) }), style: { alignSelf: 'center', marginLeft: 8, fontSize: 14, color: RED, textDecoration: 'underline', cursor: 'pointer' } }, 'Remove') : null),
             h('div', { style: { display: 'flex', gap: 12, flexWrap: 'wrap', maxWidth: 360 } },
               num('Height', b.h, v => setHs(i, { h: v }), markErr(b.h, b.w, 0), 'h' + i), num('Width', b.w, v => setHs(i, { w: v }), markErr(b.h, b.w, 1), 'w' + i)))),
