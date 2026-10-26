@@ -1957,16 +1957,21 @@ function rfBase(h, w, q) {
     let f = r[0][1]; for (let i = 1; i < r.length; i++) if (q >= r[i - 1][0]) f = q >= r[i][0] ? r[i][1] : r[i - 1][1] + (r[i][1] - r[i - 1][1]) * (q - r[i - 1][0]) / (r[i][0] - r[i - 1][0]);
     p *= f; }
   return p; }
-// UV Varnish costs the same as Matte Lamination (live 2026-10-17)
-const RF_LAM = { 'Matte Lamination': [1.78, 0.435], 'Gloss Lamination': [2.45, 0.198], 'UV Varnish': [1.78, 0.435] };
-const RF_PAPER = { 'White PP': [-0.22, 0.079], 'Transparent OPP': [0.45, 0.198], 'Printing Paper': [0.33, -0.119], 'Synthetic Paper': [0.33, 0.237], 'Hologram': [2.56, 1.225] };
+// lamination and paper add units per running metre of web (live 26 Oct, 50 / 100 mm at 1k-100k: the same per metre at both sizes;
+// UV Varnish is about 1/7 of Matte, it was priced as Matte). White PP / OPP / Hologram must take a lamination on Excard.
+const RF_LAM = { 'Matte Lamination': [0.807, 0.11732], 'Gloss Lamination': [0.695, 0.06597], 'UV Varnish': [0.634, 0.01663] };
+const RF_PAPER = { 'White PP': [0.217, 0.01486], 'Transparent OPP': [0.813, 0.04435], 'Printing Paper': [-0.296, -0.02219], 'Synthetic Paper': [0.875, 0.0517], 'Hologram': [5.23, 0.27258] };
+// running metres of web: labels side by side across 315 mm (height across), 5 mm gaps
+const rfMetres = (h, w, q) => Math.ceil(q / Math.max(1, Math.floor(315 / (h + 5)))) * (w + 5) / 1000;
 function rfPrice(cfg, qty) {
   if (cfg.rf_proof === 'Yes (2 pcs)') return 42;
   const round = cfg.rf_cat === 'Round', h = parseFloat(round ? cfg.rf_dia : cfg.rf_h), w = parseFloat(round ? cfg.rf_dia : cfg.rf_w), q = +qty || 0;
   if (!(h >= 20 && w >= 20 && q > 0)) return null;
   const A = q * (h + 3) * (w + 3) / 1e6;   // total sticker area incl. gaps, m²
   let n = rfBase(h, w, q);
-  const lin = (c, min) => { const v = c[0] + c[1] * A; return min != null ? Math.max(min, v) : v; };
+  const M = rfMetres(h, w, q), lin = (c, min) => { const v = c[0] + c[1] * M; return min != null ? Math.max(min, v) : v; };
+  // labels longer than 320 mm: +0.058 units a metre (live 26 Oct: 50x320 253 units vs 50x325 291 at 10k; 30 / 100 mm the same)
+  if (w > 320) n += 0.058 * M;
   if (RF_LAM[cfg.rf_lam]) n += lin(RF_LAM[cfg.rf_lam], 0);
   if (RF_PAPER[cfg.rf_paper]) n += cfg.rf_paper === 'Printing Paper' ? Math.min(0, lin(RF_PAPER[cfg.rf_paper])) : lin(RF_PAPER[cfg.rf_paper], 0);
   if (/White/.test(cfg.rf_colour || '')) n += Math.max(0, -0.33 + 0.119 * A);
