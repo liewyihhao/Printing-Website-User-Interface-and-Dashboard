@@ -2616,6 +2616,10 @@ const STK_CUT_LIVE = {"50x60":{"100":0.9541,"300":0.9873,"500":0.9603,"1000":0.9
 const STK_CUT_FULL = new Set(['50x50', '60x90']);
 // cut-to-size sheet curve: flat RM0.695 a printed sheet past 15,000 sheets (live 26 Oct, 60x90 / 100x150 out to 125,000 sheets);
 // the fitted curve kept falling (100x150 at 1M pcs was 18% under)
+// cut to size, other materials: the material scales the printed-sheet cost and the RM0.01 a piece by its own factors (fit 26 Oct to
+// 11 materials x 50x50 / 80x80 to 1M pcs, within ~2% past 4,000 sheets) with a shared shape below that
+const STK_MATC = {"Mirror Kote (Strong Glue)":[1.4506,1.1825],"Transparent OPP":[1.2384,1.1563],"White PP (Polypropylene)":[1.6697,1.2137],"White PE (Polyethylene)":[1.9172,1.3494],"Synthetic Paper":[2.0609,1.5061],"Printing Paper":[0.9757,1.0157],"Brown Craft Paper":[1.426,1.175],"Matte Silver Polyester":[1.9164,1.3282],"Bright Silver Polyester":[1.9164,1.3282],"Removable Transparent OPP":[1.2776,1.0989],"Removable White PP":[1.5895,1.2259]};
+const STK_MATC_SHAPE = [[21, 0.9825], [67, 1.04], [209, 0.8553], [667, 0.9154], [1042, 0.9681], [4000, 1]];
 const stkFC2 = sh => sh > 15000 ? 171.28 + 0.695 * sh : stkAtLog(STK_FC2, sh);
 function stkCutCorr(h, w, q) { const a = Math.min(h, w), b = Math.max(h, w); let ws = 0, fs = 0;
   for (const k in STK_CUT_LIVE) { const kk = k.split('x'), dd = Math.hypot(Math.log(a / +kk[0]), Math.log(b / +kk[1])), z = dd / 0.3; if (dd > 0.01) continue;
@@ -2668,7 +2672,10 @@ function stkSheetPrice(cfg, paper, h, w, q) {
     const mk = stkDieMK(h, w, q), rd = paper === 'Mirror Kote' ? 1 : stkMatR(paper, 'D', Math.ceil(q / STK_UPS_DIE2(h, w))); p = pA * (1 - wb) + pB * wb;
     if (mk != null) p = rd != null ? mk * rd : p * mk / fd;   // material/finish ratio from the old curve, Mirror Kote level from the live grid
     const ld = STK_DIE_LIVE[Math.min(h, w) + 'x' + Math.max(h, w)]; if (ld) { const ks = Object.keys(ld).map(Number).sort((a, b) => a - b); p *= q <= ks[0] ? ld[ks[0]] : q >= ks[ks.length - 1] ? ld[ks[ks.length - 1]] : stkLog(ks.map(k => [k, ld[k]]), q); }
-  } else { const s2 = Math.ceil(q / STK_UPS_CUT2(h, w)), rc = paper === 'Mirror Kote' ? 1 : stkMatR(paper, 'C', s2); p = (stkFC2(s2) + 0.01 * q) * (rc != null ? rc : r);
+  } else { const s2 = Math.ceil(q / STK_UPS_CUT2(h, w)), mc = paper !== 'Mirror Kote' && STK_MATC[paper], rc = paper === 'Mirror Kote' ? 1 : stkMatR(paper, 'C', s2);
+    // the fitted ratio table up to 500 printed sheets, the sheet / piece factors from 2,000 (log-blended between)
+    const pOld = (stkFC2(s2) + 0.01 * q) * (rc != null ? rc : r), wm = mc ? Math.max(0, Math.min(1, Math.log(s2 / 500) / Math.log(4))) : 0;
+    p = wm > 0 ? pOld * (1 - wm) + (stkFC2(s2) * mc[0] * stkLog(STK_MATC_SHAPE, s2) + 0.01 * q * mc[1]) * wm : pOld;
     // sampled sizes keep Excard's own cut-to-size price (live / model, by quantity; 22 Oct live re-check: 60x60 ran 7-11% over the
     // sheet curve from 1,500 pcs, 60x120 12% under)
     p *= stkCutCorr(h, w, q); }
