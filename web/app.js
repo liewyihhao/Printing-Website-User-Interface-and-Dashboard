@@ -2695,6 +2695,7 @@ function stkCutRE(h, w, q) { const u = STK_UPS_DIE3(h, w); if (!(u > 0)) return 
   const [a1, a2, ta] = br(a), [b1, b2, tb] = br(b); let sl = 0, ws = 0;
   for (const [x, y, wt] of [[a1, b1, (1 - ta) * (1 - tb)], [a2, b1, ta * (1 - tb)], [a1, b2, (1 - ta) * tb], [a2, b2, ta * tb]]) { const c = STK_CUT_RC[Math.min(x, y) + 'x' + Math.max(x, y)]; if (wt <= 0 || !c) continue; sl += wt * L(stkLog(c, q)); ws += wt; }
   return base * (ws ? Math.exp(0.75 * sl / ws) : 1); }
+const STK_MSC = {"Mirror Kote (Strong Glue)":[0.4852,0.42,0.3533,0.3202,0.2875,0.2872],"Transparent OPP":[0.3112,0.15,0.1647,0.1451,0.1799,0.1803],"White PP (Polypropylene)":[0.7135,0.4481,0.4311,0.3813,0.4176,0.4171],"White PE (Polyethylene)":[0.9701,0.6321,0.6039,0.5384,0.5727,0.5719],"Synthetic Paper":[1.1878,0.7911,0.7485,0.6684,0.7008,0.6992],"Printing Paper":[0,0,-0.0015,-0.0024,-0.0023,-0.0019],"Brown Craft Paper":[0.4612,0.2651,0.2673,0.2374,0.2728,0.2724],"Matte Silver Polyester":[0.9643,0.6321,0.5997,0.536,0.5704,0.5696],"Bright Silver Polyester":[0.9643,0.6321,0.5997,0.536,0.5704,0.5696],"Removable Transparent OPP":[0.3115,0.1521,0.1647,0.1451,0.1799,0.1803],"Removable White PP":[0.6287,0.3881,0.3786,0.337,0.3723,0.3715]};   // RM per printed sheet over Mirror Kote (x1.21), sheet tiers 81-180 / -300 / -600 / -1000 / -1500 / more
 function stkSheetPrice(cfg, paper, h, w, q) {
   const die = stkDie(Object.assign({}, cfg, { height: h, width: w })), sc = Math.ceil(q / (STK_UPS_CUT(h, w) || STK_UPS_CUT2(h, w))), sd = Math.ceil(q / STK_UPS_DIE(h, w));
   if (die ? !isFinite(sd) || !isFinite(sc) : !(STK_UPS_CUT2(h, w) > 0)) return null;   // only the layout in use has to fit (300 x 300 cut fits no die sheet)
@@ -2719,6 +2720,10 @@ function stkSheetPrice(cfg, paper, h, w, q) {
     p *= stkCutCorr(h, w, q);
     // past 80 sheets: the reverse-engineered Mirror Kote level, materials keep their ratio to it
     const re = stkCutRE(h, w, q); if (re != null) p *= re / ((stkFC2(s2) + 0.01 * q) * stkCutCorr(h, w, q)); }
+  // past 80 printed sheets every material is the Mirror Kote price plus a flat surcharge per sheet, stepped on the same sheet tiers
+  // (29 Oct, live material vs Mirror Kote pairs: same RM / sheet on cut-to-size and die-cut, every size)
+  const msc = paper !== 'Mirror Kote' && STK_MSC[paper]; if (msc) { const s3 = Math.ceil(q / STK_UPS_DIE3(h, w)); if (s3 > 80) { const pm = stkSheetPrice(cfg, 'Mirror Kote', h, w, q);
+    if (pm != null) return pm + 1.21 * msc[STK_DIE_RT.filter(x => s3 > x).length - 1] * s3; } }
   if (cfg.category === 'Custom Die-Cut') p *= stkLog([[100, 1.1461], [300, 1.132], [1000, 1.1128], [3000, 1.095], [10000, 1.0763], [50000, 1.0617]], q);   // live 23 Oct, 10 sizes x 6 qtys
   return p;
 }
