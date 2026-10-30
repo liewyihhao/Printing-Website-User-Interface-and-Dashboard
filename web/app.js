@@ -198,21 +198,21 @@ function flyerPriceBase(cfg, qty) {
 
 // Digital Loose Sheet hot stamping, as on Excard (do-loose-sheet): each colour has its own block size
 // and foil colour. Excard cash added for ONE colour, A4 / Gloss Art Card 230gsm / 4C Both
-// (captured live 2026-09-29; the 3,000 row for the middle sizes is scaled from 2,000):
-const DLS_HS_QTY = [100, 200, 500, 1000, 2000, 3000];
+// (re-captured live 2026-10-31 on A4 Gloss Art Paper 128gsm, 100 to 20,000):
+const DLS_HS_QTY = [100, 500, 1000, 2000, 5000, 10000, 20000];
 const DLS_HS_COST = {
-  '90mm x 30mm':   [48.5, 48.5, 43.0, 52.9, 80.85, 108.55],
-  '90mm x 70mm':   [60.6, 60.65, 75.0, 162.65, 187.1, 261.05],
-  '95mm x 206mm':  [111.35, 113.55, 168.7, 323.2, 470.05, 658.05],
-  '101mm x 144mm': [95.9, 95.9, 127.9, 253.9, 347.65, 486.7],
-  '144mm x 206mm': [138.9, 151.05, 221.6, 407.5, 610.95, 855.35],
-  '194mm x 206mm': [166.45, 194.05, 290.0, 517.25, 803.85, 1125.4],
-  '206mm x 294mm': [229.3, 276.75, 414.55, 725.15, 1161.9, 1647.05],
+  '90mm x 30mm':   [47.40, 46.30, 60.65, 99.35, 205.55, 381.15, 738.05],
+  '90mm x 70mm':   [59.55, 78.25, 116.85, 204.45, 450.45, 859.30, 1682.85],
+  '95mm x 206mm':  [110.25, 172.00, 323.55, 482.80, 1092.60, 2103.25, 4130.30],
+  '101mm x 144mm': [94.80, 131.20, 255.40, 361.50, 809.65, 1553.45, 3045.75],
+  '144mm x 206mm': [137.80, 223.80, 406.70, 620.25, 1391.75, 2673.80, 5242.55],
+  '194mm x 206mm': [165.40, 289.95, 515.30, 810.80, 1822.55, 3508.90, 6883.80],
+  '206mm x 294mm': [228.20, 414.55, 719.70, 1163.10, 2618.35, 5043.85, 9898.35],
 };
 const DLS_HS_SIZES = Object.keys(DLS_HS_COST);
 const DLS_HS_COLOURS = ['Gold', 'Silver', 'Green', 'Blue', 'Black', 'Red'];
 // one colour's cost at any quantity: flat below 100, straight lines between the captured quantities,
-// the last step's rate carried on above 3,000
+// the last step's rate carried on above 20,000
 function dlsHsOne(size, qty) {
   const row = DLS_HS_COST[size]; if (!row) return 0;
   const Q = DLS_HS_QTY, n = Q.length;
@@ -220,14 +220,13 @@ function dlsHsOne(size, qty) {
   for (let i = 1; i < n; i++) if (qty <= Q[i]) return row[i - 1] + (row[i] - row[i - 1]) * (qty - Q[i - 1]) / (Q[i] - Q[i - 1]);
   return row[n - 1] + (row[n - 1] - row[n - 2]) * (qty - Q[n - 1]) / (Q[n - 1] - Q[n - 2]);
 }
-// the chosen option's colours (1C / 2C on the Front or the Back). Excard charges the second colour a
-// little less (2 × 90×70 at 100 = +115.75 vs 2 × 60.60): the smaller block is taken at 90%.
+// the chosen option's colours (1C / 2C on the Front or the Back): the sum of both blocks
+// (live 101x144 + 90x70: RM4.40 under the sum at 100, RM6.75 over at 1,000)
 function dlsHotStampCost(cfg, qty) {
   const m = String(cfg.hot_stamping || '').match(/^(\d)C \((Front|Back)\)$/); if (!m) return 0;
-  const side = m[2].toLowerCase(), costs = [];
-  for (let i = 1; i <= +m[1]; i++) { const s = cfg['hs_size_' + side + '_' + i]; if (s) costs.push(dlsHsOne(s, qty)); }
-  costs.sort((a, b) => b - a);
-  return Math.round(costs.reduce((t, c, i) => t + (i ? c * 0.9 : c), 0) * 100) / 100;
+  const side = m[2].toLowerCase(); let t = 0;
+  for (let i = 1; i <= +m[1]; i++) { const s = cfg['hs_size_' + side + '_' + i]; if (s) t += dlsHsOne(s, qty); }
+  return Math.round(t * 100) / 100;
 }
 const dlsHsFields = () => {
   const out = [];
@@ -294,12 +293,12 @@ function dlsCreaseCodes(cfg) {
   return ['A5', '2DL', '310'].indexOf(sk) >= 0 ? DLS_FOLD_STD.filter(c => c !== '2Fd' && c !== '3Fc') : DLS_FOLD_STD;
 }
 // Excard cash deltas, sampled live (A4; creasing / hole punching / round corner checked size-independent on A5).
-// Excard charges more for these at exactly 1,000 than at 2,000; the tables keep that.
+// Re-checked 31 Oct (A4 Gloss Art 128gsm, 100 to 20,000): the old spike at exactly 1,000 is gone.
 const DLS_ADD = {
   fold:   [[10, 7.70], [100, 7.70], [500, 14.35], [1000, 20.95], [2000, 46.20], [5000, 112.00], [10000, 220.60], [20000, 441.20]],
-  crease: [[10, 17.60], [100, 18.75], [500, 23.15], [1000, 85.85], [2000, 55.45], [5000, 116.65], [10000, 221.75], [20000, 428.50]],
-  punch:  [[10, 6.60], [100, 6.60], [500, 6.65], [1000, 59.25], [2000, 12.70], [5000, 30.05], [20000, 116.65]],
-  rc:     [[10, 7.70], [100, 8.80], [500, 15.45], [1000, 78.90], [2000, 49.70], [5000, 118.95], [20000, 465.45]],
+  crease: [[10, 17.60], [100, 18.75], [500, 23.15], [1000, 32.00], [2000, 55.45], [5000, 116.65], [10000, 221.75], [20000, 428.50]],
+  punch:  [[10, 6.60], [100, 6.60], [1000, 6.60], [2000, 12.70], [5000, 30.00], [10000, 58.90], [20000, 116.65]],   // live 31 Oct: no 1,000 spike any more
+  rc:     [[10, 7.70], [100, 8.80], [500, 15.45], [1000, 25.35], [2000, 49.65], [5000, 120.10], [10000, 234.45], [20000, 465.45]],
 };
 // lamination per piece per A4 of sheet area (A4 Gloss Art Card 310gsm), Gloss Both = 1.44 × Front, Matt Front = 0.67 × Both
 const DLS_LAM_RATE = { 'Matt Lamination (Both)': [[100, 0.2095], [1000, 0.2545], [5000, 0.2000]], 'Gloss Lamination (Front)': [[100, 0.1100], [1000, 0.1540], [5000, 0.0989]] };
@@ -371,7 +370,8 @@ function dlsPriceBase(cfg, q) {
   if (v.creased) add += dlsLin(DLS_ADD.crease, q) + (cfg.creasing === 'Crease + Fold' ? 0.08 * q : 0);
   if (v.finish && cfg.hole_punch && cfg.hole_punch !== 'Not Required') add += dlsLin(DLS_ADD.punch, q);
   if (v.rc && cfg.rcorner && cfg.rcorner !== 'Not Required') add += dlsLin(DLS_ADD.rc, q);
-  if (DLS_ENV[cfg.envelope]) add += DLS_ENV[cfg.envelope] * q;
+  // envelopes: the litho rate while the plain price is under RM1,000, the higher DLS_ENV rate above (White DL live 31 Oct)
+  if (DLS_ENV[cfg.envelope]) add += (base < 1000 ? LO_ENV[cfg.envelope] : DLS_ENV[cfg.envelope]) * q;
   return Math.round((base + add) * 100) / 100;
 }
 
@@ -522,17 +522,17 @@ const LO_ADD = {
   rc: [[0, 0], [500, 12.10], [1000, 30.35], [5000, 140.65], [20000, 607.05]],
   perfLine: [[0, 0], [1000, 26.68], [5000, 123.70], [20000, 534.65]],   // per line, plus RM7.30
 };
-// hot stamping, one colour (A3 Gloss Art 128gsm): by block area at 500 / 1,000 / 5,000 / 20,000
-const LO_HS_S = [[500, 47.30], [1000, 67.90], [5000, 260.75], [20000, 1078.55]];   // 90 × 30 mm block
-const LO_HS_B = [[500, 348.05], [1000, 704.60], [5000, 3079.15]];                  // 206 × 294 mm block
-function loHsOne(size, q) {
-  const m = String(size || '').match(/(\d+)mm x (\d+)mm/); if (!m) return 0;
-  const a = +m[1] * +m[2], s = dlsLin(LO_HS_S, q), b = dlsLin(LO_HS_B, q);
-  const mid = 224.35 * (s / 67.90 + b / 704.60) / 2;                                // 101 × 144 mm = RM224.35 at 1,000
-  if (a <= 2700) return s;
-  if (a <= 14544) return s + (mid - s) * (a - 2700) / (14544 - 2700);
-  return mid + (b - mid) * (a - 14544) / (60564 - 14544);
-}
+// every block size measured live 31 Oct (A3 Gloss Art 128gsm, one colour; 2 colours = the sum of both blocks; no markup)
+const LO_HS_T = {
+  '90mm x 30mm': [[500, 47.30], [1000, 67.90], [2000, 116.40], [5000, 260.75], [20000, 1078.55]],
+  '90mm x 70mm': [[500, 63.05], [1000, 129.75], [2000, 226.80], [5000, 637.85], [20000, 2150.45]],
+  '95mm x 206mm': [[500, 140.70], [1000, 295.90], [2000, 515.40], [5000, 1363.05], [20000, 4911.90]],
+  '101mm x 144mm': [[500, 107.95], [1000, 224.35], [2000, 389.30], [5000, 1042.95], [20000, 3685.90]],
+  '144mm x 206mm': [[500, 188.00], [1000, 380.80], [2000, 656.10], [5000, 1697.80], [20000, 6152.45]],
+  '194mm x 206mm': [[500, 242.55], [1000, 493.60], [2000, 973.60], [5000, 2183.95], [20000, 7997.40]],
+  '206mm x 294mm': [[500, 348.05], [1000, 704.60], [2000, 1370.75], [5000, 3079.15], [20000, 11383.10]],
+};
+function loHsOne(size, q) { const t = LO_HS_T[size]; return t ? dlsLin(t, q) : 0; }
 function loHotStampCost(cfg, q) {
   if (!loVis(cfg).hs) return 0;
   const m = String(cfg.hot_stamping || '').match(/^(\d)C \((Front|Back)\)$/); if (!m) return 0;
@@ -543,11 +543,15 @@ function loHotStampCost(cfg, q) {
 // folding with 3 or more folds (3Fa, 3Fb, 3Fd, 4Fa, 4Fb); 1-2 folds are free. Sampled live 30 Oct (A3/A4/A5, Gloss Art 128,
 // Simili 80, Matte Art 130, 300-100,000 pcs): fold F = RM36.39 + RM12.128 per 1,000 (min RM48.50), and Excard marks the folded
 // total up by the plain price B: none under RM1,000, x1.0952 on B+F to ~RM1,190, x1.05 to ~RM1,300, above that x1.0952 on F only
-function loFold3(b, q) {
-  const f = Math.round(Math.max(48.5, 36.394 + 12.128 * q / 1000) * 20) / 20, m = 0.92 / 0.84;
-  const t = b < 1000 ? b + f : b < 1190 ? m * (b + f) : b < 1300 ? 1.05 * (b + f) : b + m * f;
+// The same markup applies to envelopes (A4 White DL: RM0.0485/pc at 1,000-5,000, x1.0952 at 20,000).
+const loFoldF = q => Math.round(Math.max(48.5, 36.394 + 12.128 * q / 1000) * 20) / 20;
+function loMarkup(b, f) {
+  const m = 0.92 / 0.84, t = !f ? b : b < 1000 ? b + f : b < 1190 ? m * (b + f) : b < 1300 ? 1.05 * (b + f) : b + m * f;
   return Math.round(t * 20) / 20;
 }
+// envelope per piece, live 31 Oct (A4 Gloss Art 128gsm, 1,000 pcs, before the markup)
+const LO_ENV = { '133mm x 102mm - Cream A7': 0.0255, '162mm x 114mm - White A6': 0.0376, '108mm x 159mm - Pink A6': 0.04245, '162mm x 229mm - Pink A5': 0.07765,
+  '162mm x 229mm - White A5': 0.074, '215mm x 114mm - Pink DL': 0.1104, '110mm x 220mm - White DL': 0.04855 };
 // creasing on the card papers, sampled live 30 Oct (A4 Gloss Art Card 310gsm, Matt Lamination (Both)). Standard (and the crease
 // part of Crease + Fold) by quantity, +RM14.60 for a 3- or 4-fold code; Custom = first line + each further line. Excard charges a
 // flat RM42.50 for Custom at 20,000 whatever the line count; the tables keep that.
@@ -574,14 +578,13 @@ function loPriceBase(cfg, q) {
   } else base = loSheet(cfg, lam, q);
   if (base == null) return null;
   const v = loVis(cfg);
-  if (v.folded && /^[34]F/.test(cfg.fold_code || '')) base = loFold3(base, q);
+  base = loMarkup(base, (v.folded && /^[34]F/.test(cfg.fold_code || '') ? loFoldF(q) : 0) + (LO_ENV[cfg.envelope] || 0) * q);
   let add = 0;
   if (v.creased && cfg.creasing === 'Crease + Fold') add += 0.08 * q;
   if (v.creased) add += loCreaseCost(cfg, q);
   if (v.hp && cfg.hole_punch && cfg.hole_punch !== 'Not Required') add += dlsLin(LO_ADD.punch, q);
   if (v.rc && cfg.rcorner && cfg.rcorner !== 'Not Required') add += dlsLin(LO_ADD.rc, q);
   if (v.perfOn) { const n = +(String(cfg.perforation).match(/(\d)/) || [])[1] || 1; add += 7.30 + n * dlsLin(LO_ADD.perfLine, q); }
-  if (DLS_ENV[cfg.envelope]) add += DLS_ENV[cfg.envelope] * 0.978 * q;
   const N = BC_PKG_N[cfg.package] || 1;
   return Math.round((base + add) * N * 100) / 100;
 }
