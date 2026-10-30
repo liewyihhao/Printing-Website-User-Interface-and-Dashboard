@@ -35,7 +35,8 @@
      "fieldKey": "spot_back",
      "option": "Black"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0406",
@@ -70,7 +71,8 @@
      "fieldKey": "spot_back",
      "option": "Cyan"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0407",
@@ -105,7 +107,8 @@
      "fieldKey": "spot_back",
      "option": "Magenta"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0411",
@@ -140,7 +143,8 @@
      "fieldKey": "crease_lines",
      "option": "1 Line"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0412",
@@ -175,7 +179,8 @@
      "fieldKey": "crease_lines",
      "option": "2 Lines"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0413",
@@ -210,7 +215,8 @@
      "fieldKey": "crease_lines",
      "option": "3 Lines"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0414",
@@ -245,7 +251,8 @@
      "fieldKey": "crease_lines",
      "option": "4 Lines"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0415",
@@ -280,7 +287,8 @@
      "fieldKey": "crease_lines",
      "option": "5 Lines"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0416",
@@ -315,7 +323,8 @@
      "fieldKey": "crease_lines",
      "option": "6 Lines"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0430",
@@ -350,7 +359,8 @@
      "fieldKey": "spot_front",
      "option": "Black"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0431",
@@ -385,7 +395,8 @@
      "fieldKey": "spot_front",
      "option": "Cyan"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0432",
@@ -420,7 +431,8 @@
      "fieldKey": "spot_front",
      "option": "Magenta"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-none",
@@ -1025,7 +1037,8 @@
      "fieldKey": "rf_hs",
      "option": "Not Required"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0076",
@@ -1040,7 +1053,8 @@
      "fieldKey": "folding_type",
      "option": "Required"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0150",
@@ -1055,7 +1069,8 @@
      "fieldKey": "folding_type",
      "option": "Required"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0209",
@@ -1070,7 +1085,8 @@
      "fieldKey": "folding_type",
      "option": "Required"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0398",
@@ -1085,7 +1101,8 @@
      "fieldKey": "folding_type",
      "option": "Required"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0429",
@@ -1100,7 +1117,8 @@
      "fieldKey": "folding_type",
      "option": "Required"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0408",
@@ -1135,7 +1153,8 @@
      "fieldKey": "creasing",
      "option": "Crease + Fold"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0409",
@@ -1170,7 +1189,8 @@
      "fieldKey": "creasing",
      "option": "Standard"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0410",
@@ -1205,7 +1225,8 @@
      "fieldKey": "creasing",
      "option": "Custom"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0458",
@@ -1240,7 +1261,8 @@
      "fieldKey": "rcorner",
      "option": "Round Corner (Radius 6mm)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0095",
@@ -1287,7 +1309,8 @@
      "fieldKey": "hot_stamping",
      "option": "1C (Front)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0096",
@@ -1334,7 +1357,8 @@
      "fieldKey": "hot_stamping",
      "option": "1C (Back)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0099",
@@ -1381,7 +1405,8 @@
      "fieldKey": "hot_stamping",
      "option": "2C (Front)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0100",
@@ -1428,7 +1453,8 @@
      "fieldKey": "hot_stamping",
      "option": "2C (Back)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0444",
@@ -1466,7 +1492,8 @@
      "fieldKey": "lam",
      "option": "Gloss Lamination (Front)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0445",
@@ -1504,7 +1531,8 @@
      "fieldKey": "lam",
      "option": "Gloss Lamination (Both)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0446",
@@ -1542,7 +1570,8 @@
      "fieldKey": "lam",
      "option": "Matt Lamination (Front)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0447",
@@ -1580,7 +1609,8 @@
      "fieldKey": "lam",
      "option": "Matt Lamination (Both)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0448",
@@ -1613,7 +1643,8 @@
      "fieldKey": "lam",
      "option": "Gloss Water Base Varnish (Both)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0449",
@@ -1646,7 +1677,8 @@
      "fieldKey": "lam",
      "option": "Matt Lamination (Front) + Spot UV (Front)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0450",
@@ -1679,7 +1711,8 @@
      "fieldKey": "lam",
      "option": "Matt Lamination (Both) + Spot UV (Front)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0451",
@@ -1712,7 +1745,8 @@
      "fieldKey": "lam",
      "option": "Matt Lamination (Both) + Spot UV (Both)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0452",
@@ -1745,7 +1779,8 @@
      "fieldKey": "lam",
      "option": "UV Varnish (Front)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0453",
@@ -1778,7 +1813,8 @@
      "fieldKey": "lam",
      "option": "UV Varnish (Both)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0454",
@@ -1811,7 +1847,8 @@
      "fieldKey": "lam",
      "option": "Gloss Water Base Varnish (Front)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0456",
@@ -1841,7 +1878,8 @@
      "fieldKey": "perf_side",
      "option": "297"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0457",
@@ -1871,7 +1909,8 @@
      "fieldKey": "perf_side",
      "option": "420"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0455",
@@ -1901,7 +1940,8 @@
      "fieldKey": "perf_side",
      "option": "210"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0433",
@@ -1936,7 +1976,8 @@
      "fieldKey": "hp_side",
      "option": "Width Side (210mm)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0434",
@@ -1971,7 +2012,8 @@
      "fieldKey": "hp_side",
      "option": "Height Side (148mm)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0417",
@@ -2006,7 +2048,8 @@
      "fieldKey": "crease_side",
      "option": "210"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0418",
@@ -2041,7 +2084,8 @@
      "fieldKey": "crease_side",
      "option": "297"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0419",
@@ -2076,7 +2120,8 @@
      "fieldKey": "crease_side",
      "option": "420"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0397",
@@ -2091,7 +2136,8 @@
      "fieldKey": "crease_side",
      "option": "445"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0420",
@@ -2121,7 +2167,8 @@
      "fieldKey": "crease_side",
      "option": "594"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0421",
@@ -2151,7 +2198,8 @@
      "fieldKey": "crease_side",
      "option": "630"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0443",
@@ -2186,7 +2234,8 @@
      "fieldKey": "hp_side",
      "option": "Width Side (297mm)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0439",
@@ -2221,7 +2270,8 @@
      "fieldKey": "hp_side",
      "option": "Height Side (210mm)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0435",
@@ -2256,7 +2306,8 @@
      "fieldKey": "hp_side",
      "option": "Width Side (420mm)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0436",
@@ -2291,7 +2342,8 @@
      "fieldKey": "hp_side",
      "option": "Height Side (297mm)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0440",
@@ -2326,7 +2378,8 @@
      "fieldKey": "hp_side",
      "option": "Width Side (148mm)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0441",
@@ -2361,7 +2414,8 @@
      "fieldKey": "hp_side",
      "option": "Height Side (105mm)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0400",
@@ -2376,7 +2430,8 @@
      "fieldKey": "hp_side",
      "option": "Width Side (105mm)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0401",
@@ -2391,7 +2446,8 @@
      "fieldKey": "hp_side",
      "option": "Height Side (74mm)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0402",
@@ -2406,7 +2462,8 @@
      "fieldKey": "hp_side",
      "option": "Width Side (445mm)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0403",
@@ -2421,7 +2478,8 @@
      "fieldKey": "hp_side",
      "option": "Height Side (310mm)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0399",
@@ -2436,7 +2494,8 @@
      "fieldKey": "hp_side",
      "option": "Height Side (198mm)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0404",
@@ -2451,7 +2510,8 @@
      "fieldKey": "hp_side",
      "option": "Height Side (99mm)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0438",
@@ -2481,7 +2541,8 @@
      "fieldKey": "hp_side",
      "option": "Width Side (594mm)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0442",
@@ -2511,7 +2572,8 @@
      "fieldKey": "hp_side",
      "option": "Height Side (420mm)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0437",
@@ -2541,7 +2603,8 @@
      "fieldKey": "hp_side",
      "option": "Width Side (630mm)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0093",
@@ -2556,7 +2619,8 @@
      "fieldKey": "creasing",
      "option": "Standard Creasing"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0094",
@@ -2571,7 +2635,8 @@
      "fieldKey": "creasing",
      "option": "Customised Creasing"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0097",
@@ -2586,7 +2651,8 @@
      "fieldKey": "hot_stamping",
      "option": "1C (Front) + 1C (Back)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0098",
@@ -2601,7 +2667,8 @@
      "fieldKey": "hot_stamping",
      "option": "1C (Front) + 2C (Back)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0101",
@@ -2616,7 +2683,8 @@
      "fieldKey": "hot_stamping",
      "option": "2C (Front) + 1C (Back)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0102",
@@ -2631,7 +2699,8 @@
      "fieldKey": "hot_stamping",
      "option": "2C (Front) + 2C (Back)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0057",
@@ -2648,7 +2717,8 @@
      "fieldKey": "binding",
      "option": "Perfect Binding"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0058",
@@ -2665,7 +2735,8 @@
      "fieldKey": "ordertype",
      "option": "Soft Cover"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0059",
@@ -2682,7 +2753,8 @@
      "fieldKey": "ordertype",
      "option": "Hard Cover"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0061",
@@ -2699,7 +2771,8 @@
      "fieldKey": "binding",
      "option": "Perfect Binding"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0065",
@@ -2716,7 +2789,8 @@
      "fieldKey": "ordertype",
      "option": "Soft Cover"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0066",
@@ -2733,7 +2807,8 @@
      "fieldKey": "ordertype",
      "option": "Hard Cover"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0056",
@@ -2750,7 +2825,8 @@
      "fieldKey": "binding",
      "option": "Saddle Stitching"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0060",
@@ -2767,7 +2843,8 @@
      "fieldKey": "binding",
      "option": "Saddle Stitching"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0062",
@@ -2789,7 +2866,8 @@
      "fieldKey": "cover_embossing",
      "option": "Add Emboss"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0063",
@@ -2811,7 +2889,8 @@
      "fieldKey": "outer_inner",
      "option": "4C : 4 Colour Outer Only"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0064",
@@ -2833,7 +2912,8 @@
      "fieldKey": "outer_inner",
      "option": "4C : 4 Colour Outer & 4 Colour Inner"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0067",
@@ -2855,7 +2935,8 @@
      "fieldKey": "hot_stamping",
      "option": "Hot Stamping - 1 Colour (Front)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0068",
@@ -2877,7 +2958,8 @@
      "fieldKey": "hot_stamping",
      "option": "Hot Stamping - 2 Colours (Front)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0048",
@@ -2892,7 +2974,8 @@
      "fieldKey": "layers",
      "option": "1"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0049",
@@ -2907,7 +2990,8 @@
      "fieldKey": "layers",
      "option": "2"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0050",
@@ -2922,7 +3006,8 @@
      "fieldKey": "layers",
      "option": "3"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0054",
@@ -2937,7 +3022,8 @@
      "fieldKey": "papermaterials",
      "option": "NCR (Carbonize Paper)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0055",
@@ -2952,7 +3038,8 @@
      "fieldKey": "papermaterials",
      "option": "Normal Paper"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0051",
@@ -2967,7 +3054,8 @@
      "fieldKey": "layers",
      "option": "4"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0052",
@@ -2982,7 +3070,8 @@
      "fieldKey": "layers",
      "option": "5"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0053",
@@ -2997,7 +3086,8 @@
      "fieldKey": "layers",
      "option": "6"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0042",
@@ -3012,7 +3102,8 @@
      "fieldKey": "back_print_layer",
      "option": "First Layer Only"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0043",
@@ -3027,7 +3118,8 @@
      "fieldKey": "back_print_layer",
      "option": "All Layers"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0047",
@@ -3042,7 +3134,8 @@
      "fieldKey": "binding",
      "option": "Pad"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0045",
@@ -3057,7 +3150,8 @@
      "fieldKey": "bindinglocation",
      "option": "Top side binding"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0046",
@@ -3072,7 +3166,8 @@
      "fieldKey": "binding",
      "option": "Book"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0044",
@@ -3087,7 +3182,8 @@
      "fieldKey": "bindinglocation",
      "option": "Left side binding"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0138",
@@ -3102,7 +3198,8 @@
      "fieldKey": "layers",
      "option": "2"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0139",
@@ -3117,7 +3214,8 @@
      "fieldKey": "layers",
      "option": "3"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0140",
@@ -3132,7 +3230,8 @@
      "fieldKey": "layers",
      "option": "4"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0141",
@@ -3147,7 +3246,8 @@
      "fieldKey": "layers",
      "option": "5"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0548",
@@ -3162,7 +3262,8 @@
      "fieldKey": "rf_core",
      "option": "25mm"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0549",
@@ -3177,7 +3278,8 @@
      "fieldKey": "rf_core",
      "option": "40mm"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0550",
@@ -3192,7 +3294,8 @@
      "fieldKey": "rf_core",
      "option": "76mm"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0371",
@@ -3207,7 +3310,8 @@
      "fieldKey": "cutting_method",
      "option": "Cut To Size"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0372",
@@ -3222,7 +3326,8 @@
      "fieldKey": "cutting_method",
      "option": "Die-Cutting"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0374",
@@ -3237,7 +3342,8 @@
      "fieldKey": "delivery_sheet",
      "option": "297mm x 210mm"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0375",
@@ -3252,7 +3358,8 @@
      "fieldKey": "delivery_sheet",
      "option": "210mm x 148mm"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0373",
@@ -3267,7 +3374,8 @@
      "fieldKey": "delivery_sheet",
      "option": "330mm x 482mm"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0376",
@@ -3282,7 +3390,8 @@
      "fieldKey": "delivery_sheet",
      "option": "148mm x 148mm"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0377",
@@ -3297,7 +3406,8 @@
      "fieldKey": "delivery_sheet",
      "option": "111mm x 148mm"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0380",
@@ -3312,7 +3422,8 @@
      "fieldKey": "delivery_sheet",
      "option": "74mm x 98mm"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0378",
@@ -3327,7 +3438,8 @@
      "fieldKey": "delivery_sheet",
      "option": "89mm x 148mm"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0379",
@@ -3342,7 +3454,8 @@
      "fieldKey": "delivery_sheet",
      "option": "112mm x 98mm"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0381",
@@ -3357,7 +3470,8 @@
      "fieldKey": "waste_removal",
      "option": "Required"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0382",
@@ -3372,7 +3486,8 @@
      "fieldKey": "colour",
      "option": "Gold"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0383",
@@ -3387,7 +3502,8 @@
      "fieldKey": "colour",
      "option": "Silver"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0537",
@@ -3402,7 +3518,8 @@
      "fieldKey": "rf_cat",
      "option": "Rectangle/Square"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0538",
@@ -3417,7 +3534,8 @@
      "fieldKey": "rf_cat",
      "option": "Round"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0539",
@@ -3432,7 +3550,8 @@
      "fieldKey": "rf_cat",
      "option": "Custom Shape"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0540",
@@ -3447,7 +3566,8 @@
      "fieldKey": "rf_dir",
      "option": "3 o'clock"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0552",
@@ -3462,7 +3582,8 @@
      "fieldKey": "rf_rolltype",
      "option": "Roll Out"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0541",
@@ -3477,7 +3598,8 @@
      "fieldKey": "rf_dir",
      "option": "6 o'clock"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0542",
@@ -3492,7 +3614,8 @@
      "fieldKey": "rf_dir",
      "option": "9 o'clock"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0543",
@@ -3507,7 +3630,8 @@
      "fieldKey": "rf_dir",
      "option": "12 o'clock"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0551",
@@ -3522,7 +3646,8 @@
      "fieldKey": "rf_rolltype",
      "option": "Roll In"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0544",
@@ -3537,7 +3662,8 @@
      "fieldKey": "rf_hs",
      "option": "1C (Front)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0545",
@@ -3552,7 +3678,8 @@
      "fieldKey": "rf_lam",
      "option": "Matte Lamination"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0546",
@@ -3567,7 +3694,8 @@
      "fieldKey": "rf_lam",
      "option": "Gloss Lamination"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0547",
@@ -3582,7 +3710,8 @@
      "fieldKey": "rf_lam",
      "option": "UV Varnish"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0553",
@@ -3597,7 +3726,8 @@
      "fieldKey": "rf_spot",
      "option": "NBLK 01"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0554",
@@ -3612,7 +3742,8 @@
      "fieldKey": "rf_spot",
      "option": "NCYN 01"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0555",
@@ -3627,7 +3758,8 @@
      "fieldKey": "rf_spot",
      "option": "NMAG 01"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0556",
@@ -3642,7 +3774,8 @@
      "fieldKey": "rf_spot",
      "option": "NWHT 01"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0583",
@@ -3662,7 +3795,8 @@
      "fieldKey": "printdirection",
      "option": "Face Out View"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0584",
@@ -3682,7 +3816,8 @@
      "fieldKey": "printdirection",
      "option": "Face In View"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0585",
@@ -3702,7 +3837,8 @@
      "fieldKey": "printdirection",
      "option": "Both Side View"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0628",
@@ -3717,7 +3853,8 @@
      "fieldKey": "uvd_sheet",
      "option": "297mm x 420mm (A3)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0629",
@@ -3732,7 +3869,8 @@
      "fieldKey": "uvd_sheet",
      "option": "210mm x 297mm (A4)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0630",
@@ -3747,7 +3885,8 @@
      "fieldKey": "uvd_sheet",
      "option": "148mm x 210mm (A5)"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0631",
@@ -3762,7 +3901,8 @@
      "fieldKey": "size",
      "option": "267mm x 390mm"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0632",
@@ -3777,7 +3917,8 @@
      "fieldKey": "size",
      "option": "118mm x 180mm"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0633",
@@ -3792,7 +3933,8 @@
      "fieldKey": "size",
      "option": "180mm x 267mm"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0047",
@@ -3807,7 +3949,8 @@
      "fieldKey": "binding",
      "option": "Pad"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "assetId": "cfg-0046",
@@ -3822,7 +3965,16 @@
      "fieldKey": "binding",
      "option": "Book"
     }
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   }
- ]
+ ],
+ "userApproval": {
+  "receipt": "User Image Approvals - 30 October 2026.json",
+  "approvedAt": "2026-10-29T23:21:51.052019+00:00",
+  "source": "User explicitly said: approve all the images.",
+  "scope": "Exact SHA-256 revisions only. Earlier production/review statuses below are kept as history; this is not supplier or manufacturing verification.",
+  "approved": 144,
+  "of": 144
+ }
 }

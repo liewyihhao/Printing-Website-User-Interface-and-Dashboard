@@ -2,7 +2,7 @@
  "generatedAt": "2026-10-08T08:34:22.638Z",
  "source": "Codex outputs/product-images/manifest.json (current files, incl. pending and archive/unapproved)",
  "count": 90,
- "userApproved": 5,
+ "userApproved": 90,
  "technicalReady": 17,
  "deferredUnchanged": [
   {
@@ -18,7 +18,7 @@
    "name": "X-ccessories"
   }
  ],
- "note": "Integrated as product hero images. Integration is not approval: only userApproved images have user sign-off; the rest carry open QA notes.",
+ "note": "Integrated as product hero images. All 90 integrated revisions were approved by the owner on 30 Oct 2026 (see userApproval). Earlier QA statuses are kept as history.",
  "products": [
   {
    "id": 129,
@@ -34,7 +34,8 @@
    "releaseShaMatches": true,
    "technicalReady": true,
    "userApproved": false,
-   "remainingQA": []
+   "remainingQA": [],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 154,
@@ -54,7 +55,8 @@
     "needs-excard-product-verification",
     "Archived foamboard logo appears centred; current physical print-plane and reference verification remain incomplete.",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 112,
@@ -70,7 +72,8 @@
    "releaseShaMatches": true,
    "technicalReady": true,
    "userApproved": false,
-   "remainingQA": []
+   "remainingQA": [],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 140,
@@ -89,7 +92,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 172,
@@ -105,7 +109,8 @@
    "releaseShaMatches": true,
    "technicalReady": true,
    "userApproved": false,
-   "remainingQA": []
+   "remainingQA": [],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 137,
@@ -121,7 +126,8 @@
    "releaseShaMatches": true,
    "technicalReady": true,
    "userApproved": false,
-   "remainingQA": []
+   "remainingQA": [],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 109,
@@ -137,7 +143,8 @@
    "releaseShaMatches": true,
    "technicalReady": true,
    "userApproved": true,
-   "remainingQA": []
+   "remainingQA": [],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 170,
@@ -157,7 +164,8 @@
     "banner-matched-draft",
     "Archived sample ID headers look plausible, but current product/reference and compositing-plane verification remain incomplete.",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 151,
@@ -173,7 +181,8 @@
    "releaseShaMatches": true,
    "technicalReady": true,
    "userApproved": false,
-   "remainingQA": []
+   "remainingQA": [],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 185,
@@ -189,7 +198,8 @@
    "releaseShaMatches": true,
    "technicalReady": true,
    "userApproved": false,
-   "remainingQA": []
+   "remainingQA": [],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 108,
@@ -205,7 +215,8 @@
    "releaseShaMatches": true,
    "technicalReady": true,
    "userApproved": true,
-   "remainingQA": []
+   "remainingQA": [],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 1,
@@ -221,7 +232,8 @@
    "releaseShaMatches": true,
    "technicalReady": true,
    "userApproved": false,
-   "remainingQA": []
+   "remainingQA": [],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 141,
@@ -241,7 +253,8 @@
     "draft-needs-edge-review",
     "Archived stamp logos sit on top labels; exact physical printing boundaries and perspective provenance remain unverified.",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 177,
@@ -257,7 +270,8 @@
    "releaseShaMatches": true,
    "technicalReady": true,
    "userApproved": true,
-   "remainingQA": []
+   "remainingQA": [],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 120,
@@ -273,7 +287,8 @@
    "releaseShaMatches": true,
    "technicalReady": true,
    "userApproved": true,
-   "remainingQA": []
+   "remainingQA": [],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 118,
@@ -293,7 +308,8 @@
     "draft-needs-user-review",
     "Rear-calendar header logo has little visible clearance from the foreground page edge. Review natural occlusion and rear-page margins without removing the functional calendar content.",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 122,
@@ -312,7 +328,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 175,
@@ -331,7 +348,8 @@
    "remainingQA": [
     "draft-needs-stand-material-refinement",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 135,
@@ -350,7 +368,8 @@
    "remainingQA": [
     "draft-needs-shape-and-material-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 119,
@@ -369,7 +388,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 149,
@@ -388,7 +408,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 152,
@@ -407,7 +428,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 153,
@@ -426,7 +448,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 150,
@@ -445,7 +468,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 126,
@@ -464,7 +488,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 131,
@@ -483,7 +508,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 144,
@@ -502,7 +528,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 130,
@@ -521,7 +548,8 @@
    "remainingQA": [
     "draft-needs-diecut-alpha-cleanup",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 145,
@@ -540,7 +568,8 @@
    "remainingQA": [
     "draft-needs-transparent-edge-cleanup",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 146,
@@ -559,7 +588,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 147,
@@ -578,7 +608,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 148,
@@ -597,7 +628,8 @@
    "remainingQA": [
     "draft-needs-material-and-transparent-edge-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 127,
@@ -616,7 +648,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 132,
@@ -635,7 +668,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 133,
@@ -654,7 +688,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 134,
@@ -673,7 +708,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 139,
@@ -692,7 +728,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 136,
@@ -711,7 +748,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 138,
@@ -730,7 +768,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 128,
@@ -749,7 +788,8 @@
    "remainingQA": [
     "draft-needs-transparent-edge-cleanup",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 105,
@@ -768,7 +808,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 104,
@@ -787,7 +828,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 106,
@@ -806,7 +848,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 113,
@@ -822,7 +865,8 @@
    "releaseShaMatches": true,
    "technicalReady": true,
    "userApproved": true,
-   "remainingQA": []
+   "remainingQA": [],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 178,
@@ -841,7 +885,8 @@
    "remainingQA": [
     "draft-needs-transparent-edge-cleanup",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 166,
@@ -860,7 +905,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 115,
@@ -876,7 +922,8 @@
    "releaseShaMatches": true,
    "technicalReady": true,
    "userApproved": false,
-   "remainingQA": []
+   "remainingQA": [],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 114,
@@ -895,7 +942,8 @@
    "remainingQA": [
     "draft-needs-shape-and-layout-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 121,
@@ -914,7 +962,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 110,
@@ -933,7 +982,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 174,
@@ -952,7 +1002,8 @@
    "remainingQA": [
     "draft-needs-transparent-edge-cleanup",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 125,
@@ -968,7 +1019,8 @@
    "releaseShaMatches": true,
    "technicalReady": true,
    "userApproved": false,
-   "remainingQA": []
+   "remainingQA": [],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 123,
@@ -987,7 +1039,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 124,
@@ -1006,7 +1059,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 159,
@@ -1025,7 +1079,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 160,
@@ -1044,7 +1099,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 161,
@@ -1063,7 +1119,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 162,
@@ -1082,7 +1139,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 158,
@@ -1102,7 +1160,8 @@
     "draft-needs-user-review",
     "Flag logos require a closer check against upper seam margins and fabric curvature, especially the small right flag.",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 156,
@@ -1121,7 +1180,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 157,
@@ -1140,7 +1200,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 155,
@@ -1159,7 +1220,8 @@
    "remainingQA": [
     "draft-needs-product-and-edge-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 164,
@@ -1178,7 +1240,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 165,
@@ -1198,7 +1261,8 @@
     "draft-needs-product-and-edge-review",
     "Loose die-cut card logos are very small at catalogue scale, and sheet-piece branding is inconsistent. Review readable size and consistent placement on each printed face.",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 107,
@@ -1217,7 +1281,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 183,
@@ -1236,7 +1301,8 @@
    "remainingQA": [
     "draft-needs-framing-and-edge-cleanup",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 180,
@@ -1255,7 +1321,8 @@
    "remainingQA": [
     "draft-needs-framing-and-edge-cleanup",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 181,
@@ -1274,7 +1341,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 182,
@@ -1293,7 +1361,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 176,
@@ -1313,7 +1382,8 @@
     "draft-needs-user-review",
     "Transfer logos sit on the demonstrated printing area, but the finished mug requires cylindrical-wrap verification before authentic surface placement can be confirmed.",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 167,
@@ -1332,7 +1402,8 @@
    "remainingQA": [
     "draft-needs-flap-shape-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 168,
@@ -1351,7 +1422,8 @@
    "remainingQA": [
     "draft-needs-product-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 169,
@@ -1370,7 +1442,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 24,
@@ -1389,7 +1462,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 111,
@@ -1409,7 +1483,8 @@
     "draft-needs-hole-and-edge-cleanup",
     "Header logos are noticeably skewed/compressed. Verify the physical form-plane dimensions and mapping before deciding which part is legitimate perspective.",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 19,
@@ -1428,7 +1503,8 @@
    "remainingQA": [
     "draft-needs-framing-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 37,
@@ -1447,7 +1523,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 21,
@@ -1466,7 +1543,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 50,
@@ -1485,7 +1563,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 60,
@@ -1504,7 +1583,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 179,
@@ -1523,7 +1603,8 @@
    "remainingQA": [
     "draft-needs-closure-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 184,
@@ -1539,7 +1620,8 @@
    "releaseShaMatches": true,
    "technicalReady": true,
    "userApproved": false,
-   "remainingQA": []
+   "remainingQA": [],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 143,
@@ -1558,7 +1640,8 @@
    "remainingQA": [
     "draft-needs-framing-and-edge-cleanup",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 116,
@@ -1577,7 +1660,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 101,
@@ -1596,7 +1680,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 117,
@@ -1615,7 +1700,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 173,
@@ -1631,7 +1717,8 @@
    "releaseShaMatches": true,
    "technicalReady": true,
    "userApproved": false,
-   "remainingQA": []
+   "remainingQA": [],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 61,
@@ -1647,7 +1734,8 @@
    "releaseShaMatches": true,
    "technicalReady": true,
    "userApproved": false,
-   "remainingQA": []
+   "remainingQA": [],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 102,
@@ -1666,7 +1754,8 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   },
   {
    "id": 103,
@@ -1685,7 +1774,16 @@
    "remainingQA": [
     "draft-needs-user-review",
     "Final palette, surface and edge review for this exact revision pending."
-   ]
+   ],
+   "userApproval": "approved 2026-10-30"
   }
- ]
+ ],
+ "userApproval": {
+  "receipt": "User Image Approvals - 30 October 2026.json",
+  "approvedAt": "2026-10-29T23:21:51.052019+00:00",
+  "source": "User explicitly said: approve all the images.",
+  "scope": "Exact SHA-256 revisions only. Earlier production/review statuses below are kept as history; this is not supplier or manufacturing verification.",
+  "approved": 90,
+  "of": 90
+ }
 }
