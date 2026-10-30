@@ -540,6 +540,29 @@ function loHotStampCost(cfg, q) {
   for (let i = 1; i <= +m[1]; i++) t += loHsOne(cfg['hs_size_' + side + '_' + i], q);
   return Math.round(t * 100) / 100;
 }
+// folding with 3 or more folds (3Fa, 3Fb, 3Fd, 4Fa, 4Fb); 1-2 folds are free. Sampled live 30 Oct (A3/A4/A5, Gloss Art 128,
+// Simili 80, Matte Art 130, 300-100,000 pcs): fold F = RM36.39 + RM12.128 per 1,000 (min RM48.50), and Excard marks the folded
+// total up by the plain price B: none under RM1,000, x1.0952 on B+F to ~RM1,190, x1.05 to ~RM1,300, above that x1.0952 on F only
+function loFold3(b, q) {
+  const f = Math.round(Math.max(48.5, 36.394 + 12.128 * q / 1000) * 20) / 20, m = 0.92 / 0.84;
+  const t = b < 1000 ? b + f : b < 1190 ? m * (b + f) : b < 1300 ? 1.05 * (b + f) : b + m * f;
+  return Math.round(t * 20) / 20;
+}
+// creasing on the card papers, sampled live 30 Oct (A4 Gloss Art Card 310gsm, Matt Lamination (Both)). Standard (and the crease
+// part of Crease + Fold) by quantity, +RM14.60 for a 3- or 4-fold code; Custom = first line + each further line. Excard charges a
+// flat RM42.50 for Custom at 20,000 whatever the line count; the tables keep that.
+const LO_CREASE = {
+  std: [[1000, 90.95], [5000, 174.00], [20000, 556.50]],
+  custom1: [[1000, 55.80], [5000, 166.05], [10000, 297.50], [20000, 42.50], [100000, 42.50]],
+  line: [[1000, 26.675], [5000, 135.475], [20000, 0], [100000, 0]],
+};
+// The tables are per A4 piece: other sizes count by area (A5 2,000 = A4 1,000, checked live); Simili 140gsm is 0.84 x the card rate.
+function loCreaseCost(cfg, q) {
+  const s = LO_SZ[cfg.size], k = s ? s[1] * s[2] / (297 * 210) : 1, qe = q * k, pf = loPc(cfg) === 'S140' ? 0.84 : 1;
+  if (cfg.creasing === 'Custom') { const n = +(String(cfg.crease_lines || '').match(/\d/) || [1])[0]; return pf * (dlsLin(LO_CREASE.custom1, qe) + (n - 1) * Math.max(0, dlsLin(LO_CREASE.line, qe))); }
+  if (cfg.creasing === 'Standard' || cfg.creasing === 'Crease + Fold') return pf * dlsLin(LO_CREASE.std, qe) + (/^[34]F/.test(cfg.fold_code_c || '') ? 14.6 : 0);
+  return 0;
+}
 function loPriceBase(cfg, q) {
   if (!LO_SZ[cfg.size] || !cfg.paper || !cfg.colour) return null;
   const lam = loVis(cfg).lam ? (cfg.lam || 'Not Required') : 'Not Required';
@@ -551,8 +574,10 @@ function loPriceBase(cfg, q) {
   } else base = loSheet(cfg, lam, q);
   if (base == null) return null;
   const v = loVis(cfg);
+  if (v.folded && /^[34]F/.test(cfg.fold_code || '')) base = loFold3(base, q);
   let add = 0;
   if (v.creased && cfg.creasing === 'Crease + Fold') add += 0.08 * q;
+  if (v.creased) add += loCreaseCost(cfg, q);
   if (v.hp && cfg.hole_punch && cfg.hole_punch !== 'Not Required') add += dlsLin(LO_ADD.punch, q);
   if (v.rc && cfg.rcorner && cfg.rcorner !== 'Not Required') add += dlsLin(LO_ADD.rc, q);
   if (v.perfOn) { const n = +(String(cfg.perforation).match(/(\d)/) || [])[1] || 1; add += 7.30 + n * dlsLin(LO_ADD.perfLine, q); }
