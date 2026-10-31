@@ -2276,6 +2276,8 @@ function bkDigiPrice(cfg, q) {
   else {
     price += per(BK_COVER[BK_CODE[cfg.cover]]);
     if (/^GAC/.test(BK_CODE[cfg.cover] || '') || BK_LAM[cfg.cover_lamination]) price += per(BK_LAM[cfg.cover_lamination]);
+    // a paper cover has no free base finish, so a finish on it costs more (live 31 Oct, A4 / A6 16pp Gloss Art 150 + Matte Front)
+    if (!/^GAC/.test(BK_CODE[cfg.cover] || 'GAC') && BK_LAM[cfg.cover_lamination]) price += per([8, 34]);
     if (/Inner/.test(cfg.outer_inner || '')) price += per(BK_OUTIN);
   }
   if (kind !== 'hard' && BK_CODE[cfg.cover] === 'GAC310') price *= 1.05;   // Excard: Gloss Art Card 310 cover = +5% on the whole book (exact on saddle + perfect samples)
