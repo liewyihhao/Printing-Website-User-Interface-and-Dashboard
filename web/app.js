@@ -341,6 +341,7 @@ function dlsLiveAt(rows, q) {
   const a = rows[rows.length - 2], b = rows[rows.length - 1]; return a ? b[1] + (b[1] - a[1]) * (q - b[0]) / (b[0] - a[0]) : b[1];
 }
 const DLS_LIVE_LAM = { 'Gloss Lamination (Both)': 'gloss_lam_both', 'Matt Lamination (Front)': 'matt_lam_front' };
+const DLS_LAM_MIX = { 'Gloss Lamination (Front)': [-0.3367, 1.3436], 'Matt Lamination (Both)': [1.6606, -0.6703] };   // × (Gloss Both − plain), × (Matt Front − plain)
 function dlsPriceBase(cfg, q) {
   const E = typeof window !== 'undefined' && window.PricingEngine, p = E && E.DATA.products.find(x => x.id === 50);
   if (!p || !cfg.size || !cfg.paper) return null;
@@ -349,8 +350,13 @@ function dlsPriceBase(cfg, q) {
   const v = dlsVis(cfg);
   // live price list first: lamination included when that lamination was swept, otherwise the plain list + the lamination cost
   const lamOn = !!(v.lam && cfg.lam && cfg.lam !== 'Not Required'), lamCode = lamOn ? DLS_LIVE_LAM[cfg.lam] : 'none';
-  let live = lamCode ? dlsLiveAt(DLS_PL[dlsLiveKey(cfg, lamCode)], q) : null; const lamIn = live != null && lamOn;
+  let live = lamCode ? dlsLiveAt(DLS_PL[dlsLiveKey(cfg, lamCode)], q) : null; let lamIn = live != null && lamOn;
   if (live == null && lamOn) live = dlsLiveAt(DLS_PL[dlsLiveKey(cfg, 'none')], q);
+  // Gloss (Front) and Matt (Both) were not swept: Excard's price is a fixed mix of the Gloss (Both) and Matt (Front) lists of
+  // the same size, paper and print colour (fitted on 21 live quotes 31 Oct, A3 to A7, 150gsm papers to 360gsm card; 3 holdouts within 0.6%)
+  const mix = lamOn && !lamIn && live != null && DLS_LAM_MIX[cfg.lam];
+  if (mix) { const gb = dlsLiveAt(DLS_PL[dlsLiveKey(cfg, 'gloss_lam_both')], q), mf = dlsLiveAt(DLS_PL[dlsLiveKey(cfg, 'matt_lam_front')], q);
+    if (gb != null && mf != null) { live = Math.round((live + mix[0] * (gb - live) + mix[1] * (mf - live)) * 20) / 20; lamIn = true; } }
   let base;
   if (live != null) {
     base = live;
@@ -372,7 +378,12 @@ function dlsPriceBase(cfg, q) {
   if (v.rc && cfg.rcorner && cfg.rcorner !== 'Not Required') add += dlsLin(DLS_ADD.rc, q);
   // envelopes: the litho rate while the plain price is under RM1,000, the higher DLS_ENV rate above (White DL live 31 Oct)
   if (DLS_ENV[cfg.envelope]) add += (base < 1000 ? LO_ENV[cfg.envelope] : DLS_ENV[cfg.envelope]) * q;
-  return Math.round((base + add) * 100) / 100;
+  add += dlsHotStampCost(cfg, q);
+  // Excard's price level: when plain + finishing lands between ~RM1,090 and RM1,190 the whole order is × 0.88/0.84
+  // (live 31 Oct: creasing on A4 / 2DL / A3 / A5 card and hole punching on A4 310gsm, exact; RM1,077 and RM1,212 stay plain)
+  let t = base + add;
+  if (add > 0 && t >= 1090 && t < 1190) t = Math.round(t * 0.88 / 0.84 * 20) / 20;
+  return Math.round(t * 100) / 100;
 }
 
 // ---------- Loose Sheet — Litho (Offset): Excard's v4 lo-loose-sheet form (live capture 2026-10-01) ----------
@@ -3163,7 +3174,7 @@ const CFG_OVERRIDES = {
     priceBase: dlsPriceBase,
     // hot stamping as on Excard: each colour asks its block size and foil colour, priced by block size × quantity
     priceSub: { hot_stamping: { '1C (Front)': 'Not Required', '1C (Back)': 'Not Required', '2C (Front)': 'Not Required', '2C (Back)': 'Not Required' } },
-    priceAddon: { hot_stamping: dlsHotStampCost },
+    // hot stamping is priced inside dlsPriceBase (it counts towards Excard's price level)
   },
   'Banner — Litho': {
     label: { topeyelet: 'Top Eyelets', bottomeyelet: 'Bottom Eyelets', inc_printcolour: 'Printing', inc_compulsory: 'Compulsory' },
