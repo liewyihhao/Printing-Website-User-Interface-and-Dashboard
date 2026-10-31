@@ -557,7 +557,7 @@ function loHotStampCost(cfg, q) {
 // The same markup applies to envelopes (A4 White DL: RM0.0485/pc at 1,000-5,000, x1.0952 at 20,000).
 const loFoldF = q => Math.round(Math.max(48.5, 36.394 + 12.128 * q / 1000) * 20) / 20;
 function loMarkup(b, f) {
-  const m = 0.92 / 0.84, t = !f ? b : b < 1000 ? b + f : b < 1190 ? m * (b + f) : b < 1300 ? 1.05 * (b + f) : b + m * f;
+  const m = 0.92 / 0.84, t = !f ? b : b < 960 ? b + f : b < 1190 ? m * (b + f) : b < 1300 ? 1.05 * (b + f) : b + m * f;
   return Math.round(t * 20) / 20;
 }
 // envelope per piece, live 31 Oct (A4 Gloss Art 128gsm, 1,000 pcs, before the markup)
@@ -578,18 +578,45 @@ function loCreaseCost(cfg, q) {
   if (cfg.creasing === 'Standard' || cfg.creasing === 'Crease + Fold') return pf * dlsLin(LO_CREASE.std, qe) + (/^[34]F/.test(cfg.fold_code_c || '') ? 14.6 : 0);
   return 0;
 }
+// Spot UV charge by sheet area in A4 pieces (live 31 Oct, Gloss Art Card 310 / 360gsm on A3, A4 and A5, Front and Both
+// matt lamination alike); 250gsm is 1.322 × (A5 live) and Spot UV on both sides 1.367 × front only. Used where no list was swept.
+const LO_SUV_F = [[500, 177.10], [1000, 214.65], [1500, 252.25], [2000, 291.05], [2500, 329.90], [3000, 361.40], [4000, 429.30], [5000, 508.10], [10000, 903.50], [20000, 1574.10]];
+// 250gsm follows the press layout instead: the Spot UV part of a swept list of the same size (Front and Both matt lamination
+// share it), else the A3 list by A4 pieces (4 x A5 and A3 Matt Front land on it exactly); A5 = 1.322 × LO_SUV_F
+const loMarkupInv = (b, t) => { const m = 0.92 / 0.84; return b < 960 ? t - b : b < 1190 ? t / m - b : b < 1300 ? t / 1.05 - b : (t - b) / m; };
+function loSuvFromList(size, paper, colour, both) {
+  const S = LO_PL[[size, paper, both ? LO_L.MBSB : LO_L.MBS, colour].join('|')], B = S && LO_PL[[size, paper, LO_L.MB, colour].join('|')];
+  if (!B) return null;
+  const rows = Object.keys(S).filter(k => B[k] != null).map(Number).sort((a, b) => a - b).map(k => [k, loMarkupInv(B[k], S[k])]);
+  return rows.length > 1 ? rows : null;
+}
+function loSuvF(cfg, lam, q) {
+  const s = LO_SZ[cfg.size]; if (!s) return 0;
+  const a4 = q * s[1] * s[2] / (297 * 210), pc = loPc(cfg), sb = /Spot UV \(Both\)/.test(lam);
+  if (pc === 'GAC250' && loSz(cfg) !== 'A5') {   // Spot UV (Both) from the donor's own (Both) list: 1.0x short runs to ~2x long runs
+    let rows = loSuvFromList(cfg.size, cfg.paper, cfg.colour, sb) || loSuvFromList(cfg.size, cfg.paper, '4C (Both)', sb);
+    if (rows) return dlsLin(rows, q);
+    rows = loSuvFromList('A3 (297mm x 420mm)', cfg.paper, '4C (Both)', sb);
+    if (rows) return dlsLin(rows, a4 / 2);
+  }
+  return dlsLin(LO_SUV_F, a4) * (pc === 'GAC250' ? 1.322 : 1) * (sb ? 1.367 : 1);
+}
 function loPriceBase(cfg, q) {
   if (!LO_SZ[cfg.size] || !cfg.paper || !cfg.colour) return null;
   const lam = loVis(cfg).lam ? (cfg.lam || 'Not Required') : 'Not Required';
   let base;
-  const sv = !LO_PL[[cfg.size, cfg.paper, lam, cfg.colour].join('|')] && LO_SUV[lam];
-  if (sv) {   // Spot UV / water-base finishes priced off their parent lamination
+  const listed = !!LO_PL[[cfg.size, cfg.paper, lam, cfg.colour].join('|')], sv = !listed && LO_SUV[lam];
+  let suvF = 0;
+  if (sv && /Spot UV/.test(lam)) {   // unswept Spot UV: the parent lamination + the Spot UV charge, through Excard's price level
+    base = loSheet(cfg, sv.parent, q); if (base == null) return null;
+    suvF = loSuvF(cfg, lam, q);
+  } else if (sv) {   // water-base varnish priced off its parent lamination
     const parent = loSheet(cfg, sv.parent, q); if (parent == null) return null;
     base = parent * dlsLin(sv.ratio[loSz(cfg)] || sv.ratio.def, q);
   } else base = loSheet(cfg, lam, q);
   if (base == null) return null;
   const v = loVis(cfg);
-  base = loMarkup(base, (v.folded && /^[34]F/.test(cfg.fold_code || '') ? loFoldF(q) : 0) + (LO_ENV[cfg.envelope] || 0) * q);
+  base = loMarkup(base, suvF + (v.folded && /^[34]F/.test(cfg.fold_code || '') ? loFoldF(q) : 0) + (LO_ENV[cfg.envelope] || 0) * q);
   let add = 0;
   if (v.creased && cfg.creasing === 'Crease + Fold') add += 0.08 * q;
   if (v.creased) add += loCreaseCost(cfg, q);
