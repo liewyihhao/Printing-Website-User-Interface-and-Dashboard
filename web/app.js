@@ -2425,6 +2425,12 @@ const bkoF = (q, a, b) => a === 1000 && b === 10000 && q > a && q < b ? Math.pow
 // 1C saddle stitch: [pages per plate set, RM per copy per set above 3,000 copies] (live 1C sweep)
 // paper cover saving per size: [fixed part, share of the A4 per-copy part] (A4 / A5 sweeps; B5 from the 1C self-cover sweep)
 const BKO_COVF = { B5: [-75, .52], A6: [-120, .37] };
+// finish on a paper cover: [fixed RM, RM per copy above 1,000] (live A4 / A5 / A6; other sizes scale A4 by BKO_K)
+const BKO_PLAM = { A4: [46, .0308], A5: [38, .0133], A6: [48, 0] };
+// second laminated side vs our pro-rata extra: [at 1,000, at 5,000+] (live B5 / A5 / A6)
+// printing inside a card cover, measured where the A4 rule x size share is off (live 31 Oct, A5 16pp Gloss Art Card 250; flat below 1,000)
+const BKO_INNER = { 'P|A5': [[1000, 160], [5000, 200], [10000, 250]], 'L|A5': [[1000, 140], [5000, 420], [10000, 620]] };
+const BKO_LAM2 = { B5: [.81, .80], 'B5+': [.81, .80], A5: [.95, .93], A6: [.49, .78] };
 // [saddle pages per set, RM per copy per set above 3,000, perfect inside pages per set]
 // inside-paper cost share vs A4 where it differs from BKO_K (A6 from the GA100 1C sweep)
 const BKO_KCONT = { A6: .26, A5: .51 };
@@ -2540,10 +2546,18 @@ function bkoPrice(cfg, q) {
       // the Spot UV part at 1,000 / 10,000 copies and its short-run slope: larger over matte lamination on both sides (live A4 24pp)
       const both = /\(Both\) \+ Spot UV/.test(cfg.cover_lamination), S = spot ? (both ? [323, 2193] : [220, 1154]) : [0, 0], slope = both ? 0.209 : 0.106;
       const L = [v[0] - (spot ? (both ? 220 : 220) : 0) + 35, v[1] - (spot ? 1154 : 0) + 35];
-      const lam = Math.max(0, k * (q < 1000 ? L[0] * q / 1000 : bkoLin2(L, q)) - 35);
-      price += lam + (spot ? (q >= 1000 ? bkoLin2(S, q) : Math.max(149, S[0] - slope * (1000 - q))) * k : 0); }
+      let lam = Math.max(0, k * (q < 1000 ? L[0] * q / 1000 : bkoLin2(L, q)) - 35);
+      // the second laminated side costs less than pro rata on smaller covers (live 31 Oct, Gloss Front vs Both, 16pp, 1,000 / 5,000)
+      if (/^(Gloss|Matte) Lamination \(Both\)$/.test(cfg.cover_lamination) && BKO_LAM2[sk]) { const f0 = BKO_LAM['Gloss Lamination (Front)'];
+        const lf = Math.max(0, k * (q < 1000 ? (f0[0] + 35) * q / 1000 : bkoLin2([f0[0] + 35, f0[1] + 35], q)) - 35), r = BKO_LAM2[sk];
+        lam = lf + (lam - lf) * (q <= 1000 ? r[0] : q >= 5000 ? r[1] : r[0] + (r[1] - r[0]) * (q - 1000) / 4000); }
+      price += lam + (spot ? (q >= 1000 ? bkoLin2(S, q) : Math.max(149, S[0] - slope * (1000 - q))) * k : 0);
+      // a paper cover has no free base finish (a card cover's price includes Gloss Waterbase Varnish), so any finish on it costs
+      // a fixed amount plus a per-copy part above 1,000 (live 31 Oct, 16pp Matte Art 150 cover: A4 / A5 / A6, 300-10,000)
+      if (!/^GAC/.test(BK_CODE[cfg.cover] || 'GAC') && !scUsed) { const pl = BKO_PLAM[sk] || [46, .0308 * k]; price += pl[0] + pl[1] * Math.max(0, q - 1000); } }
     // printing inside the cover costs extra on a card cover; a self-cover already prints both sides of every page
-    if (/Inner/.test(cfg.outer_inner || '') && !scUsed) price += (q <= 1000 ? 200 : 200 + 280 * (q - 1000) / 9000) * k;
+    if (/Inner/.test(cfg.outer_inner || '') && !scUsed) { const it = /^GAC/.test(BK_CODE[cfg.cover] || '') && BKO_INNER[(cfg.orientation === 'Landscape' ? 'L|' : 'P|') + sk];
+      price += it ? dlsLin(it, Math.max(1000, q)) : (q <= 1000 ? 200 : 200 + 280 * (q - 1000) / 9000) * k; }
     if (BK_CODE[cfg.cover] === 'GAC310') price *= 1.05;
   }
   return Math.round((price + bkoAddons(cfg, q)) * 100) / 100;
